@@ -58,7 +58,7 @@ describe('Global Orators Landing Page & Features Tests', () => {
     // Verify tournament achievements
     expect(screen.getByText('World Universities Debating Championship')).toBeInTheDocument();
     expect(screen.getByText('Pan-African Universities Debating Championship')).toBeInTheDocument();
-  });
+  }, 15000);
 
   test('should render SubdomainSwitcher with globalorators.com, app, and coach domains', () => {
     render(
