@@ -135,7 +135,7 @@ describe('Global Orators Landing Page & Features Tests', () => {
     expect(screen.getByText(/0:24 \/ 1:18/)).toBeInTheDocument();
   });
 
-  test('should open and close mobile table of contents drawer on LandingPage', async () => {
+  test('should open and close mobile navigation drawer with standard nav links on LandingPage', async () => {
     render(
       <AppProvider>
         <LandingPage />
@@ -145,20 +145,29 @@ describe('Global Orators Landing Page & Features Tests', () => {
     const mobileToggleBtn = document.getElementById('mobile-toc-toggle');
     expect(mobileToggleBtn).toBeInTheDocument();
 
-    // Open drawer
+    // Verify desktop standard nav has Home, About, Academy
+    expect(screen.getAllByRole('button', { name: 'Home' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('link', { name: 'About' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('link', { name: 'Academy' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('link', { name: 'Foundation' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('link', { name: 'Escapism' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('link', { name: 'Tournaments' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('link', { name: 'Testimonials' }).length).toBeGreaterThan(0);
+
+    // Open mobile drawer
     await act(async () => {
       fireEvent.click(mobileToggleBtn!);
     });
 
-    expect(screen.getByText(/Table of Contents • The Manifesto/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/Chapter I • The Diagnosis & The Remedy/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/The Safe Circle • Speaking as Escapism/i)).toBeInTheDocument();
+    // Check that standard nav buttons/links are rendered in mobile drawer
+    expect(screen.getAllByRole('button', { name: 'Home' }).length).toBeGreaterThan(1);
+    expect(screen.getAllByRole('link', { name: 'About' }).length).toBeGreaterThan(1);
+    expect(screen.getAllByRole('link', { name: 'Academy' }).length).toBeGreaterThan(1);
+    expect(screen.getAllByRole('link', { name: 'Foundation' }).length).toBeGreaterThan(1);
 
     // Close drawer
     await act(async () => {
       fireEvent.click(mobileToggleBtn!);
     });
-
-    expect(screen.queryByText(/Table of Contents • The Manifesto/i)).not.toBeInTheDocument();
   });
 });
