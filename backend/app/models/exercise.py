@@ -18,7 +18,7 @@ class Exercise(Base):
     secondary_muscles: Mapped[List[str]] = mapped_column(JSON, default=list)
     equipment: Mapped[str] = mapped_column(String(64), index=True, nullable=False)
     difficulty: Mapped[str] = mapped_column(String(32), default="Intermediate")
-    category: Mapped[str] = mapped_column(String(64), default="Strength")
+    category: Mapped[str] = mapped_column(String(64), default="Argumentation & Logic")
     description: Mapped[str] = mapped_column(Text, default="")
     instructions: Mapped[List[str]] = mapped_column(JSON, default=list)
     form_cues: Mapped[List[str]] = mapped_column(JSON, default=list)

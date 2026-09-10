@@ -369,9 +369,9 @@ export const INITIAL_EXERCISES: Exercise[] = [
     "equipment": "Podium & Microphone",
     "difficulty": "Beginner",
     "category": "Vocal Delivery",
-    "description": "Vocal gymnastics drill expanding abdominal resonance, eliminating vocal fry, and filling a large hall with deep, commanding tone without straining vocal folds.",
+    "description": "Vocal agility drill expanding abdominal resonance, eliminating vocal fry, and filling a large hall with deep, commanding tone without straining vocal folds.",
     "instructions": [
-      "Stand in athletic speaker stance, shoulders relaxed, knees unlocked.",
+      "Stand in grounded speaker stance, shoulders relaxed, knees unlocked.",
       "Inhale deeply through the nose into the lower abdomen over 4 counts.",
       "Project sustained resonant vowel hums (Mmm, Ahh, Ohh) targeting 75-80 dB without straining.",
       "Vary pitch across octaves while maintaining abdominal support and open throat posture."

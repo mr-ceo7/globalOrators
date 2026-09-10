@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { 
   X, 
   User, 
-  Dumbbell, 
   Calendar, 
   AlertTriangle, 
   FileText, 
@@ -81,7 +80,7 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({ client, 
           <div className="w-10 h-1.5 bg-slate-700 rounded-full" />
         </div>
 
-        {/* Header with Athlete Profile Banner */}
+        {/* Header with Speaker Profile Banner */}
         <div className="relative p-6 bg-gradient-to-r from-slate-950 via-slate-900 to-emerald-950/40 border-b border-slate-800">
           <button 
             id="close-client-profile-btn"
@@ -320,7 +319,7 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({ client, 
             </div>
           )}
 
-          {/* Tab: Program & Workouts */}
+          {/* Tab: Curriculum & Rehearsal Sessions */}
           {activeTab === 'program' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">

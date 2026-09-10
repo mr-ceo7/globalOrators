@@ -15,13 +15,13 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite+aiosqlite:///./nubianfit.db"
     
     # JWT Authentication
-    SECRET_KEY: str = "nubianfit-super-secret-jwt-signing-key-2026-secure"
+    SECRET_KEY: str = "globalorators-super-secret-jwt-signing-key-2026-secure"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
     
     # Default Coach Account (auto-seeded)
     DEFAULT_COACH_NAME: str = "Head Coach Qassim"
-    DEFAULT_COACH_EMAIL: str = "coach@nubianfit.com"
+    DEFAULT_COACH_EMAIL: str = "coach@globalorators.com"
     DEFAULT_COACH_PASSWORD: str = "Coach@123"
     
     # CORS

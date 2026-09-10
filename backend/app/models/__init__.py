@@ -1,5 +1,5 @@
 """
-NubianFit ORM Models
+global Orators ORM Models
 """
 
 from app.models.user import User

@@ -13,7 +13,7 @@ class ExerciseBase(CamelModel):
     secondary_muscles: List[str] = Field(default_factory=list)
     equipment: str
     difficulty: str = "Intermediate"
-    category: str = "Strength"
+    category: str = "Argumentation & Logic"
     description: str = ""
     instructions: List[str] = Field(default_factory=list)
     form_cues: List[str] = Field(default_factory=list)

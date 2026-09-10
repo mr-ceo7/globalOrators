@@ -317,7 +317,7 @@ export const CalendarScheduler: React.FC = () => {
                   {dayNum}
                 </span>
 
-                {/* Workout Dots */}
+                {/* Rehearsal Dots */}
                 <div className="flex items-center justify-center gap-0.5 mt-0.5 h-1.5">
                   {Array.from({ length: completedCount }).map((_, idx) => (
                     <span key={`comp-dot-${idx}`} className="h-1 w-1 rounded-full bg-emerald-400 shrink-0" />
@@ -332,7 +332,7 @@ export const CalendarScheduler: React.FC = () => {
         </div>
       </div>
 
-      {/* Selected Day Workouts List for Mobile Month View */}
+      {/* Selected Day Rehearsals List for Mobile Month View */}
       <div className={`md:hidden ${mobileViewMode === 'grid' ? 'block' : 'hidden'} space-y-3 mt-4`}>
         <div className="flex items-center justify-between px-2">
           <h4 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
@@ -508,7 +508,7 @@ export const CalendarScheduler: React.FC = () => {
         })()}
       </div>
 
-      {/* Schedule Workout Modal */}
+      {/* Schedule Rehearsal Session Modal */}
       {isScheduleModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
           <div className="relative w-full max-w-md rounded-3xl bg-slate-900 border border-slate-700 shadow-2xl p-6 space-y-4">

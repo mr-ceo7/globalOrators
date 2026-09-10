@@ -12,7 +12,7 @@ class ProgramBase(CamelModel):
     subtitle: str = ""
     description: str = ""
     difficulty: str = "Intermediate"
-    goal: str = "Hypertrophy"
+    goal: str = "Competitive Debate"
     duration_weeks: int = 8
     days_per_week: int = 4
     days: List[Dict[str, Any]] = Field(default_factory=list)
@@ -28,7 +28,7 @@ class ProgramCreate(CamelModel):
     subtitle: str = ""
     description: str = ""
     difficulty: str = "Intermediate"
-    goal: str = "Hypertrophy"
+    goal: str = "Competitive Debate"
     duration_weeks: int = 8
     days_per_week: int = 4
     days: List[Dict[str, Any]] = Field(default_factory=list)

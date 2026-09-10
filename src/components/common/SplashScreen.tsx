@@ -48,7 +48,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
       >
         <img
           src={logoIcon}
-          alt="NubianFit Brand Mark"
+          alt="global Orators Brand Mark"
           className="h-24 w-24 sm:h-32 sm:w-32 md:h-40 md:w-40 object-contain filter drop-shadow-[0_10px_25px_rgba(16,185,129,0.25)]"
         />
       </motion.div>
@@ -80,9 +80,9 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
           global<span className="text-logo-fit">orators</span>
         </span>
         <div className="flex justify-between text-[8px] text-slate-400 font-bold tracking-normal lowercase mt-2 w-full leading-none">
-          <span>eloquence</span>
-          <span>and</span>
-          <span>strategy</span>
+          <span>speak</span>
+          <span>with</span>
+          <span>impact</span>
         </div>
       </motion.div>
     </motion.div>

@@ -1,5 +1,5 @@
 """
-NubianFit FastAPI Backend Main Application
+global Orators FastAPI Backend Main Application
 """
 
 import logging
@@ -31,7 +31,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
 )
-logger = logging.getLogger("nubianfit")
+logger = logging.getLogger("globalorators")
 
 
 @asynccontextmanager
@@ -47,9 +47,9 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Error during database seed: {e}")
     
-    logger.info("NubianFit FastAPI Backend ready.")
+    logger.info("global Orators FastAPI Backend ready.")
     yield
-    logger.info("Shutting down NubianFit FastAPI Backend...")
+    logger.info("Shutting down global Orators FastAPI Backend...")
 
 
 app = FastAPI(

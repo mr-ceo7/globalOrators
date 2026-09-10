@@ -25,7 +25,7 @@ class ClientBase(CamelModel):
     age: int = 25
     gender: str = "Male"
     status: str = "Active"
-    goal: str = "Hypertrophy"
+    goal: str = "Competitive Debate"
     experience_level: str = "Intermediate"
     start_date: str = ""
     current_program_id: Optional[str] = None
@@ -34,12 +34,12 @@ class ClientBase(CamelModel):
     workouts_completed: int = 0
     total_workouts_assigned: int = 0
     last_active: str = "Recently"
-    target_weight_kg: float = 70.0
-    current_weight_kg: float = 75.0
-    starting_weight_kg: float = 75.0
+    target_weight_kg: float = 140.0
+    current_weight_kg: float = 145.0
+    starting_weight_kg: float = 145.0
     height_cm: float = 175.0
-    body_fat_percentage: float = 15.0
-    target_body_fat: float = 12.0
+    body_fat_percentage: float = 85.0
+    target_body_fat: float = 90.0
     injuries_and_health: List[str] = Field(default_factory=list)
     medical_alerts: Optional[str] = None
     custom_coach_notes: List[str] = Field(default_factory=list)
@@ -54,7 +54,7 @@ class ClientCreate(CamelModel):
     age: int = 25
     gender: str = "Male"
     status: str = "Active"
-    goal: str = "Hypertrophy"
+    goal: str = "Competitive Debate"
     experience_level: str = "Intermediate"
     start_date: str = ""
     current_program_id: Optional[str] = None

@@ -17,18 +17,22 @@ router = APIRouter(prefix="/exercises", tags=["Exercises"])
 
 @router.get("", response_model=List[ExerciseResponse])
 async def list_exercises(
+    skill: Optional[str] = None,
     muscle: Optional[str] = None,
+    format: Optional[str] = None,
     equipment: Optional[str] = None,
     difficulty: Optional[str] = None,
     search: Optional[str] = None,
     db: AsyncSession = Depends(get_db)
 ):
-    """List all exercises with optional filtering by muscle, equipment, difficulty, or search term."""
+    """List all exercises with optional filtering by skill/muscle, format/equipment, difficulty, or search term."""
     query = select(Exercise)
-    if muscle:
-        query = query.where(Exercise.primary_muscle == muscle)
-    if equipment:
-        query = query.where(Exercise.equipment == equipment)
+    target_skill = skill or muscle
+    target_format = format or equipment
+    if target_skill:
+        query = query.where(Exercise.primary_muscle == target_skill)
+    if target_format:
+        query = query.where(Exercise.equipment == target_format)
     if difficulty:
         query = query.where(Exercise.difficulty == difficulty)
     if search:

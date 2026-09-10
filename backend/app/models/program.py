@@ -17,7 +17,7 @@ class TrainingProgram(Base):
     subtitle: Mapped[str] = mapped_column(String(255), default="")
     description: Mapped[str] = mapped_column(Text, default="")
     difficulty: Mapped[str] = mapped_column(String(32), default="Intermediate")
-    goal: Mapped[str] = mapped_column(String(64), default="Hypertrophy")
+    goal: Mapped[str] = mapped_column(String(64), default="Competitive Debate")
     duration_weeks: Mapped[int] = mapped_column(Integer, default=8)
     days_per_week: Mapped[int] = mapped_column(Integer, default=4)
     days: Mapped[List[Dict[str, Any]]] = mapped_column(JSON, default=list)

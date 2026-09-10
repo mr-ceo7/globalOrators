@@ -132,9 +132,9 @@ export const clientsApi = {
   delete: (id: string) => api.delete<{ message: string; id: string }>(`/clients/${id}`),
 };
 
-// Exercises Endpoints
+// Exercises / Speech Drills Endpoints
 export const exercisesApi = {
-  getAll: (params?: { muscle?: string; equipment?: string; difficulty?: string; search?: string }) =>
+  getAll: (params?: { skill?: string; muscle?: string; equipment?: string; format?: string; difficulty?: string; search?: string }) =>
     api.get<Exercise[]>('/exercises', params),
   getById: (id: string) => api.get<Exercise>(`/exercises/${id}`),
   create: (exercise: Partial<Exercise>) => api.post<Exercise>('/exercises', exercise),

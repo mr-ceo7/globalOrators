@@ -58,9 +58,9 @@ export const Sidebar: React.FC = () => {
                   global<span className="text-logo-fit">orators</span>
                 </span>
                 <div className="flex justify-between text-[8px] text-slate-400 font-bold tracking-normal lowercase mt-1.5 w-full leading-none">
-                  <span>eloquence</span>
-                  <span>and</span>
-                  <span>strategy</span>
+                  <span>speak</span>
+                  <span>with</span>
+                  <span>impact</span>
                 </div>
               </div>
               <span className="text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 leading-none self-start mt-0.5">

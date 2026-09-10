@@ -6,7 +6,6 @@ import {
   Plus, 
   MessageSquare, 
   TrendingUp, 
-  Dumbbell, 
   ShieldAlert, 
   ChevronRight, 
   LayoutGrid, 

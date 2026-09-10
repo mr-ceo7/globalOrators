@@ -1,9 +1,9 @@
 /**
- * NubianFit Coach OS Service Worker
+ * global Orators Coach OS Service Worker
  * Provides offline resilience, static asset caching, and instantaneous loads.
  */
 
-const CACHE_NAME = 'nubianfit-cache-v1.2';
+const CACHE_NAME = 'globalorators-cache-v1.2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

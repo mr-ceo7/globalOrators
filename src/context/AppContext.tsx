@@ -379,7 +379,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       isCustom: true
     };
     setExercises(prev => [newEx, ...prev]);
-    showToast(`Exercise "${newEx.name}" added to library.`);
+    showToast(`Speech drill "${newEx.name}" added to library.`);
 
     try {
       const created = await exercisesApi.create(exerciseData);
@@ -470,7 +470,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         clientName: targetClient.name,
         clientAvatar: targetClient.avatar,
         title: `Assigned: ${targetProgram.title}`,
-        description: `Program assigned with ${targetProgram.days.length} training days`,
+        description: `Curriculum assigned with ${targetProgram.days.length} training rounds`,
         timestamp: 'Just now'
       },
       ...prev
@@ -492,7 +492,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       id: tempId
     };
     setScheduledWorkouts(prev => [newSched, ...prev]);
-    showToast(`Workout "${newSched.workoutTitle}" scheduled for ${newSched.date}.`);
+    showToast(`Rehearsal session "${newSched.workoutTitle}" scheduled for ${newSched.date}.`);
 
     try {
       const created = await workoutsApi.create(workoutData);
@@ -523,8 +523,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status: 'Completed',
       durationMin: feedback.durationMin || target.durationMin || 55,
       rating: feedback.rating || 5,
-      clientFeedback: feedback.clientFeedback || target.clientFeedback || 'Great workout completed!',
-      coachFeedback: feedback.coachFeedback || target.coachFeedback || 'Excellent consistency.'
+      clientFeedback: feedback.clientFeedback || target.clientFeedback || 'Great rehearsal session completed!',
+      coachFeedback: feedback.coachFeedback || target.coachFeedback || 'Excellent delivery and pacing consistency.'
     };
 
     setScheduledWorkouts(prev => prev.map(w => w.id === workoutId ? updatedWorkout : w));
@@ -551,14 +551,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         clientId: target.clientId,
         clientName: target.clientName,
         clientAvatar: target.clientAvatar,
-        title: `Workout Logged: ${target.workoutTitle}`,
-        description: `Completed with ${feedback.rating || 5}/5 intensity rating`,
+        title: `Speech Session Logged: ${target.workoutTitle}`,
+        description: `Completed with ${feedback.rating || 5}/5 delivery score rating`,
         timestamp: 'Just now'
       },
       ...prev
     ]);
 
-    showToast(`Workout "${target.workoutTitle}" marked completed! 💪`);
+    showToast(`Rehearsal session "${target.workoutTitle}" marked completed! 🎙️`);
 
     try {
       await workoutsApi.complete(workoutId, {
@@ -603,8 +603,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           clientId: client.id,
           clientName: client.name,
           clientAvatar: client.avatar,
-          title: 'Weight Logged',
-          description: `${entryData.weightKg} kg (${entryData.weightKg < client.currentWeightKg ? 'Weight reduced' : 'Measurement recorded'})`,
+          title: 'Speech Metric Logged',
+          description: `${entryData.weightKg} WPM cadence • ${entryData.bodyFatPercentage}% fluency score`,
           timestamp: 'Just now',
           metadata: { weightKg: entryData.weightKg }
         },
@@ -612,7 +612,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ]);
     }
 
-    showToast(`Biometric log recorded: ${entryData.weightKg} kg.`);
+    showToast(`Delivery metric recorded: ${entryData.weightKg} WPM.`);
 
     try {
       const created = await metricsApi.create(entryData);
@@ -642,8 +642,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           clientId: client.id,
           clientName: client.name,
           clientAvatar: client.avatar,
-          title: `New PR: ${prData.exerciseName}`,
-          description: `${prData.weightKg} kg for ${prData.reps} reps (Est 1RM: ${prData.estimated1RmKg}kg)`,
+          title: `Speech Milestone: ${prData.exerciseName}`,
+          description: `${prData.weightKg} WPM cadence over ${prData.reps} speeches/rounds`,
           timestamp: 'Just now',
           metadata: { weightKg: prData.weightKg, exerciseName: prData.exerciseName }
         },
@@ -651,7 +651,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ]);
     }
 
-    showToast(`New Personal Record added for ${prData.exerciseName}! 🔥`);
+    showToast(`Speech milestone logged for ${prData.exerciseName}! 🎯`);
 
     try {
       const created = await prsApi.create(prData);
@@ -671,7 +671,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setPhotos(prev => [newPhoto, ...prev]);
-    showToast('Progress photo uploaded successfully.');
+    showToast('Stage check-in photo uploaded successfully.');
 
     try {
       const created = await photosApi.create(photoData);
@@ -711,10 +711,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (!client) return;
 
       const clientReplies = [
-        'Thanks Coach! Crushed the session today. Feeling motivated!',
-        'Got it, will increase the tempo on the eccentric reps next time.',
-        'Submitted my weight check-in for this morning!',
-        'Shoulder felt 100% with the neutral grip adjustments. Appreciate you!'
+        'Thanks Coach! Crushed the rehearsal session today. Feeling confident for the tournament!',
+        'Got it, will incorporate the 2-second pause before my rebuttal next time.',
+        'Submitted my speaking pace and fluency check-in for this morning!',
+        'Vocal projection felt strong and resonant with the diaphragmatic breathwork adjustments. Appreciate you!'
       ];
       const randomReply = clientReplies[Math.floor(Math.random() * clientReplies.length)];
 
@@ -744,7 +744,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ]);
     }, 2800);
 
-    showToast('Message sent to client.');
+    showToast('Message sent to speaker.');
   };
 
   const toggleHabitCompletion = async (clientId: string, date: string, habitId: string) => {
@@ -766,11 +766,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           clientId,
           date,
           habits: [
-            { habitId: 'h-1', title: 'Daily Water Intake', completed: habitId === 'h-1', currentValue: '3.5', targetValue: '3.5', unit: 'Liters' },
-            { habitId: 'h-2', title: 'Protein Target', completed: habitId === 'h-2', currentValue: '180', targetValue: '180', unit: 'Grams' },
-            { habitId: 'h-3', title: 'Daily Step Goal', completed: habitId === 'h-3', currentValue: '10,000', targetValue: '10,000', unit: 'Steps' },
-            { habitId: 'h-4', title: 'Sleep Duration', completed: habitId === 'h-4', currentValue: '8.0', targetValue: '7.5+', unit: 'Hours' },
-            { habitId: 'h-5', title: 'Mobility / Foam Rolling', completed: habitId === 'h-5', currentValue: '10', targetValue: '10', unit: 'Minutes' }
+            { habitId: 'h-1', title: 'Vocal Hydration (Warm Lemon Water)', completed: habitId === 'h-1', currentValue: '2.5', targetValue: '2.5', unit: 'Liters' },
+            { habitId: 'h-2', title: 'Diaphragmatic Breathwork', completed: habitId === 'h-2', currentValue: '15', targetValue: '15', unit: 'Minutes' },
+            { habitId: 'h-3', title: 'Editorial & Current Affairs Reading', completed: habitId === 'h-3', currentValue: '30', targetValue: '20', unit: 'Minutes' },
+            { habitId: 'h-4', title: 'Vocal Cord Rest & Sleep', completed: habitId === 'h-4', currentValue: '8.0', targetValue: '7.5+', unit: 'Hours' },
+            { habitId: 'h-5', title: 'Tongue Twisters & Articulation', completed: habitId === 'h-5', currentValue: '10', targetValue: '10', unit: 'Minutes' }
           ]
         };
         return [newLog, ...prev];

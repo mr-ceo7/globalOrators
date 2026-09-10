@@ -1,3 +1,3 @@
 """
-NubianFit FastAPI Backend Package
+global Orators FastAPI Backend Package
 """

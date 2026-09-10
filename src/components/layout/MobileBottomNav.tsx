@@ -6,7 +6,6 @@ import {
   Plus, 
   CalendarDays, 
   MessageSquare, 
-  Dumbbell, 
   TrendingUp, 
   BookOpen, 
   Download,

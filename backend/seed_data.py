@@ -1,5 +1,5 @@
 """
-Database Seeding Script for NubianFit Platform
+Database Seeding Script for global Orators Platform
 Populates SQLite / Postgres database with initial clients, exercises, programs, workouts, metrics, PRs, habits, photos, messages, and default coach account.
 """
 
@@ -44,17 +44,14 @@ async def seed_database(force: bool = False):
         result = await session.execute(select(Client).limit(1))
         has_clients = result.scalar_one_or_none() is not None
         
-        user_res = await session.execute(select(User).limit(1))
-        has_users = user_res.scalar_one_or_none() is not None
-
-        if not force and has_clients and has_users:
-            print("Database already contains data. Skipping seed.")
-            return
-
-        print("Seeding NubianFit database...")
-
-        # 3. Seed Default Coach User
-        if not has_users or force:
+        user_res = await session.execute(select(User).where(User.id == "coach-1"))
+        coach = user_res.scalar_one_or_none()
+        if coach:
+            coach.email = settings.DEFAULT_COACH_EMAIL.lower()
+            coach.hashed_password = get_password_hash(settings.DEFAULT_COACH_PASSWORD)
+            coach.full_name = settings.DEFAULT_COACH_NAME
+            await session.commit()
+        else:
             coach_user = User(
                 id="coach-1",
                 email=settings.DEFAULT_COACH_EMAIL.lower(),
@@ -66,7 +63,14 @@ async def seed_database(force: bool = False):
                 created_at=datetime.now(timezone.utc),
             )
             session.add(coach_user)
+            await session.commit()
             print(f"-> Seeded Coach user: {settings.DEFAULT_COACH_EMAIL}")
+
+        if not force and has_clients:
+            print("Database already contains data. Skipping seed.")
+            return
+
+        print("Seeding global Orators database...")
 
         # 4. Load seed_data.json
         json_path = os.path.join(os.path.dirname(__file__), "seed_data.json")
@@ -89,7 +93,7 @@ async def seed_database(force: bool = False):
                 age=item.get("age", 25),
                 gender=item.get("gender", "Male"),
                 status=item.get("status", "Active"),
-                goal=item.get("goal", "Hypertrophy"),
+                goal=item.get("goal", "Competitive Debate"),
                 experience_level=item.get("experienceLevel", "Intermediate"),
                 start_date=item.get("startDate", ""),
                 current_program_id=item.get("currentProgramId"),
@@ -98,12 +102,12 @@ async def seed_database(force: bool = False):
                 workouts_completed=int(item.get("workoutsCompleted", 0)),
                 total_workouts_assigned=int(item.get("totalWorkoutsAssigned", 0)),
                 last_active=item.get("lastActive", "Recently"),
-                starting_weight_kg=float(item.get("startingWeightKg", 75.0)),
-                current_weight_kg=float(item.get("currentWeightKg", 75.0)),
-                target_weight_kg=float(item.get("targetWeightKg", 70.0)),
+                starting_weight_kg=float(item.get("startingWeightKg", 145.0)),
+                current_weight_kg=float(item.get("currentWeightKg", 145.0)),
+                target_weight_kg=float(item.get("targetWeightKg", 140.0)),
                 height_cm=float(item.get("heightCm", 175.0)),
-                body_fat_percentage=float(item.get("bodyFatPercentage", 15.0)),
-                target_body_fat=float(item.get("targetBodyFat", 12.0)),
+                body_fat_percentage=float(item.get("bodyFatPercentage", 85.0)),
+                target_body_fat=float(item.get("targetBodyFat", 90.0)),
                 injuries_and_health=item.get("injuriesAndHealth", []),
                 medical_alerts=item.get("medicalAlerts"),
                 custom_coach_notes=item.get("customCoachNotes", []),
@@ -121,7 +125,7 @@ async def seed_database(force: bool = False):
                 secondary_muscles=item.get("secondaryMuscles", []),
                 equipment=item["equipment"],
                 difficulty=item.get("difficulty", "Intermediate"),
-                category=item.get("category", "Strength"),
+                category=item.get("category", "Argumentation & Logic"),
                 description=item.get("description", ""),
                 instructions=item.get("instructions", []),
                 form_cues=item.get("formCues", []),
@@ -140,7 +144,7 @@ async def seed_database(force: bool = False):
                 subtitle=item.get("subtitle", ""),
                 description=item.get("description", ""),
                 difficulty=item.get("difficulty", "Intermediate"),
-                goal=item.get("goal", "Hypertrophy"),
+                goal=item.get("goal", "Competitive Debate"),
                 duration_weeks=int(item.get("durationWeeks", 8)),
                 days_per_week=int(item.get("daysPerWeek", 4)),
                 days=item.get("days", []),

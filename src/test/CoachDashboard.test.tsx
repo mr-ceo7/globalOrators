@@ -5,7 +5,7 @@ import { AppProvider } from '../context/AppContext';
 import { CoachDashboard } from '../components/dashboard/CoachDashboard';
 
 vi.mock('../services/apiClient', () => ({
-  authApi: { me: vi.fn().mockResolvedValue({ email: 'coach@nubianfit.com' }) },
+  authApi: { me: vi.fn().mockResolvedValue({ email: 'coach@globalorators.com' }) },
   clientsApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },
   exercisesApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },
   programsApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },

@@ -6,13 +6,7 @@ export type SpeakingGoal =
   | 'Executive & Board Pitching' 
   | 'Impromptu & Extemporaneous' 
   | 'Model UN & Parliamentary' 
-  | 'Stage Presence & Vocal Mastery'
-  | 'Hypertrophy'
-  | 'Fat Loss'
-  | 'Strength & Power'
-  | 'Athletic Conditioning'
-  | 'Endurance'
-  | 'Rehabilitation';
+  | 'Stage Presence & Vocal Mastery';
 
 export type FitnessGoal = SpeakingGoal;
 
@@ -20,11 +14,7 @@ export type ExperienceLevel =
   | 'Novice Speaker'
   | 'Club Debater'
   | 'Varsity / Advanced'
-  | 'Master Orator'
-  | 'Beginner' 
-  | 'Intermediate' 
-  | 'Advanced' 
-  | 'Elite Athlete';
+  | 'Master Orator';
 
 export interface Client {
   id: string;
@@ -74,19 +64,7 @@ export type SkillCategory =
   | 'Impromptu Delivery' 
   | 'Clarity & Articulation' 
   | 'Audience Engagement' 
-  | 'Cross-Examination'
-  | 'Chest' 
-  | 'Back' 
-  | 'Quads' 
-  | 'Hamstrings' 
-  | 'Glutes' 
-  | 'Shoulders' 
-  | 'Biceps' 
-  | 'Triceps' 
-  | 'Core' 
-  | 'Full Body' 
-  | 'Calves' 
-  | 'Cardio';
+  | 'Cross-Examination';
 
 export type MuscleGroup = SkillCategory;
 
@@ -98,16 +76,7 @@ export type SpeechEquipment =
   | 'Podium & Microphone' 
   | 'Slide Deck Presentation' 
   | 'Teleprompter' 
-  | 'Vocal Resonator'
-  | 'Barbell' 
-  | 'Dumbbell' 
-  | 'Cable' 
-  | 'Machine' 
-  | 'Bodyweight' 
-  | 'Kettlebell' 
-  | 'Resistance Band' 
-  | 'Trap Bar' 
-  | 'Smith Machine';
+  | 'Vocal Resonator';
 
 export type Equipment = SpeechEquipment;
 
@@ -118,12 +87,7 @@ export type DrillCategory =
   | 'Vocal Delivery' 
   | 'Impromptu' 
   | 'Stage Presence' 
-  | 'Debate Tactics'
-  | 'Strength' 
-  | 'Hypertrophy' 
-  | 'Cardio' 
-  | 'Mobility' 
-  | 'Olympic';
+  | 'Debate Tactics';
 
 export interface Exercise {
   id: string;
