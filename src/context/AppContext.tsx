@@ -106,9 +106,11 @@ interface AppContextType {
   toastMessage: string | null;
   showToast: (msg: string) => void;
 
-  // Portal & Subdomain Routing
+  // Portal & Standard URL Routing
   currentPortal: PortalView;
   setCurrentPortal: (portal: PortalView) => void;
+  currentPath: string;
+  navigate: (path: string) => void;
   
   // Speaker Client App Profile & Onboarding
   activeSpeakerProfile: SpeakerOnboardingData | null;
@@ -145,9 +147,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isBackendConnected, setIsBackendConnected] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
+  // Standard URL Path Routing & Hash Normalization
+  const [currentPath, setCurrentPathState] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const pathname = window.location.pathname.toLowerCase();
+      const hash = window.location.hash.toLowerCase().replace('#', '');
+      let resolvedPath = pathname || '/';
+
+      // Normalize legacy hash navigation (e.g. /#academy -> /academy)
+      if (hash === 'academy') resolvedPath = '/academy';
+      else if (hash === 'foundation') resolvedPath = '/foundation';
+      else if (hash === 'mission' || hash === 'about') resolvedPath = '/about';
+      else if (hash === 'escapism') resolvedPath = '/escapism';
+      else if (hash === 'championships' || hash === 'tournaments') resolvedPath = '/tournaments';
+      else if (hash === 'testimonials') resolvedPath = '/testimonials';
+
+      if (hash && window.history) {
+        window.history.replaceState({}, '', resolvedPath);
+      }
+      return resolvedPath;
+    }
+    return '/';
+  });
+
   // Portal & Subdomain Routing
   const [currentPortal, setCurrentPortalState] = useState<PortalView>(() => {
     if (typeof window !== 'undefined') {
+      const pathname = window.location.pathname.toLowerCase();
+      if (pathname === '/coach' || pathname === '/coach_os') return 'coach_os';
+      if (pathname === '/app' || pathname === '/speaker' || pathname === '/speaker_app') return 'speaker_app';
+      if (pathname === '/onboarding') return 'onboarding';
+
       const params = new URLSearchParams(window.location.search);
       const portalParam = params.get('portal');
       if (portalParam === 'coach' || portalParam === 'coach_os') return 'coach_os';
@@ -166,21 +196,64 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return 'landing';
   });
 
+  const navigate = useCallback((to: string) => {
+    if (typeof window !== 'undefined') {
+      let cleanPath = to.startsWith('/') ? to : `/${to}`;
+      if (cleanPath.length > 1 && cleanPath.endsWith('/')) {
+        cleanPath = cleanPath.slice(0, -1);
+      }
+      if (window.history) {
+        window.history.pushState({}, '', cleanPath);
+      }
+      setCurrentPathState(cleanPath);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Synchronize portal state
+      if (cleanPath === '/onboarding') {
+        setCurrentPortalState('onboarding');
+      } else if (cleanPath === '/coach' || cleanPath === '/coach_os') {
+        setCurrentPortalState('coach_os');
+      } else if (cleanPath === '/app' || cleanPath === '/speaker' || cleanPath === '/speaker_app') {
+        setCurrentPortalState('speaker_app');
+      } else {
+        setCurrentPortalState('landing');
+      }
+    }
+  }, []);
+
+  // Listen for browser forward/back buttons (popstate)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handlePopState = () => {
+      const pathname = window.location.pathname.toLowerCase() || '/';
+      setCurrentPathState(pathname);
+      if (pathname === '/onboarding') {
+        setCurrentPortalState('onboarding');
+      } else if (pathname === '/coach' || pathname === '/coach_os') {
+        setCurrentPortalState('coach_os');
+      } else if (pathname === '/app' || pathname === '/speaker' || pathname === '/speaker_app') {
+        setCurrentPortalState('speaker_app');
+      } else {
+        setCurrentPortalState('landing');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   const setCurrentPortal = useCallback((portal: PortalView) => {
     setCurrentPortalState(portal);
     localStorage.setItem('globalorators_portal', portal);
     if (typeof window !== 'undefined' && window.history) {
-      const url = new URL(window.location.href);
-      if (portal === 'landing') {
-        url.searchParams.delete('portal');
-      } else if (portal === 'coach_os') {
-        url.searchParams.set('portal', 'coach');
-      } else if (portal === 'speaker_app') {
-        url.searchParams.set('portal', 'app');
-      } else if (portal === 'onboarding') {
-        url.searchParams.set('portal', 'onboarding');
-      }
-      window.history.replaceState({}, '', url.toString());
+      let targetPath = '/';
+      if (portal === 'coach_os') targetPath = '/coach';
+      else if (portal === 'speaker_app') targetPath = '/speaker';
+      else if (portal === 'onboarding') targetPath = '/onboarding';
+      else targetPath = '/';
+
+      setCurrentPathState(targetPath);
+      window.history.pushState({}, '', targetPath);
     }
   }, []);
 
@@ -967,6 +1040,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         showToast,
         currentPortal,
         setCurrentPortal,
+        currentPath,
+        navigate,
         activeSpeakerProfile,
         setActiveSpeakerProfile,
         completeOnboarding,

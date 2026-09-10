@@ -11,7 +11,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
   onStartOnboarding,
   onOpenPartner
 }) => {
-  const { setCurrentPortal, showToast } = useApp();
+  const { setCurrentPortal, navigate } = useApp();
 
   return (
     <footer className="bg-slate-950 py-12 px-4 sm:px-8 text-xs text-slate-400 text-left">
@@ -19,11 +19,11 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
           <div className="md:col-span-5 space-y-3">
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-[#0D3A35] border border-[#276152]/60 text-white flex items-center justify-center p-0.5">
+              <div className="w-7 h-7 rounded-lg bg-[#181B1F] border border-stone-800 text-white flex items-center justify-center p-0.5">
                 <NubianFitLogo className="w-full h-full" colorMode="gold" />
               </div>
               <div className="font-serif font-black text-slate-100 text-sm tracking-tight">
-                global <span className="text-[#C85A32]">Orators</span> Project
+                global <span className="text-[#A06C18] dark:text-[#E3B95C]">Orators</span> Project
               </div>
             </div>
             <p className="text-[11px] text-slate-400 leading-relaxed max-w-sm">
@@ -40,13 +40,91 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
                 Navigation
               </div>
               <ul className="space-y-2 text-[11px] text-slate-400">
-                <li><button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-slate-100 transition-colors cursor-pointer">Home</button></li>
-                <li><a href="#mission" className="hover:text-slate-100 transition-colors">About</a></li>
-                <li><a href="#academy" className="hover:text-slate-100 transition-colors">Academy</a></li>
-                <li><a href="#foundation" className="hover:text-slate-100 transition-colors">Foundation</a></li>
-                <li><a href="#escapism" className="hover:text-slate-100 transition-colors">Escapism</a></li>
-                <li><a href="#championships" className="hover:text-slate-100 transition-colors">Tournaments</a></li>
-                <li><a href="#testimonials" className="hover:text-slate-100 transition-colors">Testimonials</a></li>
+                <li>
+                  <a 
+                    href="/" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate('/');
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }} 
+                    className="hover:text-slate-100 transition-colors"
+                  >
+                    Home
+                  </a>
+                </li>
+                <li>
+                  <a 
+                    href="/about" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate('/about');
+                    }} 
+                    className="hover:text-slate-100 transition-colors"
+                  >
+                    About
+                  </a>
+                </li>
+                <li>
+                  <a 
+                    href="/academy" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate('/academy');
+                    }} 
+                    className="hover:text-slate-100 transition-colors"
+                  >
+                    Academy
+                  </a>
+                </li>
+                <li>
+                  <a 
+                    href="/foundation" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate('/foundation');
+                    }} 
+                    className="hover:text-slate-100 transition-colors"
+                  >
+                    Foundation
+                  </a>
+                </li>
+                <li>
+                  <a 
+                    href="/escapism" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate('/escapism');
+                    }} 
+                    className="hover:text-slate-100 transition-colors"
+                  >
+                    Escapism
+                  </a>
+                </li>
+                <li>
+                  <a 
+                    href="/tournaments" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate('/tournaments');
+                    }} 
+                    className="hover:text-slate-100 transition-colors"
+                  >
+                    Tournaments
+                  </a>
+                </li>
+                <li>
+                  <a 
+                    href="/testimonials" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate('/testimonials');
+                    }} 
+                    className="hover:text-slate-100 transition-colors"
+                  >
+                    Testimonials
+                  </a>
+                </li>
               </ul>
             </div>
 
@@ -56,19 +134,43 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
               </div>
               <ul className="space-y-2 text-[11px] text-slate-400">
                 <li>
-                  <button onClick={() => setCurrentPortal('landing')} className="hover:text-slate-100 transition-colors cursor-pointer">
+                  <a 
+                    href="/" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate('/');
+                      setCurrentPortal('landing');
+                    }} 
+                    className="hover:text-slate-100 transition-colors cursor-pointer"
+                  >
                     Main Forum Home
-                  </button>
+                  </a>
                 </li>
                 <li>
-                  <button onClick={() => setCurrentPortal('speaker_app')} className="hover:text-slate-100 transition-colors cursor-pointer">
+                  <a 
+                    href="/speaker" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate('/speaker');
+                      setCurrentPortal('speaker_app');
+                    }} 
+                    className="hover:text-slate-100 transition-colors cursor-pointer"
+                  >
                     Speaker Practice Studio
-                  </button>
+                  </a>
                 </li>
                 <li>
-                  <button onClick={() => setCurrentPortal('coach_os')} className="hover:text-slate-100 transition-colors cursor-pointer">
+                  <a 
+                    href="/coach" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate('/coach');
+                      setCurrentPortal('coach_os');
+                    }} 
+                    className="hover:text-slate-100 transition-colors cursor-pointer"
+                  >
                     Coach OS Portal
-                  </button>
+                  </a>
                 </li>
                 <li>
                   <button onClick={() => onStartOnboarding()} className="hover:text-slate-100 transition-colors cursor-pointer">

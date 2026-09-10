@@ -16,7 +16,7 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
       <section id="testimonials" className="py-14 sm:py-20 px-4 sm:px-8 bg-slate-950 border-b border-slate-800 text-left">
         <div className="max-w-5xl mx-auto">
           <div className="mb-8">
-            <div className="text-[10px] font-mono tracking-widest text-[#C85A32] uppercase font-bold">
+            <div className="text-[10px] font-mono tracking-widest text-[#A06C18] dark:text-[#E3B95C] uppercase font-bold">
               Chapter IV • Living Proof & Safeguarding
             </div>
             <h2 className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight mt-1">
@@ -46,7 +46,7 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
               loading="lazy" 
             />
             <figcaption className="px-4 py-2.5 bg-slate-900 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[10px] font-mono uppercase tracking-widest text-slate-400">
-              <span className="text-[#C85A32] font-semibold">Community Storytelling Circle · Nairobi Shelter Network</span>
+              <span className="text-[#A06C18] dark:text-[#E3B95C] font-semibold">Community Storytelling Circle · Nairobi Shelter Network</span>
               <span>Informed Consent Documented • Peer Mentorship</span>
             </figcaption>
           </figure>
@@ -61,7 +61,7 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
                   <div className="font-serif font-bold text-slate-100">Nia Muthoni</div>
                   <div className="text-[10px] text-slate-400 font-mono">Foundation Fellow • Youth Advocate (Consent Documented)</div>
                 </div>
-                <div className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#C85A32]/10 text-[#C85A32] border border-[#C85A32]/20">
+                <div className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#C89630]/10 text-[#A06C18] dark:text-[#E3B95C] border border-[#C89630]/20">
                   Foundation Track
                 </div>
               </div>
@@ -88,7 +88,7 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
       {/* 7. Conversion Section: Specific Operational Actions */}
       <section className="py-14 sm:py-20 px-4 sm:px-8 border-b border-slate-800 text-center">
         <div className="max-w-3xl mx-auto space-y-5">
-          <div className="text-[10px] font-mono tracking-widest text-[#C85A32] uppercase font-bold">
+          <div className="text-[10px] font-mono tracking-widest text-[#A06C18] dark:text-[#E3B95C] uppercase font-bold">
             Applications & Partnerships
           </div>
           <h2 className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight">
@@ -101,7 +101,7 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
             <button
               onClick={() => onStartOnboarding()}
-              className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#C85A32] hover:bg-[#D46238] text-[#FFFFFF] font-serif font-bold text-xs shadow-xl shadow-[#C85A32]/25 flex items-center justify-center gap-2 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[#C85A32] focus-visible:outline-hidden"
+              className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-slate-950 font-serif font-bold text-xs shadow-xl shadow-[#C89630]/25 flex items-center justify-center gap-2 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[#C89630] focus-visible:outline-hidden"
             >
               <span>Start Your Application</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -109,14 +109,14 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
 
             <button
               onClick={() => onOpenPartner('Foundation')}
-              className="w-full sm:w-auto px-6 py-3.5 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 text-slate-100 font-serif font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer hover:border-slate-700 focus-visible:ring-2 focus-visible:ring-[#C85A32] focus-visible:outline-hidden"
+              className="w-full sm:w-auto px-6 py-3.5 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 text-slate-100 font-serif font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer hover:border-slate-700 focus-visible:ring-2 focus-visible:ring-[#C89630] focus-visible:outline-hidden"
             >
               <span>Book Institutional Call / Partnership</span>
             </button>
           </div>
 
           <div className="pt-2 text-[11px] font-mono text-slate-400">
-            Direct Director Governance Inquiries: <a href="mailto:director@globalorators.org" className="text-[#C85A32] underline hover:text-[#D46238]">director@globalorators.org</a>
+            Direct Director Governance Inquiries: <a href="mailto:director@globalorators.org" className="text-[#A06C18] dark:text-[#E3B95C] underline hover:text-[#B37D22]">director@globalorators.org</a>
           </div>
         </div>
       </section>

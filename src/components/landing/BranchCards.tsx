@@ -14,7 +14,7 @@ export const BranchCards: React.FC<BranchCardsProps> = ({
     <section id="branches" className="py-14 sm:py-20 px-4 sm:px-8 bg-slate-950 border-b border-slate-800">
       <div className="max-w-6xl mx-auto text-left">
         <div className="mb-10">
-          <div className="text-[10px] font-mono tracking-widest text-[#C85A32] uppercase font-bold">
+          <div className="text-[10px] font-mono tracking-widest text-[#A06C18] dark:text-[#E3B95C] uppercase font-bold">
             Chapter II • The Functional Structure
           </div>
           <h2 className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight mt-1">
@@ -39,11 +39,11 @@ export const BranchCards: React.FC<BranchCardsProps> = ({
                 />
                 <figcaption className="px-3.5 py-2 bg-slate-950/80 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono">
                   <span className="text-slate-300 uppercase tracking-wider font-semibold">Championship Chamber</span>
-                  <span className="text-[#C85A32] uppercase tracking-widest">Competitive Wing</span>
+                  <span className="text-[#C89630] uppercase tracking-widest">Competitive Wing</span>
                 </figcaption>
               </figure>
 
-              <div className="text-[10px] font-mono tracking-widest uppercase text-[#C85A32] font-bold">
+              <div className="text-[10px] font-mono tracking-widest uppercase text-[#A06C18] dark:text-[#E3B95C] font-bold">
                 Professional Fee & School Accreditations
               </div>
               <h3 className="text-xl sm:text-2xl font-serif font-bold text-slate-100 mt-0.5 mb-2">
@@ -98,7 +98,7 @@ export const BranchCards: React.FC<BranchCardsProps> = ({
             <div className="pt-3 border-t border-slate-800 flex flex-col sm:flex-row gap-2">
               <button
                 onClick={() => onStartOnboarding('Academy')}
-                className="flex-1 py-2.5 px-4 rounded-xl bg-[#C85A32] text-[#FFFFFF] font-serif font-bold text-xs hover:bg-[#D46238] flex items-center justify-center gap-1.5 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-[#C85A32] focus-visible:outline-hidden"
+                className="flex-1 py-2.5 px-4 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-slate-950 font-serif font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-[#C89630] focus-visible:outline-hidden"
               >
                 <span>Apply to Academy</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -183,7 +183,7 @@ export const BranchCards: React.FC<BranchCardsProps> = ({
             <div className="pt-3 border-t border-slate-800 flex flex-col sm:flex-row gap-2">
               <button
                 onClick={() => onStartOnboarding('Foundation')}
-                className="flex-1 py-2.5 px-4 rounded-xl bg-[#2E684D] hover:bg-[#387D5D] text-[#FFFFFF] font-serif font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-[#C85A32] focus-visible:outline-hidden"
+                className="flex-1 py-2.5 px-4 rounded-xl bg-[#2E684D] hover:bg-[#387D5D] text-[#FFFFFF] font-serif font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-[#C89630] focus-visible:outline-hidden"
               >
                 <span>Apply for Fellowship</span>
                 <ArrowRight className="w-3.5 h-3.5" />

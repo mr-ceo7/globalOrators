@@ -86,7 +86,7 @@ export const PwaInstallPrompt: React.FC<PwaInstallPromptProps> = ({ isOpen, onCl
 
           {/* Header */}
           <div className="mb-4 text-left flex items-start gap-3">
-            <div className="w-10 h-10 shrink-0 rounded-xl bg-[#0D3A35] border border-[#276152]/60 flex items-center justify-center p-1 shadow-md">
+            <div className="w-10 h-10 shrink-0 rounded-xl bg-[#181B1F] border border-stone-800 flex items-center justify-center p-1 shadow-md">
               <NubianFitLogo className="w-full h-full" colorMode="gold" />
             </div>
             <div>

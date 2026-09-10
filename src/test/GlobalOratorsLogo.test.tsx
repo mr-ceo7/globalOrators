@@ -48,7 +48,7 @@ describe('GlobalOratorsLogo Component Tests', () => {
   test('should support theme and currentColor color modes', () => {
     const { container: themeContainer } = render(<GlobalOratorsLogo colorMode="theme" />);
     const circleTheme = themeContainer.querySelector('[data-testid="go-globe-rim"]');
-    expect(circleTheme).toHaveAttribute('stroke', 'var(--app-fg, #0D3A35)');
+    expect(circleTheme).toHaveAttribute('stroke', 'var(--app-fg, #181B1F)');
 
     const { container: currentContainer } = render(<GlobalOratorsLogo colorMode="currentColor" />);
     const circleCurrent = currentContainer.querySelector('[data-testid="go-globe-rim"]');

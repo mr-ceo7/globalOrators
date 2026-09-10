@@ -18,7 +18,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onStartOnboarding }) =
           <div className="order-1 lg:col-span-7 lg:col-start-1 lg:row-start-1 text-left">
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-serif font-black tracking-tight text-slate-100 leading-[1.1]">
               Words Shape Nations.<br />
-              <span className="italic font-serif font-normal text-[#C85A32]">
+              <span className="italic font-serif font-normal text-[#A06C18] dark:text-[#E3B95C]">
                 Silence Breaks Them.
               </span>
             </h1>
@@ -36,8 +36,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onStartOnboarding }) =
             {!imgError ? (
               <img 
                 src="/images/hero-orator.jpg" 
-                alt="Young African speaker addressing an audience" 
-                className="h-64 sm:h-80 lg:h-full lg:min-h-[380px] w-full object-cover object-[center_20%] filter contrast-[1.05]"
+                alt="African orator articulating debate points into microphone during Global Orators session" 
+                className="h-64 sm:h-80 lg:h-full lg:min-h-[380px] w-full object-cover object-[center_32%] filter contrast-[1.02]"
                 loading="eager"
                 fetchPriority="high"
                 onError={() => setImgError(true)}
@@ -49,7 +49,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onStartOnboarding }) =
                 </div>
               </div>
             )}
-            <figcaption className="border-t border-slate-800 px-3.5 py-2 sm:py-2.5 text-[10px] font-mono uppercase tracking-widest text-[#C85A32] flex items-center justify-between shrink-0 bg-slate-900">
+            <figcaption className="border-t border-slate-800 px-3.5 py-2 sm:py-2.5 text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] flex items-center justify-between shrink-0 bg-slate-900">
               <span className="font-semibold">Assembly Floor · Nairobi</span>
               <span className="text-slate-400 font-normal">Field Dispatch</span>
             </figcaption>
@@ -67,7 +67,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onStartOnboarding }) =
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
               <button
                 onClick={() => onStartOnboarding('Academy')}
-                className="px-5 py-3 rounded-xl bg-[#C85A32] text-[#FFFFFF] font-serif font-bold text-xs sm:text-sm hover:bg-[#D46238] shadow-lg shadow-[#C85A32]/20 flex items-center justify-center gap-2 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[#C85A32] focus-visible:outline-hidden"
+                className="px-5 py-3 rounded-xl bg-[#C89630] text-slate-950 font-serif font-bold text-xs sm:text-sm hover:bg-[#B37D22] hover:text-white shadow-lg shadow-[#C89630]/20 flex items-center justify-center gap-2 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[#C89630] focus-visible:outline-hidden"
               >
                 <GraduationCap className="w-4 h-4" />
                 <span>Apply to Academy</span>
@@ -76,7 +76,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onStartOnboarding }) =
 
               <button
                 onClick={() => onStartOnboarding('Foundation')}
-                className="px-4 py-2.5 rounded-xl border border-transparent hover:border-slate-800 text-slate-300 hover:text-slate-100 font-serif font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer group focus-visible:ring-2 focus-visible:ring-[#C85A32] focus-visible:outline-hidden"
+                className="px-4 py-2.5 rounded-xl border border-transparent hover:border-slate-800 text-slate-300 hover:text-slate-100 font-serif font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer group focus-visible:ring-2 focus-visible:ring-[#C89630] focus-visible:outline-hidden"
               >
                 <Heart className="w-4 h-4 text-emerald-500 shrink-0" />
                 <span>Apply for Fellowship</span>
@@ -120,7 +120,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onStartOnboarding }) =
               <div className="text-[9px] text-slate-400 font-mono mt-0.5">Kenya, Uganda, Ghana, SA</div>
             </div>
             <div className="p-3.5 sm:p-4 rounded-xl bg-slate-900 border border-slate-800 text-left shadow-xs">
-              <div className="text-2xl sm:text-3xl font-serif font-black text-[#C85A32]">48</div>
+              <div className="text-2xl sm:text-3xl font-serif font-black text-[#A06C18] dark:text-[#E3B95C]">48</div>
               <div className="text-[11px] text-slate-300 font-semibold mt-0.5">Partner Institutions</div>
               <div className="text-[9px] text-slate-400 font-mono mt-0.5">Schools, shelters, councils</div>
             </div>

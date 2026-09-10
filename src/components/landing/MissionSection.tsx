@@ -6,20 +6,20 @@ export const MissionSection: React.FC = () => {
   return (
     <section id="mission" className="py-14 sm:py-20 px-4 sm:px-8 max-w-5xl mx-auto border-b border-slate-800">
       <div className="text-left space-y-3 mb-12">
-        <div className="text-[10px] font-mono tracking-widest text-[#C85A32] uppercase font-bold">
+        <div className="text-[10px] font-mono tracking-widest text-[#A06C18] dark:text-[#E3B95C] uppercase font-bold">
           Chapter I • The Diagnosis & The Remedy
         </div>
         <h2 className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight max-w-2xl">
           What is the Root Crisis Facing African Society?
         </h2>
-        <div className="w-16 h-0.5 bg-[#C85A32]" />
+        <div className="w-16 h-0.5 bg-[#C89630]" />
       </div>
 
       {/* Editorial 2-Column Split */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 text-left">
         {/* Pillar 1 */}
         <div className="space-y-4 text-xs sm:text-sm text-slate-300 leading-relaxed">
-          <div className="text-[10px] font-mono uppercase tracking-widest text-[#C85A32] font-bold">
+          <div className="text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold">
             The First Pillar • Deconditioning & Pan-African Enlightenment
           </div>
           <h3 className="text-xl sm:text-2xl font-serif font-bold text-slate-100">
@@ -35,7 +35,7 @@ export const MissionSection: React.FC = () => {
             />
             <figcaption className="px-3.5 py-2 bg-slate-950/80 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono">
               <span className="text-slate-300 uppercase tracking-wider font-semibold">Archive Seminar</span>
-              <span className="text-[#C85A32] uppercase tracking-widest">Pan-African Rigor</span>
+              <span className="text-[#C89630] uppercase tracking-widest">Pan-African Rigor</span>
             </figcaption>
           </figure>
 
@@ -53,7 +53,7 @@ export const MissionSection: React.FC = () => {
         {/* Pillar 2: Speaking as Escapism & Catharsis */}
         <div id="escapism" className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-7 space-y-4 shadow-xs flex flex-col justify-between">
           <div className="space-y-3.5">
-            <div className="text-[10px] font-mono uppercase tracking-widest text-[#C85A32] font-bold">
+            <div className="text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold">
               The Second Pillar • Mental Health & Voice
             </div>
             <h3 className="text-xl sm:text-2xl font-serif font-bold text-slate-100">
@@ -70,7 +70,7 @@ export const MissionSection: React.FC = () => {
             <VoiceDispatchPlayer />
           </div>
 
-          <div className="pt-3 border-t border-slate-800 flex items-center gap-2 text-xs font-serif italic text-[#C85A32]">
+          <div className="pt-3 border-t border-slate-800 flex items-center gap-2 text-xs font-serif italic text-[#A06C18] dark:text-[#E3B95C]">
             <Quote className="w-4 h-4 shrink-0" />
             <span>"To speak your truth is not a performance—it is your liberation."</span>
           </div>

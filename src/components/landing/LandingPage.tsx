@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { LandingHeader } from './LandingHeader';
-import { HeroSection } from './HeroSection';
-import { AudienceChooser } from './AudienceChooser';
-import { ProcessSection } from './ProcessSection';
-import { MissionSection } from './MissionSection';
-import { BranchCards } from './BranchCards';
-import { ChampionshipsSection } from './ChampionshipsSection';
-import { TestimonialsSection } from './TestimonialsSection';
 import { LandingFooter } from './LandingFooter';
 import { PartnerModal } from './PartnerModal';
+import { HomePage } from '../../pages/HomePage';
+import { AboutPage } from '../../pages/AboutPage';
+import { AcademyPage } from '../../pages/AcademyPage';
+import { FoundationPage } from '../../pages/FoundationPage';
+import { EscapismPage } from '../../pages/EscapismPage';
+import { TournamentsPage } from '../../pages/TournamentsPage';
+import { TestimonialsPage } from '../../pages/TestimonialsPage';
 
 export const LandingPage: React.FC = () => {
-  const { setCurrentPortal } = useApp();
+  const { currentPath, navigate, setCurrentPortal } = useApp();
   const [partnerModalOpen, setPartnerModalOpen] = useState(false);
   const [partnerBranch, setPartnerBranch] = useState<'Academy' | 'Foundation'>('Academy');
 
@@ -20,6 +20,7 @@ export const LandingPage: React.FC = () => {
     if (branch) {
       localStorage.setItem('globalorators_selected_branch', branch);
     }
+    navigate('/onboarding');
     setCurrentPortal('onboarding');
   };
 
@@ -28,54 +29,90 @@ export const LandingPage: React.FC = () => {
     setPartnerModalOpen(true);
   };
 
+  const renderActivePage = () => {
+    const normalized = currentPath.toLowerCase().replace(/\/$/, '') || '/';
+
+    switch (normalized) {
+      case '/about':
+      case '/mission':
+        return (
+          <AboutPage 
+            onStartOnboarding={handleStartOnboarding} 
+            onOpenPartner={handleOpenPartner} 
+            onNavigate={navigate} 
+          />
+        );
+      case '/academy':
+        return (
+          <AcademyPage 
+            onStartOnboarding={handleStartOnboarding} 
+            onOpenPartner={handleOpenPartner} 
+            onNavigate={navigate} 
+          />
+        );
+      case '/foundation':
+        return (
+          <FoundationPage 
+            onStartOnboarding={handleStartOnboarding} 
+            onOpenPartner={handleOpenPartner} 
+            onNavigate={navigate} 
+          />
+        );
+      case '/escapism':
+        return (
+          <EscapismPage 
+            onStartOnboarding={handleStartOnboarding} 
+            onNavigate={navigate} 
+          />
+        );
+      case '/tournaments':
+      case '/championships':
+        return (
+          <TournamentsPage 
+            onStartOnboarding={handleStartOnboarding} 
+            onNavigate={navigate} 
+          />
+        );
+      case '/testimonials':
+        return (
+          <TestimonialsPage 
+            onStartOnboarding={handleStartOnboarding} 
+            onOpenPartner={handleOpenPartner} 
+            onNavigate={navigate} 
+          />
+        );
+      case '/':
+      default:
+        return (
+          <HomePage 
+            onStartOnboarding={handleStartOnboarding} 
+            onOpenPartner={handleOpenPartner} 
+            onNavigate={navigate} 
+          />
+        );
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-[#C85A32] selection:text-white transition-colors duration-200">
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-[#C89630] selection:text-white transition-colors duration-200">
       {/* 1. Header Navigation & Portals */}
       <LandingHeader
         onStartOnboarding={handleStartOnboarding}
         onOpenPartner={handleOpenPartner}
       />
 
-      {/* Main Editorial Content */}
+      {/* Main Editorial Content Routed View */}
       <main>
-        {/* 2. Hero Section with Value Proposition & Direct CTAs */}
-        <HeroSection onStartOnboarding={handleStartOnboarding} />
-
-        {/* 3. Early Audience Fast-Track Chooser */}
-        <AudienceChooser
-          onSelectBranch={(b) => handleStartOnboarding(b)}
-          onOpenPartner={handleOpenPartner}
-        />
-
-        {/* 4. 4-Stage Methodology & Progression Model */}
-        <ProcessSection />
-
-        {/* 5. Chapter I: The Diagnosis, The Remedy & Audio Dispatch */}
-        <MissionSection />
-
-        {/* 6. Chapter II: The Functional Branches (Academy & Foundation) */}
-        <BranchCards
-          onStartOnboarding={handleStartOnboarding}
-          onOpenPartner={handleOpenPartner}
-        />
-
-        {/* 7. Chapter III: Global Arena & Continental Championships */}
-        <ChampionshipsSection />
-
-        {/* 8. Chapter IV: Living Proof, Safeguarding & Final Action */}
-        <TestimonialsSection
-          onStartOnboarding={handleStartOnboarding}
-          onOpenPartner={handleOpenPartner}
-        />
+        {renderActivePage()}
       </main>
 
-      {/* 9. Architectural Editorial Footer */}
+      {/* Architectural Editorial Footer */}
       <LandingFooter
         onStartOnboarding={handleStartOnboarding}
         onOpenPartner={handleOpenPartner}
       />
 
-      {/* 10. Direct Institutional & Partnership Dialog */}
+      {/* Direct Institutional & Partnership Dialog */}
       <PartnerModal
         isOpen={partnerModalOpen}
         onClose={() => setPartnerModalOpen(false)}

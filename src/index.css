@@ -1,27 +1,29 @@
 @import "tailwindcss";
 
 :root {
-  /* Light Cream Theme (Light Mode) */
-  --brand-deep: #0D3A35;
-  --brand-moderate: #276152;
-  --brand-laurel: #B1B7AB;
+  /* Light Cream & Charcoal Theme (Light Mode) */
+  --brand-deep: #181B1F;
+  --brand-moderate: #2D3239;
+  --brand-laurel: #8A93A0;
   --brand-cream: #FBF6F0;
+  --brand-gold: #C89630;
+  --brand-gold-text: #A06C18;
 
   --app-bg: #FBF6F0;
   --app-card: #FFFFFF;
   --app-card-hover: #F6EEE4;
-  --app-border: #D1C5B3;
-  --app-border-light: #E6DCCD;
+  --app-border: #D8D2C5;
+  --app-border-light: #E8E2D7;
   
-  --app-fg: #0D3A35;
-  --app-fg-secondary: #276152;
-  --app-muted: #6B7977;
-  --app-muted-light: #9CA8A6;
-  --app-white: #0D3A35; /* Remap white to deep bluish text in light mode */
+  --app-fg: #181B1F;
+  --app-fg-secondary: #353B45;
+  --app-muted: #5C6573;
+  --app-muted-light: #8E99A8;
+  --app-white: #181B1F; /* Remap white to charcoal text in light mode */
 
-  --app-accent: #276152;
-  --app-accent-hover: #0D3A35;
-  --app-accent-light: #E4ECEB;
+  --app-accent: #C89630;
+  --app-accent-hover: #A06C18;
+  --app-accent-light: #FBF2DE;
 
   --app-amber-text: #B45309;
   --app-amber-bg: #FEF3C7;
@@ -31,11 +33,11 @@
   --app-cyan-dark: #155E75;
 
   --logo-nubian: var(--app-fg);
-  --logo-fit: #0891b2; /* Deepened cyan for better contrast on light background */
+  --logo-fit: #C89630;
 
   --loader-text: var(--app-fg);
   --loader-shadow: var(--brand-laurel);
-  --loader-shine: rgba(39, 97, 82, 0.25);
+  --loader-shine: rgba(200, 150, 48, 0.25);
 }
 
 
@@ -44,27 +46,29 @@
 
 
 :root.dark {
-  /* Deep Bluish Theme (Dark Mode) */
-  --brand-deep: #0D3A35;
-  --brand-moderate: #276152;
-  --brand-laurel: #B1B7AB;
+  /* Charcoal & Gold Theme (Dark Mode) */
+  --brand-deep: #181B1F;
+  --brand-moderate: #2D3239;
+  --brand-laurel: #8A93A0;
   --brand-cream: #FBF6F0;
+  --brand-gold: #C89630;
+  --brand-gold-text: #E3B95C;
 
-  --app-bg: #051412;
-  --app-card: #0C2622;
-  --app-card-hover: #133832;
-  --app-border: #153E38;
-  --app-border-light: #205A51;
+  --app-bg: #0C0E11;
+  --app-card: #14171C;
+  --app-card-hover: #1B2026;
+  --app-border: #232830;
+  --app-border-light: #303742;
 
-  --app-fg: #FBF6F0;
-  --app-fg-secondary: #B1B7AB;
-  --app-muted: #839794;
-  --app-muted-light: #566E6A;
+  --app-fg: #FBF8F2;
+  --app-fg-secondary: #C8D0DC;
+  --app-muted: #8E98A8;
+  --app-muted-light: #5E6776;
   --app-white: #FFFFFF; /* Normal white in dark mode */
 
-  --app-accent: #276152;
-  --app-accent-hover: #327C69;
-  --app-accent-light: #0B2B25;
+  --app-accent: #C89630;
+  --app-accent-hover: #E3B95C;
+  --app-accent-light: #241D0E;
 
   --app-amber-text: #FBBF24;
   --app-amber-bg: #78350F;
@@ -73,11 +77,11 @@
   --app-cyan-light: #0B2B2E;
   --app-cyan-dark: #06b6d4;
 
-  --logo-fit: #22d3ee; /* Bright cyan for dark mode visibility */
+  --logo-fit: #E3B95C;
 
   --loader-text: #ffffff;
-  --loader-shadow: #153e38;
-  --loader-shine: rgba(34, 211, 238, 0.45);
+  --loader-shadow: #232830;
+  --loader-shine: rgba(227, 185, 92, 0.45);
 }
 
 

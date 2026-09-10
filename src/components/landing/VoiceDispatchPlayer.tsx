@@ -78,8 +78,8 @@ export const VoiceDispatchPlayer: React.FC = () => {
       />
 
       <div className="flex items-center justify-between text-[10px] font-mono">
-        <span className="text-[#C85A32] uppercase tracking-widest font-semibold flex items-center gap-1.5">
-          <Volume2 className="w-3.5 h-3.5 text-[#C85A32]" />
+        <span className="text-[#A06C18] dark:text-[#E3B95C] uppercase tracking-widest font-semibold flex items-center gap-1.5">
+          <Volume2 className="w-3.5 h-3.5 text-[#C89630]" />
           Voice Dispatch • Circle 07 (Nairobi)
         </span>
         <span className="text-slate-400 font-mono">
@@ -90,7 +90,7 @@ export const VoiceDispatchPlayer: React.FC = () => {
       <div className="flex items-center gap-3">
         <button
           onClick={togglePlayback}
-          className="w-10 h-10 rounded-full bg-[#C85A32] hover:bg-[#D46238] text-[#FFFFFF] flex items-center justify-center shrink-0 shadow-md shadow-[#C85A32]/25 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[#C85A32] focus-visible:outline-hidden"
+          className="w-10 h-10 rounded-full bg-[#C89630] hover:bg-[#B37D22] text-slate-950 font-bold flex items-center justify-center shrink-0 shadow-md shadow-[#C89630]/25 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[#C89630] focus-visible:outline-hidden"
           aria-label={isPlaying ? 'Pause voice dispatch' : 'Play voice dispatch'}
           title={isPlaying ? 'Pause voice excerpt' : 'Play voice excerpt'}
         >
@@ -104,7 +104,7 @@ export const VoiceDispatchPlayer: React.FC = () => {
               key={i}
               className={`flex-1 rounded-full transition-all duration-300 ${
                 isPlaying
-                  ? 'bg-[#C85A32] opacity-90'
+                  ? 'bg-[#C89630] opacity-90'
                   : 'bg-slate-700 opacity-50'
               }`}
               style={{
@@ -123,7 +123,7 @@ export const VoiceDispatchPlayer: React.FC = () => {
 
       {/* Transparent Educational & Safeguarding Disclosure */}
       <div className="flex items-start gap-1.5 text-[9px] font-mono text-slate-400 bg-slate-900/60 p-2 rounded-lg border border-slate-800/60">
-        <ShieldAlert className="w-3.5 h-3.5 text-[#C85A32] shrink-0 mt-0.5" />
+        <ShieldAlert className="w-3.5 h-3.5 text-[#C89630] shrink-0 mt-0.5" />
         <span>
           <strong className="text-slate-300 font-semibold">Educational Demo Model:</strong> Actual healing circle voice sessions are strictly confidential under child safeguarding protocols. This track demonstrates pacing, pause drills, and vocal resonance.
         </span>

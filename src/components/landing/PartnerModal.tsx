@@ -90,7 +90,7 @@ export const PartnerModal: React.FC<PartnerModalProps> = ({ isOpen, onClose, bra
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-[#C85A32] focus-visible:outline-hidden"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-[#C89630] focus-visible:outline-hidden"
             aria-label="Close dialog"
             title="Close dialog"
           >
@@ -116,7 +116,7 @@ export const PartnerModal: React.FC<PartnerModalProps> = ({ isOpen, onClose, bra
             <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-left text-xs space-y-1.5 font-mono">
               <div className="text-slate-400 flex justify-between">
                 <span>Reference ID:</span>
-                <span className="text-[#C85A32] font-bold">{successData.inquiryId}</span>
+                <span className="text-[#A06C18] dark:text-[#E3B95C] font-bold">{successData.inquiryId}</span>
               </div>
               <div className="text-slate-400 flex justify-between">
                 <span>Institution:</span>
@@ -135,7 +135,7 @@ export const PartnerModal: React.FC<PartnerModalProps> = ({ isOpen, onClose, bra
             <div className="pt-2 flex flex-col sm:flex-row gap-2">
               <button
                 onClick={onClose}
-                className="flex-1 py-2.5 rounded-xl bg-[#C85A32] hover:bg-[#D46238] text-[#FFFFFF] font-serif font-bold text-xs transition-colors cursor-pointer"
+                className="flex-1 py-2.5 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-slate-950 font-serif font-bold text-xs transition-colors cursor-pointer"
               >
                 Done
               </button>
@@ -185,7 +185,7 @@ export const PartnerModal: React.FC<PartnerModalProps> = ({ isOpen, onClose, bra
                   value={organization}
                   onChange={(e) => setOrganization(e.target.value)}
                   placeholder="e.g. Alliance High School or Hope Children's Home"
-                  className="w-full h-10 px-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 focus:border-[#C85A32] focus-visible:ring-2 focus-visible:ring-[#C85A32] focus-visible:outline-hidden"
+                  className="w-full h-10 px-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 focus:border-[#C89630] focus-visible:ring-2 focus-visible:ring-[#C89630] focus-visible:outline-hidden"
                 />
               </div>
 
@@ -203,7 +203,7 @@ export const PartnerModal: React.FC<PartnerModalProps> = ({ isOpen, onClose, bra
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="director@organization.org"
-                  className="w-full h-10 px-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 focus:border-[#C85A32] focus-visible:ring-2 focus-visible:ring-[#C85A32] focus-visible:outline-hidden"
+                  className="w-full h-10 px-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 focus:border-[#C89630] focus-visible:ring-2 focus-visible:ring-[#C89630] focus-visible:outline-hidden"
                 />
               </div>
 
@@ -218,7 +218,7 @@ export const PartnerModal: React.FC<PartnerModalProps> = ({ isOpen, onClose, bra
                   id="partner-focus"
                   value={focus}
                   onChange={(e) => setFocus(e.target.value)}
-                  className="w-full h-10 px-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 focus:border-[#C85A32] focus-visible:ring-2 focus-visible:ring-[#C85A32] focus-visible:outline-hidden"
+                  className="w-full h-10 px-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 focus:border-[#C89630] focus-visible:ring-2 focus-visible:ring-[#C89630] focus-visible:outline-hidden"
                 >
                   <option value="Institutional Speech Training & Tournament Sponsorship">Institutional Speech Training & Tournament Sponsorship</option>
                   <option value="Charity / Children's Home Voice Healing Circles">Charity / Children's Home Voice Healing Circles</option>
@@ -240,7 +240,7 @@ export const PartnerModal: React.FC<PartnerModalProps> = ({ isOpen, onClose, bra
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Briefly describe your timeline, student cohort size, or grant objectives..."
-                  className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 focus:border-[#C85A32] focus-visible:ring-2 focus-visible:ring-[#C85A32] focus-visible:outline-hidden"
+                  className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 focus:border-[#C89630] focus-visible:ring-2 focus-visible:ring-[#C89630] focus-visible:outline-hidden"
                 />
               </div>
 
@@ -255,7 +255,7 @@ export const PartnerModal: React.FC<PartnerModalProps> = ({ isOpen, onClose, bra
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 py-2.5 rounded-xl bg-[#C85A32] text-[#FFFFFF] text-xs font-serif font-bold hover:bg-[#D46238] flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+                  className="flex-1 py-2.5 rounded-xl bg-[#C89630] text-slate-950 text-xs font-serif font-bold hover:bg-[#B37D22] flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
                 >
                   {loading ? (
                     <>

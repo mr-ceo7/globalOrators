@@ -27,7 +27,7 @@ export const GlobalOratorsLogo: React.FC<GlobalOratorsLogoProps> = ({
     colorMode === 'gold' 
       ? `url(#${goldGradId})` 
       : colorMode === 'theme' 
-        ? 'var(--app-fg, #0D3A35)' 
+        ? 'var(--app-fg, #181B1F)' 
         : 'currentColor';
 
   const strokeSource = fillSource;

@@ -14,7 +14,7 @@ export const AudienceChooser: React.FC<AudienceChooserProps> = ({
     <section className="py-10 sm:py-14 px-4 sm:px-8 max-w-6xl mx-auto text-left border-b border-slate-800">
       <div className="mb-6 flex flex-col sm:flex-row sm:items-end justify-between">
         <div>
-          <div className="text-[10px] font-mono uppercase tracking-widest text-[#C85A32] font-bold">
+          <div className="text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold">
             Audience Orientation • Fast-Track Pathways
           </div>
           <h2 className="text-xl sm:text-2xl lg:text-3xl font-serif font-black text-slate-100 tracking-tight mt-1">
@@ -29,12 +29,12 @@ export const AudienceChooser: React.FC<AudienceChooserProps> = ({
       {/* 2-Column Responsive Mobile Grid / 4-Column Desktop */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Card 1: Aspiring Speaker */}
-        <div className="p-3.5 sm:p-5 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col justify-between hover:border-[#C85A32]/60 transition-all group">
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col justify-between hover:border-[#C89630]/60 transition-all group">
           <div className="space-y-2">
-            <div className="w-8 h-8 rounded-lg bg-[#C85A32]/15 text-[#C85A32] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-[#C89630]/15 text-[#A06C18] dark:text-[#E3B95C] flex items-center justify-center">
               <GraduationCap className="w-4 h-4" />
             </div>
-            <div className="text-[10px] font-mono text-[#C85A32] uppercase font-bold tracking-wider">
+            <div className="text-[10px] font-mono text-[#A06C18] dark:text-[#E3B95C] uppercase font-bold tracking-wider">
               For Speakers
             </div>
             <h3 className="text-xs sm:text-sm font-serif font-bold text-slate-100 leading-snug">
@@ -46,7 +46,7 @@ export const AudienceChooser: React.FC<AudienceChooserProps> = ({
           </div>
           <button
             onClick={() => onSelectBranch('Academy')}
-            className="mt-4 w-full py-2 px-3 rounded-lg bg-[#C85A32] hover:bg-[#D46238] text-[#FFFFFF] font-serif font-bold text-[11px] flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+            className="mt-4 w-full py-2 px-3 rounded-lg bg-[#C89630] hover:bg-[#B37D22] text-slate-950 font-serif font-bold text-[11px] flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
           >
             <span>Apply to Academy</span>
             <ArrowRight className="w-3 h-3" />
@@ -79,7 +79,7 @@ export const AudienceChooser: React.FC<AudienceChooserProps> = ({
         </div>
 
         {/* Card 3: Schools & Institutions */}
-        <div className="p-3.5 sm:p-5 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col justify-between hover:border-[#C85A32]/60 transition-all group">
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col justify-between hover:border-[#C89630]/60 transition-all group">
           <div className="space-y-2">
             <div className="w-8 h-8 rounded-lg bg-amber-500/15 text-amber-500 flex items-center justify-center">
               <Building2 className="w-4 h-4" />

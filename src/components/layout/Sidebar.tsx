@@ -47,12 +47,12 @@ export const Sidebar: React.FC = () => {
       <div className="flex items-center justify-between p-4 h-16 border-b border-slate-800/80">
         <div className="flex items-center gap-3 overflow-hidden cursor-pointer" onClick={() => setActiveTab('dashboard')}>
           {isCollapsed ? (
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center p-1 rounded-lg bg-[#0D3A35] border border-[#276152]/60 shadow-sm">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center p-1 rounded-lg bg-[#181B1F] border border-stone-800 shadow-sm">
               <NubianFitLogo className="w-full h-full" colorMode="gold" />
             </div>
           ) : (
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 shrink-0 rounded-lg bg-[#0D3A35] border border-[#276152]/60 flex items-center justify-center p-1 shadow-sm">
+              <div className="w-8 h-8 shrink-0 rounded-lg bg-[#181B1F] border border-stone-800 flex items-center justify-center p-1 shadow-sm">
                 <NubianFitLogo className="w-full h-full" colorMode="gold" />
               </div>
               <div className="flex flex-col items-stretch">
