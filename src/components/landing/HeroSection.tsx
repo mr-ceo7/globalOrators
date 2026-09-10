@@ -9,29 +9,88 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onStartOnboarding }) =
   const [imgError, setImgError] = useState(false);
 
   return (
-    <section className="relative pt-10 sm:pt-16 pb-12 sm:pb-20 px-4 sm:px-8 border-b border-slate-800">
+    <section className="relative pt-8 sm:pt-14 pb-12 sm:pb-20 px-4 sm:px-8 border-b border-slate-800">
       <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-          {/* Left Hero Narrative */}
-          <div className="lg:col-span-7 space-y-5 text-left">
+        {/* Mobile: 1-Column sequential rhythm (Headline -> Value Prop -> Image -> Paragraph -> CTAs -> Proof Points)
+            Desktop (lg:): 2-Column editorial split (Col 1-7 Left narrative rows 1-5, Col 8-12 Right Image spanning rows 1-5) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-y-4 sm:gap-y-5 lg:gap-x-12 lg:items-center">
+          {/* 1. Headline */}
+          <div className="order-1 lg:col-span-7 lg:col-start-1 lg:row-start-1 text-left">
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-serif font-black tracking-tight text-slate-100 leading-[1.1]">
               Words Shape Nations.<br />
               <span className="italic font-serif font-normal text-[#C85A32]">
                 Silence Breaks Them.
               </span>
             </h1>
+          </div>
 
-            {/* Clear One-Sentence Value Proposition */}
-            <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-xs sm:text-sm font-serif font-bold text-slate-100 leading-snug">
+          {/* 2. Short Value Proposition */}
+          <div className="order-2 lg:col-span-7 lg:col-start-1 lg:row-start-2 text-left">
+            <div className="p-3 sm:p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs sm:text-sm font-serif font-bold text-slate-100 leading-snug">
               Debate training, sovereign leadership development, and healing-centered voice programs for African youth.
             </div>
+          </div>
 
+          {/* 3. Hero Documentary Photography Frame (Brought immediately after Value Proposition on mobile) */}
+          <figure className="order-3 lg:col-span-5 lg:col-start-8 lg:row-start-1 lg:row-span-5 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 shadow-xl flex flex-col justify-between self-stretch">
+            {!imgError ? (
+              <img 
+                src="/images/hero-orator.jpg" 
+                alt="Young African speaker addressing an audience" 
+                className="h-64 sm:h-80 lg:h-full lg:min-h-[380px] w-full object-cover object-[center_20%] filter contrast-[1.05]"
+                loading="eager"
+                fetchPriority="high"
+                onError={() => setImgError(true)}
+              />
+            ) : (
+              <div className="h-64 sm:h-80 lg:h-full lg:min-h-[380px] w-full bg-slate-950 flex items-center justify-center p-6 text-center text-slate-400">
+                <div className="font-serif italic text-sm">
+                  "Words Shape Nations. Silence Breaks Them."
+                </div>
+              </div>
+            )}
+            <figcaption className="border-t border-slate-800 px-3.5 py-2 sm:py-2.5 text-[10px] font-mono uppercase tracking-widest text-[#C85A32] flex items-center justify-between shrink-0 bg-slate-900">
+              <span className="font-semibold">Assembly Floor · Nairobi</span>
+              <span className="text-slate-400 font-normal">Field Dispatch</span>
+            </figcaption>
+          </figure>
+
+          {/* 4. One short supporting paragraph */}
+          <div className="order-4 lg:col-span-7 lg:col-start-1 lg:row-start-3 text-left">
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal max-w-xl">
               The <strong className="text-slate-100 font-semibold">Global Orators Project (GOP)</strong> cultivates minds capable of sovereign critical thought and champion debate—paired with safe, trauma-informed vocal release to heal trauma, break patriarchal silence, and champion honest emotional truth.
             </p>
+          </div>
 
-            {/* Value Pillars Checklist */}
-            <div className="grid grid-cols-2 gap-2 text-[11px] font-mono text-slate-400 pt-1">
+          {/* 5. Specific Action CTAs (Primary Academy vs Secondary Fellowship) */}
+          <div className="order-5 lg:col-span-7 lg:col-start-1 lg:row-start-4 text-left">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
+              <button
+                onClick={() => onStartOnboarding('Academy')}
+                className="px-5 py-3 rounded-xl bg-[#C85A32] text-[#FFFFFF] font-serif font-bold text-xs sm:text-sm hover:bg-[#D46238] shadow-lg shadow-[#C85A32]/20 flex items-center justify-center gap-2 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[#C85A32] focus-visible:outline-hidden"
+              >
+                <GraduationCap className="w-4 h-4" />
+                <span>Apply to Academy</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+
+              <button
+                onClick={() => onStartOnboarding('Foundation')}
+                className="px-4 py-2.5 rounded-xl border border-transparent hover:border-slate-800 text-slate-300 hover:text-slate-100 font-serif font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer group focus-visible:ring-2 focus-visible:ring-[#C85A32] focus-visible:outline-hidden"
+              >
+                <Heart className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span>Apply for Fellowship</span>
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-500 border border-emerald-500/30">
+                  Grant Funded
+                </span>
+                <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-100 group-hover:translate-x-1 transition-all" />
+              </button>
+            </div>
+          </div>
+
+          {/* 6. Proof Points (Moved below CTAs to avoid delaying image) */}
+          <div className="order-6 lg:col-span-7 lg:col-start-1 lg:row-start-5 text-left">
+            <div className="grid grid-cols-2 gap-2.5 text-[11px] font-mono text-slate-400 pt-1">
               <div className="flex items-center gap-1.5">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                 <span>British Parliamentary Rigor</span>
@@ -49,64 +108,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onStartOnboarding }) =
                 <span>Safe Therapeutic Circles</span>
               </div>
             </div>
-
-            {/* Specific Action CTAs */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
-              <button
-                onClick={() => onStartOnboarding('Academy')}
-                className="px-5 py-3 rounded-xl bg-[#C85A32] text-[#FFFFFF] font-serif font-bold text-xs sm:text-sm hover:bg-[#D46238] shadow-lg shadow-[#C85A32]/20 flex items-center justify-center gap-2 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[#C85A32] focus-visible:outline-hidden"
-              >
-                <GraduationCap className="w-4 h-4" />
-                <span>Apply to Academy</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-
-              <button
-                onClick={() => onStartOnboarding('Foundation')}
-                className="px-5 py-3 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 text-slate-100 font-serif font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all hover:border-emerald-500/50 cursor-pointer focus-visible:ring-2 focus-visible:ring-[#C85A32] focus-visible:outline-hidden"
-              >
-                <Heart className="w-4 h-4 text-emerald-500" />
-                <span>Apply for Fellowship</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-500 border border-emerald-500/30">
-                  Grant Funded
-                </span>
-              </button>
-            </div>
-          </div>
-
-          {/* Right Hero Documentary Photography Frame */}
-          <div className="lg:col-span-5">
-            <figure className="rounded-2xl overflow-hidden border border-slate-800 shadow-2xl bg-slate-900 flex flex-col">
-              {!imgError ? (
-                <img 
-                  src="/images/hero-orator.jpg" 
-                  alt="Young African orator speaking passionately at a wooden podium" 
-                  className="w-full h-72 sm:h-[380px] object-cover object-top filter contrast-[1.05]"
-                  loading="eager"
-                  onError={() => setImgError(true)}
-                />
-              ) : (
-                <div className="w-full h-72 sm:h-[380px] bg-slate-950 flex items-center justify-center p-6 text-center text-slate-400">
-                  <div className="font-serif italic text-sm">
-                    "Words Shape Nations. Silence Breaks Them."
-                  </div>
-                </div>
-              )}
-              <figcaption className="p-3 sm:p-4 bg-slate-900 border-t border-slate-800 text-left">
-                <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-[#C85A32] font-semibold">
-                  <span>Field Dispatch • Assembly Floor</span>
-                  <span className="text-slate-400">Nairobi, Kenya</span>
-                </div>
-                <div className="text-xs text-slate-300 font-serif italic mt-1 leading-snug">
-                  "When youth speak with radical honesty, the future of the continent is rewritten."
-                </div>
-              </figcaption>
-            </figure>
           </div>
         </div>
 
         {/* 2-Column Responsive Stats Grid on Mobile */}
-        <div className="mt-10 pt-6 border-t border-slate-800">
+        <div className="mt-8 sm:mt-12 pt-6 border-t border-slate-800">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
             <div className="p-3.5 sm:p-4 rounded-xl bg-slate-900 border border-slate-800 text-left shadow-xs">
               <div className="text-2xl sm:text-3xl font-serif font-black text-slate-100">1,450+</div>
