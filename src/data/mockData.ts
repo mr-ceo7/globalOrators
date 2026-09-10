@@ -22,6 +22,9 @@ export const INITIAL_CLIENTS: Client[] = [
     "age": 28,
     "gender": "Male",
     "status": "Active",
+    "branch": "Academy",
+    "missionFocus": "Pan-African Debating Union & British Parliamentary Championships",
+    "catharsisScore": 72,
     "goal": "Competitive Debate",
     "experienceLevel": "Varsity / Advanced",
     "startDate": "2026-04-10",
@@ -66,6 +69,9 @@ export const INITIAL_CLIENTS: Client[] = [
     "age": 32,
     "gender": "Female",
     "status": "Active",
+    "branch": "Academy",
+    "missionFocus": "Global Leadership & Corporate Keynote Conventions",
+    "catharsisScore": 80,
     "goal": "Keynote & Conference",
     "experienceLevel": "Master Orator",
     "startDate": "2026-05-15",
@@ -89,7 +95,7 @@ export const INITIAL_CLIENTS: Client[] = [
     "customCoachNotes": [
       "Superb spatial stage anchoring; transitions from Stage Right to Center are natural and authoritative.",
       "Keynote pacing is locked at 132 WPM, perfectly aligned with global conference simultaneous interpretation.",
-      "Slide synchronisation is crisp\u2014she never turns her back to the audience."
+      "Slide synchronisation is crisp—she never turns her back to the audience."
     ],
     "onboardingSurvey": {
       "gymAccess": "Main Stage Conference Auditoriums (Wireless Lavalier, Confidence Monitors, 500+ Seating)",
@@ -110,6 +116,9 @@ export const INITIAL_CLIENTS: Client[] = [
     "age": 35,
     "gender": "Male",
     "status": "Needs Review",
+    "branch": "Academy",
+    "missionFocus": "African Tech Innovation & Venture Capital Pitching",
+    "catharsisScore": 65,
     "goal": "Executive & Board Pitching",
     "experienceLevel": "Club Debater",
     "startDate": "2026-03-01",
@@ -154,6 +163,9 @@ export const INITIAL_CLIENTS: Client[] = [
     "age": 24,
     "gender": "Female",
     "status": "Active",
+    "branch": "Foundation",
+    "missionFocus": "Pan-African Youth Enlightenment & Model UN Diplomatic Voice",
+    "catharsisScore": 92,
     "goal": "Model UN & Parliamentary",
     "experienceLevel": "Varsity / Advanced",
     "startDate": "2026-06-01",
@@ -197,6 +209,9 @@ export const INITIAL_CLIENTS: Client[] = [
     "age": 21,
     "gender": "Male",
     "status": "Onboarding",
+    "branch": "Foundation",
+    "missionFocus": "Speaking as Escapism from Social Anxiety & Emotional Isolation",
+    "catharsisScore": 88,
     "goal": "Impromptu & Extemporaneous",
     "experienceLevel": "Novice Speaker",
     "startDate": "2026-08-01",
@@ -241,6 +256,9 @@ export const INITIAL_CLIENTS: Client[] = [
     "age": 29,
     "gender": "Female",
     "status": "Needs Check-in",
+    "branch": "Foundation",
+    "missionFocus": "Trauma Storytelling, Breaking Generational Silence & Child Advocacy",
+    "catharsisScore": 95,
     "goal": "Stage Presence & Vocal Mastery",
     "experienceLevel": "Club Debater",
     "startDate": "2026-07-10",
@@ -695,6 +713,58 @@ export const INITIAL_EXERCISES: Exercise[] = [
       "Direct answers with zero hedging"
     ],
     "thumbnailUrl": "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=400&auto=format&fit=crop&q=80"
+  },
+  {
+    "id": "ex-catharsis-1",
+    "name": "Cathartic Voice Journaling & Vulnerability Release",
+    "primaryMuscle": "Cathartic Storytelling",
+    "secondaryMuscles": [
+      "Emotional Vulnerability",
+      "Pacing & Pauses"
+    ],
+    "equipment": "Prepared Manuscript",
+    "difficulty": "Beginner",
+    "category": "Catharsis & Healing",
+    "description": "Speaking as a profound form of escapism and emotional catharsis. Guided vocalization of suppressed feelings, breaking generational and patriarchal silence, and releasing bottled trauma through intentional vocal expression.",
+    "instructions": [
+      "Close your eyes, breathe into your lower abdomen for 4 counts, and exhale with an audible sigh.",
+      "Speak aloud your untold truth or a burden you carried without self-censoring or trying to perform.",
+      "Notice the physical sensation of lightness and catharsis in your chest as the story leaves your throat.",
+      "Conclude with an empowering statement of self-worth, healing, and future resilience."
+    ],
+    "formCues": [
+      "Permission to let the voice tremble without judgment",
+      "Keep shoulders dropped and soles of feet grounded",
+      "Release throat constriction on exhale",
+      "Emotion is strength and honesty, not weakness"
+    ],
+    "thumbnailUrl": "https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b?w=400&auto=format&fit=crop&q=80"
+  },
+  {
+    "id": "ex-panafrican-1",
+    "name": "Pan-African Deconditioning & Leadership Manifesto",
+    "primaryMuscle": "Deconditioning & Pan-Africanism",
+    "secondaryMuscles": [
+      "Argumentation & Logic",
+      "Rhetoric & Storytelling"
+    ],
+    "equipment": "Podium & Microphone",
+    "difficulty": "Advanced",
+    "category": "Pan-African Discourse",
+    "description": "Cognitive enlightenment speech drill. Dismantling colonial social conditioning, breaking dependency mentalities and ethnic divisions, and articulating an audacious blueprint for sovereign African youth leadership.",
+    "instructions": [
+      "Diagnose the socio-economic root cause of a continental challenge without defaulting to colonial fatalism.",
+      "Articulate a bold, proactive solution centered on self-development, good governance, and youth agency.",
+      "Synthesize your argument into a commanding call-to-action that rallies community ownership.",
+      "Deliver the final 60 seconds with unwavering moral clarity and steady vocal resonance."
+    ],
+    "formCues": [
+      "Resonant, forward chest projection",
+      "Command open stage space with dignity and pride",
+      "Use active, decisive leadership verbs",
+      "Never rush pivotal thesis takeaways"
+    ],
+    "thumbnailUrl": "https://images.unsplash.com/photo-1531206715517-5c0ba140b2b8?w=400&auto=format&fit=crop&q=80"
   }
 ];
 

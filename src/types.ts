@@ -1,12 +1,19 @@
 export type ClientStatus = 'Active' | 'Inactive' | 'Onboarding' | 'Needs Check-in' | 'Needs Review';
 
+export type BranchType = 'Academy' | 'Foundation';
+
+export type PortalView = 'landing' | 'speaker_app' | 'coach_os' | 'onboarding';
+
 export type SpeakingGoal = 
   | 'Competitive Debate' 
   | 'Keynote & Conference' 
   | 'Executive & Board Pitching' 
   | 'Impromptu & Extemporaneous' 
   | 'Model UN & Parliamentary' 
-  | 'Stage Presence & Vocal Mastery';
+  | 'Stage Presence & Vocal Mastery'
+  | 'Cathartic Expression & Healing'
+  | 'Trauma Storytelling & Advocacy'
+  | 'Pan-African Leadership';
 
 export type FitnessGoal = SpeakingGoal;
 
@@ -15,6 +22,21 @@ export type ExperienceLevel =
   | 'Club Debater'
   | 'Varsity / Advanced'
   | 'Master Orator';
+
+export interface SpeakerOnboardingData {
+  branch: BranchType;
+  fullName: string;
+  email: string;
+  age?: number;
+  phone?: string;
+  missionFocus: string;
+  speakingGoal: SpeakingGoal;
+  experienceLevel: ExperienceLevel;
+  vocalBaselinePace: number;
+  emotionalOpennessRating: number;
+  selectedHabits: string[];
+  bioNotes?: string;
+}
 
 export interface Client {
   id: string;
@@ -25,6 +47,9 @@ export interface Client {
   age: number;
   gender: string;
   status: ClientStatus;
+  branch?: BranchType;
+  missionFocus?: string;
+  catharsisScore?: number; // 0-100% emotional vulnerability & expression score
   goal: SpeakingGoal;
   experienceLevel: ExperienceLevel;
   startDate: string;
@@ -64,7 +89,10 @@ export type SkillCategory =
   | 'Impromptu Delivery' 
   | 'Clarity & Articulation' 
   | 'Audience Engagement' 
-  | 'Cross-Examination';
+  | 'Cross-Examination'
+  | 'Cathartic Storytelling'
+  | 'Emotional Vulnerability'
+  | 'Deconditioning & Pan-Africanism';
 
 export type MuscleGroup = SkillCategory;
 
@@ -87,7 +115,9 @@ export type DrillCategory =
   | 'Vocal Delivery' 
   | 'Impromptu' 
   | 'Stage Presence' 
-  | 'Debate Tactics';
+  | 'Debate Tactics'
+  | 'Catharsis & Healing'
+  | 'Pan-African Discourse';
 
 export interface Exercise {
   id: string;

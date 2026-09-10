@@ -20,6 +20,11 @@ import { SplashScreen } from './components/common/SplashScreen';
 import { MobileBottomNav } from './components/layout/MobileBottomNav';
 import { PwaInstallPrompt } from './components/common/PwaInstallPrompt';
 
+import { SubdomainSwitcher } from './components/common/SubdomainSwitcher';
+import { LandingPage } from './components/landing/LandingPage';
+import { OnboardingFlow } from './components/onboarding/OnboardingFlow';
+import { ClientPortal } from './components/clientApp/ClientPortal';
+
 const MainLayout: React.FC = () => {
   const { activeTab, setActiveTab } = useApp();
   const [isLoadingApp, setIsLoadingApp] = useState(true);
@@ -39,7 +44,7 @@ const MainLayout: React.FC = () => {
   }, [isLoadingApp]);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex font-sans antialiased selection:bg-emerald-500 selection:text-slate-950">
+    <div className="flex-1 bg-slate-950 text-slate-100 flex font-sans antialiased selection:bg-emerald-500 selection:text-slate-950 min-h-[calc(100vh-42px)]">
       {/* Initial App Load Splash Screen */}
       <AnimatePresence>
         {isLoadingApp && (
@@ -56,10 +61,12 @@ const MainLayout: React.FC = () => {
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 h-[calc(100vh-42px)] overflow-hidden">
         {/* Global Header */}
         <Header 
-          onOpenAddClientModal={() => setIsAddClientModalOpen(true)}
+          onOpenNewClient={() => setIsAddClientModalOpen(true)}
+          onOpenNewProgram={() => setActiveTab('programs')}
+          onOpenExerciseModal={() => setIsAddExerciseModalOpen(true)}
           onOpenInstallModal={() => setIsInstallModalOpen(true)}
         />
 
@@ -123,10 +130,24 @@ const MainLayout: React.FC = () => {
   );
 };
 
+const AppContent: React.FC = () => {
+  const { currentPortal } = useApp();
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans antialiased">
+      {currentPortal !== 'landing' && <SubdomainSwitcher />}
+      {currentPortal === 'landing' && <LandingPage />}
+      {currentPortal === 'speaker_app' && <ClientPortal />}
+      {currentPortal === 'onboarding' && <OnboardingFlow />}
+      {currentPortal === 'coach_os' && <MainLayout />}
+    </div>
+  );
+};
+
 export default function App() {
   return (
     <AppProvider>
-      <MainLayout />
+      <AppContent />
     </AppProvider>
   );
 }

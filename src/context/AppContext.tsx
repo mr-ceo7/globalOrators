@@ -9,7 +9,10 @@ import {
   ProgressPhoto, 
   ChatMessage, 
   ActivityFeedItem,
-  ClientDailyHabitLog
+  ClientDailyHabitLog,
+  PortalView,
+  SpeakerOnboardingData,
+  BranchType
 } from '../types';
 import { 
   INITIAL_CLIENTS, 
@@ -102,8 +105,38 @@ interface AppContextType {
   // Toast notifications
   toastMessage: string | null;
   showToast: (msg: string) => void;
+
+  // Portal & Subdomain Routing
+  currentPortal: PortalView;
+  setCurrentPortal: (portal: PortalView) => void;
+  
+  // Speaker Client App Profile & Onboarding
+  activeSpeakerProfile: SpeakerOnboardingData | null;
+  setActiveSpeakerProfile: (profile: SpeakerOnboardingData | null) => void;
+  completeOnboarding: (data: SpeakerOnboardingData) => void;
+  resetOnboarding: () => void;
 }
 
+
+const DEFAULT_SPEAKER_PROFILE: SpeakerOnboardingData = {
+  branch: 'Foundation',
+  fullName: 'Kofi Mensah',
+  email: 'kofi.mensah@globalorators.org',
+  age: 20,
+  phone: '+254 712 345 678',
+  missionFocus: 'Breaking Patriarchal Silence & Speaking as Catharsis from Childhood Adversity',
+  speakingGoal: 'Cathartic Expression & Healing',
+  experienceLevel: 'Novice Speaker',
+  vocalBaselinePace: 135,
+  emotionalOpennessRating: 8,
+  selectedHabits: [
+    'Vocal Hydration (2.5L + Warm Lemon Water)',
+    'Diaphragmatic Breathwork (5 Min Morning Routine)',
+    'Cathartic Voice Journaling (1-Min Audio Reflection)',
+    'Tongue Twisters & Articulation Warmups'
+  ],
+  bioNotes: 'Foundation scholar working on cathartic expression, healing from past adversity, and discovering his oratorical voice.'
+};
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -111,6 +144,57 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [activeTab, setActiveTab] = useState<NavigationTab>('dashboard');
   const [isBackendConnected, setIsBackendConnected] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Portal & Subdomain Routing
+  const [currentPortal, setCurrentPortalState] = useState<PortalView>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const portalParam = params.get('portal');
+      if (portalParam === 'coach' || portalParam === 'coach_os') return 'coach_os';
+      if (portalParam === 'app' || portalParam === 'speaker_app') return 'speaker_app';
+      if (portalParam === 'onboarding') return 'onboarding';
+      if (portalParam === 'landing') return 'landing';
+
+      const hostname = window.location.hostname.toLowerCase();
+      if (hostname.startsWith('coach.')) return 'coach_os';
+      if (hostname.startsWith('app.')) return 'speaker_app';
+    }
+    const saved = localStorage.getItem('globalorators_portal');
+    if (saved && ['landing', 'speaker_app', 'coach_os', 'onboarding'].includes(saved)) {
+      return saved as PortalView;
+    }
+    return 'landing';
+  });
+
+  const setCurrentPortal = useCallback((portal: PortalView) => {
+    setCurrentPortalState(portal);
+    localStorage.setItem('globalorators_portal', portal);
+    if (typeof window !== 'undefined' && window.history) {
+      const url = new URL(window.location.href);
+      if (portal === 'landing') {
+        url.searchParams.delete('portal');
+      } else if (portal === 'coach_os') {
+        url.searchParams.set('portal', 'coach');
+      } else if (portal === 'speaker_app') {
+        url.searchParams.set('portal', 'app');
+      } else if (portal === 'onboarding') {
+        url.searchParams.set('portal', 'onboarding');
+      }
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, []);
+
+  // Speaker Client App Profile & Onboarding
+  const [activeSpeakerProfile, setActiveSpeakerProfile] = useState<SpeakerOnboardingData | null>(() => {
+    const saved = localStorage.getItem('globalorators_speaker_profile');
+    return saved ? JSON.parse(saved) : DEFAULT_SPEAKER_PROFILE;
+  });
+
+  const resetOnboarding = useCallback(() => {
+    localStorage.removeItem('globalorators_speaker_profile');
+    setActiveSpeakerProfile(null);
+    setCurrentPortal('onboarding');
+  }, [setCurrentPortal]);
 
   
   const [clients, setClients] = useState<Client[]>(() => {
@@ -784,6 +868,59 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const completeOnboarding = useCallback((data: SpeakerOnboardingData) => {
+    setActiveSpeakerProfile(data);
+    localStorage.setItem('globalorators_speaker_profile', JSON.stringify(data));
+
+    // Register or sync client in Coach OS
+    const newClientEntry: Client = {
+      id: `client-${Date.now()}`,
+      name: data.fullName,
+      avatar: data.branch === 'Academy'
+        ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
+        : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+      email: data.email,
+      phone: data.phone || '+254 700 000 000',
+      age: data.age || 21,
+      gender: 'Non-binary',
+      status: 'Active',
+      branch: data.branch,
+      missionFocus: data.missionFocus,
+      catharsisScore: data.emotionalOpennessRating * 10,
+      goal: data.speakingGoal,
+      experienceLevel: data.experienceLevel,
+      startDate: new Date().toISOString().split('T')[0],
+      currentProgramId: data.branch === 'Academy' ? 'prog-1' : 'prog-3',
+      currentProgramName: data.branch === 'Academy' ? '8-Week Championship Debate Masterclass' : '6-Week Impromptu Fluency & Extemporaneous Protocol',
+      complianceRate: 100,
+      workoutsCompleted: 0,
+      totalWorkoutsAssigned: 12,
+      lastActive: 'Just now',
+      targetWeightKg: 145,
+      currentWeightKg: data.vocalBaselinePace,
+      startingWeightKg: data.vocalBaselinePace,
+      heightCm: 175,
+      bodyFatPercentage: 88,
+      targetBodyFat: 95,
+      injuriesAndHealth: ['Navigating emotional vulnerability hurdles', 'Overcoming conversational hesitation'],
+      medicalAlerts: 'Prioritize diaphragmatic calming breathwork and vocal hydration before speaking.',
+      customCoachNotes: [`Onboarded through Global Orators ${data.branch} flow. Focus: ${data.missionFocus}`],
+      onboardingSurvey: {
+        gymAccess: data.branch === 'Academy' ? 'University Debate Hall & Parliamentary Forum' : 'Children\'s Home & Community Empowerment Center',
+        weeklyAvailabilityDays: 4,
+        dietaryRestrictions: 'Public Speaking Trainee',
+        sleepAvgHours: 7.5,
+        stressLevel: 'Moderate',
+        favoriteExercises: data.branch === 'Academy' ? 'Aristotelian Triad Framing' : 'Cathartic Voice Journaling & Vulnerability Release',
+        leastFavoriteExercises: 'None recorded'
+      }
+    };
+
+    setClients(prev => [newClientEntry, ...prev]);
+    setCurrentPortal('speaker_app');
+    showToast(`Welcome ${data.fullName}! Your ${data.branch} protocol is ready. 🎙️`);
+  }, [setCurrentPortal, showToast]);
+
   return (
     <AppContext.Provider
       value={{
@@ -827,7 +964,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         theme,
         toggleTheme,
         toastMessage,
-        showToast
+        showToast,
+        currentPortal,
+        setCurrentPortal,
+        activeSpeakerProfile,
+        setActiveSpeakerProfile,
+        completeOnboarding,
+        resetOnboarding
       }}
     >
       {children}

@@ -36,6 +36,7 @@ export const ClientRoster: React.FC<{
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>('All');
   const [selectedGoalFilter, setSelectedGoalFilter] = useState<string>('All');
+  const [selectedBranchFilter, setSelectedBranchFilter] = useState<'All' | 'Academy' | 'Foundation'>('All');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [viewingClientProfile, setViewingClientProfile] = useState<Client | null>(null);
 
@@ -45,6 +46,8 @@ export const ClientRoster: React.FC<{
   const [formPhone, setFormPhone] = useState('');
   const [formAge, setFormAge] = useState(28);
   const [formGender, setFormGender] = useState('Male');
+  const [formBranch, setFormBranch] = useState<'Academy' | 'Foundation'>('Academy');
+  const [formMissionFocus, setFormMissionFocus] = useState('Pan-African Championship Debate & Leadership');
   const [formStatus, setFormStatus] = useState<ClientStatus>('Active');
   const [formGoal, setFormGoal] = useState<FitnessGoal>('Competitive Debate');
   const [formExperience, setFormExperience] = useState<ExperienceLevel>('Varsity / Advanced');
@@ -68,7 +71,8 @@ export const ClientRoster: React.FC<{
                           c.goal.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = selectedStatusFilter === 'All' || c.status === selectedStatusFilter;
     const matchesGoal = selectedGoalFilter === 'All' || c.goal === selectedGoalFilter;
-    return matchesSearch && matchesStatus && matchesGoal;
+    const matchesBranch = selectedBranchFilter === 'All' || (c.branch || 'Academy') === selectedBranchFilter;
+    return matchesSearch && matchesStatus && matchesGoal && matchesBranch;
   });
 
   const handleCreateClient = async (e: React.FormEvent) => {
@@ -93,6 +97,9 @@ export const ClientRoster: React.FC<{
         age: Number(formAge),
         gender: formGender,
         status: formStatus,
+        branch: formBranch,
+        missionFocus: formMissionFocus,
+        catharsisScore: formBranch === 'Foundation' ? 90 : 72,
         goal: formGoal,
         experienceLevel: formExperience,
         startDate: new Date().toISOString().split('T')[0],
@@ -174,16 +181,37 @@ export const ClientRoster: React.FC<{
           />
         </div>
 
+        {/* Branch Filter Tabs */}
+        <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+          {[
+            { id: 'All', label: 'All Tracks' },
+            { id: 'Academy', label: 'Academy 🎓' },
+            { id: 'Foundation', label: 'Foundation 💖' }
+          ].map((b) => (
+            <button
+              key={b.id}
+              onClick={() => setSelectedBranchFilter(b.id as any)}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                selectedBranchFilter === b.id
+                  ? 'bg-emerald-500 text-slate-950 shadow-sm'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              {b.label}
+            </button>
+          ))}
+        </div>
+
         {/* Status Filter Tabs */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
           {['All', 'Active', 'Needs Check-in', 'Onboarding', 'Inactive'].map((status) => (
             <button
               key={status}
               onClick={() => setSelectedStatusFilter(status)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors ${
                 selectedStatusFilter === status
-                  ? 'bg-emerald-500 text-slate-950 font-bold'
-                  : 'bg-slate-800 text-slate-400 hover:text-white'
+                  ? 'bg-slate-700 text-white font-bold'
+                  : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
               }`}
             >
               {status}
@@ -375,6 +403,15 @@ export const ClientRoster: React.FC<{
                         {client.name}
                       </h3>
                       <div className="text-[11px] text-slate-400">{client.email}</div>
+                      <div className="mt-1">
+                        <span className={`text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded ${
+                          client.branch === 'Foundation'
+                            ? 'bg-teal-500/15 text-teal-300 border border-teal-500/30'
+                            : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                        }`}>
+                          {client.branch || 'Academy'} Track
+                        </span>
+                      </div>
                     </div>
                   </div>
                   {getStatusBadge(client.status)}
