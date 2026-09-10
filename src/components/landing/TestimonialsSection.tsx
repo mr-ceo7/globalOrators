@@ -54,15 +54,15 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-7 space-y-4 shadow-sm">
               <p className="text-xs sm:text-sm text-slate-300 italic leading-relaxed font-serif">
-                "Growing up in an abusive home, silence was my survival mechanism. I carried guilt that wasn't mine for fifteen years. Global Orators Foundation gave me the first safe room in my life to speak without fear. The moment I said it aloud, it lost its grip over me. Today, I coach younger kids in the children's home on how to tell their stories."
+                "A public speaker and philosopher passionately enthusiastic about giving a voice to the leaders of tomorrow, believing in the power of structured arguments and eloquent communication to better shape associations amongst future leaders. Global Orators gave me the platform to sharpen rigorous rhetoric while creating safe rooms for others to find their voice."
               </p>
               <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs">
                 <div>
-                  <div className="font-serif font-bold text-slate-100">Nia Muthoni</div>
-                  <div className="text-[10px] text-slate-400 font-mono">Foundation Fellow • Youth Advocate (Consent Documented)</div>
+                  <div className="font-serif font-bold text-slate-100">Imani</div>
+                  <div className="text-[10px] text-slate-400 font-mono">Public Speaker & Philosopher • Orator Fellow (Consent Documented)</div>
                 </div>
                 <div className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#C89630]/10 text-[#A06C18] dark:text-[#E3B95C] border border-[#C89630]/20">
-                  Foundation Track
+                  Orator Fellow
                 </div>
               </div>
             </div>

@@ -5,6 +5,7 @@ import { ProcessSection } from '../components/landing/ProcessSection';
 import { MissionSection } from '../components/landing/MissionSection';
 import { BranchCards } from '../components/landing/BranchCards';
 import { ChampionshipsSection } from '../components/landing/ChampionshipsSection';
+import { SpeakerSpotlight } from '../components/landing/SpeakerSpotlight';
 import { TestimonialsSection } from '../components/landing/TestimonialsSection';
 import { SEOHead } from '../components/common/SEOHead';
 
@@ -65,7 +66,10 @@ export const HomePage: React.FC<HomePageProps> = ({
       {/* 6. Chapter III: Continental & World Championships */}
       <ChampionshipsSection />
 
-      {/* 7. Chapter IV: Living Catharsis Proof & Conversion CTAs */}
+      {/* 7. Featured Speaker Spotlight: Imani */}
+      <SpeakerSpotlight onStartOnboarding={onStartOnboarding} />
+
+      {/* 8. Chapter IV: Living Catharsis Proof & Conversion CTAs */}
       <TestimonialsSection
         onStartOnboarding={onStartOnboarding}
         onOpenPartner={onOpenPartner}

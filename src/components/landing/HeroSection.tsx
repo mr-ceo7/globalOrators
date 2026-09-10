@@ -50,8 +50,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onStartOnboarding }) =
               </div>
             )}
             <figcaption className="border-t border-slate-800 px-3.5 py-2 sm:py-2.5 text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] flex items-center justify-between shrink-0 bg-slate-900">
-              <span className="font-semibold">Assembly Floor · Nairobi</span>
-              <span className="text-slate-400 font-normal">Field Dispatch</span>
+              <span className="font-semibold">Imani · Public Speaker & Philosopher</span>
+              <span className="text-slate-400 font-normal">Nairobi Assembly Floor</span>
             </figcaption>
           </figure>
 

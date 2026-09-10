@@ -122,7 +122,7 @@ describe('Global Orators Dedicated Routing & SEO Tests', () => {
       fireEvent.click(screen.getByText('Go to Testimonials'));
     });
     expect(screen.getByTestId('current-path')).toHaveTextContent('/testimonials');
-    expect(screen.getByText('Nia Muthoni')).toBeInTheDocument();
+    expect(screen.getByText('Imani')).toBeInTheDocument();
     expect(screen.getByText('Tariq Bakari')).toBeInTheDocument();
   });
 

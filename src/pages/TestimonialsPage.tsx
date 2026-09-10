@@ -26,11 +26,11 @@ export const TestimonialsPage: React.FC<TestimonialsPageProps> = ({
 
   const stories = [
     {
-      author: 'Nia Muthoni',
-      role: 'Foundation Fellow • Youth Advocate',
-      track: 'Foundation Track',
+      author: 'Imani',
+      role: 'Public Speaker & Philosopher • Orator Fellow',
+      track: 'Academy & Foundation Fellow',
       location: 'Nairobi, Kenya',
-      quote: 'Growing up in an abusive home, silence was my survival mechanism. I carried guilt that wasn\'t mine for fifteen years. Global Orators Foundation gave me the first safe room in my life to speak without fear. The moment I said it aloud, it lost its grip over me. Today, I coach younger kids in the children\'s home on how to tell their stories without shame.',
+      quote: 'A public speaker and philosopher passionately enthusiastic about giving a voice to the leaders of tomorrow, believing in the power of structured arguments and eloquent communication to better shape associations amongst future leaders. Global Orators gave me the platform to sharpen rigorous rhetoric while creating safe rooms for others to find their voice.',
       consent: 'Informed Consent Documented'
     },
     {
