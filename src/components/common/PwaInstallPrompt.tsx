@@ -85,15 +85,19 @@ export const PwaInstallPrompt: React.FC<PwaInstallPromptProps> = ({ isOpen, onCl
           </button>
 
           {/* Header */}
-          <div className="mb-4 text-left">
-            <h3 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
-              Install <span className="font-extrabold text-white tracking-tight">global <span className="text-emerald-400">Orators</span></span>
-              <span className="text-[9px] uppercase font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold">
-                PWA
-              </span>
-            </h3>
-
-            <p className="text-xs text-slate-400 mt-1">Install for quick home screen access and offline speech logging</p>
+          <div className="mb-4 text-left flex items-start gap-3">
+            <div className="w-10 h-10 shrink-0 rounded-xl bg-[#0D3A35] border border-[#276152]/60 flex items-center justify-center p-1 shadow-md">
+              <NubianFitLogo className="w-full h-full" colorMode="gold" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
+                Install <span className="font-extrabold text-white tracking-tight">global <span className="text-[#C89630]">Orators</span></span>
+                <span className="text-[9px] uppercase font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold">
+                  PWA
+                </span>
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5">Install for quick home screen access and offline speech logging</p>
+            </div>
           </div>
 
           {/* Benefits Grid */}

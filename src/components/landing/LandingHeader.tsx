@@ -35,8 +35,8 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           className="flex items-center gap-2.5 sm:gap-3 cursor-pointer group shrink-0"
         >
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-[#C85A32] text-[#FFFFFF] flex items-center justify-center p-1 shadow-md shadow-[#C85A32]/20 group-hover:bg-[#D46238] transition-colors">
-            <NubianFitLogo className="w-full h-full text-[#FFFFFF]" />
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-[#0D3A35] border border-[#276152]/60 text-[#FFFFFF] flex items-center justify-center p-1 shadow-md group-hover:border-[#C89630]/60 transition-colors">
+            <NubianFitLogo className="w-full h-full" colorMode="gold" />
           </div>
           <div>
             <div className="text-sm sm:text-base lg:text-lg font-serif font-black tracking-tight text-slate-100 leading-none">

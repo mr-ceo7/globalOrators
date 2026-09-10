@@ -106,16 +106,21 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="flex items-center">
         <button
           onClick={() => setActiveTab('dashboard')}
-          className="md:hidden shrink-0 active:scale-95 transition-transform text-left flex flex-col items-stretch"
+          className="md:hidden shrink-0 active:scale-95 transition-transform text-left flex items-center gap-2"
           title="Go to Dashboard"
         >
-          <span className="font-logo text-[15px] tracking-wide text-logo-nubian lowercase block leading-none">
-            global<span className="text-logo-fit">orators</span>
-          </span>
-          <div className="flex justify-between text-[7px] text-slate-400 font-bold tracking-normal lowercase mt-1.5 w-full leading-none">
-            <span>speak</span>
-            <span>with</span>
-            <span>impact</span>
+          <div className="w-7 h-7 shrink-0 rounded-md bg-[#0D3A35] border border-[#276152]/60 flex items-center justify-center p-0.5 shadow-sm">
+            <NubianFitLogo className="w-full h-full" colorMode="gold" />
+          </div>
+          <div className="flex flex-col items-stretch">
+            <span className="font-serif font-black text-[14px] tracking-tight text-slate-100 block leading-none">
+              global<span className="text-[#C89630]">orators</span>
+            </span>
+            <div className="flex justify-between text-[7px] text-slate-400 font-mono tracking-widest uppercase mt-1 w-full leading-none">
+              <span>speak</span>
+              <span>with</span>
+              <span>impact</span>
+            </div>
           </div>
         </button>
       </div>

@@ -47,17 +47,19 @@ export const Sidebar: React.FC = () => {
       <div className="flex items-center justify-between p-4 h-16 border-b border-slate-800/80">
         <div className="flex items-center gap-3 overflow-hidden cursor-pointer" onClick={() => setActiveTab('dashboard')}>
           {isCollapsed ? (
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center font-logo text-lg lowercase">
-              <span className="text-logo-nubian">g</span>
-              <span className="text-logo-fit">o</span>
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center p-1 rounded-lg bg-[#0D3A35] border border-[#276152]/60 shadow-sm">
+              <NubianFitLogo className="w-full h-full" colorMode="gold" />
             </div>
           ) : (
             <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 shrink-0 rounded-lg bg-[#0D3A35] border border-[#276152]/60 flex items-center justify-center p-1 shadow-sm">
+                <NubianFitLogo className="w-full h-full" colorMode="gold" />
+              </div>
               <div className="flex flex-col items-stretch">
-                <span className="font-logo text-[17px] tracking-wide text-logo-nubian lowercase block leading-none">
-                  global<span className="text-logo-fit">orators</span>
+                <span className="font-serif font-black text-[16px] tracking-tight text-slate-100 block leading-none">
+                  global<span className="text-[#C89630]">orators</span>
                 </span>
-                <div className="flex justify-between text-[8px] text-slate-400 font-bold tracking-normal lowercase mt-1.5 w-full leading-none">
+                <div className="flex justify-between text-[8px] text-slate-400 font-mono tracking-widest uppercase mt-1 w-full leading-none">
                   <span>speak</span>
                   <span>with</span>
                   <span>impact</span>
@@ -67,8 +69,6 @@ export const Sidebar: React.FC = () => {
                 Coach
               </span>
             </div>
-
-
           )}
         </div>
 
