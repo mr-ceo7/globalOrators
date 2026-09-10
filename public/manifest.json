@@ -1,0 +1,50 @@
+{
+  "short_name": "global Orators",
+  "name": "global Orators Coach & Speaker OS",
+  "description": "Premier Public Speaking, Oratory & Debate Coaching Platform with structured curriculums, live speech rehearsal logging, delivery metrics, and instant speaker messenger.",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#0D3A35",
+  "background_color": "#0D3A35",
+
+  "categories": ["education", "productivity", "speech", "coaching"],
+  "shortcuts": [
+    {
+      "name": "Live Session Logger",
+      "short_name": "Log Session",
+      "description": "Record speech rounds, duration, pacing, and timers",
+      "url": "/?tab=programs",
+      "icons": [{ "src": "/icon.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Speaker Roster",
+      "short_name": "Speakers",
+      "description": "View orator profiles, debate formats, and fluency",
+      "url": "/?tab=clients",
+      "icons": [{ "src": "/icon.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Coach Messenger",
+      "short_name": "Messenger",
+      "description": "1-on-1 direct speaker communication",
+      "url": "/?tab=messenger",
+      "icons": [{ "src": "/icon.png", "sizes": "192x192" }]
+    }
+  ]
+}

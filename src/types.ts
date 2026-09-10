@@ -1,0 +1,309 @@
+export type ClientStatus = 'Active' | 'Inactive' | 'Onboarding' | 'Needs Check-in' | 'Needs Review';
+
+export type SpeakingGoal = 
+  | 'Competitive Debate' 
+  | 'Keynote & Conference' 
+  | 'Executive & Board Pitching' 
+  | 'Impromptu & Extemporaneous' 
+  | 'Model UN & Parliamentary' 
+  | 'Stage Presence & Vocal Mastery'
+  | 'Hypertrophy'
+  | 'Fat Loss'
+  | 'Strength & Power'
+  | 'Athletic Conditioning'
+  | 'Endurance'
+  | 'Rehabilitation';
+
+export type FitnessGoal = SpeakingGoal;
+
+export type ExperienceLevel = 
+  | 'Novice Speaker'
+  | 'Club Debater'
+  | 'Varsity / Advanced'
+  | 'Master Orator'
+  | 'Beginner' 
+  | 'Intermediate' 
+  | 'Advanced' 
+  | 'Elite Athlete';
+
+export interface Client {
+  id: string;
+  name: string;
+  avatar: string;
+  email: string;
+  phone: string;
+  age: number;
+  gender: string;
+  status: ClientStatus;
+  goal: SpeakingGoal;
+  experienceLevel: ExperienceLevel;
+  startDate: string;
+  currentProgramId?: string;
+  currentProgramName?: string;
+  complianceRate: number; // percentage 0 - 100
+  workoutsCompleted: number; // sessions completed
+  totalWorkoutsAssigned: number; // total sessions assigned
+  lastActive: string;
+  targetWeightKg: number; // target speaking pace (WPM)
+  currentWeightKg: number; // current speaking pace (WPM)
+  startingWeightKg: number; // starting speaking pace (WPM)
+  heightCm: number;
+  bodyFatPercentage: number; // clarity / fluency score %
+  targetBodyFat: number; // target clarity / fluency %
+  injuriesAndHealth: string[]; // speech challenges & focus areas
+  medicalAlerts?: string; // coach vocal health / speech delivery alert
+  customCoachNotes: string[];
+  onboardingSurvey: {
+    gymAccess: string; // primary debate / speaking format & venue
+    weeklyAvailabilityDays: number;
+    dietaryRestrictions: string; // speaking background / club affiliation
+    sleepAvgHours: number;
+    stressLevel: string;
+    favoriteExercises: string; // favorite speech drills & formats
+    leastFavoriteExercises: string; // speech areas needing growth
+  };
+}
+
+export type SkillCategory = 
+  | 'Vocal Modulation' 
+  | 'Argumentation & Logic' 
+  | 'Pacing & Pauses' 
+  | 'Body Language & Presence' 
+  | 'Rebuttal & Refutation' 
+  | 'Rhetoric & Storytelling' 
+  | 'Impromptu Delivery' 
+  | 'Clarity & Articulation' 
+  | 'Audience Engagement' 
+  | 'Cross-Examination'
+  | 'Chest' 
+  | 'Back' 
+  | 'Quads' 
+  | 'Hamstrings' 
+  | 'Glutes' 
+  | 'Shoulders' 
+  | 'Biceps' 
+  | 'Triceps' 
+  | 'Core' 
+  | 'Full Body' 
+  | 'Calves' 
+  | 'Cardio';
+
+export type MuscleGroup = SkillCategory;
+
+export type SpeechEquipment = 
+  | 'Impromptu Prompt' 
+  | 'Prepared Manuscript' 
+  | 'Cross-Examination' 
+  | 'Debate Flow Sheet' 
+  | 'Podium & Microphone' 
+  | 'Slide Deck Presentation' 
+  | 'Teleprompter' 
+  | 'Vocal Resonator'
+  | 'Barbell' 
+  | 'Dumbbell' 
+  | 'Cable' 
+  | 'Machine' 
+  | 'Bodyweight' 
+  | 'Kettlebell' 
+  | 'Resistance Band' 
+  | 'Trap Bar' 
+  | 'Smith Machine';
+
+export type Equipment = SpeechEquipment;
+
+export type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced';
+
+export type DrillCategory = 
+  | 'Argumentation' 
+  | 'Vocal Delivery' 
+  | 'Impromptu' 
+  | 'Stage Presence' 
+  | 'Debate Tactics'
+  | 'Strength' 
+  | 'Hypertrophy' 
+  | 'Cardio' 
+  | 'Mobility' 
+  | 'Olympic';
+
+export interface Exercise {
+  id: string;
+  name: string;
+  primaryMuscle: MuscleGroup;
+  secondaryMuscles: MuscleGroup[];
+  equipment: Equipment;
+  difficulty: Difficulty;
+  description: string;
+  instructions: string[];
+  formCues: string[];
+  demoVideoPlaceholderUrl?: string;
+  thumbnailUrl: string;
+  category: DrillCategory;
+  isCustom?: boolean;
+}
+
+export interface WorkoutSet {
+  id: string;
+  setNumber: number;
+  targetReps: string; // e.g. "3:00 min" or "135 WPM" or "8-10"
+  targetRpe?: number; // Fluency / Delivery Score (1-10)
+  targetWeightKg?: number; // Target Pacing (WPM)
+  restSeconds?: number; // Prep / intermission time seconds
+  completedReps?: number; // Actual Duration (min) or Reps
+  completedWeightKg?: number; // Actual Pacing (WPM)
+  completedRpe?: number; // Actual Fluency (1-10)
+  isCompleted?: boolean;
+  notes?: string;
+}
+
+export interface WorkoutExerciseItem {
+  id: string;
+  exerciseId: string;
+  exerciseName: string;
+  primaryMuscle: MuscleGroup;
+  equipment: Equipment;
+  sets: WorkoutSet[];
+  tempo?: string; // e.g. "135 WPM Cadence" or "3-0-1-0"
+  coachNotes?: string;
+  isSupersetWithNext?: boolean; // e.g. back-to-back cross-fire / rebuttal drill
+}
+
+export interface WorkoutDay {
+  id: string;
+  dayNumber: number;
+  name: string; // e.g. "Day 1: Persuasive Hooks & Case Architecture"
+  focus: string;
+  estimatedDurationMin: number;
+  warmupNotes?: string;
+  cooldownNotes?: string;
+  exercises: WorkoutExerciseItem[];
+}
+
+export interface TrainingProgram {
+  id: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  difficulty: Difficulty;
+  goal: SpeakingGoal;
+  durationWeeks: number;
+  daysPerWeek: number;
+  days: WorkoutDay[];
+  tags: string[];
+  assignedClientCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ScheduledWorkout {
+  id: string;
+  clientId: string;
+  clientName: string;
+  clientAvatar: string;
+  programId?: string;
+  programName?: string;
+  workoutDayId: string;
+  workoutTitle: string;
+  date: string; // YYYY-MM-DD
+  time?: string;
+  status: 'Scheduled' | 'Completed' | 'Missed' | 'In-Progress';
+  durationMin?: number;
+  rating?: number; // 1-5
+  clientFeedback?: string;
+  coachFeedback?: string;
+  totalVolumeKg?: number; // Total Speaking Time or Cumulative Volume
+  prCount?: number;
+  exercises: WorkoutExerciseItem[];
+}
+
+export interface MetricEntry {
+  id: string;
+  clientId: string;
+  date: string;
+  weightKg: number; // Speaking Pace (WPM)
+  bodyFatPercentage?: number; // Fluency / Clarity Score (%)
+  chestCm?: number; // Filler Word Count (per speech)
+  waistCm?: number; // Vocal Projection (dB)
+  armsCm?: number; // Stage Presence / Confidence (1-10)
+  thighsCm?: number;
+  notes?: string;
+}
+
+export interface PersonalRecord {
+  id: string;
+  clientId: string;
+  exerciseName: string;
+  weightKg: number; // Milestone Score or Pacing (WPM / Speaker Points)
+  reps: number; // Rounds or Speeches
+  estimated1RmKg: number; // Overall Oratory Index
+  date: string;
+  previousWeightKg?: number;
+}
+
+export interface HabitItem {
+  id: string;
+  title: string;
+  targetValue: string;
+  unit: string;
+  iconName: string;
+  category: 'Nutrition' | 'Recovery' | 'Activity' | 'Mindset';
+}
+
+export interface ClientDailyHabitLog {
+  id: string;
+  clientId: string;
+  date: string; // YYYY-MM-DD
+  habits: {
+    habitId: string;
+    title: string;
+    completed: boolean;
+    currentValue?: number | string;
+    targetValue: string;
+    unit: string;
+  }[];
+}
+
+export interface ProgressPhoto {
+  id: string;
+  clientId: string;
+  date: string;
+  view: 'Front' | 'Side' | 'Back'; // Stage / Podium / Delivery angle
+  photoUrl: string;
+  weightKg: number; // Speaking Pace (WPM)
+  bodyFatPercentage?: number; // Fluency %
+  notes?: string;
+}
+
+export interface ChatAttachment {
+  type: 'workout_link' | 'video_form_check' | 'progress_photo' | 'audio_note';
+  title: string;
+  url?: string;
+  workoutId?: string;
+  durationSeconds?: number;
+  feedbackGiven?: boolean;
+}
+
+export interface ChatMessage {
+  id: string;
+  clientId: string;
+  sender: 'coach' | 'client';
+  text: string;
+  timestamp: string;
+  isRead: boolean;
+  attachment?: ChatAttachment;
+}
+
+export interface ActivityFeedItem {
+  id: string;
+  type: 'workout_completed' | 'pr_achieved' | 'check_in_submitted' | 'new_message' | 'streak_milestone';
+  clientId: string;
+  clientName: string;
+  clientAvatar: string;
+  title: string;
+  description: string;
+  timestamp: string;
+  metadata?: {
+    weightKg?: number;
+    exerciseName?: string;
+    compliance?: number;
+  };
+}

@@ -1,0 +1,7 @@
+{
+  "name": "global Orators",
+  "description": "Comprehensive modern public speaking, orator, and debate coaching platform with mobile-first native bottom navigation, offline PWA capabilities, curriculum programming, live speech drill logging, and fluency analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

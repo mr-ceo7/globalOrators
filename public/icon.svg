@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <!-- Background Squircle using brand Deep Bluish -->
+  <rect width="512" height="512" rx="128" fill="#0D3A35"/>
+  <rect x="12" y="12" width="488" height="488" rx="116" fill="none" stroke="#276152" stroke-width="4" stroke-opacity="0.3"/>
+  
+  <!-- Central Emblem Shield in brand Moderate Green -->
+  <polygon 
+    points="256,45 440,145 440,365 256,465 72,365 72,145" 
+    fill="#276152" 
+    fill-opacity="0.15" 
+    stroke="#276152" 
+    stroke-width="16" 
+    stroke-linejoin="round"
+  />
+  
+  <!-- Monogram geometry of N and F -->
+  <!-- Left pillar of N in brand Light Cream -->
+  <path d="M170 180 V332" stroke="#FBF6F0" stroke-width="26" stroke-linecap="round"/>
+  <!-- Diagonal slash of N in brand Light Cream -->
+  <path d="M170 180 L256 332" stroke="#FBF6F0" stroke-width="26" stroke-linecap="round"/>
+  <!-- Right pillar of N + vertical of F in brand Light Cream -->
+  <path d="M256 180 V332" stroke="#FBF6F0" stroke-width="26" stroke-linecap="round"/>
+  <!-- Top horizontal of F in brand Moderate Green -->
+  <path d="M256 180 H342" stroke="#276152" stroke-width="26" stroke-linecap="round"/>
+  <!-- Middle horizontal of F / Dynamic upward arrow check in brand Moderate Green -->
+  <path d="M198 266 L256 306 L342 206" stroke="#276152" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Arrow head on the check tip in brand Moderate Green -->
+  <path d="M304 206 H342 V244" stroke="#276152" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
