@@ -44,6 +44,7 @@ describe('Global Orators Landing Page & Features Tests', () => {
     );
 
     // Verify brand and lead headline
+    expect(screen.getByText('Global')).toBeInTheDocument();
     expect(screen.getByText('speak with impact')).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 1, name: /Words Shape Nations/i })).toBeInTheDocument();
 

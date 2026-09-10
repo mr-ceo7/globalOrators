@@ -43,7 +43,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
           </div>
           <div>
             <div className="text-sm sm:text-base lg:text-lg font-serif font-black tracking-tight text-slate-100 leading-none">
-              global <span className="text-[#A06C18] dark:text-[#E3B95C]">Orators</span>
+              Global <span className="text-[#A06C18] dark:text-[#E3B95C]">Orators</span>
             </div>
             <div className="text-[9px] sm:text-[10px] text-slate-400 tracking-widest font-mono uppercase mt-0.5 whitespace-nowrap">
               speak with impact

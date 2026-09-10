@@ -8,6 +8,88 @@ interface AboutPageProps {
   onNavigate: (path: string) => void;
 }
 
+interface TeamMember {
+  name: string;
+  role: string;
+  category: string;
+  initials: string;
+  specialty: string;
+  bio: string;
+  image?: string;
+}
+
+const teamMembers: TeamMember[] = [
+  {
+    name: 'Geoffrey Anyona',
+    role: 'Founder & Forensics Director',
+    category: 'Founder',
+    initials: 'GA',
+    image: '/images/geoffrey-founder.jpg',
+    specialty: 'Strategic Communication & Forensics',
+    bio: 'Debater, public speaker, writer, and Founder of The Global Orators Project. Dedicated to the conviction that a generation that can speak must also learn to think, extending from youth debate mentorship to corporate communications training.'
+  },
+  {
+    name: 'Tyrese Kingori',
+    role: 'Co-Founder & Institutional Strategy',
+    category: 'Co-Founder',
+    initials: 'TK',
+    specialty: 'Operations & Continental Growth',
+    bio: 'Co-architect of the Global Orators Project vision. Oversees institutional partnerships, continental operations, and strategic program rollout across universities, secondary schools, and partner networks.'
+  },
+  {
+    name: 'Milo Brian',
+    role: 'Debate Coach & Forensics Adjudicator',
+    category: 'Debate Coach',
+    initials: 'MB',
+    image: '/images/milo-podium.jpg',
+    specialty: 'British Parliamentary & Poetics',
+    bio: 'Legal scholar, award-winning collegiate debater, and poet. Specializes in British Parliamentary debate frameworks, point-of-information tactics, and bridging legal forensics with poetic rhetorical power.'
+  },
+  {
+    name: 'Obed Imbusi',
+    role: 'Debate Coach & Tournament Strategist',
+    category: 'Debate Coach',
+    initials: 'OI',
+    image: '/images/obed-arena.jpg',
+    specialty: 'Arena Rebuttals & Policy Clash',
+    bio: 'Championship finalist and elite collegiate debater. Prepares speakers for high-pressure tournament arenas, teaching policy modeling, strategic rebuttal architecture, and deep dialectical clash on continental circuits.'
+  },
+  {
+    name: 'Liz Imani',
+    role: 'Public Speaking Coach & Philosophy Fellow',
+    category: 'Speaking Coach',
+    initials: 'LI',
+    image: '/images/imani-dialogue.jpg',
+    specialty: 'Voice Resonance & Deconditioning',
+    bio: 'Public speaker, philosopher, and debate fellow. Focuses on authentic vocal resonance, dismantling colonial cognitive conditioning, and empowering speakers to overcome fear and command the assembly floor.'
+  },
+  {
+    name: 'Rachael',
+    role: 'Public Speaking Coach & Vocal Presence Specialist',
+    category: 'Speaking Coach',
+    initials: 'RC',
+    specialty: 'Vocal Presence & Executive Delivery',
+    bio: 'Dedicated public speaking coach specializing in vocal presence, breathwork, diaphragm control, and delivery cadence. Helps young speakers and emerging leaders unlock confident, articulate stage command.'
+  },
+  {
+    name: 'Qassim Musa',
+    role: 'Tech Lead & Platforms Engineer',
+    category: 'Technology',
+    initials: 'QM',
+    image: '/images/qassim-musa.jpg',
+    specialty: 'Platform Architecture & Speech Tools',
+    bio: 'Architects and engineers the Global Orators digital suite, drill studio tools, encrypted voice vaults, and interactive coaching portals to support Pan-African oratorical training across all devices.'
+  },
+  {
+    name: 'Michelle Kinanga',
+    role: 'Marketing, Branding & Social Media Specialist',
+    category: 'Brand & Media',
+    initials: 'MK',
+    specialty: 'Brand Identity & Digital Storytelling',
+    bio: 'Directs brand identity, social media storytelling, and movement communications. Crafts documentary visual narratives and digital campaigns that amplify African voices across continental networks.'
+  }
+];
+
 export const AboutPage: React.FC<AboutPageProps> = ({
   onStartOnboarding,
   onOpenPartner,
@@ -222,11 +304,85 @@ export const AboutPage: React.FC<AboutPageProps> = ({
         </div>
       </section>
 
-      {/* Chapter 3: The Two Sovereign Pillars */}
+      {/* Chapter 3: Movement Directorate & Faculty */}
+      <section id="team" className="py-12 sm:py-18 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800 text-left">
+        <div className="mb-10 text-left">
+          <div className="text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold">
+            Chapter III • Directorate & Movement Faculty
+          </div>
+          <h2 className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight mt-1">
+            The Minds Behind the Movement
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl font-normal">
+            Orators, debaters, strategists, and technologists committed to cultivating cognitive sovereignty and vocal courage across Africa.
+          </p>
+        </div>
+
+        {/* 2-Column Responsive Grid on Mobile / 4-Column on Desktop */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+          {teamMembers.map((member) => (
+            <div 
+              key={member.name}
+              className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl flex flex-col justify-between group hover:border-[#C89630]/40 transition-colors"
+            >
+              <div>
+                {/* Photo or Architectural Monogram */}
+                <div className="h-44 sm:h-56 w-full overflow-hidden bg-slate-950 relative">
+                  {member.image ? (
+                    <img 
+                      src={member.image} 
+                      alt={`${member.name}, ${member.role}`}
+                      className="w-full h-full object-cover object-[center_20%] filter contrast-[1.03] group-hover:scale-102 transition-transform duration-500"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-gradient-to-b from-slate-900 to-slate-950 border-b border-slate-800/80">
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-slate-800 border-2 border-[#C89630]/30 flex items-center justify-center shadow-inner group-hover:border-[#C89630] transition-colors">
+                        <span className="font-serif font-black text-lg sm:text-xl text-[#C89630] tracking-wider">
+                          {member.initials}
+                        </span>
+                      </div>
+                      <span className="text-[9px] font-mono tracking-widest uppercase text-slate-400 mt-2.5 text-center line-clamp-1">
+                        {member.specialty}
+                      </span>
+                    </div>
+                  )}
+                  <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded bg-slate-950/80 backdrop-blur-xs border border-slate-800 text-[9px] font-mono tracking-widest uppercase text-[#C89630] font-bold">
+                    {member.category}
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="p-3.5 sm:p-5 space-y-2 text-left">
+                  <div>
+                    <h3 className="font-serif font-bold text-slate-100 text-sm sm:text-base leading-snug">
+                      {member.name}
+                    </h3>
+                    <p className="text-[10px] sm:text-xs text-slate-400 font-mono mt-0.5">
+                      {member.role}
+                    </p>
+                  </div>
+
+                  <p className="text-[11px] sm:text-xs text-slate-300 leading-relaxed font-normal">
+                    {member.bio}
+                  </p>
+                </div>
+              </div>
+
+              {/* Card Footer Tag */}
+              <div className="px-3.5 sm:px-5 py-2.5 bg-slate-950/60 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-mono text-slate-400">
+                <span className="truncate">{member.specialty}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Chapter 4: The Two Sovereign Pillars */}
       <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800">
         <div className="mb-10 text-left">
           <div className="text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold">
-            Chapter III • The Structural Architecture
+            Chapter IV • The Structural Architecture
           </div>
           <h2 className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight mt-1">
             Two Pillars. One Unified Movement.
@@ -295,11 +451,11 @@ export const AboutPage: React.FC<AboutPageProps> = ({
         </div>
       </section>
 
-      {/* Chapter 4: Pan-African Footprint */}
+      {/* Chapter 5: Pan-African Footprint */}
       <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800">
         <div className="mb-8 text-left">
           <div className="text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold">
-            Chapter IV • Regional Hubs
+            Chapter V • Regional Hubs
           </div>
           <h2 className="text-2xl sm:text-3xl font-serif font-black text-slate-100 tracking-tight mt-1">
             Continental & Global Footprint
@@ -331,11 +487,11 @@ export const AboutPage: React.FC<AboutPageProps> = ({
         </div>
       </section>
 
-      {/* Chapter 5: Movement FAQs */}
+      {/* Chapter 6: Movement FAQs */}
       <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-4xl mx-auto border-b border-slate-800">
         <div className="mb-8 text-left">
           <div className="text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold">
-            Chapter V • Frequently Asked Questions
+            Chapter VI • Frequently Asked Questions
           </div>
           <h2 className="text-2xl sm:text-3xl font-serif font-black text-slate-100 tracking-tight mt-1">
             Questions on Governance & Enrollment

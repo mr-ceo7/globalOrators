@@ -48,7 +48,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
       >
         <img
           src={logoIcon}
-          alt="global Orators Brand Mark"
+          alt="Global Orators Brand Mark"
           className="h-24 w-24 sm:h-32 sm:w-32 md:h-40 md:w-40 object-contain filter drop-shadow-[0_10px_25px_rgba(16,185,129,0.25)]"
         />
       </motion.div>

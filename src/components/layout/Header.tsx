@@ -77,7 +77,7 @@ export const Header: React.FC<HeaderProps> = ({
       case 'calendar': return 'Session Schedule';
       case 'progress': return 'Speech Analytics';
       case 'messenger': return 'Speaker Messenger';
-      default: return 'global Orators';
+      default: return 'Global Orators';
     }
   };
 
@@ -114,7 +114,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
           <div className="flex flex-col items-stretch">
             <span className="font-serif font-black text-[14px] tracking-tight text-slate-100 block leading-none">
-              global<span className="text-[#C89630]">orators</span>
+              Global<span className="text-[#C89630]">orators</span>
             </span>
             <div className="flex justify-between text-[7px] text-slate-400 font-mono tracking-widest uppercase mt-1 w-full leading-none">
               <span>speak</span>
@@ -131,7 +131,7 @@ export const Header: React.FC<HeaderProps> = ({
           {getBreadcrumbTitle()}
         </h1>
         <span className="text-[10px] sm:text-[11px] text-slate-400 hidden sm:inline-block">
-          global Orators Coaching Suite
+          Global Orators Coaching Suite
         </span>
       </div>
 

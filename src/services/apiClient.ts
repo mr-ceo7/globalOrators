@@ -1,5 +1,5 @@
 /**
- * global Orators API Client Service
+ * Global Orators API Client Service
  * Connects frontend to the FastAPI backend with JWT authentication and fallback resiliency.
  */
 

@@ -91,7 +91,7 @@ export const PwaInstallPrompt: React.FC<PwaInstallPromptProps> = ({ isOpen, onCl
             </div>
             <div>
               <h3 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
-                Install <span className="font-extrabold text-white tracking-tight">global <span className="text-[#C89630]">Orators</span></span>
+                Install <span className="font-extrabold text-white tracking-tight">Global <span className="text-[#C89630]">Orators</span></span>
                 <span className="text-[9px] uppercase font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold">
                   PWA
                 </span>
@@ -151,7 +151,7 @@ export const PwaInstallPrompt: React.FC<PwaInstallPromptProps> = ({ isOpen, onCl
                 className="w-full py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm flex items-center justify-center gap-2 transition-colors active:scale-[0.98]"
               >
                 <Download className="w-4 h-4" />
-                {isInstalling ? 'Installing global Orators...' : 'Install App to Home Screen'}
+                {isInstalling ? 'Installing Global Orators...' : 'Install App to Home Screen'}
               </button>
             )}
 

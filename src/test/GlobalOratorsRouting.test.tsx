@@ -86,6 +86,16 @@ describe('Global Orators Dedicated Routing & SEO Tests', () => {
     expect(screen.getAllByText('Geoffrey Anyona').length).toBeGreaterThan(0);
     expect(screen.getByText(/curated corporate communications training/i)).toBeInTheDocument();
 
+    // Verify Chapter III: Movement Directorate & Faculty
+    expect(screen.getByRole('heading', { level: 2, name: /The Minds Behind the Movement/i })).toBeInTheDocument();
+    expect(screen.getByText('Tyrese Kingori')).toBeInTheDocument();
+    expect(screen.getByText('Milo Brian')).toBeInTheDocument();
+    expect(screen.getByText('Obed Imbusi')).toBeInTheDocument();
+    expect(screen.getByText('Liz Imani')).toBeInTheDocument();
+    expect(screen.getByText('Rachael')).toBeInTheDocument();
+    expect(screen.getByText('Qassim Musa')).toBeInTheDocument();
+    expect(screen.getByText('Michelle Kinanga')).toBeInTheDocument();
+
     // Navigate to Foundation
     const foundationBtn = screen.getByText('Go to Foundation');
     await act(async () => {
