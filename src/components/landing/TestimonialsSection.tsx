@@ -37,6 +37,20 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
             </div>
           </div>
 
+          {/* Featured Community Storytelling Dispatch */}
+          <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl mb-8">
+            <img 
+              src="/images/mentorship-circle.jpg" 
+              alt="African youth mentor coaching children and teenagers in a community storytelling circle in Nairobi" 
+              className="w-full h-56 sm:h-72 md:h-80 object-cover object-[center_35%] filter contrast-[1.05]" 
+              loading="lazy" 
+            />
+            <figcaption className="px-4 py-2.5 bg-slate-900 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[10px] font-mono uppercase tracking-widest text-slate-400">
+              <span className="text-[#C85A32] font-semibold">Community Storytelling Circle · Nairobi Shelter Network</span>
+              <span>Informed Consent Documented • Peer Mentorship</span>
+            </figcaption>
+          </figure>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-7 space-y-4 shadow-sm">
               <p className="text-xs sm:text-sm text-slate-300 italic leading-relaxed font-serif">

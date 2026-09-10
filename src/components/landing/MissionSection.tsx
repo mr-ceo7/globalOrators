@@ -25,6 +25,20 @@ export const MissionSection: React.FC = () => {
           <h3 className="text-xl sm:text-2xl font-serif font-bold text-slate-100">
             Cognitive Sovereignty & Deconditioning
           </h3>
+
+          <figure className="rounded-xl overflow-hidden border border-slate-800 bg-slate-900 shadow-sm my-3">
+            <img 
+              src="/images/sovereign-scholars.jpg" 
+              alt="Young African university scholars in debate discussion over policy papers in archive library"
+              className="w-full h-44 sm:h-52 object-cover object-center filter contrast-[1.05]"
+              loading="lazy"
+            />
+            <figcaption className="px-3.5 py-2 bg-slate-950/80 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono">
+              <span className="text-slate-300 uppercase tracking-wider font-semibold">Archive Seminar</span>
+              <span className="text-[#C85A32] uppercase tracking-widest">Pan-African Rigor</span>
+            </figcaption>
+          </figure>
+
           <p className="font-serif text-sm sm:text-base text-slate-100 italic leading-snug">
             "A lack of information stemming from colonial social conditioning has conditioned the mentalities of our populace—creating social mediocrity that still struggles with ethnic division, western dependency, and self-doubt."
           </p>

@@ -17,6 +17,23 @@ export const ChampionshipsSection: React.FC = () => {
         </p>
       </div>
 
+      {/* Featured Championship Arena Visual Dispatch */}
+      <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl mb-8">
+        <img 
+          src="/images/championship-stage.jpg" 
+          alt="Pan-African debate squad delivering championship speech at PAUDC tournament" 
+          className="w-full h-56 sm:h-80 md:h-96 object-cover object-[center_30%] filter contrast-[1.05]" 
+          loading="lazy" 
+        />
+        <figcaption className="px-4 py-2.5 sm:py-3 bg-slate-900 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] font-mono">
+          <div className="flex items-center gap-2">
+            <span className="text-[#C85A32] font-semibold uppercase tracking-wider">PAUDC Grand Finals · Strathmore Delegation</span>
+            <span className="text-slate-400">Addis Ababa</span>
+          </div>
+          <div className="text-slate-400">14 African Nations Represented • British Parliamentary Rigor</div>
+        </figcaption>
+      </figure>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
         <div className="p-5 sm:p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-3 shadow-xs">
           <div className="text-[10px] font-mono text-[#C85A32] uppercase font-bold tracking-wider">
