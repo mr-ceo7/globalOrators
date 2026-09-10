@@ -219,7 +219,7 @@ export const OnboardingFlow: React.FC = () => {
                     Global Orators Foundation
                   </h3>
                   <p className="text-xs text-slate-300 leading-relaxed">
-                    100% sponsored fellowships. Empowering youth in children's homes, overcoming trauma & abuse, breaking patriarchal silence through therapeutic vocal catharsis.
+                    100% sponsored fellowships. Equipping youth in children's homes to overcome trauma & abuse, breaking patriarchal silence through therapeutic vocal catharsis.
                   </p>
                 </div>
                 <div className="mt-4 pt-3 border-t border-slate-800 text-[10px] text-slate-400 font-mono">
@@ -300,7 +300,7 @@ export const OnboardingFlow: React.FC = () => {
                     {
                       title: 'Speaking as a Form of Escapism & Emotional Catharsis',
                       goal: 'Cathartic Expression & Healing' as SpeakingGoal,
-                      desc: 'Experiencing the transformative relief that comes from vocalizing suppressed feelings in a safe space.'
+                      desc: 'Experiencing the visceral emotional relief that comes from vocalizing suppressed feelings in a safe space.'
                     },
                     {
                       title: 'Breaking Patriarchal & Generational Silence',

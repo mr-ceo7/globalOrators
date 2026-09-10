@@ -106,4 +106,59 @@ describe('Global Orators Landing Page & Features Tests', () => {
     });
     expect(document.documentElement.classList.contains('dark')).toBe(false);
   });
+
+  test('should render Take the Floor CTA, debated motions, and interactive voice dispatch on LandingPage', async () => {
+    render(
+      <AppProvider>
+        <LandingPage />
+      </AppProvider>
+    );
+
+    // Verify "Take the Floor" button
+    expect(screen.getAllByText('Take the Floor').length).toBeGreaterThan(0);
+
+    // Verify Debated Motions section
+    expect(screen.getByText('Sovereignty Defended On The Floor')).toBeInTheDocument();
+    expect(screen.getByText(/Condition All Foreign Mineral Concessions/i)).toBeInTheDocument();
+    expect(screen.getByText(/Repudiate Odious Historical Debts/i)).toBeInTheDocument();
+
+    // Verify Voice Dispatch audio player
+    expect(screen.getByText(/Voice Dispatch • Circle 07/i)).toBeInTheDocument();
+    const playBtn = screen.getByLabelText('Play voice dispatch');
+    expect(playBtn).toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(playBtn);
+    });
+
+    expect(screen.getByLabelText('Pause voice dispatch')).toBeInTheDocument();
+    expect(screen.getByText(/0:24 \/ 1:18/)).toBeInTheDocument();
+  });
+
+  test('should open and close mobile table of contents drawer on LandingPage', async () => {
+    render(
+      <AppProvider>
+        <LandingPage />
+      </AppProvider>
+    );
+
+    const mobileToggleBtn = document.getElementById('mobile-toc-toggle');
+    expect(mobileToggleBtn).toBeInTheDocument();
+
+    // Open drawer
+    await act(async () => {
+      fireEvent.click(mobileToggleBtn!);
+    });
+
+    expect(screen.getByText(/Table of Contents • The Manifesto/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Chapter I • The Diagnosis & The Remedy/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/The Safe Circle • Speaking as Escapism/i)).toBeInTheDocument();
+
+    // Close drawer
+    await act(async () => {
+      fireEvent.click(mobileToggleBtn!);
+    });
+
+    expect(screen.queryByText(/Table of Contents • The Manifesto/i)).not.toBeInTheDocument();
+  });
 });

@@ -16,7 +16,12 @@ import {
   Building2,
   Users,
   Sun,
-  Moon
+  Moon,
+  Menu,
+  X,
+  Play,
+  Pause,
+  Volume2
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { NubianFitLogo } from '../common/NubianFitLogo';
@@ -26,6 +31,8 @@ export const LandingPage: React.FC = () => {
   const [portalsDropdownOpen, setPortalsDropdownOpen] = useState(false);
   const [partnerModalOpen, setPartnerModalOpen] = useState(false);
   const [partnerBranch, setPartnerBranch] = useState<'Academy' | 'Foundation'>('Academy');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isPlayingDispatch, setIsPlayingDispatch] = useState(false);
 
   const handleStartOnboarding = (branch?: 'Academy' | 'Foundation') => {
     if (branch) {
@@ -145,13 +152,106 @@ export const LandingPage: React.FC = () => {
             {/* Primary Get Started Button */}
             <button
               onClick={() => handleStartOnboarding()}
-              className="px-4 py-1.5 rounded-lg bg-[#C85A32] hover:bg-[#D46238] text-[#FFFFFF] font-serif font-bold text-xs shadow-md shadow-[#C85A32]/20 flex items-center gap-1.5 transition-all"
+              className="px-3.5 sm:px-4 py-1.5 rounded-lg bg-[#C85A32] hover:bg-[#D46238] text-[#FFFFFF] font-serif font-bold text-xs shadow-md shadow-[#C85A32]/20 flex items-center gap-1.5 transition-all"
             >
-              <span>Begin Journey</span>
+              <span>Take the Floor</span>
               <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+
+            {/* Mobile Table of Contents Hamburger Button */}
+            <button
+              id="mobile-toc-toggle"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-2 rounded-lg border border-slate-800 bg-slate-900 text-slate-300 hover:text-slate-100 hover:border-slate-700 transition-colors"
+              aria-label={mobileMenuOpen ? 'Close Table of Contents' : 'Open Table of Contents'}
+              title="Table of Contents"
+            >
+              {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
             </button>
           </div>
         </div>
+
+        {/* Mobile Editorial Table of Contents Drawer */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden mt-3 pt-3 border-t border-slate-800 bg-slate-950 text-left animate-fadeIn">
+            <div className="text-[10px] font-mono tracking-widest uppercase text-[#C85A32] font-bold px-2 mb-2">
+              Table of Contents • The Manifesto
+            </div>
+            <div className="flex flex-col gap-0.5 text-xs">
+              <a 
+                href="#mission" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-2.5 py-2 rounded-lg text-slate-200 hover:bg-slate-900 hover:text-[#C85A32] font-serif font-bold transition-colors flex items-center justify-between"
+              >
+                <span>Chapter I • The Diagnosis & The Remedy</span>
+                <span className="text-[10px] font-mono text-slate-400 font-normal">01</span>
+              </a>
+              <a 
+                href="#academy" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-2.5 py-2 rounded-lg text-slate-200 hover:bg-slate-900 hover:text-[#C85A32] font-serif font-bold transition-colors flex items-center justify-between"
+              >
+                <span>Chapter II • Global Orators Academy</span>
+                <span className="text-[10px] font-mono text-slate-400 font-normal">02</span>
+              </a>
+              <a 
+                href="#foundation" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-2.5 py-2 rounded-lg text-slate-200 hover:bg-slate-900 hover:text-[#C85A32] font-serif font-bold transition-colors flex items-center justify-between"
+              >
+                <span>Chapter II • The Foundation Fellowship</span>
+                <span className="text-[10px] font-mono text-slate-400 font-normal">03</span>
+              </a>
+              <a 
+                href="#escapism" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-2.5 py-2 rounded-lg text-slate-200 hover:bg-slate-900 hover:text-[#C85A32] font-serif font-bold transition-colors flex items-center justify-between"
+              >
+                <span>The Safe Circle • Speaking as Escapism</span>
+                <span className="text-[10px] font-mono text-slate-400 font-normal">04</span>
+              </a>
+              <a 
+                href="#championships" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-2.5 py-2 rounded-lg text-slate-200 hover:bg-slate-900 hover:text-[#C85A32] font-serif font-bold transition-colors flex items-center justify-between"
+              >
+                <span>Chapter III • The Global Arena</span>
+                <span className="text-[10px] font-mono text-slate-400 font-normal">05</span>
+              </a>
+              <a 
+                href="#testimonials" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-2.5 py-2 rounded-lg text-slate-200 hover:bg-slate-900 hover:text-[#C85A32] font-serif font-bold transition-colors flex items-center justify-between"
+              >
+                <span>Chapter IV • Living Proof</span>
+                <span className="text-[10px] font-mono text-slate-400 font-normal">06</span>
+              </a>
+            </div>
+
+            <div className="mt-3 pt-3 border-t border-slate-800 grid grid-cols-2 gap-2">
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setCurrentPortal('speaker_app');
+                }}
+                className="px-2.5 py-2 rounded-lg bg-slate-900 border border-slate-800 text-[11px] font-semibold text-slate-200 hover:text-white flex items-center justify-center gap-1.5"
+              >
+                <Mic className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Speaker App</span>
+              </button>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setCurrentPortal('coach_os');
+                }}
+                className="px-2.5 py-2 rounded-lg bg-slate-900 border border-slate-800 text-[11px] font-semibold text-slate-200 hover:text-white flex items-center justify-center gap-1.5"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-[#C85A32]" />
+                <span>Coach OS</span>
+              </button>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* 2. Hero Section: Editorial & Warm Humanist */}
@@ -172,7 +272,7 @@ export const LandingPage: React.FC = () => {
               </p>
 
               <p className="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-xl">
-                The <strong className="text-slate-100 font-semibold">Global Orators Project (GOP)</strong> cultivates minds capable of sovereign critical thought and champion debate—while pioneering <strong className="text-slate-100 font-semibold">Speaking as a Form of Escapism</strong> to heal trauma, break patriarchal silence, and champion honest emotional truth.
+                The <strong className="text-slate-100 font-semibold">Global Orators Project (GOP)</strong> cultivates minds capable of sovereign critical thought and champion debate—while establishing <strong className="text-slate-100 font-semibold">Speaking as a Form of Escapism</strong> to heal trauma, break patriarchal silence, and champion honest emotional truth.
               </p>
 
               {/* Action Buttons */}
@@ -199,25 +299,25 @@ export const LandingPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Right Hero Documentary Photography */}
+            {/* Right Hero Documentary Photography Frame */}
             <div className="lg:col-span-5">
-              <div className="relative rounded-2xl overflow-hidden border border-slate-800 shadow-2xl bg-slate-900">
+              <figure className="rounded-2xl overflow-hidden border border-slate-800 shadow-2xl bg-slate-900 flex flex-col">
                 <img 
                   src="/images/hero-orator.jpg" 
                   alt="Young African orator speaking passionately at a wooden podium" 
-                  className="w-full h-80 sm:h-[440px] object-cover object-top filter contrast-[1.05]"
+                  className="w-full h-80 sm:h-[420px] object-cover object-top filter contrast-[1.05]"
                   loading="eager"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-85" />
-                <div className="absolute bottom-4 left-4 right-4 text-left">
-                  <div className="text-[10px] font-mono uppercase tracking-widest text-amber-400 font-bold">
-                    Documentary Dispatch • Pan-African Youth Assembly
+                <figcaption className="p-3.5 sm:p-4 bg-slate-900 border-t border-slate-800 text-left">
+                  <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-[#C85A32] font-semibold">
+                    <span>Field Dispatch • Assembly Floor</span>
+                    <span className="text-slate-400">Nairobi, Kenya</span>
                   </div>
-                  <div className="text-xs text-[#FFFFFF] font-serif italic mt-0.5">
+                  <div className="text-xs text-slate-300 font-serif italic mt-1 leading-snug">
                     "When youth speak with radical honesty, the future of the continent is rewritten."
                   </div>
-                </div>
-              </div>
+                </figcaption>
+              </figure>
             </div>
           </div>
 
@@ -276,20 +376,70 @@ export const LandingPage: React.FC = () => {
           </div>
 
           {/* Pillar 2: Speaking as Escapism & Catharsis */}
-          <div id="escapism" className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 space-y-4 shadow-xs">
-            <div className="text-[10px] font-mono uppercase tracking-widest text-[#C85A32] font-bold">
-              The Second Pillar • Mental Health & Voice
+          <div id="escapism" className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 space-y-5 shadow-xs flex flex-col justify-between">
+            <div className="space-y-4">
+              <div className="text-[10px] font-mono uppercase tracking-widest text-[#C85A32] font-bold">
+                The Second Pillar • Mental Health & Voice
+              </div>
+              <h3 className="text-xl sm:text-2xl font-serif font-bold text-slate-100">
+                Speaking as a Form of Escapism & Catharsis
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                Growing up under millennial parentage and decades of patriarchal conditioning, emotional vulnerability has been branded as weakness. African boys were told never to cry; African girls were instructed to swallow their pain.
+              </p>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                The result has been a silent epidemic of anxiety and untreated trauma. There is a raw, physical catharsis that occurs when an individual stands up and speaks aloud the exact burden they carried in secrecy. When you hear a story that matches your own, the isolation shatters.
+              </p>
+
+              {/* Interactive Voice Dispatch Player */}
+              <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800 space-y-3">
+                <div className="flex items-center justify-between text-[10px] font-mono">
+                  <span className="text-[#C85A32] uppercase tracking-widest font-semibold flex items-center gap-1.5">
+                    <Volume2 className="w-3.5 h-3.5 text-[#C85A32]" />
+                    Voice Dispatch • Circle 07 (Nairobi)
+                  </span>
+                  <span className="text-slate-400">{isPlayingDispatch ? '0:24 / 1:18' : '1:18'}</span>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setIsPlayingDispatch(!isPlayingDispatch)}
+                    className="w-10 h-10 rounded-full bg-[#C85A32] hover:bg-[#D46238] text-[#FFFFFF] flex items-center justify-center shrink-0 shadow-md shadow-[#C85A32]/25 transition-all cursor-pointer"
+                    aria-label={isPlayingDispatch ? 'Pause voice dispatch' : 'Play voice dispatch'}
+                  >
+                    {isPlayingDispatch ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
+                  </button>
+
+                  {/* Simulated Acoustic Waveform Bars */}
+                  <div className="flex-1 flex items-center gap-1 h-8 overflow-hidden px-1">
+                    {[35, 60, 25, 80, 95, 50, 75, 45, 90, 60, 30, 85, 100, 70, 45, 80, 65, 40, 75, 85, 60, 40, 80, 50, 30, 70, 85, 45].map((h, i) => (
+                      <div
+                        key={i}
+                        className={`flex-1 rounded-full transition-all duration-300 ${
+                          isPlayingDispatch
+                            ? 'bg-[#C85A32] opacity-90'
+                            : 'bg-slate-700 opacity-50'
+                        }`}
+                        style={{
+                          height: isPlayingDispatch 
+                            ? `${Math.max(20, (h + (i % 3) * 20) % 100)}%` 
+                            : `${Math.max(15, h * 0.35)}%`
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="text-[11px] text-slate-300 font-serif italic border-t border-slate-800/80 pt-2 leading-relaxed">
+                  "{isPlayingDispatch ? 'Now Playing: ' : ''}For six years I believed silence was safety. The day I spoke my truth in the circle, the fear left my body."
+                </div>
+                <div className="text-[9px] font-mono text-slate-400">
+                  Recorded at Hope Children's Home Healing Circle • Voice used with informed consent
+                </div>
+              </div>
             </div>
-            <h3 className="text-xl sm:text-2xl font-serif font-bold text-slate-100">
-              Speaking as a Form of Escapism & Catharsis
-            </h3>
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              Growing up under millennial parentage and decades of patriarchal conditioning, emotional vulnerability has been branded as weakness. African boys were told never to cry; African girls were instructed to swallow their pain.
-            </p>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              The result has been a silent epidemic of anxiety and untreated trauma. There is a sacred, transformative catharsis that occurs when an individual stands up and speaks aloud the exact burden they carried in secrecy. When you hear a story that matches your own, the isolation shatters.
-            </p>
-            <div className="pt-2 border-t border-slate-800 flex items-center gap-2 text-xs font-serif italic text-[#C85A32]">
+
+            <div className="pt-3 border-t border-slate-800 flex items-center gap-2 text-xs font-serif italic text-[#C85A32]">
               <Quote className="w-4 h-4 shrink-0" />
               <span>"To speak your truth is not a performance—it is your liberation."</span>
             </div>
@@ -317,17 +467,18 @@ export const LandingPage: React.FC = () => {
             {/* Branch 1: Global Orators Academy */}
             <div id="academy" className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-lg">
               <div>
-                <div className="relative rounded-xl overflow-hidden mb-6 border border-slate-800">
+                <figure className="rounded-xl overflow-hidden mb-6 border border-slate-800 bg-slate-950/40">
                   <img 
                     src="/images/academy-debate.jpg" 
                     alt="Young African debaters at parliamentary debate table" 
                     className="w-full h-48 sm:h-56 object-cover"
                     loading="lazy"
                   />
-                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded bg-black/75 text-xs font-mono text-[#FFFFFF] border border-white/20">
-                    The Commercial & Championship Arm
-                  </div>
-                </div>
+                  <figcaption className="px-3.5 py-2.5 bg-slate-950/80 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono">
+                    <span className="text-slate-300 uppercase tracking-wider font-semibold">Championship Debate Chamber</span>
+                    <span className="text-[#C85A32] uppercase tracking-widest">Competitive Wing</span>
+                  </figcaption>
+                </figure>
 
                 <div className="text-[10px] font-mono tracking-widest uppercase text-[#C85A32] font-bold">
                   Professional Fee & Corporate Partnerships
@@ -384,17 +535,18 @@ export const LandingPage: React.FC = () => {
             {/* Branch 2: Global Orators Foundation */}
             <div id="foundation" className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-lg">
               <div>
-                <div className="relative rounded-xl overflow-hidden mb-6 border border-slate-800">
+                <figure className="rounded-xl overflow-hidden mb-6 border border-slate-800 bg-slate-950/40">
                   <img 
                     src="/images/foundation-circle.jpg" 
                     alt="African youth and children sitting in a warm library healing circle" 
                     className="w-full h-48 sm:h-56 object-cover"
                     loading="lazy"
                   />
-                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded bg-black/75 text-xs font-mono text-[#FFFFFF] border border-white/20">
-                    The Non-Profit Philanthropic Arm
-                  </div>
-                </div>
+                  <figcaption className="px-3.5 py-2.5 bg-slate-950/80 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono">
+                    <span className="text-slate-300 uppercase tracking-wider font-semibold">Community Healing Circle</span>
+                    <span className="text-emerald-500 uppercase tracking-widest">Grant Fellowship</span>
+                  </figcaption>
+                </figure>
 
                 <div className="text-[10px] font-mono tracking-widest uppercase text-emerald-500 font-bold">
                   Grant-Funded & Community Supported
@@ -507,10 +659,71 @@ export const LandingPage: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Debated Motions: Real British Parliamentary Clashes */}
+        <div className="mt-12 pt-10 border-t border-slate-800 text-left">
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-end justify-between">
+            <div>
+              <div className="text-[10px] font-mono tracking-widest text-[#C85A32] uppercase font-bold">
+                The Motions • Real British Parliamentary Clashes
+              </div>
+              <h3 className="text-xl sm:text-2xl font-serif font-black text-slate-100 tracking-tight mt-1">
+                Sovereignty Defended On The Floor
+              </h3>
+            </div>
+            <div className="text-[11px] text-slate-400 font-mono mt-1 sm:mt-0">
+              15-minute prep • No internet • Pure cognitive sovereignty
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2.5 shadow-xs">
+              <div className="flex items-center justify-between text-[10px] font-mono">
+                <span className="text-[#C85A32] font-semibold">PAUDC Grand Finals</span>
+                <span className="text-slate-400">Addis Ababa</span>
+              </div>
+              <p className="text-xs font-serif font-bold text-slate-100 leading-snug">
+                "This House Would Condition All Foreign Mineral Concessions on 100% Domestic In-Country Refining & Value-Addition."
+              </p>
+              <div className="pt-2 border-t border-slate-800/80 text-[10px] font-mono text-emerald-500 font-semibold flex items-center justify-between">
+                <span>Opening Government</span>
+                <span>Unanimous Champions</span>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2.5 shadow-xs">
+              <div className="flex items-center justify-between text-[10px] font-mono">
+                <span className="text-[#C85A32] font-semibold">WUDC Semi-Finals</span>
+                <span className="text-slate-400">Belgrade</span>
+              </div>
+              <p className="text-xs font-serif font-bold text-slate-100 leading-snug">
+                "This House Believes That Post-Colonial States Should Form a Sovereign Cartel to Repudiate Odious Historical Debts."
+              </p>
+              <div className="pt-2 border-t border-slate-800/80 text-[10px] font-mono text-emerald-500 font-semibold flex items-center justify-between">
+                <span>Closing Opposition</span>
+                <span>Grand Finalist Award</span>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2.5 shadow-xs">
+              <div className="flex items-center justify-between text-[10px] font-mono">
+                <span className="text-[#C85A32] font-semibold">Pan-African Youth Assembly</span>
+                <span className="text-slate-400">Nairobi</span>
+              </div>
+              <p className="text-xs font-serif font-bold text-slate-100 leading-snug">
+                "This House Would Abolish Institutional Language and Dress Codes That Subordinate Indigenous Expression to Colonial Norms."
+              </p>
+              <div className="pt-2 border-t border-slate-800/80 text-[10px] font-mono text-emerald-500 font-semibold flex items-center justify-between">
+                <span>Opening Opposition</span>
+                <span>Highest Speaker Score</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* 6. Human Catharsis Testimonials */}
-      <section className="py-16 sm:py-24 px-4 sm:px-8 bg-slate-950 border-t border-slate-800 text-left">
+      <section id="testimonials" className="py-16 sm:py-24 px-4 sm:px-8 bg-slate-950 border-t border-slate-800 text-left">
         <div className="max-w-5xl mx-auto">
           <div className="mb-12">
             <div className="text-[11px] font-mono tracking-widest text-[#C85A32] uppercase font-bold">
@@ -570,7 +783,7 @@ export const LandingPage: React.FC = () => {
               onClick={() => handleStartOnboarding()}
               className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#C85A32] hover:bg-[#D46238] text-[#FFFFFF] font-serif font-bold text-xs shadow-xl shadow-[#C85A32]/25 flex items-center justify-center gap-2 transition-all"
             >
-              <span>Begin Speaker Onboarding</span>
+              <span>Take the Floor</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
 
@@ -611,13 +824,15 @@ export const LandingPage: React.FC = () => {
             <div className="md:col-span-7 grid grid-cols-2 sm:grid-cols-3 gap-6 text-xs">
               <div>
                 <div className="font-mono text-[10px] uppercase tracking-widest text-slate-100 font-bold mb-3">
-                  Branches
+                  Manifesto Chapters
                 </div>
                 <ul className="space-y-2 text-[11px] text-slate-400">
+                  <li><a href="#mission" className="hover:text-slate-100 transition-colors">The Diagnosis & Remedy</a></li>
                   <li><a href="#academy" className="hover:text-slate-100 transition-colors">Global Orators Academy</a></li>
-                  <li><a href="#foundation" className="hover:text-slate-100 transition-colors">Global Orators Foundation</a></li>
+                  <li><a href="#foundation" className="hover:text-slate-100 transition-colors">The Foundation Fellowship</a></li>
                   <li><a href="#escapism" className="hover:text-slate-100 transition-colors">Speaking as Escapism</a></li>
-                  <li><a href="#championships" className="hover:text-slate-100 transition-colors">Debate Tournaments</a></li>
+                  <li><a href="#championships" className="hover:text-slate-100 transition-colors">Debated Motions & WUDC</a></li>
+                  <li><a href="#testimonials" className="hover:text-slate-100 transition-colors">Living Proof & Dispatches</a></li>
                 </ul>
               </div>
 
@@ -699,7 +914,7 @@ export const LandingPage: React.FC = () => {
 
             <p className="text-xs text-slate-300 mb-4 leading-relaxed font-normal">
               {partnerBranch === 'Academy'
-                ? 'Empower your institution, university, or corporate leadership team with premier debate training, keynote coaching, and accredited speech syllabi.'
+                ? 'Equip your university, school, or corporate leadership council with premier debate training, keynote coaching, and accredited speech syllabi.'
                 : 'Connect your children\'s home, orphanage, or charitable shelter with our grant-funded cathartic voice circles, or contribute directly to our non-profit fellowship grant pool.'}
             </p>
 
