@@ -32,9 +32,9 @@ describe('Global Orators Landing Page & Features Tests', () => {
       </AppProvider>
     );
 
-    // Verify brand and tagline
+    // Verify brand and lead headline
     expect(screen.getByText('speak with impact')).toBeInTheDocument();
-    expect(screen.getByText(/The Pan-African Voice & Catharsis Movement/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: /Words Shape Nations/i })).toBeInTheDocument();
 
     // Verify both missions
     expect(screen.getByText(/Deconditioning & Pan-African Enlightenment/i)).toBeInTheDocument();
@@ -79,5 +79,31 @@ describe('Global Orators Landing Page & Features Tests', () => {
     fireEvent.click(catharsisTab);
 
     expect(screen.getByText(/Private & Encrypted Expression Vault/i)).toBeInTheDocument();
+  });
+
+  test('should allow toggling theme on LandingPage between light and dark modes', async () => {
+    render(
+      <AppProvider>
+        <LandingPage />
+      </AppProvider>
+    );
+
+    const themeToggleBtn = document.getElementById('landing-theme-toggle');
+    expect(themeToggleBtn).toBeInTheDocument();
+
+    // Default theme is light
+    expect(document.documentElement.classList.contains('dark')).toBe(false);
+
+    // Click to toggle to dark
+    await act(async () => {
+      fireEvent.click(themeToggleBtn!);
+    });
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+
+    // Click to toggle back to light
+    await act(async () => {
+      fireEvent.click(themeToggleBtn!);
+    });
+    expect(document.documentElement.classList.contains('dark')).toBe(false);
   });
 });
