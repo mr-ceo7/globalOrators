@@ -32,13 +32,13 @@ export const BranchCards: React.FC<BranchCardsProps> = ({
             <div>
               <figure className="rounded-xl overflow-hidden mb-5 border border-slate-800 bg-slate-950/40">
                 <img 
-                  src="/images/academy-debate.jpg" 
-                  alt="Young African debaters at parliamentary debate table" 
-                  className="w-full h-44 sm:h-52 object-cover"
+                  src="/images/obed-deliberation.jpg" 
+                  alt="Obed and debaters in the motion preparation chamber at Global Orators Academy" 
+                  className="w-full h-44 sm:h-52 object-cover object-[center_35%]"
                   loading="lazy"
                 />
                 <figcaption className="px-3.5 py-2 bg-slate-950/80 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono">
-                  <span className="text-slate-300 uppercase tracking-wider font-semibold">Championship Chamber</span>
+                  <span className="text-slate-300 uppercase tracking-wider font-semibold">Motion Deliberation Chamber</span>
                   <span className="text-[#C89630] uppercase tracking-widest">Competitive Wing</span>
                 </figcaption>
               </figure>
@@ -117,13 +117,13 @@ export const BranchCards: React.FC<BranchCardsProps> = ({
             <div>
               <figure className="rounded-xl overflow-hidden mb-5 border border-slate-800 bg-slate-950/40">
                 <img 
-                  src="/images/foundation-circle.jpg" 
-                  alt="African youth and children sitting in a warm library healing circle" 
-                  className="w-full h-44 sm:h-52 object-cover"
+                  src="/images/geoffrey-youth-assembly.jpg" 
+                  alt="Geoffrey Anyona and youth scholars in community mentorship assembly" 
+                  className="w-full h-44 sm:h-52 object-cover object-[center_35%]"
                   loading="lazy"
                 />
                 <figcaption className="px-3.5 py-2 bg-slate-950/80 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono">
-                  <span className="text-slate-300 uppercase tracking-wider font-semibold">Healing Circle</span>
+                  <span className="text-slate-300 uppercase tracking-wider font-semibold">Youth Outreach Assembly</span>
                   <span className="text-emerald-500 uppercase tracking-widest">100% Grant-Funded</span>
                 </figcaption>
               </figure>

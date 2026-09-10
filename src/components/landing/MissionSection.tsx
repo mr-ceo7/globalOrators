@@ -15,6 +15,36 @@ export const MissionSection: React.FC = () => {
         <div className="w-16 h-0.5 bg-[#C89630]" />
       </div>
 
+      {/* Founder's Note: Geoffrey Anyona */}
+      <div className="p-6 sm:p-7 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-4 mb-10 text-left">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+          <div className="flex items-center gap-3.5">
+            <img 
+              src="/images/geoffrey-founder.jpg" 
+              alt="Geoffrey Anyona" 
+              className="w-12 h-12 rounded-full object-cover object-top border-2 border-[#C89630]/40 shrink-0" 
+            />
+            <div>
+              <div className="font-serif font-bold text-slate-100 text-sm sm:text-base">Geoffrey Anyona</div>
+              <div className="text-[10px] text-slate-400 font-mono">Founder & Forensics Director · The Global Orators Project</div>
+            </div>
+          </div>
+          <div className="text-[10px] font-mono tracking-widest text-[#A06C18] dark:text-[#E3B95C] uppercase font-bold px-2.5 py-1 rounded-md bg-[#C89630]/10 border border-[#C89630]/20 self-start sm:self-center">
+            The Founding Conviction
+          </div>
+        </div>
+
+        <blockquote className="space-y-2">
+          <p className="font-serif italic text-sm sm:text-base text-slate-100 leading-relaxed">
+            "The Global Orators Project is built around a simple conviction: a generation that can speak must also learn to think."
+          </p>
+        </blockquote>
+
+        <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
+          We are working to build a generation that is not simply articulate, but aware, intellectually curious, and courageous enough to participate in shaping its future. Our movement dismantles cognitive conditioning by combining parliamentary forensic discipline with authentic, trauma-informed vocal release.
+        </p>
+      </div>
+
       {/* Editorial 2-Column Split */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 text-left">
         {/* Pillar 1 */}
@@ -28,14 +58,14 @@ export const MissionSection: React.FC = () => {
 
           <figure className="rounded-xl overflow-hidden border border-slate-800 bg-slate-900 shadow-sm my-3">
             <img 
-              src="/images/sovereign-scholars.jpg" 
-              alt="Young African university scholars in debate discussion over policy papers in archive library"
-              className="w-full h-44 sm:h-52 object-cover object-center filter contrast-[1.05]"
+              src="/images/geoffrey-contemplation.jpg" 
+              alt="Geoffrey Anyona reflecting with pen in hand during an international debate assembly"
+              className="w-full h-44 sm:h-52 object-cover object-[center_25%] filter contrast-[1.03]"
               loading="lazy"
             />
             <figcaption className="px-3.5 py-2 bg-slate-950/80 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono">
-              <span className="text-slate-300 uppercase tracking-wider font-semibold">Archive Seminar</span>
-              <span className="text-[#C89630] uppercase tracking-widest">Pan-African Rigor</span>
+              <span className="text-slate-300 uppercase tracking-wider font-semibold">Founding Inquiry</span>
+              <span className="text-[#C89630] uppercase tracking-widest">Cognitive Sovereignty</span>
             </figcaption>
           </figure>
 

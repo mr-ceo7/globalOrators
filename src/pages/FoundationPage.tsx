@@ -98,17 +98,17 @@ export const FoundationPage: React.FC<FoundationPageProps> = ({
         </div>
       </section>
 
-      {/* Featured Healing Circle Dispatch */}
+      {/* Featured Youth Outreach Dispatch */}
       <section className="py-8 sm:py-12 px-4 sm:px-8 max-w-6xl mx-auto">
         <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl">
           <img 
-            src="/images/foundation-circle.jpg" 
-            alt="African youth sitting in a warm library safe circle sharing personal stories" 
-            className="w-full h-64 sm:h-80 md:h-96 object-cover object-center filter contrast-[1.05]" 
+            src="/images/geoffrey-youth-assembly.jpg" 
+            alt="Geoffrey Anyona with youth debate scholars and secondary school students in community mentorship assembly" 
+            className="w-full h-64 sm:h-80 md:h-96 object-cover object-[center_35%] filter contrast-[1.03]" 
             loading="lazy" 
           />
           <figcaption className="px-4 py-3 bg-slate-900 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] font-mono uppercase tracking-widest text-slate-400">
-            <span className="text-emerald-500 font-semibold">Healing Circle · Nairobi Shelter Network</span>
+            <span className="text-emerald-500 font-semibold">Youth Leadership Assembly · Secondary School Outreach</span>
             <span>100% Grant-Funded · Trauma-Informed Peer Mentorship</span>
           </figcaption>
         </figure>

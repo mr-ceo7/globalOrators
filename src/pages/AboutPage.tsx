@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, BookOpen, Compass, ShieldCheck, Globe, Users, Award, ChevronRight } from 'lucide-react';
+import { ArrowRight, BookOpen, Compass, ShieldCheck, Globe, Users, Award, ChevronRight, Quote } from 'lucide-react';
 import { SEOHead } from '../components/common/SEOHead';
 
 interface AboutPageProps {
@@ -112,26 +112,121 @@ export const AboutPage: React.FC<AboutPageProps> = ({
           </div>
         </div>
 
-        {/* Documentary Photo Dispatch */}
+        {/* Documentary Photo Dispatch: Proposition Deconstruction */}
         <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl my-10">
           <img 
-            src="/images/sovereign-scholars.jpg" 
-            alt="Scholars analyzing policy papers and motion archives in Nairobi library seminar" 
-            className="w-full h-60 sm:h-80 md:h-96 object-cover object-center filter contrast-[1.05]" 
+            src="/images/geoffrey-panel-debate.jpg" 
+            alt="Geoffrey Anyona and debate delegates analyzing proposition arguments at the International Sports & Debate Assembly" 
+            className="w-full h-60 sm:h-80 md:h-96 object-cover object-[center_35%] filter contrast-[1.03]" 
             loading="lazy" 
           />
           <figcaption className="px-4 py-2.5 bg-slate-900 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] font-mono uppercase tracking-widest text-slate-400">
-            <span className="text-[#A06C18] dark:text-[#E3B95C] font-semibold">Archive Seminar · Nairobi Library Research Center</span>
-            <span>Policy Deconstruction & Constitutional Debate</span>
+            <span className="text-[#A06C18] dark:text-[#E3B95C] font-semibold">Proposition Deliberation · Continental Assembly Forum · Maseru</span>
+            <span>Policy Deconstruction & International Debate</span>
           </figcaption>
         </figure>
       </section>
 
-      {/* Chapter 2: The Two Sovereign Pillars */}
+      {/* Chapter 2: The Founder's Conviction & Leadership */}
+      <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800 text-left">
+        <div className="mb-10 text-left">
+          <div className="text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold">
+            Chapter II • Leadership & Founding Conviction
+          </div>
+          <h2 className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight mt-1">
+            "A Generation That Can Speak Must Also Learn to Think."
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl font-normal">
+            A founding manifesto on intellectual curiosity, critical discourse, and continental leadership from Geoffrey Anyona.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+          {/* Left Column: Dual Documentary Visuals of Founder */}
+          <div className="lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-5">
+            <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl flex flex-col justify-between">
+              <div className="h-64 sm:h-72 w-full overflow-hidden bg-slate-950">
+                <img 
+                  src="/images/geoffrey-founder.jpg" 
+                  alt="Geoffrey Anyona, Founder of The Global Orators Project, at the debate rostrum" 
+                  className="w-full h-full object-cover object-[center_20%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500" 
+                  loading="lazy" 
+                />
+              </div>
+              <figcaption className="p-3 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-slate-400">
+                <span className="text-[#A06C18] dark:text-[#E3B95C] font-bold">Geoffrey Anyona</span>
+                <span>Founder & Forensics Director</span>
+              </figcaption>
+            </figure>
+
+            <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl flex flex-col justify-between">
+              <div className="h-48 sm:h-56 w-full overflow-hidden bg-slate-950">
+                <img 
+                  src="/images/geoffrey-keynote.jpg" 
+                  alt="Geoffrey Anyona delivering keynote address at the International Sports and Olympism Assembly in Maseru, Lesotho" 
+                  className="w-full h-full object-cover object-[center_25%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500" 
+                  loading="lazy" 
+                />
+              </div>
+              <figcaption className="p-3 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-slate-400">
+                <span className="text-emerald-500 font-bold">Keynote Dispatch</span>
+                <span>Maseru, Lesotho</span>
+              </figcaption>
+            </figure>
+          </div>
+
+          {/* Right Column: Founder's Bio & Conviction */}
+          <div className="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 flex flex-col justify-between space-y-6 shadow-xl">
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#C89630]/10 border border-[#C89630]/20 text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold">
+                Founder's Dispatch
+              </div>
+
+              <blockquote className="space-y-3">
+                <Quote className="w-8 h-8 text-[#C89630]/40 shrink-0" />
+                <p className="font-serif italic text-base sm:text-lg text-slate-100 leading-relaxed">
+                  "Geoffrey Anyona is a debater, public speaker, writer and Founder of The Global Orators Project; an initiative built around a simple conviction: a generation that can speak must also learn to think."
+                </p>
+              </blockquote>
+
+              <div className="space-y-3 text-xs sm:text-sm text-slate-300 leading-relaxed pt-2 border-t border-slate-800">
+                <p>
+                  His work centres on public speaking, debate, critical thinking, youth leadership and strategic communication, extending from the mentorship of young speakers to curated corporate communications training for professionals and organisations.
+                </p>
+                <p>
+                  With a growing interest in international affairs and global discourse, Geoffrey is passionate about the ideas that shape societies and the voices that have the power to challenge them.
+                </p>
+                <p>
+                  Through The Global Orators Project, he is working to build a generation that is not simply articulate, but aware, intellectually curious and courageous enough to participate in shaping its future.
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <img 
+                  src="/images/geoffrey-founder.jpg" 
+                  alt="Geoffrey Anyona" 
+                  className="w-10 h-10 rounded-full object-cover object-top border border-slate-700 shrink-0" 
+                />
+                <div>
+                  <div className="font-serif font-bold text-slate-100 text-sm">Geoffrey Anyona</div>
+                  <div className="text-[10px] text-slate-400 font-mono">Founder · Forensics Director · Writer</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-[10px] font-mono text-[#A06C18] dark:text-[#E3B95C] px-3 py-1.5 rounded-lg bg-[#C89630]/10 border border-[#C89630]/20 font-semibold shrink-0">
+                Nairobi • London • Global
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Chapter 3: The Two Sovereign Pillars */}
       <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800">
         <div className="mb-10 text-left">
           <div className="text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold">
-            The Structural Architecture
+            Chapter III • The Structural Architecture
           </div>
           <h2 className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight mt-1">
             Two Pillars. One Unified Movement.
@@ -200,11 +295,11 @@ export const AboutPage: React.FC<AboutPageProps> = ({
         </div>
       </section>
 
-      {/* Chapter 3: Pan-African Footprint */}
+      {/* Chapter 4: Pan-African Footprint */}
       <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800">
         <div className="mb-8 text-left">
           <div className="text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold">
-            Chapter III • Regional Hubs
+            Chapter IV • Regional Hubs
           </div>
           <h2 className="text-2xl sm:text-3xl font-serif font-black text-slate-100 tracking-tight mt-1">
             Continental & Global Footprint
@@ -236,11 +331,11 @@ export const AboutPage: React.FC<AboutPageProps> = ({
         </div>
       </section>
 
-      {/* Chapter 4: Movement FAQs */}
+      {/* Chapter 5: Movement FAQs */}
       <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-4xl mx-auto border-b border-slate-800">
         <div className="mb-8 text-left">
           <div className="text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold">
-            Frequently Asked Questions
+            Chapter V • Frequently Asked Questions
           </div>
           <h2 className="text-2xl sm:text-3xl font-serif font-black text-slate-100 tracking-tight mt-1">
             Questions on Governance & Enrollment

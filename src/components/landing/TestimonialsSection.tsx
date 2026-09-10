@@ -57,11 +57,18 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
                 "A public speaker and philosopher passionately enthusiastic about giving a voice to the leaders of tomorrow, believing in the power of structured arguments and eloquent communication to better shape associations amongst future leaders. Global Orators gave me the platform to sharpen rigorous rhetoric while creating safe rooms for others to find their voice."
               </p>
               <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs">
-                <div>
-                  <div className="font-serif font-bold text-slate-100">Imani</div>
-                  <div className="text-[10px] text-slate-400 font-mono">Public Speaker & Philosopher • Orator Fellow (Consent Documented)</div>
+                <div className="flex items-center gap-3">
+                  <img 
+                    src="/images/hero-orator.jpg" 
+                    alt="Imani" 
+                    className="w-10 h-10 rounded-full object-cover object-top border border-slate-700 shrink-0" 
+                  />
+                  <div>
+                    <div className="font-serif font-bold text-slate-100">Imani</div>
+                    <div className="text-[10px] text-slate-400 font-mono">Public Speaker & Philosopher • Orator Fellow</div>
+                  </div>
                 </div>
-                <div className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#C89630]/10 text-[#A06C18] dark:text-[#E3B95C] border border-[#C89630]/20">
+                <div className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#C89630]/10 text-[#A06C18] dark:text-[#E3B95C] border border-[#C89630]/20 shrink-0">
                   Orator Fellow
                 </div>
               </div>
@@ -69,15 +76,22 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
 
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-7 space-y-4 shadow-sm">
               <p className="text-xs sm:text-sm text-slate-300 italic leading-relaxed font-serif">
-                "As an African young man, men in my family taught me that crying or speaking about mental anxiety was weakness. I developed severe panic attacks before any speech. Learning that speaking is catharsis—and that emotional vulnerability requires ten times more bravery than suppression—saved my mental health and my university career."
+                "A legal scholar, award-winning debater, poet and a firm believer in not limiting oneself regardless of the underlying circumstances. Global Orators provides the arena where forensic legal precision and poetic voice converge—empowering young advocates to dismantle institutional barriers and argue without fear or concession."
               </p>
               <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs">
-                <div>
-                  <div className="font-serif font-bold text-slate-100">Tariq Bakari</div>
-                  <div className="text-[10px] text-slate-400 font-mono">Academy Scholar • Pan-African Debate Finalist</div>
+                <div className="flex items-center gap-3">
+                  <img 
+                    src="/images/milo-podium.jpg" 
+                    alt="Milo Brian" 
+                    className="w-10 h-10 rounded-full object-cover object-top border border-slate-700 shrink-0" 
+                  />
+                  <div>
+                    <div className="font-serif font-bold text-slate-100">Milo Brian</div>
+                    <div className="text-[10px] text-slate-400 font-mono">Legal Scholar, Award-Winning Debater & Poet</div>
+                  </div>
                 </div>
-                <div className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-                  Academy Track
+                <div className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 shrink-0">
+                  Academy Scholar
                 </div>
               </div>
             </div>

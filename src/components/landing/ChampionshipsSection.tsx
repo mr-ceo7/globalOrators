@@ -17,20 +17,20 @@ export const ChampionshipsSection: React.FC = () => {
         </p>
       </div>
 
-      {/* Featured Championship Arena Visual Dispatch */}
+      {/* Featured Championship Arena Visual Dispatch: Authentic Trophy & Medal Laureates */}
       <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl mb-8">
         <img 
-          src="/images/championship-stage.jpg" 
-          alt="Pan-African debate squad delivering championship speech at PAUDC tournament" 
-          className="w-full h-56 sm:h-80 md:h-96 object-cover object-[center_30%] filter contrast-[1.05]" 
+          src="/images/geoffrey-squad-trophy.jpg" 
+          alt="Geoffrey Anyona, debaters, and delegation celebrating championship victory with trophy and medals" 
+          className="w-full h-56 sm:h-80 md:h-96 object-cover object-[center_25%] filter contrast-[1.03]" 
           loading="lazy" 
         />
         <figcaption className="px-4 py-2.5 sm:py-3 bg-slate-900 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] font-mono">
           <div className="flex items-center gap-2">
-            <span className="text-[#A06C18] dark:text-[#E3B95C] font-semibold uppercase tracking-wider">PAUDC Grand Finals · Strathmore Delegation</span>
-            <span className="text-slate-400">Addis Ababa</span>
+            <span className="text-[#A06C18] dark:text-[#E3B95C] font-semibold uppercase tracking-wider">Tournament Championship Delegation · Team Victory</span>
+            <span className="text-slate-400">Continental Circuit</span>
           </div>
-          <div className="text-slate-400">14 African Nations Represented • British Parliamentary Rigor</div>
+          <div className="text-slate-400">Trophy & Gold Medal Laureates • British Parliamentary Excellence</div>
         </figcaption>
       </figure>
 

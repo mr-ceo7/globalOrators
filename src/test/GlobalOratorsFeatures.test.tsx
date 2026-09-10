@@ -58,6 +58,11 @@ describe('Global Orators Landing Page & Features Tests', () => {
     // Verify tournament achievements
     expect(screen.getByText('World Universities Debating Championship')).toBeInTheDocument();
     expect(screen.getByText('Pan-African Universities Debating Championship')).toBeInTheDocument();
+
+    // Verify Founder's Note
+    expect(screen.getByText('Geoffrey Anyona')).toBeInTheDocument();
+    expect(screen.getByText(/Founder & Forensics Director · The Global Orators Project/i)).toBeInTheDocument();
+    expect(screen.getByText(/a generation that can speak must also learn to think/i)).toBeInTheDocument();
   }, 15000);
 
   test('should render SubdomainSwitcher with globalorators.com, app, and coach domains', () => {
@@ -226,4 +231,28 @@ describe('Global Orators Landing Page & Features Tests', () => {
       fireEvent.click(mobileToggleBtn!);
     });
   });
+
+  test('should render Speaker Spotlight and Testimonials featuring authentic profiles for both Imani and Milo Brian', () => {
+    render(
+      <AppProvider>
+        <LandingPage />
+      </AppProvider>
+    );
+
+    // Verify Speaker Spotlight header
+    expect(screen.getByText(/Voices of Conviction: Rigor, Rhetoric, and Courage/i)).toBeInTheDocument();
+
+    // Verify Imani's presence in spotlight & testimonials
+    expect(screen.getAllByText('Imani').length).toBeGreaterThan(0);
+    expect(screen.getByText(/Dispatch 01 · Philosophy & Voice/i)).toBeInTheDocument();
+    expect(screen.getByAltText(/Imani studying and drafting philosophical debate arguments/i)).toBeInTheDocument();
+
+    // Verify Milo Brian's presence in spotlight & testimonials
+    expect(screen.getAllByText('Milo Brian').length).toBeGreaterThan(0);
+    expect(screen.getByText(/Dispatch 02 · Law, Forensics & Poetics/i)).toBeInTheDocument();
+    expect(screen.getByText(/Milo, among other things, is a legal scholar, award winning debater, poet/i)).toBeInTheDocument();
+    expect(screen.getByAltText(/Milo Brian delivering an award-winning speech at the podium with microphone/i)).toBeInTheDocument();
+    expect(screen.getByAltText(/Milo Brian reviewing debate frameworks and poetry in front of a green chalkboard/i)).toBeInTheDocument();
+  });
 });
+

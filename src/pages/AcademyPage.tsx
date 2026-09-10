@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, GraduationCap, Trophy, CheckCircle, BookOpen, Clock, Users, Shield, Building2 } from 'lucide-react';
+import { ArrowRight, GraduationCap, Trophy, CheckCircle, BookOpen, Clock, Users, Shield, Building2, Quote } from 'lucide-react';
 import { SEOHead } from '../components/common/SEOHead';
 
 interface AcademyPageProps {
@@ -109,20 +109,39 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({
         </div>
       </section>
 
-      {/* Featured Arena Dispatch */}
+      {/* Featured Arena Dispatch: Authentic Documentary Visuals */}
       <section className="py-8 sm:py-12 px-4 sm:px-8 max-w-6xl mx-auto">
-        <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl">
-          <img 
-            src="/images/academy-debate.jpg" 
-            alt="Young African debaters engaged in parliamentary debate at championship rostrum" 
-            className="w-full h-64 sm:h-80 md:h-96 object-cover object-center filter contrast-[1.05]" 
-            loading="lazy" 
-          />
-          <figcaption className="px-4 py-3 bg-slate-900 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] font-mono uppercase tracking-widest text-slate-400">
-            <span className="text-[#A06C18] dark:text-[#E3B95C] font-semibold">Championship Chamber · PAUDC Selection Squad</span>
-            <span>British Parliamentary & Extemporaneous Motion Prep</span>
-          </figcaption>
-        </figure>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl flex flex-col justify-between">
+            <div className="h-64 sm:h-80 w-full overflow-hidden bg-slate-950">
+              <img 
+                src="/images/obed-poi.jpg" 
+                alt="Obed raising hand with pen for Point of Information during parliamentary debate" 
+                className="w-full h-full object-cover object-[center_20%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500" 
+                loading="lazy" 
+              />
+            </div>
+            <figcaption className="px-4 py-3 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-[11px] font-mono uppercase tracking-widest text-slate-400">
+              <span className="text-[#A06C18] dark:text-[#E3B95C] font-semibold">Chamber Point of Information</span>
+              <span>Parliamentary Floor Action</span>
+            </figcaption>
+          </figure>
+
+          <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl flex flex-col justify-between">
+            <div className="h-64 sm:h-80 w-full overflow-hidden bg-slate-950">
+              <img 
+                src="/images/obed-deliberation.jpg" 
+                alt="Obed and debaters collaborating in the motion deliberation chamber at Global Orators Academy" 
+                className="w-full h-full object-cover object-[center_35%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500" 
+                loading="lazy" 
+              />
+            </div>
+            <figcaption className="px-4 py-3 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-[11px] font-mono uppercase tracking-widest text-slate-400">
+              <span className="text-emerald-500 font-semibold">15-Minute Deliberation Room</span>
+              <span>Collaborative Case Prep</span>
+            </figcaption>
+          </figure>
+        </div>
       </section>
 
       {/* Program Specifications Matrix */}
@@ -183,6 +202,69 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({
               </p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Academy Scholar in Focus: Obed */}
+      <section className="py-12 sm:py-16 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800 text-left">
+        <div className="p-6 sm:p-10 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-6">
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold">
+              Scholar in Focus · Academy Debate Fellow
+            </span>
+            <div className="h-px bg-slate-800 flex-1" />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            <div className="lg:col-span-7 space-y-4">
+              <blockquote className="space-y-3">
+                <Quote className="w-8 h-8 text-[#C89630]/40 shrink-0" />
+                <p className="font-serif italic text-sm sm:text-base text-slate-100 leading-relaxed">
+                  "An articulate, thoughtful, and highly motivated young leader whose background in debate has strengthened critical thinking, communication, and the ability to engage with complex issues. He demonstrates intellectual curiosity, resilience, and a strong sense of responsibility, consistently approaching challenges with maturity and integrity. He combines analytical reasoning with empathy, enabling him to contribute meaningfully to discussions."
+                </p>
+              </blockquote>
+
+              <p className="text-xs text-slate-300 leading-relaxed font-normal pt-2 border-t border-slate-800">
+                At Global Orators Academy, Obed exemplifies the balance between razor-sharp competitive forensics and empathetic listening. His growth through tournament division and intensive argument workshops reflects the Academy's core mission: equipping African youth to engage the world's most intricate questions with moral clarity and poise.
+              </p>
+
+              <div className="pt-2 flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex items-center gap-3">
+                  <img 
+                    src="/images/obed-poi.jpg" 
+                    alt="Obed" 
+                    className="w-10 h-10 rounded-full object-cover object-top border border-slate-700 shrink-0" 
+                  />
+                  <div>
+                    <div className="font-serif font-bold text-slate-100 text-sm">Obed</div>
+                    <div className="text-[10px] text-slate-400 font-mono">Academy Debate Fellow · Parliamentary Intervener</div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => onStartOnboarding('Academy')}
+                  className="px-4 py-2 rounded-lg bg-[#C89630] hover:bg-[#B37D22] text-slate-950 font-serif font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shrink-0"
+                >
+                  <span>Train With Academy Fellows</span>
+                  <ArrowRight className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
+
+            <div className="lg:col-span-5 flex flex-col gap-3">
+              <div className="rounded-xl overflow-hidden border border-slate-800 bg-slate-950 shadow-md">
+                <img 
+                  src="/images/obed-arena.jpg" 
+                  alt="Obed at the tournament adjudication arena" 
+                  className="w-full h-56 sm:h-64 object-cover object-[center_20%] filter contrast-[1.03]" 
+                  loading="lazy" 
+                />
+              </div>
+              <div className="text-[10px] font-mono text-slate-400 flex items-center justify-between px-1">
+                <span className="text-[#A06C18] dark:text-[#E3B95C] uppercase font-bold">Tournament Floor Presence</span>
+                <span>Pan-African Circuit</span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

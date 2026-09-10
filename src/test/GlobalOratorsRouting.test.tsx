@@ -63,6 +63,7 @@ describe('Global Orators Dedicated Routing & SEO Tests', () => {
     expect(screen.getByTestId('current-path')).toHaveTextContent('/academy');
     expect(screen.getByRole('heading', { level: 1, name: /The Sovereign Chamber of Forensics/i })).toBeInTheDocument();
     expect(screen.getByText('The 4 Mastery Modules')).toBeInTheDocument();
+    expect(screen.getByText('Obed')).toBeInTheDocument();
   });
 
   test('should navigate to About page and Foundation page', async () => {
@@ -81,6 +82,9 @@ describe('Global Orators Dedicated Routing & SEO Tests', () => {
     expect(screen.getByTestId('current-path')).toHaveTextContent('/about');
     expect(screen.getByText('The Crisis of Cognitive Dependency')).toBeInTheDocument();
     expect(screen.getByText('Nairobi, Kenya')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: /A Generation That Can Speak Must Also Learn to Think/i })).toBeInTheDocument();
+    expect(screen.getAllByText('Geoffrey Anyona').length).toBeGreaterThan(0);
+    expect(screen.getByText(/curated corporate communications training/i)).toBeInTheDocument();
 
     // Navigate to Foundation
     const foundationBtn = screen.getByText('Go to Foundation');
@@ -123,7 +127,9 @@ describe('Global Orators Dedicated Routing & SEO Tests', () => {
     });
     expect(screen.getByTestId('current-path')).toHaveTextContent('/testimonials');
     expect(screen.getByText('Imani')).toBeInTheDocument();
-    expect(screen.getByText('Tariq Bakari')).toBeInTheDocument();
+    expect(screen.getByText('Milo Brian')).toBeInTheDocument();
+    expect(screen.getByText('Obed')).toBeInTheDocument();
+    expect(screen.getByText(/Academy Debate Fellow & Youth Leader/i)).toBeInTheDocument();
   });
 
   test('should inject SEO metadata tags and Schema.org JSON-LD structured data', () => {
