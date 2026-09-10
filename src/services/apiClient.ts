@@ -205,3 +205,28 @@ export const messagesApi = {
 export const activityApi = {
   getAll: (limit = 25) => api.get<ActivityFeedItem[]>(`/activity?limit=${limit}`),
 };
+
+// Inquiries Endpoints
+export interface InquiryPayload {
+  organization: string;
+  email: string;
+  branch: 'Academy' | 'Foundation';
+  focus: string;
+  message?: string;
+}
+
+export interface InquiryResponse {
+  status: string;
+  inquiryId: string;
+  organization: string;
+  email: string;
+  branch: string;
+  focus: string;
+  message: string;
+  createdAt: string;
+}
+
+export const inquiriesApi = {
+  submit: (data: InquiryPayload) => api.post<InquiryResponse>('/inquiries', data),
+  getAll: () => api.get<InquiryResponse[]>('/inquiries'),
+};

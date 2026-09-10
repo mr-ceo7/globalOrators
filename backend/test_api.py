@@ -133,4 +133,27 @@ async def test_api_endpoints():
         res = await client.get("/api/activity")
         assert res.status_code == 200
         assert len(res.json()) >= 5
+
+        # 15. Inquiries (Partnership / Grant Submission)
+        res = await client.post(
+            "/api/inquiries",
+            json={
+                "organization": "Alliance High School",
+                "email": "principal@alliance.ac.ke",
+                "branch": "Academy",
+                "focus": "Institutional Speech Training & Tournament Sponsorship",
+                "message": "Interested in 2026 debate curriculum."
+            }
+        )
+        assert res.status_code == 201
+        inq_data = res.json()
+        assert inq_data["status"] == "success"
+        assert inq_data["organization"] == "Alliance High School"
+        assert "inquiryId" in inq_data or "inquiry_id" in inq_data
+
+        # List inquiries
+        res = await client.get("/api/inquiries")
+        assert res.status_code == 200
+        assert len(res.json()) >= 1
+
         print("All API endpoints tested and passed flawlessly!")

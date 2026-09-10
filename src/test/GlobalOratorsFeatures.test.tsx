@@ -18,6 +18,17 @@ vi.mock('../services/apiClient', () => ({
   photosApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },
   messagesApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },
   activityApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },
+  inquiriesApi: {
+    submit: vi.fn().mockResolvedValue({
+      status: 'success',
+      inquiryId: 'GOP-INQ-TEST-001',
+      organization: 'Strathmore University',
+      branch: 'Academy',
+      receivedAt: '2026-09-10T12:00:00Z',
+      message: 'Inquiry received. Our partnerships director will review and respond within 24 hours.'
+    }),
+    list: vi.fn().mockResolvedValue([])
+  },
 }));
 
 describe('Global Orators Landing Page & Features Tests', () => {
@@ -107,15 +118,23 @@ describe('Global Orators Landing Page & Features Tests', () => {
     expect(document.documentElement.classList.contains('dark')).toBe(false);
   });
 
-  test('should render Take the Floor CTA, debated motions, and interactive voice dispatch on LandingPage', async () => {
+  test('should render audience-specific CTAs, value proposition, process steps, and interactive voice dispatch on LandingPage', async () => {
     render(
       <AppProvider>
         <LandingPage />
       </AppProvider>
     );
 
-    // Verify "Take the Floor" button
-    expect(screen.getAllByText('Take the Floor').length).toBeGreaterThan(0);
+    // Verify clear one-sentence value proposition
+    expect(screen.getByText(/Debate training, sovereign leadership development, and healing-centered voice programs for African youth/i)).toBeInTheDocument();
+
+    // Verify Audience Chooser fast-track section and 4-stage methodology
+    expect(screen.getByText('Choose Your Path')).toBeInTheDocument();
+    expect(screen.getByText('How The Program Operates')).toBeInTheDocument();
+
+    // Verify audience-specific direct action CTAs (replaces generic 'Take the Floor')
+    expect(screen.getAllByText('Apply to Academy').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Apply for Fellowship').length).toBeGreaterThan(0);
 
     // Verify Debated Motions section
     expect(screen.getByText('Sovereignty Defended On The Floor')).toBeInTheDocument();
@@ -133,6 +152,43 @@ describe('Global Orators Landing Page & Features Tests', () => {
 
     expect(screen.getByLabelText('Pause voice dispatch')).toBeInTheDocument();
     expect(screen.getByText(/0:24 \/ 1:18/)).toBeInTheDocument();
+  });
+
+  test('should open partner modal and submit partnership inquiry with confirmation reference number', async () => {
+    render(
+      <AppProvider>
+        <LandingPage />
+      </AppProvider>
+    );
+
+    // Click "Inquire for School Partnership"
+    const partnerBtn = screen.getByRole('button', { name: /Inquire for School Partnership/i });
+    expect(partnerBtn).toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(partnerBtn);
+    });
+
+    // Verify dialog opens
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByText('Partner with Global Orators Academy')).toBeInTheDocument();
+
+    // Fill form fields
+    const orgInput = screen.getByLabelText(/Organization/i);
+    const emailInput = screen.getByLabelText(/Contact Email/i);
+
+    fireEvent.change(orgInput, { target: { value: 'Strathmore University' } });
+    fireEvent.change(emailInput, { target: { value: 'dean@strathmore.edu' } });
+
+    // Submit form
+    const submitBtn = screen.getByRole('button', { name: /Submit Inquiry/i });
+    await act(async () => {
+      fireEvent.click(submitBtn);
+    });
+
+    // Verify success confirmation with reference ID
+    expect(await screen.findByText('Inquiry Successfully Logged')).toBeInTheDocument();
+    expect(screen.getByText('GOP-INQ-TEST-001')).toBeInTheDocument();
   });
 
   test('should open and close mobile navigation drawer with standard nav links on LandingPage', async () => {

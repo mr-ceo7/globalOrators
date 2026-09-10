@@ -25,6 +25,7 @@ from app.routers import (
     photos_router,
     messages_router,
     activity_router,
+    inquiries_router,
 )
 
 logging.basicConfig(
@@ -93,6 +94,7 @@ app.include_router(habits_router, prefix=settings.API_PREFIX)
 app.include_router(photos_router, prefix=settings.API_PREFIX)
 app.include_router(messages_router, prefix=settings.API_PREFIX)
 app.include_router(activity_router, prefix=settings.API_PREFIX)
+app.include_router(inquiries_router, prefix=settings.API_PREFIX)
 
 
 if __name__ == "__main__":
