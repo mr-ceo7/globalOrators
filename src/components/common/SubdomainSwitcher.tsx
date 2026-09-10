@@ -43,10 +43,9 @@ export const SubdomainSwitcher: React.FC = () => {
       <div className="max-w-7xl mx-auto px-3 sm:px-6 flex items-center justify-between py-1.5 sm:py-2">
         {/* Left: Indicator & Collapse Toggle */}
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/20 font-mono text-[10px] tracking-wide">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="hidden sm:inline">DOMAIN SIMULATION:</span>
-            <span className="font-semibold text-white">
+          <div className="flex items-center gap-1.5 bg-slate-900 text-slate-300 px-2.5 py-0.5 rounded-md border border-slate-800 font-mono text-[10px] tracking-wide">
+            <span className="text-[#C89630] font-bold uppercase">ENV:</span>
+            <span className="font-semibold text-slate-100">
               {portals.find(p => p.id === currentPortal)?.subdomain || 'globalorators.com'}
             </span>
           </div>

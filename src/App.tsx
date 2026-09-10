@@ -135,7 +135,7 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans antialiased">
-      {currentPortal !== 'landing' && <SubdomainSwitcher />}
+      {currentPortal !== 'landing' && currentPortal !== 'onboarding' && <SubdomainSwitcher />}
       {currentPortal === 'landing' && <LandingPage />}
       {currentPortal === 'speaker_app' && <ClientPortal />}
       {currentPortal === 'onboarding' && <OnboardingFlow />}

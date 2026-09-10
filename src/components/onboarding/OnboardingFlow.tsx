@@ -118,9 +118,9 @@ export const OnboardingFlow: React.FC = () => {
                 key={step}
                 className={`w-2 sm:w-6 h-1.5 rounded-full transition-all ${
                   step === currentStep 
-                    ? 'bg-emerald-400' 
+                    ? 'bg-[#C89630]' 
                     : step < currentStep 
-                    ? 'bg-emerald-600/60' 
+                    ? 'bg-[#C89630]/60' 
                     : 'bg-slate-800'
                 }`}
               />
@@ -138,10 +138,10 @@ export const OnboardingFlow: React.FC = () => {
         {currentStep === 1 && (
           <div className="space-y-6 animate-fadeIn">
             <div className="text-center max-w-lg mx-auto">
-              <span className="text-[10px] uppercase font-bold tracking-widest text-emerald-400 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+              <span className="text-[10px] font-mono uppercase font-bold tracking-widest text-[#C89630] px-2.5 py-1 rounded-md bg-[#C89630]/10 border border-[#C89630]/20">
                 Step 1 of 5
               </span>
-              <h2 className="text-2xl sm:text-3xl font-black text-white mt-2">
+              <h2 className="text-2xl sm:text-3xl font-serif font-black text-white mt-3">
                 Choose Your Functional Branch
               </h2>
               <p className="text-xs sm:text-sm text-slate-400 mt-1">
@@ -159,25 +159,25 @@ export const OnboardingFlow: React.FC = () => {
                   setSpeakingGoal('Competitive Debate');
                   setMissionFocus('Pan-African Leadership & Cognitive Deconditioning');
                 }}
-                className={`p-5 rounded-2xl border text-left transition-all relative flex flex-col justify-between ${
+                className={`p-5 rounded-2xl border text-left transition-all relative flex flex-col justify-between cursor-pointer ${
                   branch === 'Academy'
-                    ? 'bg-emerald-950/30 border-emerald-500 ring-2 ring-emerald-500/20 shadow-xl'
+                    ? 'bg-[#C89630]/10 border-[#C89630] ring-2 ring-[#C89630]/20 shadow-xl'
                     : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
                 }`}
               >
                 {branch === 'Academy' && (
-                  <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center">
+                  <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-[#C89630] text-slate-950 flex items-center justify-center">
                     <Check className="w-3 h-3 stroke-[3]" />
                   </div>
                 )}
                 <div>
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#C89630]/15 text-[#C89630] border border-[#C89630]/30 flex items-center justify-center mb-3">
                     <GraduationCap className="w-5 h-5" />
                   </div>
-                  <div className="text-[10px] uppercase font-extrabold tracking-wider text-emerald-400">
-                    Revenue & Championship Arm
+                  <div className="text-[10px] font-mono uppercase font-extrabold tracking-widest text-[#C89630]">
+                    Competitive Forensics & Leadership
                   </div>
-                  <h3 className="text-base font-bold text-white mt-1 mb-2">
+                  <h3 className="text-base font-serif font-bold text-white mt-1 mb-2">
                     Global Orators Academy
                   </h3>
                   <p className="text-xs text-slate-300 leading-relaxed">
@@ -197,25 +197,25 @@ export const OnboardingFlow: React.FC = () => {
                   setSpeakingGoal('Cathartic Expression & Healing');
                   setMissionFocus('Speaking as a Form of Escapism & Catharsis from Adversity');
                 }}
-                className={`p-5 rounded-2xl border text-left transition-all relative flex flex-col justify-between ${
+                className={`p-5 rounded-2xl border text-left transition-all relative flex flex-col justify-between cursor-pointer ${
                   branch === 'Foundation'
-                    ? 'bg-teal-950/30 border-teal-500 ring-2 ring-teal-500/20 shadow-xl'
+                    ? 'bg-[#2E684D]/20 border-emerald-500 ring-2 ring-emerald-500/20 shadow-xl'
                     : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
                 }`}
               >
                 {branch === 'Foundation' && (
-                  <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-teal-500 text-slate-950 flex items-center justify-center">
+                  <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center">
                     <Check className="w-3 h-3 stroke-[3]" />
                   </div>
                 )}
                 <div>
-                  <div className="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-400 border border-teal-500/20 flex items-center justify-center mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center mb-3">
                     <HeartHandshake className="w-5 h-5" />
                   </div>
-                  <div className="text-[10px] uppercase font-extrabold tracking-wider text-teal-400">
+                  <div className="text-[10px] font-mono uppercase font-extrabold tracking-widest text-emerald-400">
                     Grant-Funded Non-Profit Arm
                   </div>
-                  <h3 className="text-base font-bold text-white mt-1 mb-2">
+                  <h3 className="text-base font-serif font-bold text-white mt-1 mb-2">
                     Global Orators Foundation
                   </h3>
                   <p className="text-xs text-slate-300 leading-relaxed">
@@ -627,7 +627,7 @@ export const OnboardingFlow: React.FC = () => {
         {currentStep < 5 ? (
           <button
             onClick={handleNext}
-            className="px-6 py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs hover:bg-emerald-400 flex items-center gap-2 shadow-lg shadow-emerald-500/20 ml-auto"
+            className="px-6 py-2.5 rounded-xl bg-[#C89630] text-slate-950 font-serif font-bold text-xs hover:bg-[#B37D22] flex items-center gap-2 shadow-lg shadow-[#C89630]/20 ml-auto cursor-pointer"
           >
             <span>Continue</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -635,7 +635,7 @@ export const OnboardingFlow: React.FC = () => {
         ) : (
           <button
             onClick={handleFinish}
-            className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs hover:from-emerald-400 hover:to-teal-400 flex items-center gap-2 shadow-xl shadow-emerald-500/25 ml-auto"
+            className="px-6 py-2.5 rounded-xl bg-[#C89630] text-slate-950 font-serif font-bold text-xs hover:bg-[#B37D22] flex items-center gap-2 shadow-xl shadow-[#C89630]/25 ml-auto cursor-pointer"
           >
             <span>Enter My Speaker Portal</span>
             <ArrowRight className="w-3.5 h-3.5" />
