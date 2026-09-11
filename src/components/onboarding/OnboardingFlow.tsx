@@ -917,6 +917,83 @@ export interface OnboardingFlowProps {
   initialStep?: number;
 }
 
+export interface Step4HabitOption {
+  id: string;
+  tag: string;
+  title: string;
+  desc: string;
+}
+
+export const getStep4Habits = (branch: BranchType): Step4HabitOption[] => {
+  if (branch === 'Academy') {
+    return [
+      {
+        id: 'Diaphragmatic Breathwork & Resonance',
+        tag: 'VOCAL CORE • 5 MIN',
+        title: 'Diaphragmatic Breathwork & Resonance',
+        desc: 'Calms sympathetic nervous arousal and activates deep chest-to-mask vocal projection.'
+      },
+      {
+        id: 'Rapid Motion Rebuttal Drills',
+        tag: 'FORENSICS • 7 MIN',
+        title: 'Rapid Motion Rebuttal Drills',
+        desc: 'Construct point-counterpoint syllogisms against spontaneous tournament motions.'
+      },
+      {
+        id: 'Vocal Hydration & Cord Conditioning',
+        tag: 'PHYSIOLOGY • DAILY',
+        title: 'Vocal Hydration & Cord Conditioning',
+        desc: 'Protects vocal cord mucosa and prevents larynx fatigue during high-intensity oration.'
+      },
+      {
+        id: 'Tongue Twisters & Articulation Precision',
+        tag: 'DICTION • 3 MIN',
+        title: 'Tongue Twisters & Consonant Agility',
+        desc: 'Eliminates mumbling, sharpens plosives, and builds crisp articulatory precision.'
+      },
+      {
+        id: 'Pan-African & Geopolitics Reading',
+        tag: 'COGNITION • 10 MIN',
+        title: 'Pan-African & Geopolitics Reading',
+        desc: 'Sharpens cognitive familiarity with socio-economic context, policy, and global discourse.'
+      }
+    ];
+  }
+
+  return [
+    {
+      id: 'Cathartic Voice Audio Journaling',
+      tag: 'CATHARSIS • 1 MIN',
+      title: 'Cathartic Voice Audio Journaling',
+      desc: 'Speaking raw, unedited thoughts into the private audio vault for emotional release.'
+    },
+    {
+      id: 'Diaphragmatic Somatic Grounding',
+      tag: 'GROUNDING • 5 MIN',
+      title: 'Diaphragmatic Somatic Grounding',
+      desc: 'Regulates vagus nerve tone, dissolves throat tightness, and anchors the nervous system.'
+    },
+    {
+      id: 'Vocal Hydration & Gentle Warm-Up',
+      tag: 'SANCTUARY • DAILY',
+      title: 'Vocal Hydration & Gentle Warm-Up',
+      desc: 'Gentle warm hydration and resonant humming to honor and protect your speaking instrument.'
+    },
+    {
+      id: 'Voice Reclamation & Sovereignty Reading',
+      tag: 'EMPOWERMENT • 5 MIN',
+      title: 'Voice Reclamation & Sovereignty Reading',
+      desc: 'Vocalizing personal narratives aloud to shed inherited silence and build authentic agency.'
+    },
+    {
+      id: 'Polyvagal Humming & Chest Release',
+      tag: 'SOMATICS • 3 MIN',
+      title: 'Polyvagal Humming & Chest Release',
+      desc: 'Low-frequency resonant humming to melt chest constriction and ease fight-or-flight panic.'
+    }
+  ];
+};
+
 export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   initialBranch: propBranch,
   initialStep: propStep
@@ -962,6 +1039,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   const [otherDescription, setOtherDescription] = useState('');
   const [customFormatDescription, setCustomFormatDescription] = useState('');
   const [customPriorityDescription, setCustomPriorityDescription] = useState('');
+  const [customHabitDescription, setCustomHabitDescription] = useState('');
   const [age, setAge] = useState<number>(20);
   const [institution, setInstitution] = useState('');
   const [primaryDiscipline, setPrimaryDiscipline] = useState(activeConfig.formats[0].id);
@@ -997,6 +1075,10 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       if (coreFocus === 'Other / Custom Priority' && !value.trim()) {
         error = 'Please describe what you are looking for in your technical priority.';
       }
+    } else if (fieldName === 'customHabitDescription') {
+      if (selectedHabits.includes('Other / Custom Ritual') && !value.trim()) {
+        error = 'Please describe your personal daily ritual.';
+      }
     }
     setFieldErrors(prev => ({ ...prev, [fieldName]: error }));
     return error;
@@ -1019,18 +1101,49 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     }
   }, [branch, missionFocus, activeConfig]);
 
-  const [selectedHabits, setSelectedHabits] = useState<string[]>([
-    'Vocal Hydration (2.5L + Warm Lemon Water)',
-    'Diaphragmatic Breathwork (5 Min Morning Routine)',
-    'Cathartic Voice Journaling (1-Min Audio Reflection)'
-  ]);
+  // Branch-specific daily habits
+  const currentHabitOptions = useMemo(() => getStep4Habits(branch), [branch]);
+
+  const [selectedHabits, setSelectedHabits] = useState<string[]>(() =>
+    resolvedBranch === 'Academy'
+      ? [
+          'Diaphragmatic Breathwork & Resonance',
+          'Vocal Hydration & Cord Conditioning',
+          'Tongue Twisters & Articulation Precision'
+        ]
+      : [
+          'Cathartic Voice Audio Journaling',
+          'Diaphragmatic Somatic Grounding',
+          'Vocal Hydration & Gentle Warm-Up'
+        ]
+  );
+
+  const prevBranchHabitsRef = useRef(branch);
+  useEffect(() => {
+    if (prevBranchHabitsRef.current !== branch) {
+      prevBranchHabitsRef.current = branch;
+      if (branch === 'Academy') {
+        setSelectedHabits([
+          'Diaphragmatic Breathwork & Resonance',
+          'Vocal Hydration & Cord Conditioning',
+          'Tongue Twisters & Articulation Precision'
+        ]);
+      } else {
+        setSelectedHabits([
+          'Cathartic Voice Audio Journaling',
+          'Diaphragmatic Somatic Grounding',
+          'Vocal Hydration & Gentle Warm-Up'
+        ]);
+      }
+    }
+  }, [branch]);
 
   const [primaryObstacle, setPrimaryObstacle] = useState('Nervous Tension & Panic Freezing');
 
   // Toggle Habits
-  const handleToggleHabit = (habit: string) => {
+  const handleToggleHabit = (habitId: string) => {
     setSelectedHabits(prev => 
-      prev.includes(habit) ? prev.filter(h => h !== habit) : [...prev, habit]
+      prev.includes(habitId) ? prev.filter(h => h !== habitId) : [...prev, habitId]
     );
   };
 
@@ -1087,6 +1200,16 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         return;
       }
     }
+    if (currentStep === 4) {
+      if (selectedHabits.includes('Other / Custom Ritual')) {
+        const habitErr = validateField('customHabitDescription', customHabitDescription);
+        if (habitErr) {
+          setTouched(prev => ({ ...prev, customHabitDescription: true }));
+          alert('Please give a brief description of your custom daily ritual.');
+          return;
+        }
+      }
+    }
     setCurrentStep(prev => Math.min(prev + 1, 5));
   };
 
@@ -1099,6 +1222,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     const sanitizedOtherDesc = sanitizeMultiline(otherDescription, 1000);
     const sanitizedFormatDesc = sanitizeText(customFormatDescription, 150);
     const sanitizedPriorityDesc = sanitizeText(customPriorityDescription, 150);
+    const sanitizedCustomHabit = sanitizeText(customHabitDescription, 150);
 
     const resolvedMission = (missionFocus === 'Other Speaking Pursuit' && sanitizedOtherDesc.trim())
       ? `Other: ${sanitizedOtherDesc.trim()}`
@@ -1111,6 +1235,13 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     const resolvedFocus = (coreFocus === 'Other / Custom Priority' && sanitizedPriorityDesc.trim())
       ? `Other: ${sanitizedPriorityDesc.trim()}`
       : coreFocus;
+
+    const resolvedHabits = selectedHabits.map(h => {
+      if (h === 'Other / Custom Ritual' && sanitizedCustomHabit.trim()) {
+        return `Other: ${sanitizedCustomHabit.trim()}`;
+      }
+      return h;
+    });
 
     const data: SpeakerOnboardingData = {
       branch,
@@ -1126,7 +1257,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       experienceLevel,
       vocalBaselinePace: sanitizeInteger(vocalBaselinePace, 100, 200, 140),
       emotionalOpennessRating: sanitizeInteger(emotionalOpennessRating, 1, 10, 8),
-      selectedHabits,
+      selectedHabits: resolvedHabits,
       bioNotes: sanitizedOtherDesc.trim()
         ? `${branch} member from ${sanitizedInstitution}. Custom Objective: ${sanitizedOtherDesc.trim()}. Primary discipline: ${resolvedDiscipline}, specializing in ${resolvedFocus}.`
         : `${branch} member from ${sanitizedInstitution}. Primary discipline: ${resolvedDiscipline}, specializing in ${resolvedFocus}. Mission: ${missionFocus}.`
@@ -1975,59 +2106,133 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 Commit to Daily Orator Habits
               </h2>
               <p className="text-xs sm:text-sm text-slate-400 mt-1">
-                Great orators are forged through micro-habits. Select your daily rituals.
+                {branch === 'Academy'
+                  ? 'Great orators are forged through daily discipline. Calibrate your morning drills, forensic analysis, and vocal conditioning.'
+                  : 'Sovereign voices are nurtured through daily sanctuary. Select the somatic rituals, cathartic reflections, and grounding habits that restore your expression.'}
               </p>
             </div>
 
-            <div className="space-y-2.5">
-              {[
-                {
-                  title: 'Vocal Hydration (2.5L + Warm Lemon Water)',
-                  desc: 'Protects delicate vocal cord mucosa and prevents hoarseness.'
-                },
-                {
-                  title: 'Diaphragmatic Breathwork (5 Min Morning Routine)',
-                  desc: 'Calms nervous system, relieves anxiety, and expands resonance.'
-                },
-                {
-                  title: 'Cathartic Voice Journaling (1-Min Audio Reflection)',
-                  desc: 'Speaking freely into the audio vault as emotional escapism.'
-                },
-                {
-                  title: 'Pan-African & Current Affairs Reading (10 Min Daily)',
-                  desc: 'Sharpens cognitive familiarity with socio-economic realities.'
-                },
-                {
-                  title: 'Tongue Twisters & Articulation Warmups',
-                  desc: 'Eliminates mumbling and builds crisp consonant enunciation.'
-                }
-              ].map(habit => {
-                const isSelected = selectedHabits.includes(habit.title);
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+              {currentHabitOptions.map(habit => {
+                const isSelected = selectedHabits.includes(habit.id);
                 return (
                   <button
-                    key={habit.title}
+                    key={habit.id}
                     type="button"
-                    onClick={() => handleToggleHabit(habit.title)}
-                    className={`w-full p-3.5 rounded-xl border text-left flex items-center justify-between transition-all ${
+                    onClick={() => handleToggleHabit(habit.id)}
+                    className={`p-3 sm:p-3.5 rounded-xl border text-left transition-all relative flex flex-col justify-between cursor-pointer ${
                       isSelected
                         ? 'bg-[#C89630]/15 border-[#C89630] text-white ring-1 ring-[#C89630]/30 shadow-xs'
-                        : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700'
+                        : 'bg-slate-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
                     }`}
                   >
                     <div>
-                      <div className="text-xs font-bold text-white">{habit.title}</div>
-                      <div className="text-[11px] text-slate-400 mt-0.5">{habit.desc}</div>
-                    </div>
-                    <div
-                      className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 ml-3 ${
-                        isSelected ? 'bg-[#C89630] text-slate-950' : 'border border-slate-700'
-                      }`}
-                    >
-                      {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                      <div className="flex items-center justify-between gap-1 mb-1.5">
+                        <span className="text-[9px] font-mono uppercase font-bold tracking-widest text-[#C89630]">
+                          {habit.tag}
+                        </span>
+                        <div
+                          className={`w-4 h-4 rounded-md flex items-center justify-center shrink-0 ${
+                            isSelected ? 'bg-[#C89630] text-slate-950' : 'border border-slate-700'
+                          }`}
+                        >
+                          {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                        </div>
+                      </div>
+                      <div className="text-xs font-bold text-white leading-snug">
+                        {habit.title}
+                      </div>
+                      <div className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                        {habit.desc}
+                      </div>
                     </div>
                   </button>
                 );
               })}
+
+              {/* Card 6: Other / Custom Ritual */}
+              {(() => {
+                const isOtherSelected = selectedHabits.includes('Other / Custom Ritual');
+                return (
+                  <button
+                    type="button"
+                    onClick={() => handleToggleHabit('Other / Custom Ritual')}
+                    className={`p-3 sm:p-3.5 rounded-xl border text-left transition-all relative flex flex-col justify-between cursor-pointer ${
+                      isOtherSelected
+                        ? 'bg-[#C89630]/15 border-[#C89630] text-white ring-1 ring-[#C89630]/30 shadow-xs'
+                        : 'bg-slate-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between gap-1 mb-1.5">
+                        <span className="text-[9px] font-mono uppercase font-bold tracking-widest text-[#C89630]">
+                          BESPOKE • CUSTOM
+                        </span>
+                        <div
+                          className={`w-4 h-4 rounded-md flex items-center justify-center shrink-0 ${
+                            isOtherSelected ? 'bg-[#C89630] text-slate-950' : 'border border-slate-700'
+                          }`}
+                        >
+                          {isOtherSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                        </div>
+                      </div>
+                      <div className="text-xs font-bold text-white leading-snug">
+                        Other / Custom Ritual
+                      </div>
+                      <div className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                        Define your own personal speaking discipline, vocal warm-up, or evening reflection.
+                      </div>
+                    </div>
+                  </button>
+                );
+              })()}
+
+              {/* Expandable Textarea for Other Custom Ritual spanning col-span-2 */}
+              {selectedHabits.includes('Other / Custom Ritual') && (
+                <div className="col-span-2 space-y-1 animate-fadeIn pt-1">
+                  <div className="flex items-center justify-between">
+                    <label 
+                      htmlFor="custom-habit-description"
+                      className="block text-[10px] uppercase font-mono tracking-widest text-slate-400 font-bold"
+                    >
+                      Describe Your Daily Ritual *
+                    </label>
+                    <span className="text-[10px] font-mono text-slate-400">
+                      {customHabitDescription.length}/500
+                    </span>
+                  </div>
+                  <textarea
+                    id="custom-habit-description"
+                    rows={2}
+                    maxLength={500}
+                    spellCheck={true}
+                    aria-required="true"
+                    aria-invalid={touched.customHabitDescription && !!fieldErrors.customHabitDescription}
+                    aria-describedby={touched.customHabitDescription && fieldErrors.customHabitDescription ? "custom-habit-error" : undefined}
+                    value={customHabitDescription}
+                    onChange={(e) => {
+                      const val = sanitizeMultiline(e.target.value, 500);
+                      setCustomHabitDescription(val);
+                      if (touched.customHabitDescription) validateField('customHabitDescription', val);
+                    }}
+                    onBlur={() => handleBlur('customHabitDescription', customHabitDescription)}
+                    placeholder="Describe your personal speaking ritual (e.g. 5-minute vocal sirens, mirror monologue drills, reading poetry aloud, or bedtime gratitude audio notes)..."
+                    className={`w-full p-3 rounded-xl bg-slate-950 border text-xs text-white placeholder-slate-600 focus:outline-hidden transition-all ${
+                      touched.customHabitDescription && fieldErrors.customHabitDescription
+                        ? 'border-rose-500 focus:border-rose-400 focus:ring-1 focus:ring-rose-400/30'
+                        : 'border-slate-800 focus:border-[#C89630] focus:ring-1 focus:ring-[#C89630]/30'
+                    }`}
+                  />
+                  {touched.customHabitDescription && fieldErrors.customHabitDescription && (
+                    <p id="custom-habit-error" role="alert" className="text-[10px] font-mono text-rose-400">
+                      {fieldErrors.customHabitDescription}
+                    </p>
+                  )}
+                  <p className="text-[10px] text-slate-400 font-mono">
+                    This ritual will be integrated directly into your daily habit tracker on your speaker portal.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}

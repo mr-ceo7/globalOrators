@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Mic, 
   Square, 
@@ -24,7 +24,8 @@ import {
   ArrowUpRight, 
   ChevronRight,
   ShieldCheck,
-  Globe
+  Globe,
+  LogOut
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { BranchType, SpeakerOnboardingData } from '../../types';
@@ -37,6 +38,20 @@ export const ClientPortal: React.FC = () => {
     showToast,
     resetOnboarding
   } = useApp();
+
+  const profile = useMemo(() => activeSpeakerProfile || {
+    branch: 'Foundation' as BranchType,
+    fullName: 'Nia Adebayo',
+    email: 'nia.adebayo@globalorators.org',
+    missionFocus: 'Speaking as a Form of Escapism & Healing',
+    speakingGoal: 'Cathartic Expression & Healing',
+    experienceLevel: 'Novice Speaker',
+    vocalBaselinePace: 135,
+    emotionalOpennessRating: 8,
+    selectedHabits: ['Vocal Hydration (2.5L + Warm Lemon Water)', 'Diaphragmatic Breathwork (5 Min Morning Routine)']
+  }, [activeSpeakerProfile]);
+
+  const isAcademy = profile.branch === 'Academy';
 
   // Active Tab inside Client Portal
   const [speakerTab, setSpeakerTab] = useState<'practice' | 'catharsis' | 'schedule' | 'habits' | 'coach'>('practice');
@@ -73,14 +88,36 @@ export const ClientPortal: React.FC = () => {
     }
   ]);
 
-  // Daily Habits State in Client Portal
-  const [habitsStatus, setHabitsStatus] = useState<{ [title: string]: boolean }>({
-    'Vocal Hydration (2.5L + Warm Lemon Water)': true,
-    'Diaphragmatic Breathwork (5 Min Morning Routine)': true,
-    'Cathartic Voice Journaling (1-Min Audio Reflection)': false,
-    'Pan-African & Current Affairs Reading (10 Min Daily)': true,
-    'Tongue Twisters & Articulation Warmups': false
+  // Daily Habits State in Client Portal initialized dynamically from profile
+  const [habitsStatus, setHabitsStatus] = useState<{ [title: string]: boolean }>(() => {
+    const initial: { [title: string]: boolean } = {};
+    const habitsList = profile.selectedHabits && profile.selectedHabits.length > 0
+      ? profile.selectedHabits
+      : [
+          'Vocal Hydration (2.5L + Warm Lemon Water)',
+          'Diaphragmatic Breathwork (5 Min Morning Routine)',
+          'Tongue Twisters & Articulation Warmups'
+        ];
+    habitsList.forEach((habitTitle, idx) => {
+      initial[habitTitle] = idx === 0;
+    });
+    return initial;
   });
+
+  const habitsKey = useMemo(() => (profile.selectedHabits || []).join(':::'), [profile.selectedHabits]);
+
+  // Keep habitsStatus in sync whenever speaker profile updates
+  useEffect(() => {
+    if (profile.selectedHabits && profile.selectedHabits.length > 0) {
+      setHabitsStatus(prev => {
+        const next: { [title: string]: boolean } = {};
+        profile.selectedHabits.forEach((habitTitle, idx) => {
+          next[habitTitle] = prev[habitTitle] !== undefined ? prev[habitTitle] : idx === 0;
+        });
+        return next;
+      });
+    }
+  }, [habitsKey]);
 
   // Client to Coach simulated messages
   const [clientMessageInput, setClientMessageInput] = useState('');
@@ -119,7 +156,7 @@ export const ClientPortal: React.FC = () => {
         bioNotes: 'Lead debater on the Global Orators Pan-African tournament squad.'
       };
       setActiveSpeakerProfile(academyProfile);
-      showToast('Switched to Global Orators Academy demo profile 🎓');
+      showToast('Switched to Global Orators Academy demo profile.');
     } else {
       const foundationProfile: SpeakerOnboardingData = {
         branch: 'Foundation',
@@ -140,23 +177,9 @@ export const ClientPortal: React.FC = () => {
         bioNotes: 'Foundation fellow transforming past domestic adversity into voice advocacy.'
       };
       setActiveSpeakerProfile(foundationProfile);
-      showToast('Switched to Global Orators Foundation demo profile 💖');
+      showToast('Switched to Global Orators Foundation demo profile.');
     }
   };
-
-  const profile = activeSpeakerProfile || {
-    branch: 'Foundation' as BranchType,
-    fullName: 'Nia Adebayo',
-    email: 'nia.adebayo@globalorators.org',
-    missionFocus: 'Speaking as a Form of Escapism & Healing',
-    speakingGoal: 'Cathartic Expression & Healing',
-    experienceLevel: 'Novice Speaker',
-    vocalBaselinePace: 135,
-    emotionalOpennessRating: 8,
-    selectedHabits: ['Vocal Hydration (2.5L + Warm Lemon Water)', 'Diaphragmatic Breathwork (5 Min Morning Routine)']
-  };
-
-  const isAcademy = profile.branch === 'Academy';
 
   // Toggle habit check
   const toggleHabit = (title: string) => {
@@ -204,7 +227,7 @@ export const ClientPortal: React.FC = () => {
 
     setJournalEntries([newEntry, ...journalEntries]);
     setJournalText('');
-    showToast('Reflection logged in your private Catharsis Vault 🎙️');
+    showToast('Reflection logged in your private Catharsis Vault.');
   };
 
   // Send message to coach
@@ -296,11 +319,25 @@ export const ClientPortal: React.FC = () => {
 
           <button
             onClick={() => setCurrentPortal('landing')}
-            className="px-2.5 py-1.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:text-white text-xs font-semibold flex items-center gap-1.5"
+            className="px-2.5 py-1.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
             title="Return to Landing Page (globalorators.com)"
           >
             <Globe className="w-3.5 h-3.5 text-emerald-400" />
             <span className="hidden md:inline">Public Site</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveSpeakerProfile(null);
+              localStorage.removeItem('globalorators_speaker_profile');
+              setCurrentPortal('landing');
+              showToast('Signed out of speaker portal.');
+            }}
+            className="px-2.5 py-1.5 rounded-xl border border-rose-900/40 bg-rose-950/20 text-rose-300 hover:text-rose-100 hover:bg-rose-950/40 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+            title="Sign out of speaker profile"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Sign Out</span>
           </button>
         </div>
       </header>
@@ -745,9 +782,8 @@ export const ClientPortal: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-xs sm:text-sm font-bold text-white">Head Coach Qassim</h3>
-                    <div className="text-[10px] text-emerald-400 flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      <span>Online • Global Orators Coaching Lead</span>
+                    <div className="text-[10px] text-emerald-400 font-mono uppercase tracking-wider">
+                      Online • Coaching Lead
                     </div>
                   </div>
                 </div>

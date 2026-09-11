@@ -8,10 +8,12 @@ import {
   Moon, 
   Menu, 
   X,
-  Building2
+  Building2,
+  LogIn
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { NubianFitLogo } from '../common/NubianFitLogo';
+import { SpeakerLoginModal } from './SpeakerLoginModal';
 
 interface LandingHeaderProps {
   onStartOnboarding: (branch?: 'Academy' | 'Foundation') => void;
@@ -25,6 +27,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
   const { setCurrentPortal, theme, toggleTheme, currentPath, navigate } = useApp();
   const [portalsDropdownOpen, setPortalsDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [speakerLoginOpen, setSpeakerLoginOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 bg-slate-950/95 backdrop-blur-xl border-b border-slate-800 px-4 sm:px-8 lg:px-12 py-3 transition-colors duration-200">
@@ -180,9 +183,32 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
                     <div className="text-[10px] text-slate-400 font-mono">School & charity partnerships</div>
                   </div>
                 </button>
+
+                <button
+                  onClick={() => {
+                    setPortalsDropdownOpen(false);
+                    setSpeakerLoginOpen(true);
+                  }}
+                  className="w-full px-3 py-2 rounded-lg hover:bg-slate-800 flex items-center gap-2.5 text-xs text-slate-200 transition-colors cursor-pointer border-t border-slate-800 mt-1 pt-1.5"
+                >
+                  <LogIn className="w-3.5 h-3.5 text-[#C89630]" />
+                  <div className="text-left">
+                    <div className="font-semibold text-slate-100">Sign In to Profile</div>
+                    <div className="text-[10px] text-slate-400 font-mono">Existing speaker re-entry</div>
+                  </div>
+                </button>
               </div>
             )}
           </div>
+
+          {/* Speaker Sign In Button (Desktop) */}
+          <button
+            onClick={() => setSpeakerLoginOpen(true)}
+            className="hidden sm:flex px-3 py-1.5 rounded-lg border border-slate-800 hover:border-slate-700 bg-slate-900/80 hover:bg-slate-850 text-slate-300 hover:text-white font-serif text-xs items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap focus-visible:ring-2 focus-visible:ring-[#C89630] focus-visible:outline-hidden"
+          >
+            <LogIn className="w-3.5 h-3.5 text-[#C89630]" />
+            <span>Sign In</span>
+          </button>
 
           {/* Primary Action Button (Desktop/Tablet) */}
           <button
@@ -292,16 +318,28 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
 
           {/* Mobile Actions: Apply CTA + Portals */}
           <div className="mt-3 pt-3 border-t border-slate-800 space-y-2.5">
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                onStartOnboarding();
-              }}
-              className="w-full py-2.5 px-4 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-slate-950 font-serif font-bold text-xs shadow-md shadow-[#C89630]/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
-            >
-              <span>Apply to Global Orators</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onStartOnboarding();
+                }}
+                className="py-2.5 px-3 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-slate-950 font-serif font-bold text-xs shadow-md shadow-[#C89630]/20 flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap"
+              >
+                <span>Apply Now</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setSpeakerLoginOpen(true);
+                }}
+                className="py-2.5 px-3 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-850 text-slate-200 font-serif font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap"
+              >
+                <LogIn className="w-3.5 h-3.5 text-[#C89630]" />
+                <span>Sign In</span>
+              </button>
+            </div>
 
             <div className="grid grid-cols-2 gap-2">
               <button
@@ -328,6 +366,16 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
           </div>
         </div>
       )}
+
+      {/* Speaker Re-Entry Login Modal */}
+      <SpeakerLoginModal
+        isOpen={speakerLoginOpen}
+        onClose={() => setSpeakerLoginOpen(false)}
+        onStartOnboarding={() => {
+          setSpeakerLoginOpen(false);
+          onStartOnboarding();
+        }}
+      />
     </header>
   );
 };

@@ -117,6 +117,7 @@ interface AppContextType {
   activeSpeakerProfile: SpeakerOnboardingData | null;
   setActiveSpeakerProfile: (profile: SpeakerOnboardingData | null) => void;
   completeOnboarding: (data: SpeakerOnboardingData) => void;
+  loginSpeaker: (emailOrPhone: string) => Promise<{ success: boolean; error?: string }>;
   resetOnboarding: () => void;
 }
 
@@ -139,6 +140,33 @@ const DEFAULT_SPEAKER_PROFILE: SpeakerOnboardingData = {
     'Tongue Twisters & Articulation Warmups'
   ],
   bioNotes: 'Foundation scholar working on cathartic expression, healing from past adversity, and discovering his oratorical voice.'
+};
+
+export const clientToSpeakerProfile = (client: Client): SpeakerOnboardingData => {
+  const survey = (client.onboardingSurvey || {}) as Record<string, any>;
+  return {
+    branch: (client.branch || survey.branch || 'Academy') as BranchType,
+    fullName: client.name,
+    email: client.email || survey.email || '',
+    phone: client.phone || survey.phone || '',
+    age: client.age || survey.age || 20,
+    institution: client.institution || survey.institution || '',
+    primaryDiscipline: client.primaryDiscipline || survey.primaryDiscipline || '',
+    coreFocus: client.coreFocus || survey.coreFocus || '',
+    missionFocus: client.missionFocus || survey.missionFocus || client.goal || 'Oratorical Leadership & Impact',
+    speakingGoal: client.goal,
+    experienceLevel: client.experienceLevel,
+    vocalBaselinePace: survey.vocalBaselinePace || client.currentWeightKg || 140,
+    emotionalOpennessRating: survey.emotionalOpennessRating || (client.catharsisScore ? Math.round(client.catharsisScore / 10) : 8),
+    selectedHabits: survey.selectedHabits && Array.isArray(survey.selectedHabits) && survey.selectedHabits.length > 0
+      ? survey.selectedHabits
+      : [
+          'Vocal Hydration (2.5L + Warm Lemon Water)',
+          'Diaphragmatic Breathwork (5 Min Morning Routine)',
+          'Tongue Twisters & Articulation Warmups'
+        ],
+    bioNotes: survey.bioNotes || (client.customCoachNotes && client.customCoachNotes[0]) || ''
+  };
 };
 
 const getSavedTheme = (): 'light' | 'dark' | null => {
@@ -1042,7 +1070,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       targetBodyFat: 95,
       injuriesAndHealth: ['Navigating emotional vulnerability hurdles', 'Overcoming conversational hesitation'],
       medicalAlerts: 'Prioritize diaphragmatic calming breathwork and vocal hydration before speaking.',
-      customCoachNotes: [`Onboarded through Global Orators ${data.branch} flow. Focus: ${data.missionFocus}`],
+      customCoachNotes: [data.bioNotes || `Onboarded through Global Orators ${data.branch} flow. Focus: ${data.missionFocus}`],
       onboardingSurvey: {
         gymAccess: data.branch === 'Academy' ? 'University Debate Hall & Parliamentary Forum' : 'Children\'s Home & Community Empowerment Center',
         weeklyAvailabilityDays: 4,
@@ -1050,14 +1078,102 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         sleepAvgHours: 7.5,
         stressLevel: 'Moderate',
         favoriteExercises: data.branch === 'Academy' ? 'Aristotelian Triad Framing' : 'Cathartic Voice Journaling & Vulnerability Release',
-        leastFavoriteExercises: 'None recorded'
-      }
+        leastFavoriteExercises: 'None recorded',
+        branch: data.branch,
+        fullName: data.fullName,
+        email: data.email,
+        phone: data.phone || '',
+        age: data.age || 20,
+        institution: data.institution || '',
+        primaryDiscipline: data.primaryDiscipline || '',
+        coreFocus: data.coreFocus || '',
+        missionFocus: data.missionFocus,
+        speakingGoal: data.speakingGoal,
+        experienceLevel: data.experienceLevel,
+        vocalBaselinePace: data.vocalBaselinePace,
+        emotionalOpennessRating: data.emotionalOpennessRating,
+        selectedHabits: data.selectedHabits,
+        bioNotes: data.bioNotes || ''
+      } as any
     };
 
-    setClients(prev => [newClientEntry, ...prev]);
+    setClients(prev => [newClientEntry, ...prev.filter(c => c.email !== data.email)]);
     setCurrentPortal('speaker_app');
-    showToast(`Welcome ${data.fullName}! Your ${data.branch} protocol is ready. 🎙️`);
+    showToast(`Welcome ${data.fullName}. Your ${data.branch} protocol is initialized.`);
+
+    // Persist to backend SQLite database
+    clientsApi.create(newClientEntry)
+      .then(persisted => {
+        if (persisted && persisted.id) {
+          setClients(prev => prev.map(c => c.id === newClientEntry.id ? persisted : c));
+        }
+      })
+      .catch(err => {
+        console.warn('Backend client persistence failed (local fallback retained):', err);
+      });
   }, [setCurrentPortal, showToast]);
+
+  const loginSpeaker = useCallback(async (emailOrPhone: string): Promise<{ success: boolean; error?: string }> => {
+    const clean = emailOrPhone.trim();
+    if (!clean) {
+      return { success: false, error: 'Please enter your email or phone number.' };
+    }
+
+    const cleanLower = clean.toLowerCase();
+    const cleanDigits = clean.replace(/\D/g, '');
+
+    // Check in-memory clients first
+    const localMatch = clients.find(c => {
+      const emailMatches = Boolean(c.email && c.email.toLowerCase() === cleanLower);
+      const nameMatches = Boolean(c.name && c.name.toLowerCase() === cleanLower);
+      const phoneMatches = Boolean(cleanDigits.length >= 6 && c.phone && c.phone.replace(/\D/g, '').includes(cleanDigits));
+      return emailMatches || nameMatches || phoneMatches;
+    });
+
+    try {
+      const backendClient = await clientsApi.lookup(clean);
+      if (backendClient) {
+        const profile = clientToSpeakerProfile(backendClient);
+        setActiveSpeakerProfile(profile);
+        localStorage.setItem('globalorators_speaker_profile', JSON.stringify(profile));
+        const targetEmail = (backendClient.email || '').toLowerCase();
+        const targetId = backendClient.id;
+        setClients(prev => {
+          const exists = prev.some(c => c.id === targetId || (targetEmail && (c.email || '').toLowerCase() === targetEmail));
+          return exists 
+            ? prev.map(c => (c.id === targetId || (targetEmail && (c.email || '').toLowerCase() === targetEmail)) ? backendClient : c) 
+            : [backendClient, ...prev];
+        });
+        setCurrentPortal('speaker_app');
+        showToast(`Welcome back, ${profile.fullName}. Profile loaded.`);
+        return { success: true };
+      }
+    } catch {
+      // Backend lookup returned 404 or connection offline
+      if (localMatch) {
+        const profile = clientToSpeakerProfile(localMatch);
+        setActiveSpeakerProfile(profile);
+        localStorage.setItem('globalorators_speaker_profile', JSON.stringify(profile));
+        setCurrentPortal('speaker_app');
+        showToast(`Welcome back, ${profile.fullName}. Profile loaded.`);
+        return { success: true };
+      }
+    }
+
+    if (localMatch) {
+      const profile = clientToSpeakerProfile(localMatch);
+      setActiveSpeakerProfile(profile);
+      localStorage.setItem('globalorators_speaker_profile', JSON.stringify(profile));
+      setCurrentPortal('speaker_app');
+      showToast(`Welcome back, ${profile.fullName}. Profile loaded.`);
+      return { success: true };
+    }
+
+    return {
+      success: false,
+      error: 'No speaker profile found with that email or phone number. Check your entry or create a new profile.'
+    };
+  }, [clients, setCurrentPortal, showToast]);
 
   return (
     <AppContext.Provider
@@ -1111,6 +1227,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         activeSpeakerProfile,
         setActiveSpeakerProfile,
         completeOnboarding,
+        loginSpeaker,
         resetOnboarding
       }}
     >

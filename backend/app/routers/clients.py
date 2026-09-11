@@ -7,7 +7,7 @@ import uuid
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, or_
 
 from app.dependencies import get_db, get_optional_user
 from app.models.client import Client
@@ -30,14 +30,48 @@ async def list_clients(
         query = query.where(Client.status == status_filter)
     if search:
         search_pattern = f"%{search.lower()}%"
-        query = query.where(
-            (Client.name.ilike(search_pattern)) | 
-            (Client.email.ilike(search_pattern)) | 
-            (Client.goal.ilike(search_pattern))
-        )
+        phone_digits = "".join(c for c in search if c.isdigit())
+        conditions = [
+            Client.name.ilike(search_pattern),
+            Client.email.ilike(search_pattern),
+            Client.goal.ilike(search_pattern),
+            Client.phone.ilike(search_pattern),
+        ]
+        if len(phone_digits) >= 6:
+            conditions.append(Client.phone.ilike(f"%{phone_digits}%"))
+        query = query.where(or_(*conditions))
     
     result = await db.execute(query)
     return result.scalars().all()
+
+
+@router.get("/lookup", response_model=ClientResponse)
+async def lookup_client(
+    search: str = Query(..., description="Email, phone, or name of the speaker to lookup"),
+    db: AsyncSession = Depends(get_db)
+):
+    """Lookup a speaker profile by email, phone, or name for authentication and portal entry."""
+    search_term = search.strip()
+    if not search_term:
+        raise HTTPException(status_code=400, detail="Search term cannot be empty")
+
+    search_lower = search_term.lower()
+    phone_digits = "".join(c for c in search_term if c.isdigit())
+
+    conditions = [
+        Client.email.ilike(search_lower),
+        Client.name.ilike(search_lower)
+    ]
+    if len(phone_digits) >= 6:
+        conditions.append(Client.phone.ilike(f"%{phone_digits}%"))
+
+    result = await db.execute(
+        select(Client).where(or_(*conditions)).order_by(Client.id.desc())
+    )
+    client = result.scalars().first()
+    if not client:
+        raise HTTPException(status_code=404, detail="Speaker profile not found")
+    return client
 
 
 @router.get("/{client_id}", response_model=ClientResponse)
@@ -56,7 +90,27 @@ async def create_client(
     db: AsyncSession = Depends(get_db),
     user: Optional[User] = Depends(get_optional_user)
 ):
-    """Create a new client and log activity."""
+    """Create a new client or update existing client if email or phone matches."""
+    # Check if a client with the same email or phone already exists
+    existing = None
+    if client_in.email and client_in.email.strip():
+        res = await db.execute(select(Client).where(Client.email.ilike(client_in.email.strip())))
+        existing = res.scalars().first()
+    if not existing and client_in.phone and client_in.phone.strip():
+        phone_digits = "".join(c for c in client_in.phone if c.isdigit())
+        if len(phone_digits) >= 7:
+            res = await db.execute(select(Client).where(Client.phone.ilike(f"%{phone_digits}%")))
+            existing = res.scalars().first()
+
+    if existing:
+        update_data = client_in.model_dump(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(existing, key, value)
+        existing.last_active = "Just now"
+        await db.commit()
+        await db.refresh(existing)
+        return existing
+
     client_id = f"client-{int(time.time() * 1000)}"
     
     client_dict = client_in.model_dump()

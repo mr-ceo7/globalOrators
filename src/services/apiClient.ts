@@ -126,6 +126,7 @@ export const authApi = {
 export const clientsApi = {
   getAll: (params?: { status?: string; search?: string }) => api.get<Client[]>('/clients', params),
   getById: (id: string) => api.get<Client>(`/clients/${id}`),
+  lookup: (search: string) => api.get<Client>('/clients/lookup', { search }),
   create: (client: Partial<Client>) => api.post<Client>('/clients', client),
   update: (id: string, updates: Partial<Client>) => api.patch<Client>(`/clients/${id}`, updates),
   addNote: (id: string, note: string) => api.post<Client>(`/clients/${id}/notes`, { note }),

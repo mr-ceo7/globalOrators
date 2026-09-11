@@ -9,7 +9,39 @@ import { OnboardingFlow } from '../components/onboarding/OnboardingFlow';
 
 vi.mock('../services/apiClient', () => ({
   authApi: { me: vi.fn().mockResolvedValue({ email: 'coach@globalorators.com' }) },
-  clientsApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },
+  clientsApi: { 
+    list: vi.fn().mockResolvedValue([]), 
+    getAll: vi.fn().mockResolvedValue([]),
+    create: vi.fn().mockImplementation((c) => Promise.resolve({ ...c, id: c.id || 'client-mock-123' })),
+    lookup: vi.fn().mockImplementation((search) => {
+      if (search.includes('kassim') || search.includes('254746957502')) {
+        return Promise.resolve({
+          id: 'client-mock-kassim',
+          name: 'KASSIM MUSA',
+          email: 'kassimmusa322@gmail.com',
+          phone: '+254746957502',
+          goal: 'Pan-African Leadership',
+          experienceLevel: 'Novice Speaker',
+          currentWeightKg: 140,
+          onboardingSurvey: {
+            branch: 'Academy',
+            fullName: 'KASSIM MUSA',
+            email: 'kassimmusa322@gmail.com',
+            phone: '+254746957502',
+            institution: 'Maseno University',
+            primaryDiscipline: 'Decolonial Parliamentary Forensics',
+            coreFocus: 'Ideological Rigor & Rebuttal Depth',
+            missionFocus: 'Pan-African Leadership',
+            selectedHabits: [
+              'Vocal Hydration (2.5L + Warm Lemon Water)',
+              'Decolonial Parliamentary Case Prep (15 Min)'
+            ]
+          }
+        });
+      }
+      return Promise.reject(new Error('Speaker profile not found'));
+    })
+  },
   exercisesApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },
   programsApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },
   workoutsApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },
@@ -561,5 +593,61 @@ describe('Global Orators Landing Page & Features Tests', () => {
     // Verify Step 4 renders
     expect(screen.getByText(/Commit to Daily Orator Habits/i)).toBeInTheDocument();
   });
+
+  test('should render refined Step 4 habits in 2-column layout with branch-tailored options and custom ritual input', async () => {
+    // Test Academy track Step 4
+    localStorage.setItem('globalorators_selected_branch', 'Academy');
+
+    const { unmount } = render(
+      <AppProvider>
+        <OnboardingFlow initialStep={4} />
+      </AppProvider>
+    );
+
+    expect(screen.getByText('Commit to Daily Orator Habits')).toBeInTheDocument();
+    expect(screen.getByText(/Great orators are forged through daily discipline/i)).toBeInTheDocument();
+    expect(screen.getByText('Diaphragmatic Breathwork & Resonance')).toBeInTheDocument();
+    expect(screen.getByText('VOCAL CORE • 5 MIN')).toBeInTheDocument();
+    expect(screen.getByText('Rapid Motion Rebuttal Drills')).toBeInTheDocument();
+    expect(screen.getByText('FORENSICS • 7 MIN')).toBeInTheDocument();
+
+    // Verify Other / Custom Ritual button
+    const otherRitualBtn = screen.getByRole('button', { name: /Other \/ Custom Ritual/i });
+    expect(otherRitualBtn).toBeInTheDocument();
+    expect(screen.getByText('BESPOKE • CUSTOM')).toBeInTheDocument();
+
+    // Click Other / Custom Ritual
+    await act(async () => {
+      fireEvent.click(otherRitualBtn);
+    });
+
+    expect(screen.getByText(/Describe Your Daily Ritual \*/i)).toBeInTheDocument();
+    const customHabitInput = screen.getByPlaceholderText(/5-minute vocal sirens/i);
+    expect(customHabitInput).toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.change(customHabitInput, { target: { value: '10-minute bedtime vocal straw phonation and pitch sweeps' } });
+    });
+    expect(customHabitInput).toHaveValue('10-minute bedtime vocal straw phonation and pitch sweeps');
+
+    unmount();
+
+    // Test Foundation track Step 4
+    localStorage.setItem('globalorators_selected_branch', 'Foundation');
+
+    render(
+      <AppProvider>
+        <OnboardingFlow initialBranch="Foundation" initialStep={4} />
+      </AppProvider>
+    );
+
+    expect(screen.getByText('Commit to Daily Orator Habits')).toBeInTheDocument();
+    expect(screen.getByText(/Sovereign voices are nurtured through daily sanctuary/i)).toBeInTheDocument();
+    expect(screen.getByText('Cathartic Voice Audio Journaling')).toBeInTheDocument();
+    expect(screen.getByText('CATHARSIS • 1 MIN')).toBeInTheDocument();
+    expect(screen.getByText('Diaphragmatic Somatic Grounding')).toBeInTheDocument();
+    expect(screen.getByText('GROUNDING • 5 MIN')).toBeInTheDocument();
+  });
 });
+
 
