@@ -492,5 +492,74 @@ describe('Global Orators Landing Page & Features Tests', () => {
     expect(screen.getByText('Bespoke Oratory & Rhetoric Baseline')).toBeInTheDocument();
     expect(screen.getByText(/Calibrate your personalized speaking trajectory/i)).toBeInTheDocument();
   });
+
+  test('should render Other Arena and Other Priority options on Step 3 and enable custom descriptions', async () => {
+    localStorage.setItem('globalorators_selected_branch', 'Academy');
+
+    render(
+      <AppProvider>
+        <OnboardingFlow />
+      </AppProvider>
+    );
+
+    // Advance to Step 3
+    const continueBtn = screen.getByRole('button', { name: /Continue/i });
+    await act(async () => {
+      fireEvent.click(continueBtn);
+    });
+
+    expect(screen.getByText(/Sovereign Rhetoric & Leadership Baseline/i)).toBeInTheDocument();
+
+    // 1. Test Other Arena / Format
+    const otherArenaBtn = screen.getByRole('button', { name: /Other Arena \/ Format/i });
+    expect(otherArenaBtn).toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(otherArenaBtn);
+    });
+
+    expect(screen.getByText(/Describe What You Are Looking For in Your Arena/i)).toBeInTheDocument();
+    const arenaInput = screen.getByPlaceholderText(/African Union Youth Plenary/i);
+    expect(arenaInput).toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.change(arenaInput, { target: { value: 'African Union Model Summit Plenary' } });
+    });
+    expect(arenaInput).toHaveValue('African Union Model Summit Plenary');
+
+    // 2. Test Other Technical Priority
+    const otherPriorityBtn = screen.getByRole('button', { name: /Other Priority \/ Skill Need/i });
+    expect(otherPriorityBtn).toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(otherPriorityBtn);
+    });
+
+    expect(screen.getByText(/Describe What You Are Looking For in Your Priority/i)).toBeInTheDocument();
+    const priorityInput = screen.getByPlaceholderText(/Overcoming throat constriction/i);
+    expect(priorityInput).toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.change(priorityInput, { target: { value: 'Mastering rapid extemporaneous rebuttal under pressure' } });
+    });
+    expect(priorityInput).toHaveValue('Mastering rapid extemporaneous rebuttal under pressure');
+
+    // Fill required Name and Email
+    const nameInput = screen.getByPlaceholderText(/Kwame Mensah/i);
+    const emailInput = screen.getByPlaceholderText(/nia@example.org/i);
+    await act(async () => {
+      fireEvent.change(nameInput, { target: { value: 'Kwame Mensah' } });
+      fireEvent.change(emailInput, { target: { value: 'kwame@pan-african.org' } });
+    });
+
+    // Advance to Step 4
+    const nextBtn = screen.getByRole('button', { name: /Continue/i });
+    await act(async () => {
+      fireEvent.click(nextBtn);
+    });
+
+    // Verify Step 4 renders
+    expect(screen.getByText(/Commit to Daily Orator Habits/i)).toBeInTheDocument();
+  });
 });
 

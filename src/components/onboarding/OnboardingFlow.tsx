@@ -950,6 +950,8 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [otherDescription, setOtherDescription] = useState('');
+  const [customFormatDescription, setCustomFormatDescription] = useState('');
+  const [customPriorityDescription, setCustomPriorityDescription] = useState('');
   const [age, setAge] = useState<number>(20);
   const [institution, setInstitution] = useState('');
   const [primaryDiscipline, setPrimaryDiscipline] = useState(activeConfig.formats[0].id);
@@ -1002,6 +1004,14 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         alert('Please enter your email.');
         return;
       }
+      if (primaryDiscipline === 'Other / Custom Arena' && !customFormatDescription.trim()) {
+        alert('Please give a brief description of what you are looking for in your rhetorical arena.');
+        return;
+      }
+      if (coreFocus === 'Other / Custom Priority' && !customPriorityDescription.trim()) {
+        alert('Please give a brief description of what you are looking for in your technical priority.');
+        return;
+      }
     }
     setCurrentStep(prev => Math.min(prev + 1, 5));
   };
@@ -1012,6 +1022,14 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       ? `Other: ${otherDescription.trim()}`
       : missionFocus;
 
+    const resolvedDiscipline = (primaryDiscipline === 'Other / Custom Arena' && customFormatDescription.trim())
+      ? `Other: ${customFormatDescription.trim()}`
+      : primaryDiscipline;
+
+    const resolvedFocus = (coreFocus === 'Other / Custom Priority' && customPriorityDescription.trim())
+      ? `Other: ${customPriorityDescription.trim()}`
+      : coreFocus;
+
     const data: SpeakerOnboardingData = {
       branch,
       fullName: fullName.trim() || (branch === 'Academy' ? 'Kwame Mensah' : 'Nia Adebayo'),
@@ -1019,8 +1037,8 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       phone: phone.trim() || undefined,
       institution: institution.trim() || 'Independent Orator',
       age,
-      primaryDiscipline,
-      coreFocus,
+      primaryDiscipline: resolvedDiscipline,
+      coreFocus: resolvedFocus,
       missionFocus: resolvedMission,
       speakingGoal,
       experienceLevel,
@@ -1028,8 +1046,8 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       emotionalOpennessRating,
       selectedHabits,
       bioNotes: otherDescription.trim()
-        ? `${branch} member from ${institution || 'Independent Orator'}. Custom Objective: ${otherDescription.trim()}. Primary discipline: ${primaryDiscipline}, specializing in ${coreFocus}.`
-        : `${branch} member from ${institution || 'Independent Orator'}. Primary discipline: ${primaryDiscipline}, specializing in ${coreFocus}. Mission: ${missionFocus}.`
+        ? `${branch} member from ${institution || 'Independent Orator'}. Custom Objective: ${otherDescription.trim()}. Primary discipline: ${resolvedDiscipline}, specializing in ${resolvedFocus}.`
+        : `${branch} member from ${institution || 'Independent Orator'}. Primary discipline: ${resolvedDiscipline}, specializing in ${resolvedFocus}. Mission: ${missionFocus}.`
     };
 
     completeOnboarding(data);
@@ -1523,7 +1541,56 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                       </button>
                     );
                   })}
+
+                  {/* Other Arena / Format Option */}
+                  <button
+                    type="button"
+                    onClick={() => setPrimaryDiscipline('Other / Custom Arena')}
+                    className={`col-span-2 p-3 rounded-xl border text-left transition-all relative flex flex-col justify-between cursor-pointer ${
+                      primaryDiscipline === 'Other / Custom Arena'
+                        ? 'bg-[#C89630]/15 border-[#C89630] text-white ring-1 ring-[#C89630]/30 shadow-md'
+                        : 'bg-slate-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-[9px] font-mono uppercase font-bold tracking-widest text-[#C89630]">
+                          CUSTOM
+                        </span>
+                        {primaryDiscipline === 'Other / Custom Arena' && (
+                          <Check className="w-3 h-3 text-[#C89630] stroke-[3]" />
+                        )}
+                      </div>
+                      <div className="text-xs font-bold text-white mt-1">Other Arena / Format</div>
+                      <div className="text-[10px] text-slate-400 leading-tight mt-0.5">
+                        Define a custom rhetorical arena, debate format, or speaking setting not listed above.
+                      </div>
+                    </div>
+                  </button>
                 </div>
+
+                {/* Custom description input when Other Arena is selected */}
+                {primaryDiscipline === 'Other / Custom Arena' && (
+                  <div className="mt-2.5 p-3 rounded-xl border border-[#C89630]/40 bg-slate-950/90 animate-fadeIn space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label 
+                        htmlFor="custom-arena-input"
+                        className="block text-[10px] uppercase font-bold text-[#C89630] font-mono tracking-wider"
+                      >
+                        Describe What You Are Looking For in Your Arena *
+                      </label>
+                      <span className="text-[9px] text-slate-400 font-mono">Bespoke Arena</span>
+                    </div>
+                    <input
+                      id="custom-arena-input"
+                      type="text"
+                      value={customFormatDescription}
+                      onChange={(e) => setCustomFormatDescription(e.target.value)}
+                      placeholder="e.g. African Union Youth Plenary, Courtroom Cross-Exam, Keynote Sermon, Broadcast Panel..."
+                      className="w-full h-9 px-3 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-600 focus:border-[#C89630] focus:ring-1 focus:ring-[#C89630]/30 focus:outline-hidden transition-all"
+                    />
+                  </div>
+                )}
               </div>
 
               {/* SECTION 3: Core Forensics Focus / Technical Priority */}
@@ -1558,8 +1625,53 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                       </button>
                     );
                   })}
+
+                  {/* Other Technical Priority Option */}
+                  <button
+                    type="button"
+                    onClick={() => setCoreFocus('Other / Custom Priority')}
+                    className={`col-span-2 p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                      coreFocus === 'Other / Custom Priority'
+                        ? 'bg-[#C89630]/15 border-[#C89630] text-white ring-1 ring-[#C89630]/30 shadow-xs'
+                        : 'bg-slate-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
+                    }`}
+                  >
+                    <div className="text-xs font-bold text-white flex items-center justify-between">
+                      <span>Other Priority / Skill Need</span>
+                      {coreFocus === 'Other / Custom Priority' && (
+                        <Check className="w-3 h-3 text-[#C89630] stroke-[3] shrink-0 ml-1" />
+                      )}
+                    </div>
+                    <div className="text-[9px] text-slate-400 mt-0.5">
+                      Specify a custom technical focus, vocal challenge, or speaking priority
+                    </div>
+                  </button>
                 </div>
+
+                {/* Custom description input when Other Priority is selected */}
+                {coreFocus === 'Other / Custom Priority' && (
+                  <div className="mt-2.5 p-3 rounded-xl border border-[#C89630]/40 bg-slate-950/90 animate-fadeIn space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label 
+                        htmlFor="custom-priority-input"
+                        className="block text-[10px] uppercase font-bold text-[#C89630] font-mono tracking-wider"
+                      >
+                        Describe What You Are Looking For in Your Priority *
+                      </label>
+                      <span className="text-[9px] text-slate-400 font-mono">Bespoke Priority</span>
+                    </div>
+                    <input
+                      id="custom-priority-input"
+                      type="text"
+                      value={customPriorityDescription}
+                      onChange={(e) => setCustomPriorityDescription(e.target.value)}
+                      placeholder="e.g. Overcoming throat constriction, impromptu rebuttal formulation, conversational poise..."
+                      className="w-full h-9 px-3 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-600 focus:border-[#C89630] focus:ring-1 focus:ring-[#C89630]/30 focus:outline-hidden transition-all"
+                    />
+                  </div>
+                )}
               </div>
+
 
               {/* SECTION 4: Delivery Cadence & Vocal Projection */}
               <div className="pt-4 border-t border-slate-800/80">

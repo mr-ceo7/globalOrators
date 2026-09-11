@@ -101,6 +101,7 @@ interface AppContextType {
   // Theme State
   theme: 'light' | 'dark';
   toggleTheme: () => void;
+  resetThemeToSystem?: () => void;
   
   // Toast notifications
   toastMessage: string | null;
@@ -138,6 +139,28 @@ const DEFAULT_SPEAKER_PROFILE: SpeakerOnboardingData = {
     'Tongue Twisters & Articulation Warmups'
   ],
   bioNotes: 'Foundation scholar working on cathartic expression, healing from past adversity, and discovering his oratorical voice.'
+};
+
+const getSavedTheme = (): 'light' | 'dark' | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const saved = localStorage.getItem('globalorators_theme') || localStorage.getItem('nubianfit_theme');
+    if (saved === 'light' || saved === 'dark') return saved;
+  } catch {
+    // ignore storage restrictions
+  }
+  return null;
+};
+
+const getSystemTheme = (): 'light' | 'dark' => {
+  if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
+    try {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    } catch {
+      return 'light';
+    }
+  }
+  return 'light';
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -330,18 +353,57 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    const saved = localStorage.getItem('nubianfit_theme');
-    if (saved === 'light' || saved === 'dark') return saved;
-    return 'light';
+    const saved = getSavedTheme();
+    if (saved) return saved;
+    return getSystemTheme();
   });
 
-
   const toggleTheme = () => {
-    setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
+    setTheme(prev => {
+      const next = prev === 'light' ? 'dark' : 'light';
+      try {
+        localStorage.setItem('globalorators_theme', next);
+        localStorage.setItem('nubianfit_theme', next);
+      } catch {
+        // ignore storage restrictions
+      }
+      return next;
+    });
   };
 
+  const resetThemeToSystem = () => {
+    try {
+      localStorage.removeItem('globalorators_theme');
+      localStorage.removeItem('nubianfit_theme');
+    } catch {
+      // ignore storage restrictions
+    }
+    setTheme(getSystemTheme());
+  };
+
+  // Dynamically listen for system color scheme changes (only applies if user has not set explicit manual preference)
   useEffect(() => {
-    localStorage.setItem('nubianfit_theme', theme);
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleSystemThemeChange = (e: MediaQueryListEvent | MediaQueryList) => {
+      const saved = getSavedTheme();
+      if (!saved) {
+        setTheme(e.matches ? 'dark' : 'light');
+      }
+    };
+
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', handleSystemThemeChange);
+      return () => mediaQuery.removeEventListener('change', handleSystemThemeChange);
+    } else if (typeof mediaQuery.addListener === 'function') {
+      mediaQuery.addListener(handleSystemThemeChange);
+      return () => mediaQuery.removeListener(handleSystemThemeChange);
+    }
+  }, []);
+
+  // Sync active theme to HTML documentElement class without writing to localStorage
+  useEffect(() => {
     const root = document.documentElement;
     if (theme === 'dark') {
       root.classList.add('dark');
@@ -1039,6 +1101,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         isLoading,
         theme,
         toggleTheme,
+        resetThemeToSystem,
         toastMessage,
         showToast,
         currentPortal,

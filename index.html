@@ -7,6 +7,21 @@
     <meta name="description" content="Pan-African debate training, sovereign leadership development, and healing-centered vocal expression programs for African youth." />
     <link rel="canonical" href="https://globalorators.com" />
     
+    <!-- Early theme detection to prevent flash of incorrect theme (FOUC) -->
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('globalorators_theme') || localStorage.getItem('nubianfit_theme');
+          var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (saved === 'dark' || (!saved && prefersDark)) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
+    
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
