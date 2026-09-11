@@ -424,5 +424,73 @@ describe('Global Orators Landing Page & Features Tests', () => {
     expect(screen.getByText(/Speaking as a Form of Escapism & Emotional Catharsis/i)).toBeInTheDocument();
     expect(screen.getByText(/Personal healing, emotional release & safe expression/i)).toBeInTheDocument();
   });
+
+  test('should render and accept Phone Number on Step 3 of the onboarding form', async () => {
+    localStorage.setItem('globalorators_selected_branch', 'Academy');
+
+    render(
+      <AppProvider>
+        <OnboardingFlow />
+      </AppProvider>
+    );
+
+    // Move from Step 2 to Step 3
+    const continueBtn = screen.getByRole('button', { name: /Continue/i });
+    await act(async () => {
+      fireEvent.click(continueBtn);
+    });
+
+    // Verify Phone input is present
+    expect(screen.getByText(/Phone Number \(WhatsApp\)/i)).toBeInTheDocument();
+    const phoneInput = screen.getByPlaceholderText('+254 700 000 000');
+    expect(phoneInput).toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.change(phoneInput, { target: { value: '+254 712 345 678' } });
+    });
+
+    expect(phoneInput).toHaveValue('+254 712 345 678');
+  });
+
+  test('should render Other option on Step 2 and enable user to provide custom description', async () => {
+    localStorage.setItem('globalorators_selected_branch', 'Academy');
+
+    render(
+      <AppProvider>
+        <OnboardingFlow />
+      </AppProvider>
+    );
+
+    // Verify "Other Speaking Pursuit" option exists on Step 2
+    const otherOption = screen.getByRole('button', { name: /Other Speaking Pursuit/i });
+    expect(otherOption).toBeInTheDocument();
+
+    // Click "Other Speaking Pursuit"
+    await act(async () => {
+      fireEvent.click(otherOption);
+    });
+
+    // Verify description textarea appears
+    expect(screen.getByText(/Describe What You Are Looking For/i)).toBeInTheDocument();
+    const descInput = screen.getByPlaceholderText(/Briefly describe what you are looking to achieve/i);
+    expect(descInput).toBeInTheDocument();
+
+    // Type custom description
+    await act(async () => {
+      fireEvent.change(descInput, { target: { value: 'Preparing a TEDx keynote on clean energy policy across Africa' } });
+    });
+
+    expect(descInput).toHaveValue('Preparing a TEDx keynote on clean energy policy across Africa');
+
+    // Click Continue to move to Step 3
+    const continueBtn = screen.getByRole('button', { name: /Continue/i });
+    await act(async () => {
+      fireEvent.click(continueBtn);
+    });
+
+    // Verify Step 3 renders the Bespoke Speaking Baseline
+    expect(screen.getByText('Bespoke Oratory & Rhetoric Baseline')).toBeInTheDocument();
+    expect(screen.getByText(/Calibrate your personalized speaking trajectory/i)).toBeInTheDocument();
+  });
 });
 

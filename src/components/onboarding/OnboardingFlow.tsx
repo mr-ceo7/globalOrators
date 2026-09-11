@@ -14,6 +14,7 @@ import {
   CheckCircle2, 
   User, 
   Mail, 
+  Phone,
   Clock, 
   Smile, 
   Award,
@@ -316,6 +317,89 @@ export const getStep3Config = (branch: BranchType, missionFocus: string): Step3P
         cadenceMinLabel: '110 WPM (Dramatic Resonant Pause)',
         cadenceMidLabel: '140 WPM (Dynamic Conference Flow)',
         cadenceMaxLabel: '170 WPM (Climactic Orator Surge)'
+      };
+    }
+
+    if (missionFocus.includes('Other')) {
+      return {
+        badge: 'Step 3 of 5 • Bespoke Speaking Baseline',
+        title: 'Bespoke Oratory & Rhetoric Baseline',
+        subtitle: 'Calibrate your personalized speaking trajectory, target arena, and technical priorities with the faculty.',
+        identitySectionLabel: 'Personal & Professional Identity',
+        namePlaceholder: 'e.g. Kwame Mensah',
+        institutionLabel: 'Organization / Company / Affiliation',
+        institutionPlaceholder: 'e.g. Independent Speaker / Specialized Field',
+        experienceLabel: 'Speaking Experience',
+        experienceOptions: [
+          { value: 'Novice Speaker', label: 'Emerging Speaker (<1 yr)' },
+          { value: 'Club Debater', label: 'Active Speaker (1-3 yrs)' },
+          { value: 'Varsity / Advanced', label: 'Experienced Orator (3-6 yrs)' },
+          { value: 'Master Orator', label: 'Master Speaker (6+ yrs)' }
+        ],
+        formatSectionLabel: 'Primary Speaking Format',
+        formatSectionSub: 'Select Target Arena',
+        formats: [
+          {
+            id: 'Keynote & Main Stage Address',
+            name: 'Keynote Address',
+            code: 'Main Stage',
+            desc: 'Plenary halls, conferences, and high-impact audience addresses.'
+          },
+          {
+            id: 'Competitive Forensics & Debate',
+            name: 'Competitive Forensics',
+            code: 'Debate Arena',
+            desc: 'Parliamentary debate, moot court & adversarial argumentation.'
+          },
+          {
+            id: 'Executive & Strategic Pitching',
+            name: 'Executive Pitching',
+            code: 'Boardroom',
+            desc: 'Boardroom defense, investor decks & high-stakes negotiation.'
+          },
+          {
+            id: 'Bespoke / Multi-Format Arena',
+            name: 'Bespoke Speaking Arena',
+            code: 'Custom Arena',
+            desc: 'Tailored format adapted to your specific speaking domain and goals.'
+          }
+        ],
+        prioritySectionLabel: 'Primary Development Focus',
+        prioritySectionSub: 'Curriculum Emphasis',
+        priorities: [
+          {
+            id: 'Clarity, Cadence & Vocal Projection',
+            label: 'Clarity & Projection',
+            sub: 'Diaphragmatic resonance & crisp articulation'
+          },
+          {
+            id: 'Argument Architecture & Persuasion',
+            label: 'Argument Architecture',
+            sub: 'Logical case building & compelling narrative flow'
+          },
+          {
+            id: 'Stage Poise & Overcoming Freeze Response',
+            label: 'Poise & Confidence',
+            sub: 'Grounded physical anchoring & nervous calm'
+          },
+          {
+            id: 'Impromptu Thinking & Hostile Q&A',
+            label: 'Impromptu Mastery',
+            sub: 'Quick cognitive synthesis & unscripted answers'
+          }
+        ],
+        cadenceSubtitle: 'Calibrated delivery rhythm for your custom speaking objectives:',
+        cadencePresets: [
+          { label: 'Deliberate', wpm: 125, desc: 'Thoughtful pacing' },
+          { label: 'Dynamic', wpm: 145, desc: 'Natural authority' },
+          { label: 'Commanding', wpm: 160, desc: 'High energy drive' }
+        ],
+        cadenceMin: 110,
+        cadenceMax: 180,
+        cadenceDefault: 145,
+        cadenceMinLabel: '110 WPM (Deliberate & Grounded)',
+        cadenceMidLabel: '145 WPM (Dynamic & Conversational)',
+        cadenceMaxLabel: '180 WPM (Commanding & Fast-Paced)'
       };
     }
 
@@ -652,6 +736,89 @@ export const getStep3Config = (branch: BranchType, missionFocus: string): Step3P
     };
   }
 
+  if (missionFocus.includes('Other')) {
+    return {
+      badge: 'Step 3 of 5 • Bespoke Voice Sanctuary Calibration',
+      title: 'Bespoke Vocal Healing & Expression Baseline',
+      subtitle: 'Calibrate your individualized emotional safety parameters, somatic focus, and authentic voice journey.',
+      identitySectionLabel: 'Personal & Community Identity',
+      namePlaceholder: 'e.g. Nia Adebayo',
+      institutionLabel: "Community / Fellowship / Sanctuary",
+      institutionPlaceholder: "e.g. Independent Sanctuary / Grassroots Fellow",
+      experienceLabel: 'Voice Discovery Stage',
+      experienceOptions: [
+        { value: 'Novice Speaker', label: 'Beginning The Journey (<1 yr)' },
+        { value: 'Club Debater', label: 'Growing In Expression (1-3 yrs)' },
+        { value: 'Varsity / Advanced', label: 'Empowered Speaker (3-6 yrs)' },
+        { value: 'Master Orator', label: 'Peer Voice Mentor (6+ yrs)' }
+      ],
+      formatSectionLabel: 'Sanctuary Expression Modality',
+      formatSectionSub: 'Select Sanctuary Format',
+      formats: [
+        {
+          id: 'Private Audio Vault Catharsis',
+          name: 'Private Audio Vault',
+          code: 'Sanctuary',
+          desc: 'Solo unmonitored recordings to vent raw emotion without fear of judgment.'
+        },
+        {
+          id: 'Trauma Narrative & Lived Storytelling',
+          name: 'Lived Storytelling',
+          code: 'Narrative',
+          desc: 'Refining your authentic personal story to educate, empower, and inspire.'
+        },
+        {
+          id: 'Somatic Grounding & Stage Panic Drills',
+          name: 'Somatic Vocal Drills',
+          code: 'Grounded Tone',
+          desc: 'Breathwork, diaphragm support & vagus nerve calm for freeze response.'
+        },
+        {
+          id: 'Bespoke Sanctuary Voice Modality',
+          name: 'Bespoke Sanctuary Modality',
+          code: 'Custom Voice',
+          desc: 'Customized vocal practices adapted to your personal journey.'
+        }
+      ],
+      prioritySectionLabel: 'Healing & Expressive Priority',
+      prioritySectionSub: 'Curriculum Emphasis',
+      priorities: [
+        {
+          id: 'Emotional Safety & Freedom From Freeze',
+          label: 'Freedom From Freeze',
+          sub: 'Somatic grounding to release tension'
+        },
+        {
+          id: 'Vulnerability Without Guilt',
+          label: 'Vulnerability Without Guilt',
+          sub: 'Expressing raw truth without shame'
+        },
+        {
+          id: 'Authentic Vocal Resonance',
+          label: 'Authentic Resonance',
+          sub: 'Finding your unmasked, organic tone'
+        },
+        {
+          id: 'Confident Small-Circle Sharing',
+          label: 'Small-Circle Confidence',
+          sub: 'Comfortable speaking in peer circles'
+        }
+      ],
+      cadenceSubtitle: 'Calibrated delivery rhythm for gentle vocal exploration and therapeutic pacing:',
+      cadencePresets: [
+        { label: 'Unrushed', wpm: 105, desc: 'Gentle reflection' },
+        { label: 'Expressive', wpm: 125, desc: 'Heartfelt narrative' },
+        { label: 'Empowered', wpm: 140, desc: 'Confident advocacy' }
+      ],
+      cadenceMin: 95,
+      cadenceMax: 155,
+      cadenceDefault: 125,
+      cadenceMinLabel: '95 WPM (Gentle Therapeutic Pace)',
+      cadenceMidLabel: '125 WPM (Heartfelt Expressive)',
+      cadenceMaxLabel: '155 WPM (Empowered Advocacy)'
+    };
+  }
+
   // Default Foundation: Speaking as Escapism & Emotional Catharsis
   return {
     badge: 'Step 3 of 5 • Therapeutic Voice Sanctuary',
@@ -781,6 +948,8 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [otherDescription, setOtherDescription] = useState('');
   const [age, setAge] = useState<number>(20);
   const [institution, setInstitution] = useState('');
   const [primaryDiscipline, setPrimaryDiscipline] = useState(activeConfig.formats[0].id);
@@ -818,6 +987,12 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 
   // Next Step validation
   const handleNext = () => {
+    if (currentStep === 2) {
+      if (missionFocus === 'Other Speaking Pursuit' && !otherDescription.trim()) {
+        alert('Please give a brief description of what you are looking for.');
+        return;
+      }
+    }
     if (currentStep === 3) {
       if (!fullName.trim()) {
         alert('Please enter your name to personalize your curriculum.');
@@ -833,21 +1008,28 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 
   const handleFinish = () => {
     localStorage.removeItem('globalorators_selected_branch');
+    const resolvedMission = (missionFocus === 'Other Speaking Pursuit' && otherDescription.trim())
+      ? `Other: ${otherDescription.trim()}`
+      : missionFocus;
+
     const data: SpeakerOnboardingData = {
       branch,
       fullName: fullName.trim() || (branch === 'Academy' ? 'Kwame Mensah' : 'Nia Adebayo'),
       email: email.trim() || 'speaker@globalorators.org',
+      phone: phone.trim() || undefined,
       institution: institution.trim() || 'Independent Orator',
       age,
       primaryDiscipline,
       coreFocus,
-      missionFocus,
+      missionFocus: resolvedMission,
       speakingGoal,
       experienceLevel,
       vocalBaselinePace,
       emotionalOpennessRating,
       selectedHabits,
-      bioNotes: `${branch} member from ${institution || 'Independent Orator'}. Primary discipline: ${primaryDiscipline}, specializing in ${coreFocus}. Mission: ${missionFocus}.`
+      bioNotes: otherDescription.trim()
+        ? `${branch} member from ${institution || 'Independent Orator'}. Custom Objective: ${otherDescription.trim()}. Primary discipline: ${primaryDiscipline}, specializing in ${coreFocus}.`
+        : `${branch} member from ${institution || 'Independent Orator'}. Primary discipline: ${primaryDiscipline}, specializing in ${coreFocus}. Mission: ${missionFocus}.`
     };
 
     completeOnboarding(data);
@@ -1043,6 +1225,12 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                       goal: 'Keynote & Conference' as SpeakingGoal,
                       desc: 'Mastering spatial commanding, teleprompters, and audience engagement at scale.',
                       bestFor: 'Conference keynoters, plenary speakers & summit addresses'
+                    },
+                    {
+                      title: 'Other Speaking Pursuit',
+                      goal: 'Keynote & Conference' as SpeakingGoal,
+                      desc: 'What you are looking for is not among the options above. Specify your custom speaking goals.',
+                      bestFor: 'Bespoke speaking objectives, specialized formats & personalized mentorship'
                     }
                   ].map(item => (
                     <button
@@ -1098,6 +1286,12 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                       goal: 'Impromptu & Extemporaneous' as SpeakingGoal,
                       desc: 'Grounded somatic vocalization drills to dismantle fight-or-flight stage panic.',
                       bestFor: 'Overcoming stage panic, freeze response & conversational dread'
+                    },
+                    {
+                      title: 'Other Speaking Pursuit',
+                      goal: 'Cathartic Expression & Healing' as SpeakingGoal,
+                      desc: 'What you are looking for is not among the options above. Specify your custom speaking or healing focus.',
+                      bestFor: 'Individualized vocal healing, unique lived experiences & personal sanctuaries'
                     }
                   ].map(item => (
                     <button
@@ -1129,6 +1323,32 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 </>
               )}
             </div>
+
+            {/* Custom description textarea when Other is selected */}
+            {missionFocus === 'Other Speaking Pursuit' && (
+              <div className="p-4 rounded-xl border border-[#C89630]/40 bg-slate-900/80 animate-fadeIn space-y-2">
+                <div className="flex items-center justify-between">
+                  <label 
+                    htmlFor="other-description-input"
+                    className="block text-[10px] uppercase font-bold text-[#C89630] font-mono tracking-wider"
+                  >
+                    Describe What You Are Looking For *
+                  </label>
+                  <span className="text-[10px] text-slate-400 font-mono">Bespoke Pursuit</span>
+                </div>
+                <textarea
+                  id="other-description-input"
+                  rows={3}
+                  value={otherDescription}
+                  onChange={(e) => setOtherDescription(e.target.value)}
+                  placeholder="Briefly describe what you are looking to achieve (e.g. preparing for a TEDx talk, courtroom advocacy, sermon delivery, wedding keynote, or overcoming stage panic)..."
+                  className="w-full p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-600 focus:border-[#C89630] focus:ring-1 focus:ring-[#C89630]/30 focus:outline-hidden transition-all"
+                />
+                <p className="text-[10px] text-slate-400 font-mono">
+                  Our faculty and coaches will review your description to tailor your curriculum and drills.
+                </p>
+              </div>
+            )}
           </div>
         )}
 
@@ -1192,9 +1412,24 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                     </div>
                   </div>
 
-                  {/* Institution, Age, and Experience Level in a responsive layout */}
-                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-                    <div className="sm:col-span-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
+                        Phone Number (WhatsApp)
+                      </label>
+                      <div className="relative">
+                        <Phone className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-3" />
+                        <input
+                          type="tel"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          placeholder="+254 700 000 000"
+                          className="w-full h-10 pl-9 pr-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-600 focus:border-[#C89630] focus:ring-1 focus:ring-[#C89630]/30 focus:outline-hidden transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
                       <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
                         {activeConfig.institutionLabel}
                       </label>
@@ -1209,38 +1444,39 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                         />
                       </div>
                     </div>
+                  </div>
 
-                    <div className="grid grid-cols-2 gap-2 sm:col-span-6">
-                      <div>
-                        <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
-                          Age
-                        </label>
-                        <input
-                          type="number"
-                          min={12}
-                          max={75}
-                          value={age}
-                          onChange={(e) => setAge(Number(e.target.value))}
-                          className="w-full h-10 px-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:border-[#C89630] focus:ring-1 focus:ring-[#C89630]/30 focus:outline-hidden transition-all"
-                        />
-                      </div>
+                  {/* Age and Experience Level in a 2-column responsive layout */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
+                        Age
+                      </label>
+                      <input
+                        type="number"
+                        min={12}
+                        max={75}
+                        value={age}
+                        onChange={(e) => setAge(Number(e.target.value))}
+                        className="w-full h-10 px-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:border-[#C89630] focus:ring-1 focus:ring-[#C89630]/30 focus:outline-hidden transition-all"
+                      />
+                    </div>
 
-                      <div>
-                        <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
-                          {activeConfig.experienceLabel}
-                        </label>
-                        <select
-                          value={experienceLevel}
-                          onChange={(e) => setExperienceLevel(e.target.value as ExperienceLevel)}
-                          className="w-full h-10 px-2 sm:px-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:border-[#C89630] focus:ring-1 focus:ring-[#C89630]/30 focus:outline-hidden transition-all"
-                        >
-                          {activeConfig.experienceOptions.map(opt => (
-                            <option key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+                    <div>
+                      <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
+                        {activeConfig.experienceLabel}
+                      </label>
+                      <select
+                        value={experienceLevel}
+                        onChange={(e) => setExperienceLevel(e.target.value as ExperienceLevel)}
+                        className="w-full h-10 px-2 sm:px-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:border-[#C89630] focus:ring-1 focus:ring-[#C89630]/30 focus:outline-hidden transition-all"
+                      >
+                        {activeConfig.experienceOptions.map(opt => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                 </div>
@@ -1477,7 +1713,10 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                   </div>
                   <div>
                     <h3 className="text-base font-bold text-white">{fullName || 'New Orator'}</h3>
-                    <div className="text-xs text-slate-400">{institution || email || 'speaker@globalorators.org'}</div>
+                    <div className="text-xs text-slate-400 flex items-center gap-1.5 flex-wrap">
+                      <span>{institution || email || 'speaker@globalorators.org'}</span>
+                      {phone && <span className="text-slate-500">• {phone}</span>}
+                    </div>
                   </div>
                 </div>
 
@@ -1490,7 +1729,9 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
               <div className="grid grid-cols-2 gap-3 pt-4 border-t border-slate-800/80 mb-4">
                 <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-3">
                   <div className="text-[10px] text-slate-400 uppercase font-bold">Speaking Mission</div>
-                  <div className="text-xs font-semibold text-white truncate mt-0.5">{speakingGoal}</div>
+                  <div className="text-xs font-semibold text-white truncate mt-0.5" title={otherDescription.trim() || speakingGoal}>
+                    {missionFocus.includes('Other') && otherDescription.trim() ? otherDescription.trim() : speakingGoal}
+                  </div>
                 </div>
                 <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-3">
                   <div className="text-[10px] text-slate-400 uppercase font-bold">Primary Format</div>
@@ -1510,7 +1751,9 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 <Sparkles className="w-4 h-4 text-[#C89630] shrink-0 mt-0.5" />
                 <span>
                   <strong className="text-white">Global Orators Faculty Welcome:</strong>{" "}
-                  {branch === 'Academy'
+                  {missionFocus.includes('Other') && otherDescription.trim()
+                    ? `"Your bespoke pathway in Global Orators is calibrated around your unique speaking pursuit: '${otherDescription.trim()}'. Enter your portal to begin your tailored coaching trajectory."`
+                    : branch === 'Academy'
                     ? '"Your pathway in Global Orators Academy is calibrated to awaken cognitive sovereignty, rigorous forensics argumentation, and commanding rhetorical delivery. Enter your portal to begin your first drill."'
                     : '"Your sanctuary in Global Orators Foundation is calibrated for emotional safety, vulnerability-without-apology, and discovering the healing power of your authentic voice. Enter your portal to begin your first reflection."'
                   }
