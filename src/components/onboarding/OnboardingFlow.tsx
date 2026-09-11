@@ -19,10 +19,21 @@ import {
   Smile, 
   Award,
   BookOpen,
-  Building2
+  Building2,
+  AlertCircle
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { BranchType, SpeakingGoal, ExperienceLevel, SpeakerOnboardingData } from '../../types';
+import {
+  sanitizeText,
+  sanitizeMultiline,
+  sanitizeEmail,
+  validateEmail,
+  sanitizePhone,
+  validatePhone,
+  validateName,
+  sanitizeInteger
+} from '../../utils/sanitization';
 
 export interface Step3FormatOption {
   id: string;
@@ -960,6 +971,43 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   const [vocalBaselinePace, setVocalBaselinePace] = useState<number>(activeConfig.cadenceDefault);
   const [emotionalOpennessRating, setEmotionalOpennessRating] = useState<number>(8);
 
+  // Form input validation & touched state
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  const validateField = (fieldName: string, value: string): string => {
+    let error = '';
+    if (fieldName === 'fullName') {
+      const res = validateName(value, 'Full name', 2, 80);
+      if (!res.isValid) error = res.error || '';
+    } else if (fieldName === 'email') {
+      const res = validateEmail(value);
+      if (!res.isValid) error = res.error || '';
+    } else if (fieldName === 'phone') {
+      const res = validatePhone(value, false);
+      if (!res.isValid) error = res.error || '';
+    } else if (fieldName === 'otherDescription') {
+      if (missionFocus === 'Other Speaking Pursuit' && !value.trim()) {
+        error = 'Please describe what you are looking for.';
+      }
+    } else if (fieldName === 'customFormatDescription') {
+      if (primaryDiscipline === 'Other / Custom Arena' && !value.trim()) {
+        error = 'Please describe what you are looking for in your rhetorical arena.';
+      }
+    } else if (fieldName === 'customPriorityDescription') {
+      if (coreFocus === 'Other / Custom Priority' && !value.trim()) {
+        error = 'Please describe what you are looking for in your technical priority.';
+      }
+    }
+    setFieldErrors(prev => ({ ...prev, [fieldName]: error }));
+    return error;
+  };
+
+  const handleBlur = (fieldName: string, value: string) => {
+    setTouched(prev => ({ ...prev, [fieldName]: true }));
+    validateField(fieldName, value);
+  };
+
   // Synchronize options when track/mission changes
   const prevConfigKeyRef = useRef(`${branch}-${missionFocus}`);
   useEffect(() => {
@@ -990,25 +1038,52 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   // Next Step validation
   const handleNext = () => {
     if (currentStep === 2) {
-      if (missionFocus === 'Other Speaking Pursuit' && !otherDescription.trim()) {
-        alert('Please give a brief description of what you are looking for.');
-        return;
+      if (missionFocus === 'Other Speaking Pursuit') {
+        const err = validateField('otherDescription', otherDescription);
+        if (err) {
+          setTouched(prev => ({ ...prev, otherDescription: true }));
+          alert('Please give a brief description of what you are looking for.');
+          return;
+        }
       }
     }
     if (currentStep === 3) {
-      if (!fullName.trim()) {
-        alert('Please enter your name to personalize your curriculum.');
+      const nameErr = validateField('fullName', fullName);
+      const emailErr = validateField('email', email);
+      const phoneErr = validateField('phone', phone);
+      const formatErr = primaryDiscipline === 'Other / Custom Arena'
+        ? validateField('customFormatDescription', customFormatDescription)
+        : '';
+      const priorityErr = coreFocus === 'Other / Custom Priority'
+        ? validateField('customPriorityDescription', customPriorityDescription)
+        : '';
+
+      setTouched(prev => ({
+        ...prev,
+        fullName: true,
+        email: true,
+        phone: true,
+        customFormatDescription: true,
+        customPriorityDescription: true
+      }));
+
+      if (nameErr) {
+        alert(nameErr.includes('required') ? 'Please enter your name to personalize your curriculum.' : nameErr);
         return;
       }
-      if (!email.trim()) {
-        alert('Please enter your email.');
+      if (emailErr) {
+        alert(emailErr.includes('required') ? 'Please enter your email.' : emailErr);
         return;
       }
-      if (primaryDiscipline === 'Other / Custom Arena' && !customFormatDescription.trim()) {
+      if (phoneErr) {
+        alert(phoneErr);
+        return;
+      }
+      if (formatErr) {
         alert('Please give a brief description of what you are looking for in your rhetorical arena.');
         return;
       }
-      if (coreFocus === 'Other / Custom Priority' && !customPriorityDescription.trim()) {
+      if (priorityErr) {
         alert('Please give a brief description of what you are looking for in your technical priority.');
         return;
       }
@@ -1018,36 +1093,44 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 
   const handleFinish = () => {
     localStorage.removeItem('globalorators_selected_branch');
-    const resolvedMission = (missionFocus === 'Other Speaking Pursuit' && otherDescription.trim())
-      ? `Other: ${otherDescription.trim()}`
+    const sanitizedName = sanitizeText(fullName, 80) || (branch === 'Academy' ? 'Kwame Mensah' : 'Nia Adebayo');
+    const sanitizedEmailVal = sanitizeEmail(email) || 'speaker@globalorators.org';
+    const sanitizedPhoneVal = sanitizePhone(phone) || undefined;
+    const sanitizedInstitution = sanitizeText(institution, 120) || 'Independent Orator';
+    const sanitizedOtherDesc = sanitizeMultiline(otherDescription, 1000);
+    const sanitizedFormatDesc = sanitizeText(customFormatDescription, 150);
+    const sanitizedPriorityDesc = sanitizeText(customPriorityDescription, 150);
+
+    const resolvedMission = (missionFocus === 'Other Speaking Pursuit' && sanitizedOtherDesc.trim())
+      ? `Other: ${sanitizedOtherDesc.trim()}`
       : missionFocus;
 
-    const resolvedDiscipline = (primaryDiscipline === 'Other / Custom Arena' && customFormatDescription.trim())
-      ? `Other: ${customFormatDescription.trim()}`
+    const resolvedDiscipline = (primaryDiscipline === 'Other / Custom Arena' && sanitizedFormatDesc.trim())
+      ? `Other: ${sanitizedFormatDesc.trim()}`
       : primaryDiscipline;
 
-    const resolvedFocus = (coreFocus === 'Other / Custom Priority' && customPriorityDescription.trim())
-      ? `Other: ${customPriorityDescription.trim()}`
+    const resolvedFocus = (coreFocus === 'Other / Custom Priority' && sanitizedPriorityDesc.trim())
+      ? `Other: ${sanitizedPriorityDesc.trim()}`
       : coreFocus;
 
     const data: SpeakerOnboardingData = {
       branch,
-      fullName: fullName.trim() || (branch === 'Academy' ? 'Kwame Mensah' : 'Nia Adebayo'),
-      email: email.trim() || 'speaker@globalorators.org',
-      phone: phone.trim() || undefined,
-      institution: institution.trim() || 'Independent Orator',
-      age,
+      fullName: sanitizedName,
+      email: sanitizedEmailVal,
+      phone: sanitizedPhoneVal,
+      institution: sanitizedInstitution,
+      age: sanitizeInteger(age, 12, 75, 20),
       primaryDiscipline: resolvedDiscipline,
       coreFocus: resolvedFocus,
       missionFocus: resolvedMission,
       speakingGoal,
       experienceLevel,
-      vocalBaselinePace,
-      emotionalOpennessRating,
+      vocalBaselinePace: sanitizeInteger(vocalBaselinePace, 100, 200, 140),
+      emotionalOpennessRating: sanitizeInteger(emotionalOpennessRating, 1, 10, 8),
       selectedHabits,
-      bioNotes: otherDescription.trim()
-        ? `${branch} member from ${institution || 'Independent Orator'}. Custom Objective: ${otherDescription.trim()}. Primary discipline: ${resolvedDiscipline}, specializing in ${resolvedFocus}.`
-        : `${branch} member from ${institution || 'Independent Orator'}. Primary discipline: ${resolvedDiscipline}, specializing in ${resolvedFocus}. Mission: ${missionFocus}.`
+      bioNotes: sanitizedOtherDesc.trim()
+        ? `${branch} member from ${sanitizedInstitution}. Custom Objective: ${sanitizedOtherDesc.trim()}. Primary discipline: ${resolvedDiscipline}, specializing in ${resolvedFocus}.`
+        : `${branch} member from ${sanitizedInstitution}. Primary discipline: ${resolvedDiscipline}, specializing in ${resolvedFocus}. Mission: ${missionFocus}.`
     };
 
     completeOnboarding(data);
@@ -1352,16 +1435,38 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                   >
                     Describe What You Are Looking For *
                   </label>
-                  <span className="text-[10px] text-slate-400 font-mono">Bespoke Pursuit</span>
+                  <span className="text-[10px] text-slate-400 font-mono">
+                    {otherDescription.length}/1000
+                  </span>
                 </div>
                 <textarea
                   id="other-description-input"
+                  name="otherDescription"
                   rows={3}
+                  maxLength={1000}
+                  spellCheck={true}
+                  aria-required="true"
+                  aria-invalid={touched.otherDescription && !!fieldErrors.otherDescription}
+                  aria-describedby={touched.otherDescription && fieldErrors.otherDescription ? "other-description-error" : undefined}
                   value={otherDescription}
-                  onChange={(e) => setOtherDescription(e.target.value)}
+                  onChange={(e) => {
+                    const val = sanitizeMultiline(e.target.value, 1000);
+                    setOtherDescription(val);
+                    if (touched.otherDescription) validateField('otherDescription', val);
+                  }}
+                  onBlur={() => handleBlur('otherDescription', otherDescription)}
                   placeholder="Briefly describe what you are looking to achieve (e.g. preparing for a TEDx talk, courtroom advocacy, sermon delivery, wedding keynote, or overcoming stage panic)..."
-                  className="w-full p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-600 focus:border-[#C89630] focus:ring-1 focus:ring-[#C89630]/30 focus:outline-hidden transition-all"
+                  className={`w-full p-3 rounded-xl bg-slate-950 border text-xs text-white placeholder-slate-600 focus:outline-hidden transition-all ${
+                    touched.otherDescription && fieldErrors.otherDescription
+                      ? 'border-rose-500 focus:border-rose-400 focus:ring-1 focus:ring-rose-400/30'
+                      : 'border-slate-800 focus:border-[#C89630] focus:ring-1 focus:ring-[#C89630]/30'
+                  }`}
                 />
+                {touched.otherDescription && fieldErrors.otherDescription && (
+                  <p id="other-description-error" role="alert" className="text-[10px] font-mono text-rose-400">
+                    {fieldErrors.otherDescription}
+                  </p>
+                )}
                 <p className="text-[10px] text-slate-400 font-mono">
                   Our faculty and coaches will review your description to tailor your curriculum and drills.
                 </p>
@@ -1396,35 +1501,85 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 <div className="space-y-3">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
-                        Your Full Name *
-                      </label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label htmlFor="full-name-input" className="block text-[10px] uppercase font-bold text-slate-400">
+                          Your Full Name *
+                        </label>
+                        {touched.fullName && fieldErrors.fullName && (
+                          <span id="full-name-error" role="alert" className="text-[10px] font-mono text-rose-400">
+                            {fieldErrors.fullName}
+                          </span>
+                        )}
+                      </div>
                       <div className="relative">
                         <User className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-3" />
                         <input
+                          id="full-name-input"
+                          name="fullName"
                           required
                           type="text"
+                          autoComplete="name"
+                          spellCheck={false}
+                          maxLength={80}
+                          aria-required="true"
+                          aria-invalid={touched.fullName && !!fieldErrors.fullName}
+                          aria-describedby={touched.fullName && fieldErrors.fullName ? "full-name-error" : undefined}
                           value={fullName}
-                          onChange={(e) => setFullName(e.target.value)}
+                          onChange={(e) => {
+                            const val = sanitizeText(e.target.value, 80);
+                            setFullName(val);
+                            if (touched.fullName) validateField('fullName', val);
+                          }}
+                          onBlur={() => handleBlur('fullName', fullName)}
                           placeholder={activeConfig.namePlaceholder}
-                          className="w-full h-10 pl-9 pr-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-600 focus:border-[#C89630] focus:ring-1 focus:ring-[#C89630]/30 focus:outline-hidden transition-all"
+                          className={`w-full h-10 pl-9 pr-3 rounded-xl bg-slate-950 border text-xs text-white placeholder-slate-600 focus:outline-hidden transition-all ${
+                            touched.fullName && fieldErrors.fullName
+                              ? 'border-rose-500 focus:border-rose-400 focus:ring-1 focus:ring-rose-400/30'
+                              : 'border-slate-800 focus:border-[#C89630] focus:ring-1 focus:ring-[#C89630]/30'
+                          }`}
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
-                        Email Address *
-                      </label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label htmlFor="email-input" className="block text-[10px] uppercase font-bold text-slate-400">
+                          Email Address *
+                        </label>
+                        {touched.email && fieldErrors.email && (
+                          <span id="email-error" role="alert" className="text-[10px] font-mono text-rose-400">
+                            {fieldErrors.email}
+                          </span>
+                        )}
+                      </div>
                       <div className="relative">
                         <Mail className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-3" />
                         <input
+                          id="email-input"
+                          name="email"
                           required
                           type="email"
+                          autoComplete="email"
+                          inputMode="email"
+                          autoCapitalize="none"
+                          spellCheck={false}
+                          maxLength={254}
+                          aria-required="true"
+                          aria-invalid={touched.email && !!fieldErrors.email}
+                          aria-describedby={touched.email && fieldErrors.email ? "email-error" : undefined}
                           value={email}
-                          onChange={(e) => setEmail(e.target.value)}
+                          onChange={(e) => {
+                            const val = sanitizeEmail(e.target.value);
+                            setEmail(val);
+                            if (touched.email) validateField('email', val);
+                          }}
+                          onBlur={() => handleBlur('email', email)}
                           placeholder="nia@example.org"
-                          className="w-full h-10 pl-9 pr-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-600 focus:border-[#C89630] focus:ring-1 focus:ring-[#C89630]/30 focus:outline-hidden transition-all"
+                          className={`w-full h-10 pl-9 pr-3 rounded-xl bg-slate-950 border text-xs text-white placeholder-slate-600 focus:outline-hidden transition-all ${
+                            touched.email && fieldErrors.email
+                              ? 'border-rose-500 focus:border-rose-400 focus:ring-1 focus:ring-rose-400/30'
+                              : 'border-slate-800 focus:border-[#C89630] focus:ring-1 focus:ring-[#C89630]/30'
+                          }`}
                         />
                       </div>
                     </div>
@@ -1432,31 +1587,59 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
-                        Phone Number (WhatsApp)
-                      </label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label htmlFor="phone-input" className="block text-[10px] uppercase font-bold text-slate-400">
+                          Phone Number (WhatsApp)
+                        </label>
+                        {touched.phone && fieldErrors.phone && (
+                          <span id="phone-error" role="alert" className="text-[10px] font-mono text-rose-400">
+                            {fieldErrors.phone}
+                          </span>
+                        )}
+                      </div>
                       <div className="relative">
                         <Phone className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-3" />
                         <input
+                          id="phone-input"
+                          name="phone"
                           type="tel"
+                          autoComplete="tel"
+                          inputMode="tel"
+                          spellCheck={false}
+                          maxLength={25}
+                          aria-invalid={touched.phone && !!fieldErrors.phone}
+                          aria-describedby={touched.phone && fieldErrors.phone ? "phone-error" : undefined}
                           value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
+                          onChange={(e) => {
+                            const val = sanitizePhone(e.target.value);
+                            setPhone(val);
+                            if (touched.phone) validateField('phone', val);
+                          }}
+                          onBlur={() => handleBlur('phone', phone)}
                           placeholder="+254 700 000 000"
-                          className="w-full h-10 pl-9 pr-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-600 focus:border-[#C89630] focus:ring-1 focus:ring-[#C89630]/30 focus:outline-hidden transition-all"
+                          className={`w-full h-10 pl-9 pr-3 rounded-xl bg-slate-950 border text-xs text-white placeholder-slate-600 focus:outline-hidden transition-all ${
+                            touched.phone && fieldErrors.phone
+                              ? 'border-rose-500 focus:border-rose-400 focus:ring-1 focus:ring-rose-400/30'
+                              : 'border-slate-800 focus:border-[#C89630] focus:ring-1 focus:ring-[#C89630]/30'
+                          }`}
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
+                      <label htmlFor="institution-input" className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
                         {activeConfig.institutionLabel}
                       </label>
                       <div className="relative">
                         <Building2 className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-3" />
                         <input
+                          id="institution-input"
+                          name="institution"
                           type="text"
+                          autoComplete="organization"
+                          maxLength={120}
                           value={institution}
-                          onChange={(e) => setInstitution(e.target.value)}
+                          onChange={(e) => setInstitution(sanitizeText(e.target.value, 120))}
                           placeholder={activeConfig.institutionPlaceholder}
                           className="w-full h-10 pl-9 pr-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-600 focus:border-[#C89630] focus:ring-1 focus:ring-[#C89630]/30 focus:outline-hidden transition-all"
                         />
@@ -1467,24 +1650,40 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                   {/* Age and Experience Level in a 2-column responsive layout */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
+                      <label htmlFor="age-input" className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
                         Age
                       </label>
                       <input
+                        id="age-input"
+                        name="age"
                         type="number"
+                        inputMode="numeric"
                         min={12}
                         max={75}
-                        value={age}
-                        onChange={(e) => setAge(Number(e.target.value))}
+                        value={age || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === '') {
+                            setAge(0);
+                          } else {
+                            setAge(sanitizeInteger(val, 12, 75, 20));
+                          }
+                        }}
+                        onBlur={() => {
+                          if (age < 12) setAge(12);
+                          else if (age > 75) setAge(75);
+                        }}
                         className="w-full h-10 px-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:border-[#C89630] focus:ring-1 focus:ring-[#C89630]/30 focus:outline-hidden transition-all"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
+                      <label htmlFor="experience-level-select" className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
                         {activeConfig.experienceLabel}
                       </label>
                       <select
+                        id="experience-level-select"
+                        name="experienceLevel"
                         value={experienceLevel}
                         onChange={(e) => setExperienceLevel(e.target.value as ExperienceLevel)}
                         className="w-full h-10 px-2 sm:px-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:border-[#C89630] focus:ring-1 focus:ring-[#C89630]/30 focus:outline-hidden transition-all"
@@ -1498,6 +1697,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                     </div>
                   </div>
                 </div>
+
               </div>
 
               {/* SECTION 2: Primary Debate & Forensics Format */}
@@ -1579,16 +1779,38 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                       >
                         Describe What You Are Looking For in Your Arena *
                       </label>
-                      <span className="text-[9px] text-slate-400 font-mono">Bespoke Arena</span>
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        {customFormatDescription.length}/150
+                      </span>
                     </div>
                     <input
                       id="custom-arena-input"
+                      name="customFormatDescription"
                       type="text"
+                      maxLength={150}
+                      spellCheck={true}
+                      aria-required="true"
+                      aria-invalid={touched.customFormatDescription && !!fieldErrors.customFormatDescription}
+                      aria-describedby={touched.customFormatDescription && fieldErrors.customFormatDescription ? "custom-arena-error" : undefined}
                       value={customFormatDescription}
-                      onChange={(e) => setCustomFormatDescription(e.target.value)}
+                      onChange={(e) => {
+                        const val = sanitizeText(e.target.value, 150);
+                        setCustomFormatDescription(val);
+                        if (touched.customFormatDescription) validateField('customFormatDescription', val);
+                      }}
+                      onBlur={() => handleBlur('customFormatDescription', customFormatDescription)}
                       placeholder="e.g. African Union Youth Plenary, Courtroom Cross-Exam, Keynote Sermon, Broadcast Panel..."
-                      className="w-full h-9 px-3 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-600 focus:border-[#C89630] focus:ring-1 focus:ring-[#C89630]/30 focus:outline-hidden transition-all"
+                      className={`w-full h-9 px-3 rounded-lg bg-slate-900 border text-xs text-white placeholder-slate-600 focus:outline-hidden transition-all ${
+                        touched.customFormatDescription && fieldErrors.customFormatDescription
+                          ? 'border-rose-500 focus:border-rose-400 focus:ring-1 focus:ring-rose-400/30'
+                          : 'border-slate-800 focus:border-[#C89630] focus:ring-1 focus:ring-[#C89630]/30'
+                      }`}
                     />
+                    {touched.customFormatDescription && fieldErrors.customFormatDescription && (
+                      <p id="custom-arena-error" role="alert" className="text-[10px] font-mono text-rose-400">
+                        {fieldErrors.customFormatDescription}
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
@@ -1658,19 +1880,42 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                       >
                         Describe What You Are Looking For in Your Priority *
                       </label>
-                      <span className="text-[9px] text-slate-400 font-mono">Bespoke Priority</span>
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        {customPriorityDescription.length}/150
+                      </span>
                     </div>
                     <input
                       id="custom-priority-input"
+                      name="customPriorityDescription"
                       type="text"
+                      maxLength={150}
+                      spellCheck={true}
+                      aria-required="true"
+                      aria-invalid={touched.customPriorityDescription && !!fieldErrors.customPriorityDescription}
+                      aria-describedby={touched.customPriorityDescription && fieldErrors.customPriorityDescription ? "custom-priority-error" : undefined}
                       value={customPriorityDescription}
-                      onChange={(e) => setCustomPriorityDescription(e.target.value)}
+                      onChange={(e) => {
+                        const val = sanitizeText(e.target.value, 150);
+                        setCustomPriorityDescription(val);
+                        if (touched.customPriorityDescription) validateField('customPriorityDescription', val);
+                      }}
+                      onBlur={() => handleBlur('customPriorityDescription', customPriorityDescription)}
                       placeholder="e.g. Overcoming throat constriction, impromptu rebuttal formulation, conversational poise..."
-                      className="w-full h-9 px-3 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-600 focus:border-[#C89630] focus:ring-1 focus:ring-[#C89630]/30 focus:outline-hidden transition-all"
+                      className={`w-full h-9 px-3 rounded-lg bg-slate-900 border text-xs text-white placeholder-slate-600 focus:outline-hidden transition-all ${
+                        touched.customPriorityDescription && fieldErrors.customPriorityDescription
+                          ? 'border-rose-500 focus:border-rose-400 focus:ring-1 focus:ring-rose-400/30'
+                          : 'border-slate-800 focus:border-[#C89630] focus:ring-1 focus:ring-[#C89630]/30'
+                      }`}
                     />
+                    {touched.customPriorityDescription && fieldErrors.customPriorityDescription && (
+                      <p id="custom-priority-error" role="alert" className="text-[10px] font-mono text-rose-400">
+                        {fieldErrors.customPriorityDescription}
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
+
 
 
               {/* SECTION 4: Delivery Cadence & Vocal Projection */}

@@ -151,6 +151,49 @@ async def test_api_endpoints():
         assert inq_data["organization"] == "Alliance High School"
         assert "inquiryId" in inq_data or "inquiry_id" in inq_data
 
+        # 16. Inquiries Input Sanitization & Validation Tests
+        # XSS injection attempt should be stripped and sanitized
+        res_xss = await client.post(
+            "/api/inquiries",
+            json={
+                "organization": "   <script>alert('attack')</script>Starehe Boys Centre   ",
+                "email": "  INFO@STAREHE.ORG  ",
+                "branch": "Academy",
+                "focus": "Debate Mentorship",
+                "message": "<b>Urgent:</b> Please send details <script>hack()</script>"
+            }
+        )
+        assert res_xss.status_code == 201
+        xss_data = res_xss.json()
+        assert xss_data["organization"] == "Starehe Boys Centre"
+        assert xss_data["email"] == "info@starehe.org"
+        assert "<script>" not in xss_data["message"]
+        assert "hack()" not in xss_data["message"]
+
+        # Invalid email rejection (422)
+        res_bad_email = await client.post(
+            "/api/inquiries",
+            json={
+                "organization": "Valid Org",
+                "email": "invalid-email-address",
+                "branch": "Academy",
+                "focus": "Debate"
+            }
+        )
+        assert res_bad_email.status_code == 422
+
+        # Too short organization rejection (422)
+        res_bad_org = await client.post(
+            "/api/inquiries",
+            json={
+                "organization": "   ",
+                "email": "valid@org.com",
+                "branch": "Academy",
+                "focus": "Debate"
+            }
+        )
+        assert res_bad_org.status_code == 422
+
         # List inquiries
         res = await client.get("/api/inquiries")
         assert res.status_code == 200

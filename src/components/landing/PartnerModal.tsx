@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CheckCircle, AlertCircle, Mail, Loader2, ArrowRight, X } from 'lucide-react';
 import { inquiriesApi, InquiryResponse } from '../../services/apiClient';
+import {
+  sanitizeText,
+  sanitizeMultiline,
+  sanitizeEmail,
+  validateEmail,
+  validateName
+} from '../../utils/sanitization';
 
 interface PartnerModalProps {
   isOpen: boolean;
@@ -16,6 +23,8 @@ export const PartnerModal: React.FC<PartnerModalProps> = ({ isOpen, onClose, bra
   const [loading, setLoading] = useState(false);
   const [successData, setSuccessData] = useState<InquiryResponse | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
   const modalRef = useRef<HTMLDivElement | null>(null);
   const firstInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -23,6 +32,8 @@ export const PartnerModal: React.FC<PartnerModalProps> = ({ isOpen, onClose, bra
     if (isOpen) {
       setSuccessData(null);
       setErrorMsg(null);
+      setFieldErrors({});
+      setTouched({});
       setTimeout(() => {
         firstInputRef.current?.focus();
       }, 50);
@@ -42,18 +53,49 @@ export const PartnerModal: React.FC<PartnerModalProps> = ({ isOpen, onClose, bra
 
   if (!isOpen) return null;
 
+  const validateField = (fieldName: string, value: string): string => {
+    let err = '';
+    if (fieldName === 'organization') {
+      const res = validateName(value, 'Organization name', 2, 120);
+      if (!res.isValid) err = res.error || '';
+    } else if (fieldName === 'email') {
+      const res = validateEmail(value);
+      if (!res.isValid) err = res.error || '';
+    }
+    setFieldErrors(prev => ({ ...prev, [fieldName]: err }));
+    return err;
+  };
+
+  const handleBlur = (fieldName: string, value: string) => {
+    setTouched(prev => ({ ...prev, [fieldName]: true }));
+    validateField(fieldName, value);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setErrorMsg(null);
 
+    const orgErr = validateField('organization', organization);
+    const emailErr = validateField('email', email);
+    setTouched({ organization: true, email: true });
+
+    if (orgErr || emailErr) {
+      return;
+    }
+
+    setLoading(true);
+
     try {
+      const cleanOrg = sanitizeText(organization, 120);
+      const cleanEmail = sanitizeEmail(email);
+      const cleanNotes = sanitizeMultiline(notes, 1000);
+
       const res = await inquiriesApi.submit({
-        organization: organization.trim(),
-        email: email.trim(),
+        organization: cleanOrg,
+        email: cleanEmail,
         branch,
-        focus,
-        message: notes.trim() || undefined
+        focus: sanitizeText(focus, 120),
+        message: cleanNotes || undefined
       });
       setSuccessData(res);
     } catch (err: any) {
@@ -169,41 +211,89 @@ export const PartnerModal: React.FC<PartnerModalProps> = ({ isOpen, onClose, bra
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-3.5">
+            <form onSubmit={handleSubmit} className="space-y-3.5" noValidate>
               <div>
-                <label 
-                  htmlFor="partner-org-name" 
-                  className="block text-[10px] uppercase font-mono tracking-widest text-slate-400 mb-1"
-                >
-                  Organization / Institution Name *
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label 
+                    htmlFor="partner-org-name" 
+                    className="block text-[10px] uppercase font-mono tracking-widest text-slate-400"
+                  >
+                    Organization / Institution Name *
+                  </label>
+                  {touched.organization && fieldErrors.organization && (
+                    <span id="partner-org-error" role="alert" className="text-[10px] font-mono text-rose-400">
+                      {fieldErrors.organization}
+                    </span>
+                  )}
+                </div>
                 <input
                   id="partner-org-name"
+                  name="organization"
                   ref={firstInputRef}
                   required
                   type="text"
+                  autoComplete="organization"
+                  maxLength={120}
+                  spellCheck={false}
+                  aria-required="true"
+                  aria-invalid={touched.organization && !!fieldErrors.organization}
+                  aria-describedby={touched.organization && fieldErrors.organization ? "partner-org-error" : undefined}
                   value={organization}
-                  onChange={(e) => setOrganization(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setOrganization(val);
+                    if (touched.organization) validateField('organization', val);
+                  }}
+                  onBlur={() => handleBlur('organization', organization)}
                   placeholder="e.g. Alliance High School or Hope Children's Home"
-                  className="w-full h-10 px-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 focus:border-[#C89630] focus-visible:ring-2 focus-visible:ring-[#C89630] focus-visible:outline-hidden"
+                  className={`w-full h-10 px-3.5 rounded-xl bg-slate-950 border text-xs text-slate-100 placeholder-slate-600 focus-visible:ring-2 focus-visible:outline-hidden transition-all ${
+                    touched.organization && fieldErrors.organization
+                      ? 'border-rose-500 focus:border-rose-400 focus-visible:ring-rose-500/30'
+                      : 'border-slate-800 focus:border-[#C89630] focus-visible:ring-[#C89630]'
+                  }`}
                 />
               </div>
 
               <div>
-                <label 
-                  htmlFor="partner-email" 
-                  className="block text-[10px] uppercase font-mono tracking-widest text-slate-400 mb-1"
-                >
-                  Contact Email *
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label 
+                    htmlFor="partner-email" 
+                    className="block text-[10px] uppercase font-mono tracking-widest text-slate-400"
+                  >
+                    Contact Email *
+                  </label>
+                  {touched.email && fieldErrors.email && (
+                    <span id="partner-email-error" role="alert" className="text-[10px] font-mono text-rose-400">
+                      {fieldErrors.email}
+                    </span>
+                  )}
+                </div>
                 <input
                   id="partner-email"
+                  name="email"
                   required
                   type="email"
+                  autoComplete="email"
+                  inputMode="email"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  maxLength={254}
+                  aria-required="true"
+                  aria-invalid={touched.email && !!fieldErrors.email}
+                  aria-describedby={touched.email && fieldErrors.email ? "partner-email-error" : undefined}
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setEmail(val);
+                    if (touched.email) validateField('email', val);
+                  }}
+                  onBlur={() => handleBlur('email', email)}
                   placeholder="director@organization.org"
-                  className="w-full h-10 px-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 focus:border-[#C89630] focus-visible:ring-2 focus-visible:ring-[#C89630] focus-visible:outline-hidden"
+                  className={`w-full h-10 px-3.5 rounded-xl bg-slate-950 border text-xs text-slate-100 placeholder-slate-600 focus-visible:ring-2 focus-visible:outline-hidden transition-all ${
+                    touched.email && fieldErrors.email
+                      ? 'border-rose-500 focus:border-rose-400 focus-visible:ring-rose-500/30'
+                      : 'border-slate-800 focus:border-[#C89630] focus-visible:ring-[#C89630]'
+                  }`}
                 />
               </div>
 
@@ -216,6 +306,7 @@ export const PartnerModal: React.FC<PartnerModalProps> = ({ isOpen, onClose, bra
                 </label>
                 <select
                   id="partner-focus"
+                  name="focus"
                   value={focus}
                   onChange={(e) => setFocus(e.target.value)}
                   className="w-full h-10 px-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 focus:border-[#C89630] focus-visible:ring-2 focus-visible:ring-[#C89630] focus-visible:outline-hidden"
@@ -228,19 +319,27 @@ export const PartnerModal: React.FC<PartnerModalProps> = ({ isOpen, onClose, bra
               </div>
 
               <div>
-                <label 
-                  htmlFor="partner-notes" 
-                  className="block text-[10px] uppercase font-mono tracking-widest text-slate-400 mb-1"
-                >
-                  Objectives / Notes (Optional)
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label 
+                    htmlFor="partner-notes" 
+                    className="block text-[10px] uppercase font-mono tracking-widest text-slate-400"
+                  >
+                    Objectives / Notes (Optional)
+                  </label>
+                  <span className="text-[10px] font-mono text-slate-400">
+                    {notes.length}/1000
+                  </span>
+                </div>
                 <textarea
                   id="partner-notes"
+                  name="notes"
                   rows={2}
+                  maxLength={1000}
+                  spellCheck={true}
                   value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
+                  onChange={(e) => setNotes(sanitizeMultiline(e.target.value, 1000))}
                   placeholder="Briefly describe your timeline, student cohort size, or grant objectives..."
-                  className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 focus:border-[#C89630] focus-visible:ring-2 focus-visible:ring-[#C89630] focus-visible:outline-hidden"
+                  className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 focus:border-[#C89630] focus-visible:ring-2 focus-visible:ring-[#C89630] focus-visible:outline-hidden transition-all"
                 />
               </div>
 
