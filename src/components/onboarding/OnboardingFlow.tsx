@@ -1178,10 +1178,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         {currentStep === 1 && (
           <div className="space-y-6 animate-fadeIn">
             <div className="text-center max-w-lg mx-auto">
-              <span className="text-[10px] font-mono uppercase font-bold tracking-widest text-[#C89630] px-2.5 py-1 rounded-md bg-[#C89630]/10 border border-[#C89630]/20">
-                Step 1 of 5
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-serif font-black text-white mt-3">
+              <h2 className="text-2xl sm:text-3xl font-serif font-black text-white">
                 Choose Your Functional Branch
               </h2>
               <p className="text-xs sm:text-sm text-slate-400 mt-1">
@@ -1276,10 +1273,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         {currentStep === 2 && (
           <div className="space-y-6 animate-fadeIn">
             <div className="text-center max-w-lg mx-auto">
-              <span className="text-[10px] font-mono uppercase font-bold tracking-widest text-[#C89630] px-2.5 py-1 rounded-md bg-[#C89630]/10 border border-[#C89630]/20">
-                Step 2 of 5 • {branch} Track
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-serif font-black text-white mt-2">
+              <h2 className="text-2xl sm:text-3xl font-serif font-black text-white">
                 Define Your Core Speaking Mission
               </h2>
               <p className="text-xs sm:text-sm text-slate-400 mt-1">
@@ -1478,10 +1472,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         {currentStep === 3 && (
           <div className="space-y-5 animate-fadeIn">
             <div className="text-center max-w-lg mx-auto">
-              <span className="text-[10px] font-mono uppercase font-bold tracking-widest text-[#C89630] px-2.5 py-1 rounded-md bg-[#C89630]/10 border border-[#C89630]/20">
-                {activeConfig.badge}
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-serif font-black text-white mt-2">
+              <h2 className="text-2xl sm:text-3xl font-serif font-black text-white">
                 {activeConfig.title}
               </h2>
               <p className="text-xs sm:text-sm text-slate-400 mt-1">
@@ -1980,10 +1971,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         {currentStep === 4 && (
           <div className="space-y-6 animate-fadeIn">
             <div className="text-center max-w-lg mx-auto">
-              <span className="text-[10px] font-mono uppercase font-bold tracking-widest text-[#C89630] px-2.5 py-1 rounded-md bg-[#C89630]/10 border border-[#C89630]/20">
-                Step 4 of 5 • Daily Rituals
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-serif font-black text-white mt-2">
+              <h2 className="text-2xl sm:text-3xl font-serif font-black text-white">
                 Commit to Daily Orator Habits
               </h2>
               <p className="text-xs sm:text-sm text-slate-400 mt-1">
@@ -2048,10 +2036,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         {currentStep === 5 && (
           <div className="space-y-6 animate-fadeIn">
             <div className="text-center max-w-lg mx-auto">
-              <span className="text-[10px] font-mono uppercase font-bold tracking-widest text-[#C89630] px-2.5 py-1 rounded-md bg-[#C89630]/10 border border-[#C89630]/20">
-                Step 5 of 5 • Protocol Formulated
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-serif font-black text-white mt-2">
+              <h2 className="text-2xl sm:text-3xl font-serif font-black text-white">
                 Your Protocol is Formulated!
               </h2>
               <p className="text-xs sm:text-sm text-slate-400 mt-1">

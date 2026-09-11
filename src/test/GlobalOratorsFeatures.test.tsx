@@ -393,7 +393,7 @@ describe('Global Orators Landing Page & Features Tests', () => {
     expect(screen.queryByText('Choose Your Functional Branch')).not.toBeInTheDocument();
 
     // Should land directly on Step 2 with Academy mission options
-    expect(screen.getByText(/Step 2 of 5 • Academy Track/i)).toBeInTheDocument();
+    expect(screen.getByText('Step 2 of 5')).toBeInTheDocument();
     expect(screen.getByText('Define Your Core Speaking Mission')).toBeInTheDocument();
     expect(screen.getByText(/Debaters, varsity students & corporate speakers/i)).toBeInTheDocument();
     expect(screen.getByText('Pan-African Leadership & Cognitive Deconditioning')).toBeInTheDocument();
@@ -419,7 +419,7 @@ describe('Global Orators Landing Page & Features Tests', () => {
     );
 
     // Should land directly on Step 2 with Foundation mission options
-    expect(screen.getByText(/Step 2 of 5 • Foundation Track/i)).toBeInTheDocument();
+    expect(screen.getByText('Step 2 of 5')).toBeInTheDocument();
     expect(screen.getByText(/Personal healing, vulnerability & youth advocacy/i)).toBeInTheDocument();
     expect(screen.getByText(/Speaking as a Form of Escapism & Emotional Catharsis/i)).toBeInTheDocument();
     expect(screen.getByText(/Personal healing, emotional release & safe expression/i)).toBeInTheDocument();
