@@ -111,6 +111,9 @@ describe('Speaker Login & Portal Integration Tests', () => {
       branch: 'Academy',
       fullName: 'KASSIM MUSA',
       email: 'kassimmusa322@gmail.com',
+      institution: 'Maseno University',
+      primaryDiscipline: 'Decolonial Parliamentary Forensics',
+      coreFocus: 'Ideological Rigor & Rebuttal Depth',
       missionFocus: 'Pan-African Leadership',
       speakingGoal: 'Pan-African Leadership',
       experienceLevel: 'Novice Speaker',
@@ -129,7 +132,10 @@ describe('Speaker Login & Portal Integration Tests', () => {
     );
 
     expect(screen.getByText('KASSIM MUSA')).toBeInTheDocument();
-    expect(screen.getByText('Pan-African Leadership')).toBeInTheDocument();
+    expect(screen.getAllByText(/Maseno University/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('Championship Debate & Pan-African Leadership')).toBeInTheDocument();
+    expect(screen.getByText('Decolonial Parliamentary Forensics')).toBeInTheDocument();
+    expect(screen.getByText('Ideological Rigor & Rebuttal Depth')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Sign Out/i })).toBeInTheDocument();
 
     // Click habits tab
@@ -149,4 +155,34 @@ describe('Speaker Login & Portal Integration Tests', () => {
 
     expect(localStorage.getItem('globalorators_speaker_profile')).toBeNull();
   });
+
+  test('should dynamically reconfigure syllabus and drill when speaker has Executive Pitching profile', async () => {
+    localStorage.setItem('globalorators_speaker_profile', JSON.stringify({
+      branch: 'Academy',
+      fullName: 'Amina Kimani',
+      email: 'amina@venture.org',
+      institution: 'Nairobi Tech Hub',
+      primaryDiscipline: 'Executive Investor Pitch',
+      coreFocus: 'High-Stakes Persuasion & Presence',
+      missionFocus: 'Executive Pitching & High-Stakes Storytelling',
+      speakingGoal: 'Executive Pitching',
+      experienceLevel: 'Varsity / Advanced',
+      vocalBaselinePace: 145,
+      emotionalOpennessRating: 7,
+      selectedHabits: ['Vocal Hydration (2.5L + Warm Lemon Water)']
+    }));
+
+    render(
+      <AppProvider>
+        <ClientPortal />
+      </AppProvider>
+    );
+
+    expect(screen.getByText('Amina Kimani')).toBeInTheDocument();
+    expect(screen.getAllByText(/Nairobi Tech Hub/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('Executive Investor Pitch: High-Stakes Persuasion & Presence')).toBeInTheDocument();
+    expect(screen.getByText(/The 60-Second Venture Genesis/i)).toBeInTheDocument();
+    expect(screen.getByText(/venture's founding conviction/i)).toBeInTheDocument();
+  });
 });
+

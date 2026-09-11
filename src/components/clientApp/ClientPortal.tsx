@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { BranchType, SpeakerOnboardingData } from '../../types';
+import { resolveSpeakerCurriculum } from '../../utils/curriculumResolver';
 
 export const ClientPortal: React.FC = () => {
   const { 
@@ -44,6 +45,9 @@ export const ClientPortal: React.FC = () => {
     fullName: 'Nia Adebayo',
     email: 'nia.adebayo@globalorators.org',
     missionFocus: 'Speaking as a Form of Escapism & Healing',
+    primaryDiscipline: 'Cathartic Voice Journaling',
+    coreFocus: 'Vulnerability & Unfiltered Truth',
+    institution: 'Independent Orator',
     speakingGoal: 'Cathartic Expression & Healing',
     experienceLevel: 'Novice Speaker',
     vocalBaselinePace: 135,
@@ -52,6 +56,7 @@ export const ClientPortal: React.FC = () => {
   }, [activeSpeakerProfile]);
 
   const isAcademy = profile.branch === 'Academy';
+  const curriculum = useMemo(() => resolveSpeakerCurriculum(profile), [profile]);
 
   // Active Tab inside Client Portal
   const [speakerTab, setSpeakerTab] = useState<'practice' | 'catharsis' | 'schedule' | 'habits' | 'coach'>('practice');
@@ -119,20 +124,36 @@ export const ClientPortal: React.FC = () => {
     }
   }, [habitsKey]);
 
-  // Client to Coach simulated messages
+  // Client to Coach simulated messages initialized with personalized context
   const [clientMessageInput, setClientMessageInput] = useState('');
-  const [chatMessages, setChatMessages] = useState<{ sender: 'client' | 'coach'; text: string; time: string }[]>([
+  const [chatMessages, setChatMessages] = useState<{ sender: 'client' | 'coach'; text: string; time: string }[]>(() => [
     {
       sender: 'coach',
-      text: `Welcome to Global Orators! I'm reviewing your baseline pacing. Remember, whether preparing for championships or practicing emotional catharsis, your voice is your instrument of sovereign authority.`,
+      text: `Welcome to Global Orators, ${profile.fullName.split(' ')[0]}! I've calibrated your ${profile.branch} protocol${profile.institution ? ` for ${profile.institution}` : ''}. We are prioritizing ${curriculum.focusLabel} at your target pace of ${profile.vocalBaselinePace} WPM. Remember, your voice is your sovereign instrument.`,
       time: '09:00 AM'
     },
     {
       sender: 'client',
-      text: 'Thank you Coach Qassim! I am starting today\'s vocalization drill.',
+      text: `Thank you Coach Qassim! I am starting today's drill on ${curriculum.focusLabel}.`,
       time: '09:15 AM'
     }
   ]);
+
+  // Synchronize Coach chat whenever profile persona changes
+  useEffect(() => {
+    setChatMessages([
+      {
+        sender: 'coach',
+        text: `Welcome to Global Orators, ${profile.fullName.split(' ')[0]}! I've calibrated your ${profile.branch} protocol${profile.institution ? ` for ${profile.institution}` : ''}. We are prioritizing ${curriculum.focusLabel} at your target pace of ${profile.vocalBaselinePace} WPM. Remember, your voice is your sovereign instrument.`,
+        time: '09:00 AM'
+      },
+      {
+        sender: 'client',
+        text: `Thank you Coach Qassim! I am starting today's drill on ${curriculum.focusLabel}.`,
+        time: '09:15 AM'
+      }
+    ]);
+  }, [profile.fullName, profile.branch, profile.institution, profile.coreFocus, profile.primaryDiscipline, profile.vocalBaselinePace, curriculum.focusLabel]);
 
   // Demo Profile switcher (Allows seamless switching between Academy & Foundation personas)
   const handleSwitchBranchDemo = (targetBranch: BranchType) => {
@@ -143,6 +164,9 @@ export const ClientPortal: React.FC = () => {
         email: 'kwame.mensah@globalorators.org',
         age: 22,
         phone: '+254 711 223 344',
+        institution: 'Strathmore Debate Society',
+        primaryDiscipline: 'British Parliamentary (BP)',
+        coreFocus: 'Argumentation & Rebuttal Depth',
         missionFocus: 'Pan-African Leadership & WUDC Championship Debate',
         speakingGoal: 'Competitive Debate',
         experienceLevel: 'Varsity / Advanced',
@@ -164,6 +188,9 @@ export const ClientPortal: React.FC = () => {
         email: 'nia.adebayo@globalorators.org',
         age: 19,
         phone: '+254 722 334 455',
+        institution: 'Independent Orator',
+        primaryDiscipline: 'Cathartic Voice Journaling',
+        coreFocus: 'Vulnerability & Unfiltered Truth',
         missionFocus: 'Speaking as a Form of Escapism & Catharsis from Adversity',
         speakingGoal: 'Cathartic Expression & Healing',
         experienceLevel: 'Novice Speaker',
@@ -250,7 +277,7 @@ export const ClientPortal: React.FC = () => {
         ...prev,
         {
           sender: 'coach',
-          text: `Great work, ${profile.fullName.split(' ')[0]}! I reviewed your rehearsal metrics. Keep your breath deep in the lower abdomen and let your authentic conviction lead.`,
+          text: `Great work, ${profile.fullName.split(' ')[0]}! I reviewed your rehearsal metrics for ${curriculum.focusLabel}. Keep your breath deep in the lower abdomen and let your authentic conviction lead.`,
           time: 'Just now'
         }
       ]);
@@ -261,35 +288,35 @@ export const ClientPortal: React.FC = () => {
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-emerald-500 selection:text-slate-950">
       {/* 1. Speaker App Top Header */}
       <header className="sticky top-0 z-30 bg-slate-950/85 backdrop-blur-md border-b border-slate-800/80 px-4 sm:px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm text-slate-950 shadow-md ${
-            isAcademy ? 'bg-emerald-400' : 'bg-teal-400'
+        <div className="flex items-center gap-3 min-w-0">
+          <div className={`w-9 h-9 shrink-0 rounded-xl flex items-center justify-center font-black text-sm text-slate-950 shadow-md ${
+            isAcademy ? 'bg-[#C89630]' : 'bg-teal-400'
           }`}>
             {profile.fullName.charAt(0)}
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs sm:text-sm font-bold text-white leading-tight">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs sm:text-sm font-serif font-bold text-white leading-tight truncate">
                 {profile.fullName}
               </span>
-              <span className={`text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full border ${
+              <span className={`text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded border ${
                 isAcademy
-                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                  ? 'bg-amber-500/10 text-[#C89630] border-[#C89630]/30'
                   : 'bg-teal-500/10 text-teal-300 border-teal-500/30'
               }`}>
                 {profile.branch} Track
               </span>
             </div>
-            <p className="text-[10px] text-slate-400 font-medium truncate max-w-xs sm:max-w-md">
-              {profile.missionFocus}
+            <p className="text-[10px] font-mono text-slate-400 truncate max-w-[200px] xs:max-w-xs sm:max-w-md">
+              {profile.institution ? `${profile.institution} • ` : ''}{profile.primaryDiscipline || profile.missionFocus}
             </p>
           </div>
         </div>
 
         {/* Action Controls in Header */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Quick Demo Track Toggle */}
-          <div className="hidden sm:flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-xl p-1 text-[11px]">
+          <div className="hidden md:flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-xl p-1 text-[11px]">
             <button
               onClick={() => handleSwitchBranchDemo('Academy')}
               className={`px-2 py-1 rounded-lg font-semibold transition-all ${
@@ -310,19 +337,21 @@ export const ClientPortal: React.FC = () => {
 
           <button
             onClick={() => setCurrentPortal('coach_os')}
-            className="px-2.5 py-1.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:text-white text-xs font-semibold flex items-center gap-1.5"
+            aria-label="Open Coach OS"
+            className="p-2 sm:px-2.5 sm:py-1.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-colors"
             title="Open Coach OS (coach.globalorators.com)"
           >
-            <ShieldCheck className="w-3.5 h-3.5 text-teal-400" />
+            <ShieldCheck className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-teal-400" />
             <span className="hidden md:inline">Coach OS</span>
           </button>
 
           <button
             onClick={() => setCurrentPortal('landing')}
-            className="px-2.5 py-1.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+            aria-label="Return to Public Site"
+            className="p-2 sm:px-2.5 sm:py-1.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
             title="Return to Landing Page (globalorators.com)"
           >
-            <Globe className="w-3.5 h-3.5 text-emerald-400" />
+            <Globe className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-emerald-400" />
             <span className="hidden md:inline">Public Site</span>
           </button>
 
@@ -331,12 +360,13 @@ export const ClientPortal: React.FC = () => {
               setActiveSpeakerProfile(null);
               localStorage.removeItem('globalorators_speaker_profile');
               setCurrentPortal('landing');
-              showToast('Signed out of speaker portal.');
+              showToast('Signed out of speaker profile.');
             }}
-            className="px-2.5 py-1.5 rounded-xl border border-rose-900/40 bg-rose-950/20 text-rose-300 hover:text-rose-100 hover:bg-rose-950/40 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+            aria-label="Sign Out"
+            className="p-2 sm:px-2.5 sm:py-1.5 rounded-xl border border-rose-900/40 bg-rose-950/20 text-rose-300 hover:text-rose-100 hover:bg-rose-950/40 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
             title="Sign out of speaker profile"
           >
-            <LogOut className="w-3.5 h-3.5" />
+            <LogOut className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
             <span className="hidden md:inline">Sign Out</span>
           </button>
         </div>
@@ -377,59 +407,84 @@ export const ClientPortal: React.FC = () => {
       {/* 3. Main Portal Body */}
       <main className="flex-1 max-w-5xl mx-auto w-full p-4 sm:p-6 lg:p-8">
         {/* Banner with Speaker Track Overview */}
-        <div className="mb-6 rounded-3xl p-5 sm:p-6 border bg-gradient-to-r from-slate-900 via-slate-950 to-slate-900 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl border-slate-800">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className={`text-[10px] uppercase font-bold tracking-widest px-2.5 py-0.5 rounded-full ${
-                isAcademy ? 'bg-emerald-500/20 text-emerald-300' : 'bg-teal-500/20 text-teal-300'
-              }`}>
-                {isAcademy ? 'Tournament & Leadership Syllabus' : 'Catharsis & Healing Fellowship'}
+        <div className="mb-6 rounded-3xl p-5 sm:p-6 border bg-slate-900/60 border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-2.5">
+              <span className="text-[10px] font-mono uppercase tracking-widest text-[#C89630] font-bold">
+                {profile.institution ? `${profile.institution} • ` : ''}{curriculum.syllabusKicker}
               </span>
-              <span className="text-xs text-slate-500 font-mono">• Day 14 Streak (🔥 6 Days)</span>
+              <span className="hidden xs:inline-block w-px h-3 bg-slate-800" />
+              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
+                Day 14 Practice Cycle • 6-Day Streak
+              </span>
             </div>
-            <h1 className="text-xl sm:text-2xl font-black text-white">
-              {isAcademy ? 'Championship Debate & Cognitive Sovereignty' : 'Speaking as Escapism: Emotional Vulnerability Studio'}
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-white tracking-tight leading-snug">
+              {curriculum.title}
             </h1>
-            <p className="text-xs text-slate-400 mt-1 max-w-2xl leading-relaxed">
-              {isAcademy
-                ? 'Developing razor-sharp syllogistic logic, overcoming western dependency narratives, and commanding global parliamentary conventions.'
-                : 'A safe sanctuary for vocalizing suppressed trauma, breaking generational silence, and turning lived pain into therapeutic empowerment.'}
+            <p className="text-xs sm:text-sm text-slate-300 mt-2 max-w-2xl leading-relaxed">
+              {curriculum.description}
             </p>
+
+            {/* Dynamic Curriculum Focus Tags */}
+            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 mt-3 pt-3 border-t border-slate-800/80">
+              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
+                Discipline: <strong className="text-slate-200 font-semibold">{curriculum.disciplineLabel}</strong>
+              </span>
+              <span className="hidden xs:inline-block w-1 h-1 rounded-full bg-slate-700" />
+              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
+                Focus: <strong className="text-[#C89630] font-semibold">{curriculum.focusLabel}</strong>
+              </span>
+              <span className="hidden xs:inline-block w-1 h-1 rounded-full bg-slate-700" />
+              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
+                Tier: <strong className="text-slate-200 font-semibold">{profile.experienceLevel || 'Calibrated'}</strong>
+              </span>
+            </div>
           </div>
 
           <button
             onClick={() => resetOnboarding()}
-            className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 self-start md:self-auto shrink-0"
+            className="px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-900/80 hover:bg-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200 text-[11px] font-mono uppercase tracking-wider flex items-center gap-1.5 transition-colors self-start md:self-center shrink-0"
+            title="Recalibrate curriculum preferences"
           >
-            <RefreshCw className="w-3.5 h-3.5 text-slate-400" />
-            <span>Retake Onboarding</span>
+            <RefreshCw className="w-3 h-3 text-slate-400" />
+            <span>Recalibrate Track</span>
           </button>
         </div>
 
         {/* Responsive 2-Column Mobile Stats Grid (Strictly adhering to mobile design rules) */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 mb-8">
-          <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-3 sm:p-4">
-            <div className="text-[10px] text-slate-400 uppercase font-bold">Target Pacing</div>
-            <div className="text-lg sm:text-2xl font-black text-emerald-400 mt-0.5">{profile.vocalBaselinePace} <span className="text-xs font-normal text-slate-400">WPM</span></div>
-            <div className="text-[10px] text-emerald-500/80 mt-0.5">Optimal Cadence</div>
+          <div className="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-3.5 sm:p-4.5 transition-colors hover:border-slate-700/80">
+            <div className="text-[9px] sm:text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold">Target Pacing</div>
+            <div className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-[#C89630] mt-1 tracking-tight">
+              {profile.vocalBaselinePace}
+              <span className="font-mono text-[10px] sm:text-xs font-normal text-slate-400 uppercase tracking-wider ml-1">WPM</span>
+            </div>
+            <div className="text-[10px] font-mono text-emerald-400 mt-1">Optimal Cadence</div>
           </div>
 
-          <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-3 sm:p-4">
-            <div className="text-[10px] text-slate-400 uppercase font-bold">Fluency & Clarity</div>
-            <div className="text-lg sm:text-2xl font-black text-white mt-0.5">94.2%</div>
-            <div className="text-[10px] text-slate-400 mt-0.5">Top 5% Tier</div>
+          <div className="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-3.5 sm:p-4.5 transition-colors hover:border-slate-700/80">
+            <div className="text-[9px] sm:text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold">Fluency & Clarity</div>
+            <div className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-white mt-1 tracking-tight">
+              94.2%
+            </div>
+            <div className="text-[10px] font-mono text-slate-400 mt-1">Top 5% Tier</div>
           </div>
 
-          <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-3 sm:p-4">
-            <div className="text-[10px] text-slate-400 uppercase font-bold">Catharsis Openness</div>
-            <div className="text-lg sm:text-2xl font-black text-teal-400 mt-0.5">{profile.emotionalOpennessRating * 10}%</div>
-            <div className="text-[10px] text-teal-500/80 mt-0.5">Vulnerability Index</div>
+          <div className="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-3.5 sm:p-4.5 transition-colors hover:border-slate-700/80">
+            <div className="text-[9px] sm:text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold">Catharsis Index</div>
+            <div className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-teal-400 mt-1 tracking-tight">
+              {profile.emotionalOpennessRating * 10}%
+            </div>
+            <div className="text-[10px] font-mono text-teal-400 mt-1">Vulnerability Level</div>
           </div>
 
-          <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-3 sm:p-4">
-            <div className="text-[10px] text-slate-400 uppercase font-bold">Rehearsals Logged</div>
-            <div className="text-lg sm:text-2xl font-black text-white mt-0.5">18 <span className="text-xs font-normal text-slate-400">Sessions</span></div>
-            <div className="text-[10px] text-emerald-400 mt-0.5">+4 this week</div>
+          <div className="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-3.5 sm:p-4.5 transition-colors hover:border-slate-700/80">
+            <div className="text-[9px] sm:text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold">Rehearsals Logged</div>
+            <div className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-white mt-1 tracking-tight">
+              18
+              <span className="font-mono text-[10px] sm:text-xs font-normal text-slate-400 uppercase tracking-wider ml-1">Rounds</span>
+            </div>
+            <div className="text-[10px] font-mono text-emerald-400 mt-1">+4 this week</div>
           </div>
         </div>
 
@@ -449,9 +504,7 @@ export const ClientPortal: React.FC = () => {
                       Today's Featured Drill
                     </span>
                     <h2 className="text-base sm:text-lg font-bold text-white">
-                      {isAcademy
-                        ? 'Pan-African Deconditioning & Leadership Manifesto'
-                        : 'Cathartic Voice Journaling & Vulnerability Release'}
+                      {curriculum.drillTitle}
                     </h2>
                   </div>
                 </div>
@@ -464,12 +517,10 @@ export const ClientPortal: React.FC = () => {
               {/* Prompt Card */}
               <div className="bg-slate-950/80 border border-slate-850 rounded-2xl p-4 sm:p-5 mb-6">
                 <div className="text-[10px] uppercase font-bold text-slate-400 mb-1">
-                  {isAcademy ? 'Debate / Manifesto Prompt' : 'Catharsis & Healing Safe Prompt'}
+                  {curriculum.drillCategory}
                 </div>
                 <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-medium">
-                  {isAcademy
-                    ? '"Dismantle the proposition that African youth must migrate to achieve prosperity. Defend continental resource mobilization and self-development with uncompromising moral logic."'
-                    : '"Speak aloud a truth you felt pressured to hide. Breathe through the constriction in your throat, allow your voice to express the emotion completely, and end with an affirmation of self-sovereignty."'}
+                  {curriculum.drillPrompt}
                 </p>
               </div>
 
@@ -667,12 +718,12 @@ export const ClientPortal: React.FC = () => {
                     <div>
                       <div className="flex items-center gap-2">
                         <h3 className="text-xs sm:text-sm font-bold text-white">
-                          1-on-1 Executive & Delivery Review with Coach Qassim
+                          {curriculum.sessionTitle}
                         </h3>
                         <span className="text-[9px] px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400">Confirmed</span>
                       </div>
                       <p className="text-[11px] text-slate-400 mt-0.5">
-                        Tomorrow at 03:30 PM (45 Min) • Video Consultation & Audio Pacing Feedback
+                        Tomorrow at 03:30 PM (45 Min) • {curriculum.sessionDescription}
                       </p>
                     </div>
                   </div>
@@ -693,14 +744,12 @@ export const ClientPortal: React.FC = () => {
                     <div>
                       <div className="flex items-center gap-2">
                         <h3 className="text-xs sm:text-sm font-bold text-white">
-                          {isAcademy
-                            ? 'PAUDC Championship Mock Round (British Parliamentary)'
-                            : 'Foundation Community Voice & Healing Circle'}
+                          {curriculum.workshopTitle}
                         </h3>
                         <span className="text-[9px] px-2 py-0.5 rounded bg-teal-500/15 text-teal-300">Live Workshop</span>
                       </div>
                       <p className="text-[11px] text-slate-400 mt-0.5">
-                        Friday at 05:00 PM (60 Min) • Facilitated Group Session
+                        Friday at 05:00 PM (60 Min) • {curriculum.workshopDescription}
                       </p>
                     </div>
                   </div>

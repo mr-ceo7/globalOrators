@@ -88,7 +88,7 @@ describe('Global Orators Dedicated Routing & SEO Tests', () => {
 
     // Verify Chapter III: Movement Directorate & Faculty
     expect(screen.getByRole('heading', { level: 2, name: /The Minds Behind the Movement/i })).toBeInTheDocument();
-    expect(screen.getByText('Tyrese Kingori')).toBeInTheDocument();
+    expect(screen.getByText(/Tyrese King[’']?ori Nyawira/i)).toBeInTheDocument();
     expect(screen.getByText('Milo Brian')).toBeInTheDocument();
     expect(screen.getByText('Obed Imbusi')).toBeInTheDocument();
     expect(screen.getByText('Liz Imani')).toBeInTheDocument();

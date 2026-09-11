@@ -16,6 +16,7 @@ interface TeamMember {
   specialty: string;
   bio: string;
   image?: string;
+  imagePosition?: string;
 }
 
 const teamMembers: TeamMember[] = [
@@ -29,12 +30,14 @@ const teamMembers: TeamMember[] = [
     bio: 'Debater, public speaker, writer, and Founder of The Global Orators Project. Dedicated to the conviction that a generation that can speak must also learn to think, extending from youth debate mentorship to corporate communications training.'
   },
   {
-    name: 'Tyrese Kingori',
-    role: 'Co-Founder & Institutional Strategy',
-    category: 'Co-Founder',
-    initials: 'TK',
-    specialty: 'Operations & Continental Growth',
-    bio: 'Co-architect of the Global Orators Project vision. Oversees institutional partnerships, continental operations, and strategic program rollout across universities, secondary schools, and partner networks.'
+    name: 'Tyrese King’ori Nyawira',
+    role: 'Founder & Debate Coach',
+    category: 'Founder',
+    initials: 'TN',
+    image: '/images/tyrese.jpg',
+    imagePosition: 'object-[center_15%]',
+    specialty: 'WSDC & BP Debate · Adjudication',
+    bio: 'Competitive debater, adjudicator, trainer, and debate academy founder. Mashujaa & Indaba V Novice Champion, Ikenga Open finalist, TOC East Africa judge, and assistant coach for Team Ecuador. Trains students in rigorous argumentation, rebuttal, and global affairs.'
   },
   {
     name: 'Milo Brian',
@@ -68,6 +71,7 @@ const teamMembers: TeamMember[] = [
     role: 'Public Speaking Coach & Vocal Presence Specialist',
     category: 'Speaking Coach',
     initials: 'RC',
+    image: '/images/rachael.jpg',
     specialty: 'Vocal Presence & Executive Delivery',
     bio: 'Dedicated public speaking coach specializing in vocal presence, breathwork, diaphragm control, and delivery cadence. Helps young speakers and emerging leaders unlock confident, articulate stage command.'
   },
@@ -332,7 +336,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
                     <img 
                       src={member.image} 
                       alt={`${member.name}, ${member.role}`}
-                      className="w-full h-full object-cover object-[center_20%] filter contrast-[1.03] group-hover:scale-102 transition-transform duration-500"
+                      className={`w-full h-full object-cover ${member.imagePosition || 'object-[center_20%]'} filter contrast-[1.03] group-hover:scale-102 transition-transform duration-500`}
                       loading="lazy"
                     />
                   ) : (

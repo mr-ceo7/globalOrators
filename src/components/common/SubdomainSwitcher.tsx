@@ -39,7 +39,7 @@ export const SubdomainSwitcher: React.FC = () => {
   ];
 
   return (
-    <aside aria-label="Environment and subdomain navigation" className="sticky top-0 z-50 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 text-xs transition-all duration-200">
+    <aside aria-label="Environment and subdomain navigation" className="hidden md:block sticky top-0 z-50 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 text-xs transition-all duration-200">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 flex items-center justify-between py-1.5 sm:py-2">
         {/* Left: Indicator & Collapse Toggle */}
         <div className="flex items-center gap-2">
