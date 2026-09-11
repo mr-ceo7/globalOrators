@@ -5,7 +5,6 @@ import {
   Play, 
   Pause, 
   RotateCcw, 
-  Sparkles, 
   CheckCircle2, 
   Calendar, 
   TrendingUp, 
@@ -163,7 +162,7 @@ export const ClientPortal: React.FC = () => {
   const toggleHabit = (title: string) => {
     setHabitsStatus(prev => {
       const updated = { ...prev, [title]: !prev[title] };
-      showToast(updated[title] ? `Completed: ${title} ✨` : `Unchecked: ${title}`);
+      showToast(updated[title] ? `Completed: ${title}` : `Unchecked: ${title}`);
       return updated;
     });
   };
@@ -486,8 +485,8 @@ export const ClientPortal: React.FC = () => {
                 {recordingCompleted && recordedFeedback && (
                   <div className="mt-6 pt-5 border-t border-slate-850 animate-fadeIn text-left">
                     <div className="text-[10px] uppercase font-bold text-slate-400 mb-2 flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>AI & Coach Speech Delivery Analysis</span>
+                      <Activity className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Speech Delivery Diagnostics</span>
                     </div>
 
                     {/* 2-Column Responsive Metrics on Mobile */}

@@ -5,7 +5,6 @@ import {
   ArrowRight, 
   ArrowLeft, 
   Check, 
-  Sparkles, 
   Volume2, 
   Heart, 
   Compass, 
@@ -1818,9 +1817,8 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
               {/* SECTION 3: Core Forensics Focus / Technical Priority */}
               <div className="pt-4 border-t border-slate-800/80">
                 <div className="flex items-center justify-between mb-2.5">
-                  <label className="text-[10px] font-mono uppercase font-bold tracking-wider text-[#C89630] flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>{activeConfig.prioritySectionLabel}</span>
+                  <label className="text-[10px] font-mono uppercase font-bold tracking-wider text-[#C89630]">
+                    {activeConfig.prioritySectionLabel}
                   </label>
                   <span className="text-[10px] text-slate-400 font-mono">{activeConfig.prioritySectionSub}</span>
                 </div>
@@ -2105,7 +2103,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
               </div>
 
               <div className="bg-[#C89630]/10 border border-[#C89630]/20 rounded-xl p-3.5 text-xs text-slate-300 flex items-start gap-2.5">
-                <Sparkles className="w-4 h-4 text-[#C89630] shrink-0 mt-0.5" />
+                <GraduationCap className="w-4 h-4 text-[#C89630] shrink-0 mt-0.5" />
                 <span>
                   <strong className="text-white">Global Orators Faculty Welcome:</strong>{" "}
                   {missionFocus.includes('Other') && otherDescription.trim()

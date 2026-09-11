@@ -11,8 +11,7 @@ import {
   CheckCircle2, 
   Activity,
   ChevronRight,
-  Flame,
-  Sparkles
+  Flame
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { Exercise, MuscleGroup, Equipment, Difficulty } from '../../types';

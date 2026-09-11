@@ -4,7 +4,6 @@ import {
   ChevronDown, 
   Mic, 
   ShieldCheck, 
-  Sparkles,
   Sun, 
   Moon, 
   Menu, 

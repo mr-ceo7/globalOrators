@@ -17,8 +17,7 @@ import {
   Activity, 
   BookOpen, 
   Mic, 
-  Volume2,
-  Sparkles
+  Volume2
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { MetricEntry, PersonalRecord, ProgressPhoto } from '../../types';
