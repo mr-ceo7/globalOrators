@@ -29,6 +29,9 @@ export interface SpeakerOnboardingData {
   email: string;
   age?: number;
   phone?: string;
+  institution?: string;
+  primaryDiscipline?: string;
+  coreFocus?: string;
   missionFocus: string;
   speakingGoal: SpeakingGoal;
   experienceLevel: ExperienceLevel;
@@ -48,6 +51,9 @@ export interface Client {
   gender: string;
   status: ClientStatus;
   branch?: BranchType;
+  institution?: string;
+  primaryDiscipline?: string;
+  coreFocus?: string;
   missionFocus?: string;
   catharsisScore?: number; // 0-100% emotional vulnerability & expression score
   goal: SpeakingGoal;

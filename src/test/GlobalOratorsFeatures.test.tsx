@@ -5,6 +5,7 @@ import { AppProvider } from '../context/AppContext';
 import { LandingPage } from '../components/landing/LandingPage';
 import { ClientPortal } from '../components/clientApp/ClientPortal';
 import { SubdomainSwitcher } from '../components/common/SubdomainSwitcher';
+import { OnboardingFlow } from '../components/onboarding/OnboardingFlow';
 
 vi.mock('../services/apiClient', () => ({
   authApi: { me: vi.fn().mockResolvedValue({ email: 'coach@globalorators.com' }) },
@@ -254,6 +255,174 @@ describe('Global Orators Landing Page & Features Tests', () => {
     expect(screen.getByText(/Milo, among other things, is a legal scholar, award winning debater, poet/i)).toBeInTheDocument();
     expect(screen.getByAltText(/Milo Brian delivering an award-winning speech at the podium with microphone/i)).toBeInTheDocument();
     expect(screen.getByAltText(/Milo Brian reviewing debate frameworks and poetry in front of a green chalkboard/i)).toBeInTheDocument();
+  });
+
+  test('should render dynamic Step 3 Personal Baseline adapted for Foundation Escapism & Catharsis by default', async () => {
+    render(
+      <AppProvider>
+        <OnboardingFlow />
+      </AppProvider>
+    );
+
+    // Default Step 1 is Foundation
+    // Navigate from Step 1 to Step 2
+    const continueBtn = screen.getByRole('button', { name: /Continue/i });
+    await act(async () => {
+      fireEvent.click(continueBtn);
+    });
+
+    // Step 2 is on Foundation: default is Speaking as a Form of Escapism & Emotional Catharsis
+    expect(screen.getByText('Speaking as a Form of Escapism & Emotional Catharsis')).toBeInTheDocument();
+
+    // Navigate from Step 2 to Step 3
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
+    });
+
+    // Step 3 assertions dynamically configured for Foundation Cathartic Sanctuary
+    expect(screen.getByText('Cathartic & Emotional Baseline')).toBeInTheDocument();
+    expect(screen.getByText(/A confidential sanctuary to calibrate your vocal release/i)).toBeInTheDocument();
+    expect(screen.getByText('Personal & Community Identity')).toBeInTheDocument();
+    expect(screen.getByText("Community / Children's Home / Self-Nominated")).toBeInTheDocument();
+    expect(screen.getByText('Safe Expression Modality')).toBeInTheDocument();
+    expect(screen.getByText('Private Audio Vault')).toBeInTheDocument();
+    expect(screen.getByText('Healing & Expression Priority')).toBeInTheDocument();
+    expect(screen.getByText('Emotional Release')).toBeInTheDocument();
+    expect(screen.getByText('Diaphragmatic Calm')).toBeInTheDocument();
+    expect(screen.getByText(/Speaking Cadence & Tempo Target/i)).toBeInTheDocument();
+    expect(screen.getByText('Gentle & Unhurried')).toBeInTheDocument();
+  });
+
+  test('should dynamically reconfigure Step 3 when choosing Academy Competitive Debate track', async () => {
+    render(
+      <AppProvider>
+        <OnboardingFlow />
+      </AppProvider>
+    );
+
+    // Click Academy in Step 1
+    const academyBtn = screen.getByRole('button', { name: /Global Orators Academy/i });
+    await act(async () => {
+      fireEvent.click(academyBtn);
+    });
+
+    // Move to Step 2
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
+    });
+
+    // Select Competitive Parliamentary Debate mission
+    const debateOption = screen.getByRole('button', { name: /Competitive Parliamentary Debate/i });
+    await act(async () => {
+      fireEvent.click(debateOption);
+    });
+
+    // Move to Step 3
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
+    });
+
+    // Verify Step 3 has reconfigured dynamically for Competitive Forensics
+    expect(screen.getByText('Competitive Forensics Baseline')).toBeInTheDocument();
+    expect(screen.getByText(/Calibrate your tournament circuit, debating format/i)).toBeInTheDocument();
+    expect(screen.getByText('Personal & Institutional Identity')).toBeInTheDocument();
+    expect(screen.getByText('University / Debate Society / School')).toBeInTheDocument();
+    expect(screen.getByText('Primary Forensics Format')).toBeInTheDocument();
+    expect(screen.getByText('British Parliamentary')).toBeInTheDocument();
+    expect(screen.getByText('World Schools (WSDC)')).toBeInTheDocument();
+    expect(screen.getByText('Technical Development Priority')).toBeInTheDocument();
+    expect(screen.getByText('Argumentation & Rebuttal')).toBeInTheDocument();
+    expect(screen.getByText('Motion Analysis & POIs')).toBeInTheDocument();
+    expect(screen.getByText('Forensics Pace')).toBeInTheDocument();
+  });
+
+  test('should dynamically reconfigure Step 3 when choosing Academy Executive Pitching track', async () => {
+    render(
+      <AppProvider>
+        <OnboardingFlow />
+      </AppProvider>
+    );
+
+    // Click Academy in Step 1
+    const academyBtn = screen.getByRole('button', { name: /Global Orators Academy/i });
+    await act(async () => {
+      fireEvent.click(academyBtn);
+    });
+
+    // Move to Step 2
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
+    });
+
+    // Select Executive & Investor Boardroom Pitching mission
+    const pitchOption = screen.getByRole('button', { name: /Executive & Investor Boardroom Pitching/i });
+    await act(async () => {
+      fireEvent.click(pitchOption);
+    });
+
+    // Move to Step 3
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
+    });
+
+    // Verify Step 3 has reconfigured dynamically for Executive & Capital Pitch
+    expect(screen.getByText('Executive & Capital Pitch Baseline')).toBeInTheDocument();
+    expect(screen.getByText(/Calibrate your venture narrative, corporate boardroom defense/i)).toBeInTheDocument();
+    expect(screen.getByText('Executive & Enterprise Identity')).toBeInTheDocument();
+    expect(screen.getByText('Company / Venture / Incubator')).toBeInTheDocument();
+    expect(screen.getByText('Boardroom & Commercial Format')).toBeInTheDocument();
+    expect(screen.getByText('VC Investment Pitch')).toBeInTheDocument();
+    expect(screen.getByText('Boardroom Defense')).toBeInTheDocument();
+    expect(screen.getByText('Executive Competency Priority')).toBeInTheDocument();
+    expect(screen.getByText('Metric Defensibility')).toBeInTheDocument();
+    expect(screen.getByText('Hostile Q&A Defense')).toBeInTheDocument();
+    expect(screen.getByText('Authoritative')).toBeInTheDocument();
+  });
+
+  test('should skip Step 1 and land directly on Step 2 when user clicks Apply to Academy CTA, displaying Best for indicators', async () => {
+    // Simulate user clicking "Apply to Academy" CTA which stores branch in localStorage
+    localStorage.setItem('globalorators_selected_branch', 'Academy');
+
+    render(
+      <AppProvider>
+        <OnboardingFlow />
+      </AppProvider>
+    );
+
+    // Should NOT show Step 1 "Choose Your Functional Branch"
+    expect(screen.queryByText('Choose Your Functional Branch')).not.toBeInTheDocument();
+
+    // Should land directly on Step 2 with Academy mission options
+    expect(screen.getByText(/Step 2 of 5 • Academy Track/i)).toBeInTheDocument();
+    expect(screen.getByText('Define Your Core Speaking Mission')).toBeInTheDocument();
+    expect(screen.getByText(/Debaters, varsity students & corporate speakers/i)).toBeInTheDocument();
+    expect(screen.getByText('Pan-African Leadership & Cognitive Deconditioning')).toBeInTheDocument();
+    expect(screen.getByText(/Civic organizers, public intellectuals & political youth/i)).toBeInTheDocument();
+    expect(screen.getByText(/Competitive Parliamentary Debate/i)).toBeInTheDocument();
+
+    // Clicking Previous should allow them to return to Step 1 if they want to change their branch
+    const prevBtn = screen.getByRole('button', { name: /Previous/i });
+    await act(async () => {
+      fireEvent.click(prevBtn);
+    });
+
+    expect(screen.getByText('Choose Your Functional Branch')).toBeInTheDocument();
+  });
+
+  test('should display Foundation track Best for indicators when on Foundation Step 2', async () => {
+    localStorage.setItem('globalorators_selected_branch', 'Foundation');
+
+    render(
+      <AppProvider>
+        <OnboardingFlow />
+      </AppProvider>
+    );
+
+    // Should land directly on Step 2 with Foundation mission options
+    expect(screen.getByText(/Step 2 of 5 • Foundation Track/i)).toBeInTheDocument();
+    expect(screen.getByText(/Personal healing, vulnerability & youth advocacy/i)).toBeInTheDocument();
+    expect(screen.getByText(/Speaking as a Form of Escapism & Emotional Catharsis/i)).toBeInTheDocument();
+    expect(screen.getByText(/Personal healing, emotional release & safe expression/i)).toBeInTheDocument();
   });
 });
 

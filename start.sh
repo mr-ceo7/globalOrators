@@ -2,7 +2,7 @@
 
 # Configuration
 FRONTEND_PORT=3000
-BACKEND_PORT=8000
+BACKEND_PORT=8005
 
 echo "=================================================="
 echo " Starting NubianFit Application Services "

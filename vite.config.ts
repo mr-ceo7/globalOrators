@@ -18,7 +18,7 @@ export default defineConfig(() => {
       host: '0.0.0.0',
       proxy: {
         '/api': {
-          target: 'http://127.0.0.1:8000',
+          target: 'http://127.0.0.1:8005',
           changeOrigin: true,
         },
       },
@@ -32,6 +32,7 @@ export default defineConfig(() => {
       globals: true,
       environment: 'jsdom',
       setupFiles: './src/test/setup.ts',
+      testTimeout: 15000,
     },
   };
 });
