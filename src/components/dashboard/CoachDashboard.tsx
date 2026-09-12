@@ -12,9 +12,12 @@ import {
   Play, 
   ChevronRight,
   ShieldAlert,
-  BookOpen
+  BookOpen,
+  Video
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { ScheduledWorkout } from '../../types';
+import { LiveRehearsalRoom } from '../live/LiveRehearsalRoom';
 
 export const CoachDashboard: React.FC<{
   onOpenNewClient?: () => void;
@@ -27,8 +30,12 @@ export const CoachDashboard: React.FC<{
     activityFeed, 
     setActiveTab, 
     setSelectedClientId,
-    openWorkoutLogger
+    openWorkoutLogger,
+    addCoachNote,
+    addMetricEntry
   } = useApp();
+
+  const [liveRoomWorkout, setLiveRoomWorkout] = React.useState<ScheduledWorkout | null>(null);
 
   const handleOpenClient = onOpenAddClientModal || onOpenNewClient;
   const handleOpenProgram = onOpenNewProgram || (() => setActiveTab('programs'));
@@ -295,6 +302,14 @@ export const CoachDashboard: React.FC<{
                               Scheduled
                             </span>
                             <button
+                              onClick={() => setLiveRoomWorkout(workout)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors cursor-pointer"
+                              title="Launch Live Rehearsal Room"
+                            >
+                              <Video className="h-3 w-3 text-emerald-400" />
+                              <span>Live Room</span>
+                            </button>
+                            <button
                               id={`log-workout-${workout.id}`}
                               onClick={() => openWorkoutLogger(workout)}
                               className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-colors shadow-xs"
@@ -432,6 +447,29 @@ export const CoachDashboard: React.FC<{
         </div>
 
       </div>
+
+      {/* Embedded Live Rehearsal Studio Modal */}
+      {liveRoomWorkout && (
+        <LiveRehearsalRoom
+          isOpen={Boolean(liveRoomWorkout)}
+          onClose={() => setLiveRoomWorkout(null)}
+          roomTitle={`Live Rehearsal: ${liveRoomWorkout.workoutTitle} (${liveRoomWorkout.clientName})`}
+          speakerName={liveRoomWorkout.clientName}
+          speakerId={liveRoomWorkout.clientId}
+          userRole="coach"
+          onSaveFeedback={({ wpm, score, notes, durationSeconds }) => {
+            const durMin = Math.max(1, Math.round(durationSeconds / 60));
+            addCoachNote(liveRoomWorkout.clientId, `Live Rehearsal (${durMin} min, ${wpm} WPM, Score: ${score}/10): ${notes}`);
+            addMetricEntry({
+              clientId: liveRoomWorkout.clientId,
+              date: new Date().toISOString().split('T')[0],
+              weightKg: wpm,
+              bodyFatPercentage: score * 10,
+              notes: `Live Session Rehearsal (${durMin} min): ${notes}`
+            });
+          }}
+        />
+      )}
     </div>
   );
 };

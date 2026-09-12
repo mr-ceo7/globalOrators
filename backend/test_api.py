@@ -200,25 +200,31 @@ async def test_api_endpoints():
         assert len(res.json()) >= 1
 
         # 17. Speaker Client Onboarding Persistence & Lookup Tests
+        import time
+        t_now = int(time.time())
+        test_email = f"kassim.test.{t_now}@example.com"
+        test_phone_suffix = f"{t_now % 100000000:08d}"
+        test_phone = f"+2547{test_phone_suffix}"
+        test_phone_plain = f"2547{test_phone_suffix}"
+
         speaker_payload = {
             "name": "KASSIM MUSA",
-            "email": "kassimmusa322@gmail.com",
-            "phone": "+254746957502",
-            "age": 22,
-            "gender": "Non-binary",
-            "status": "Active",
+            "email": test_email,
+            "phone": test_phone,
+            "branch": "Academy",
+            "missionFocus": "Pan-African Leadership",
             "goal": "Pan-African Leadership",
             "experienceLevel": "Novice Speaker",
-            "startDate": "2026-09-11",
-            "currentWeightKg": 140.0,
+            "status": "Active",
             "startingWeightKg": 140.0,
+            "currentWeightKg": 140.0,
             "targetWeightKg": 145.0,
             "customCoachNotes": ["Enrolled via Global Orators Academy. Focus: Pan-African Leadership"],
             "onboardingSurvey": {
                 "branch": "Academy",
                 "fullName": "KASSIM MUSA",
-                "email": "kassimmusa322@gmail.com",
-                "phone": "+254746957502",
+                "email": test_email,
+                "phone": test_phone,
                 "institution": "Maseno University",
                 "primaryDiscipline": "Decolonial Parliamentary Forensics",
                 "coreFocus": "Ideological Rigor & Rebuttal Depth",
@@ -241,28 +247,28 @@ async def test_api_endpoints():
         assert res_create.status_code == 201
         created_client = res_create.json()
         assert created_client["name"] == "KASSIM MUSA"
-        assert created_client["email"] == "kassimmusa322@gmail.com"
+        assert created_client["email"] == test_email
         assert created_client["onboardingSurvey"]["primaryDiscipline"] == "Decolonial Parliamentary Forensics"
         client_db_id = created_client["id"]
 
         # Lookup by exact email
-        res_lookup_email = await client.get("/api/clients/lookup?search=kassimmusa322@gmail.com")
+        res_lookup_email = await client.get(f"/api/clients/lookup?search={test_email}")
         assert res_lookup_email.status_code == 200
         assert res_lookup_email.json()["id"] == client_db_id
-        assert res_lookup_email.json()["phone"] == "+254746957502"
+        assert res_lookup_email.json()["phone"] == test_phone
 
         # Lookup by phone number
-        res_lookup_phone = await client.get("/api/clients/lookup?search=%2B254746957502")
+        res_lookup_phone = await client.get(f"/api/clients/lookup?search=%2B2547{test_phone_suffix}")
         assert res_lookup_phone.status_code == 200
         assert res_lookup_phone.json()["id"] == client_db_id
 
         # Lookup by phone without plus or spaces
-        res_lookup_phone_plain = await client.get("/api/clients/lookup?search=254746957502")
+        res_lookup_phone_plain = await client.get(f"/api/clients/lookup?search={test_phone_plain}")
         assert res_lookup_phone_plain.status_code == 200
         assert res_lookup_phone_plain.json()["id"] == client_db_id
 
         # Lookup non-existent speaker returns 404
-        res_lookup_missing = await client.get("/api/clients/lookup?search=nonexistent_speaker@gmail.com")
+        res_lookup_missing = await client.get("/api/clients/lookup?search=nonexistent_speaker_xyz@gmail.com")
         assert res_lookup_missing.status_code == 404
 
         # Re-submitting with same email updates existing record without duplicate

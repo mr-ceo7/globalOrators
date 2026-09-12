@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { ChatMessage, Client } from '../../types';
+import { LiveRehearsalRoom } from '../live/LiveRehearsalRoom';
 
 export const CoachMessenger: React.FC = () => {
   const { 
@@ -28,8 +29,12 @@ export const CoachMessenger: React.FC = () => {
     sendMessage,
     openWorkoutLogger,
     scheduledWorkouts,
-    setActiveTab
+    setActiveTab,
+    addCoachNote,
+    addMetricEntry
   } = useApp();
+
+  const [isLiveRoomOpen, setIsLiveRoomOpen] = useState(false);
 
   const [inputMessage, setInputMessage] = useState('');
   const [isPlayingAudio, setIsPlayingAudio] = useState<string | null>(null);
@@ -195,6 +200,15 @@ export const CoachMessenger: React.FC = () => {
 
             <div className="flex items-center gap-2">
               <button
+                onClick={() => setIsLiveRoomOpen(true)}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition-all shadow cursor-pointer"
+                title="Launch Live Rehearsal Room"
+              >
+                <Video className="w-3.5 h-3.5" />
+                <span>Live Rehearsal</span>
+              </button>
+
+              <button
                 onClick={() => setActiveTab('progress')}
                 className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-colors"
               >
@@ -228,10 +242,10 @@ export const CoachMessenger: React.FC = () => {
                     {/* Standard Text Message Bubble */}
                     <div className={`p-3.5 rounded-2xl ${
                       isCoach 
-                        ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-br-none shadow-md shadow-emerald-950/20'
+                        ? 'bg-emerald-600 text-white rounded-br-none shadow-md shadow-emerald-950/20'
                         : 'bg-slate-800/90 text-slate-100 rounded-bl-none border border-slate-700'
                     }`}>
-                      <p className="leading-relaxed text-xs">{msg.content}</p>
+                      <p className="leading-relaxed text-xs">{msg.text || (msg as any).content}</p>
 
                       {/* Workout Assignment Card Attachment */}
                       {msg.messageType === 'workout_assignment' && msg.attachmentData && (
@@ -380,13 +394,35 @@ export const CoachMessenger: React.FC = () => {
               <button
                 type="submit"
                 disabled={!inputMessage.trim()}
-                className="h-10 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 disabled:opacity-40 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md transition-all"
+                className="h-10 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md transition-all cursor-pointer"
               >
                 <span>Send</span>
                 <Send className="h-3.5 w-3.5" />
               </button>
             </form>
           </div>
+
+          {/* Embedded Live Rehearsal Studio Modal */}
+          <LiveRehearsalRoom
+            isOpen={isLiveRoomOpen}
+            onClose={() => setIsLiveRoomOpen(false)}
+            roomTitle={`Live Rehearsal: ${activeClient.name}`}
+            speakerName={activeClient.name}
+            speakerId={activeClient.id}
+            userRole="coach"
+            branch={activeClient.branch || 'Academy'}
+            onSaveFeedback={({ wpm, score, notes, durationSeconds }) => {
+              const durMin = Math.max(1, Math.round(durationSeconds / 60));
+              addCoachNote(activeClient.id, `Live Rehearsal (${durMin} min, ${wpm} WPM, Score: ${score}/10): ${notes}`);
+              addMetricEntry({
+                clientId: activeClient.id,
+                date: new Date().toISOString().split('T')[0],
+                weightKg: wpm,
+                bodyFatPercentage: score * 10,
+                notes: `Live Room Rehearsal (${durMin} min): ${notes}`
+              });
+            }}
+          />
         </div>
       ) : (
         <div className="flex-1 flex items-center justify-center text-slate-400 text-xs">

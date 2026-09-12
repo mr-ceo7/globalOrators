@@ -90,8 +90,11 @@ interface AppContextType {
   completeWorkout: (workoutId: string, feedback: { clientFeedback?: string; coachFeedback?: string; rating?: number; durationMin?: number }) => void;
   addMetricEntry: (entry: Omit<MetricEntry, 'id'>) => void;
   addPersonalRecord: (pr: Omit<PersonalRecord, 'id'>) => void;
-  addProgressPhoto: (photo: Omit<ProgressPhoto, 'id'>) => void;
-  sendMessage: (clientId: string, text: string, attachment?: ChatMessage['attachment']) => void;
+  sendMessage: (
+    target: string | { clientId: string; sender?: 'coach' | 'client'; text?: string; content?: string; messageType?: string; attachmentData?: any }, 
+    text?: string, 
+    attachment?: ChatMessage['attachment']
+  ) => void;
   toggleHabitCompletion: (clientId: string, date: string, habitId: string) => void;
   
   // Refresh data from API
@@ -930,14 +933,42 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const sendMessage = async (clientId: string, text: string, attachment?: ChatMessage['attachment']) => {
+  const sendMessage = async (
+    target: string | { clientId: string; sender?: 'coach' | 'client'; text?: string; content?: string; messageType?: string; attachmentData?: any }, 
+    textParam?: string, 
+    attachmentParam?: ChatMessage['attachment']
+  ) => {
+    let clientId: string = '';
+    let text: string = '';
+    let sender: 'coach' | 'client' = 'coach';
+    let attachment: ChatMessage['attachment'] = attachmentParam;
+
+    if (typeof target === 'object' && target !== null) {
+      clientId = target.clientId;
+      text = (target.text || target.content || '').trim();
+      if (target.sender) sender = target.sender;
+      if (target.attachmentData) {
+        attachment = {
+          type: target.messageType === 'workout_assignment' ? 'workout_link' : 'video_form_check',
+          title: target.attachmentData.title || target.attachmentData.exerciseName || 'Assignment',
+          workoutId: target.attachmentData.workoutId,
+          url: target.attachmentData.videoUrl
+        };
+      }
+    } else {
+      clientId = target;
+      text = (textParam || '').trim();
+    }
+
+    if (!clientId || !text) return;
+
     const tempId = `msg-${Date.now()}`;
     const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
     const newMsg: ChatMessage = {
       id: tempId,
       clientId,
-      sender: 'coach',
+      sender,
       text,
       timestamp: nowTime,
       isRead: true,
@@ -952,46 +983,70 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       console.warn('Backend sync failed for sendMessage:', err);
     }
 
-    // Auto simulate client reply after short delay
-    setTimeout(() => {
-      const client = clients.find(c => c.id === clientId);
-      if (!client) return;
+    if (sender === 'coach') {
+      showToast('Message sent to speaker.');
+      // Auto simulate client reply after short delay
+      setTimeout(() => {
+        const client = clients.find(c => c.id === clientId);
+        if (!client) return;
 
-      const clientReplies = [
-        'Thanks Coach! Crushed the rehearsal session today. Feeling confident for the tournament!',
-        'Got it, will incorporate the 2-second pause before my rebuttal next time.',
-        'Submitted my speaking pace and fluency check-in for this morning!',
-        'Vocal projection felt strong and resonant with the diaphragmatic breathwork adjustments. Appreciate you!'
-      ];
-      const randomReply = clientReplies[Math.floor(Math.random() * clientReplies.length)];
+        const clientReplies = [
+          'Thanks Coach! Crushed the rehearsal session today. Feeling confident for the tournament!',
+          'Got it, will incorporate the 2-second pause before my rebuttal next time.',
+          'Submitted my speaking pace and fluency check-in for this morning!',
+          'Vocal projection felt strong and resonant with the diaphragmatic breathwork adjustments. Appreciate you!'
+        ];
+        const randomReply = clientReplies[Math.floor(Math.random() * clientReplies.length)];
 
-      const clientMsg: ChatMessage = {
-        id: `msg-${Date.now() + 1}`,
-        clientId,
-        sender: 'client',
-        text: randomReply,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        isRead: false
-      };
+        const clientMsg: ChatMessage = {
+          id: `msg-${Date.now() + 1}`,
+          clientId,
+          sender: 'client',
+          text: randomReply,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          isRead: false
+        };
 
-      setMessages(prev => [...prev, clientMsg]);
+        setMessages(prev => [...prev, clientMsg]);
 
-      setActivityFeed(af => [
-        {
-          id: `act-${Date.now()}`,
-          type: 'new_message',
-          clientId: client.id,
-          clientName: client.name,
-          clientAvatar: client.avatar,
-          title: `Reply from ${client.name}`,
-          description: `"${randomReply.substring(0, 45)}..."`,
-          timestamp: 'Just now'
-        },
-        ...af
-      ]);
-    }, 2800);
+        setActivityFeed(af => [
+          {
+            id: `act-${Date.now()}`,
+            type: 'new_message',
+            clientId: client.id,
+            clientName: client.name,
+            clientAvatar: client.avatar,
+            title: `Reply from ${client.name}`,
+            description: `"${randomReply.substring(0, 45)}..."`,
+            timestamp: 'Just now'
+          },
+          ...af
+        ]);
+      }, 2800);
+    } else {
+      // Sent by speaker (client)
+      showToast('Message sent to Coach Qassim.');
+      setTimeout(() => {
+        const coachReplies = [
+          'Received! Keep your diaphragm engaged and maintain strong vocal projection.',
+          'Great insight. Review your rebuttal transitions for the upcoming round.',
+          'Acknowledged. Let’s jump into the Live Rehearsal room to run this drill live.',
+          'Excellent work. Your cadence is settling right into the 135 WPM pocket.'
+        ];
+        const randomReply = coachReplies[Math.floor(Math.random() * coachReplies.length)];
 
-    showToast('Message sent to speaker.');
+        const coachMsg: ChatMessage = {
+          id: `msg-${Date.now() + 1}`,
+          clientId,
+          sender: 'coach',
+          text: randomReply,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          isRead: false
+        };
+
+        setMessages(prev => [...prev, coachMsg]);
+      }, 1800);
+    }
   };
 
   const toggleHabitCompletion = async (clientId: string, date: string, habitId: string) => {

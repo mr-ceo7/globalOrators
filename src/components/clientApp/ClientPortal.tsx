@@ -25,11 +25,13 @@ import {
   ChevronRight,
   ShieldCheck,
   Globe,
-  LogOut
+  LogOut,
+  Video
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { BranchType, SpeakerOnboardingData } from '../../types';
 import { resolveSpeakerCurriculum } from '../../utils/curriculumResolver';
+import { LiveRehearsalRoom } from '../live/LiveRehearsalRoom';
 
 export const ClientPortal: React.FC = () => {
   const { 
@@ -37,8 +39,13 @@ export const ClientPortal: React.FC = () => {
     setActiveSpeakerProfile, 
     setCurrentPortal, 
     showToast,
-    resetOnboarding
+    resetOnboarding,
+    clients,
+    messages,
+    sendMessage
   } = useApp();
+
+  const [isLiveRehearsalOpen, setIsLiveRehearsalOpen] = useState(false);
 
   const profile = useMemo(() => activeSpeakerProfile || {
     branch: 'Foundation' as BranchType,
@@ -124,6 +131,15 @@ export const ClientPortal: React.FC = () => {
     }
   }, [habitsKey]);
 
+  // Find paired client in Coach OS
+  const pairedClient = useMemo(() => {
+    if (!clients || clients.length === 0) return undefined;
+    return clients.find(c => 
+      (profile.email && c.email && c.email.toLowerCase() === profile.email.toLowerCase()) ||
+      (profile.fullName && c.name && c.name.toLowerCase() === profile.fullName.toLowerCase())
+    ) || clients[0];
+  }, [clients, profile.email, profile.fullName]);
+
   // Client to Coach simulated messages initialized with personalized context
   const [clientMessageInput, setClientMessageInput] = useState('');
   const [chatMessages, setChatMessages] = useState<{ sender: 'client' | 'coach'; text: string; time: string }[]>(() => [
@@ -154,6 +170,21 @@ export const ClientPortal: React.FC = () => {
       }
     ]);
   }, [profile.fullName, profile.branch, profile.institution, profile.coreFocus, profile.primaryDiscipline, profile.vocalBaselinePace, curriculum.focusLabel]);
+
+  // Merged message list from shared AppContext messages
+  const displayedMessages = useMemo(() => {
+    if (pairedClient) {
+      const clientMsgs = messages.filter(m => m.clientId === pairedClient.id);
+      if (clientMsgs.length > 0) {
+        return clientMsgs.map(m => ({
+          sender: m.sender,
+          text: m.text,
+          time: m.timestamp
+        }));
+      }
+    }
+    return chatMessages;
+  }, [messages, pairedClient, chatMessages]);
 
   // Demo Profile switcher (Allows seamless switching between Academy & Foundation personas)
   const handleSwitchBranchDemo = (targetBranch: BranchType) => {
@@ -260,28 +291,26 @@ export const ClientPortal: React.FC = () => {
   // Send message to coach
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!clientMessageInput.trim()) return;
+    const textToSend = clientMessageInput.trim();
+    if (!textToSend) return;
 
-    const newMsg = {
-      sender: 'client' as const,
-      text: clientMessageInput.trim(),
-      time: 'Just now'
-    };
+    if (pairedClient) {
+      sendMessage({
+        clientId: pairedClient.id,
+        sender: 'client',
+        text: textToSend
+      });
+    }
 
-    setChatMessages([...chatMessages, newMsg]);
+    setChatMessages(prev => [
+      ...prev,
+      {
+        sender: 'client' as const,
+        text: textToSend,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }
+    ]);
     setClientMessageInput('');
-
-    // Coach automated response after 1.2s
-    setTimeout(() => {
-      setChatMessages(prev => [
-        ...prev,
-        {
-          sender: 'coach',
-          text: `Great work, ${profile.fullName.split(' ')[0]}! I reviewed your rehearsal metrics for ${curriculum.focusLabel}. Keep your breath deep in the lower abdomen and let your authentic conviction lead.`,
-          time: 'Just now'
-        }
-      ]);
-    }, 1200);
   };
 
   return (
@@ -729,10 +758,11 @@ export const ClientPortal: React.FC = () => {
                   </div>
 
                   <button
-                    onClick={() => showToast('Connecting to rehearsal room...')}
-                    className="px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs hover:bg-emerald-400 shrink-0 self-start sm:self-auto shadow-md"
+                    onClick={() => setIsLiveRehearsalOpen(true)}
+                    className="px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs hover:bg-emerald-400 shrink-0 self-start sm:self-auto shadow-md flex items-center gap-1.5 cursor-pointer"
                   >
-                    Join Room
+                    <Video className="w-3.5 h-3.5" />
+                    <span>Join Room</span>
                   </button>
                 </div>
 
@@ -837,12 +867,22 @@ export const ClientPortal: React.FC = () => {
                   </div>
                 </div>
 
-                <span className="text-[10px] text-slate-400 font-mono">Encrypted Direct Thread</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setIsLiveRehearsalOpen(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition-all shadow-sm cursor-pointer"
+                    title="Start Live Rehearsal Room"
+                  >
+                    <Video className="w-3.5 h-3.5" />
+                    <span>Live Rehearsal</span>
+                  </button>
+                  <span className="hidden sm:inline text-[10px] text-slate-400 font-mono">Encrypted Direct Thread</span>
+                </div>
               </div>
 
               {/* Chat Message List */}
               <div className="flex-1 overflow-y-auto py-4 space-y-3 pr-1">
-                {chatMessages.map((msg, index) => (
+                {displayedMessages.map((msg, index) => (
                   <div
                     key={index}
                     className={`flex flex-col ${
@@ -874,7 +914,7 @@ export const ClientPortal: React.FC = () => {
                 />
                 <button
                   type="submit"
-                  className="h-10 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-500/20"
+                  className="h-10 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-500/20 cursor-pointer"
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Send</span>
@@ -884,6 +924,20 @@ export const ClientPortal: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* Embedded Live Rehearsal Studio Modal */}
+      <LiveRehearsalRoom
+        isOpen={isLiveRehearsalOpen}
+        onClose={() => setIsLiveRehearsalOpen(false)}
+        roomTitle={`${curriculum.sessionTitle} · Live Floor`}
+        speakerName={profile.fullName}
+        speakerId={pairedClient?.id}
+        userRole="speaker"
+        branch={profile.branch}
+        onSaveFeedback={({ wpm, score }) => {
+          showToast(`Rehearsal logged: ${wpm} WPM · Score: ${score}/10`);
+        }}
+      />
     </div>
   );
 };

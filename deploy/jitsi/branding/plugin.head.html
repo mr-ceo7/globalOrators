@@ -1,0 +1,67 @@
+<style>
+  /* Global Orators Custom Branding Overrides */
+  .watermark, 
+  .leftwatermark, 
+  .rightwatermark, 
+  .header-watermark-container, 
+  .welcome-watermark,
+  .watermark-container {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+  .chrome-extension-banner {
+    display: none !important;
+  }
+  #react .welcome {
+    background-color: #070a11 !important;
+  }
+  .welcome-page-header {
+    background-image: none !important;
+    background: radial-gradient(ellipse at 50% 0%, #151d2e 0%, #070a11 85%) !important;
+  }
+  .header-text-title {
+    font-family: Georgia, Cambria, "Times New Roman", Times, serif !important;
+    color: #f8fafc !important;
+    letter-spacing: -0.02em !important;
+  }
+  .header-text-subtitle {
+    color: #c89630 !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    font-size: 14px !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase !important;
+  }
+  .welcome-page-button {
+    background-color: #c89630 !important;
+    color: #070a11 !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+  }
+  .welcome-page-button:hover {
+    background-color: #d9a53b !important;
+  }
+</style>
+<script>
+  (function() {
+    function rebrand() {
+      document.title = 'Global Orators Debate Chamber';
+      var titleEl = document.querySelector('.header-text-title');
+      if (titleEl && titleEl.textContent !== 'Global Orators Debate Chamber') {
+        titleEl.textContent = 'Global Orators Debate Chamber';
+      }
+      var subEl = document.querySelector('.header-text-subtitle');
+      if (subEl && subEl.textContent !== 'Sovereign Voice Programs & Speech Coaching') {
+        subEl.textContent = 'Sovereign Voice Programs & Speech Coaching';
+      }
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', rebrand);
+    } else {
+      rebrand();
+    }
+    var obs = new MutationObserver(rebrand);
+    obs.observe(document.documentElement, { childList: true, subtree: true });
+  })();
+</script>
