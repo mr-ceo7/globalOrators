@@ -326,49 +326,49 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   
   const [clients, setClients] = useState<Client[]>(() => {
-    const saved = localStorage.getItem('nubianfit_clients');
+    const saved = localStorage.getItem('globalorators_clients') || localStorage.getItem('nubianfit_clients');
     return saved ? JSON.parse(saved) : INITIAL_CLIENTS;
   });
   
   const [exercises, setExercises] = useState<Exercise[]>(() => {
-    const saved = localStorage.getItem('nubianfit_exercises');
+    const saved = localStorage.getItem('globalorators_drills') || localStorage.getItem('nubianfit_exercises');
     return saved ? JSON.parse(saved) : INITIAL_EXERCISES;
   });
   
   const [programs, setPrograms] = useState<TrainingProgram[]>(() => {
-    const saved = localStorage.getItem('nubianfit_programs');
+    const saved = localStorage.getItem('globalorators_curriculums') || localStorage.getItem('nubianfit_programs');
     return saved ? JSON.parse(saved) : INITIAL_PROGRAMS;
   });
   
   const [scheduledWorkouts, setScheduledWorkouts] = useState<ScheduledWorkout[]>(() => {
-    const saved = localStorage.getItem('nubianfit_workouts');
+    const saved = localStorage.getItem('globalorators_sessions') || localStorage.getItem('nubianfit_workouts');
     return saved ? JSON.parse(saved) : INITIAL_SCHEDULED_WORKOUTS;
   });
   
   const [metrics, setMetrics] = useState<MetricEntry[]>(() => {
-    const saved = localStorage.getItem('nubianfit_metrics');
+    const saved = localStorage.getItem('globalorators_metrics') || localStorage.getItem('nubianfit_metrics');
     return saved ? JSON.parse(saved) : INITIAL_METRICS;
   });
   
   const [personalRecords, setPersonalRecords] = useState<PersonalRecord[]>(() => {
-    const saved = localStorage.getItem('nubianfit_prs');
+    const saved = localStorage.getItem('globalorators_prs') || localStorage.getItem('nubianfit_prs');
     return saved ? JSON.parse(saved) : INITIAL_PRS;
   });
   
   const [photos, setPhotos] = useState<ProgressPhoto[]>(() => {
-    const saved = localStorage.getItem('nubianfit_photos');
+    const saved = localStorage.getItem('globalorators_photos') || localStorage.getItem('nubianfit_photos');
     return saved ? JSON.parse(saved) : INITIAL_PHOTOS;
   });
   
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
-    const saved = localStorage.getItem('nubianfit_messages');
+    const saved = localStorage.getItem('globalorators_messages') || localStorage.getItem('nubianfit_messages');
     return saved ? JSON.parse(saved) : INITIAL_MESSAGES;
   });
   
   const [activityFeed, setActivityFeed] = useState<ActivityFeedItem[]>(INITIAL_ACTIVITY_FEED);
   
   const [habitLogs, setHabitLogs] = useState<ClientDailyHabitLog[]>(() => {
-    const saved = localStorage.getItem('nubianfit_habits');
+    const saved = localStorage.getItem('globalorators_habits') || localStorage.getItem('nubianfit_habits');
     return saved ? JSON.parse(saved) : INITIAL_HABIT_LOGS;
   });
 
@@ -447,30 +447,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Sync to localStorage as backup
   useEffect(() => {
+    localStorage.setItem('globalorators_clients', JSON.stringify(clients));
     localStorage.setItem('nubianfit_clients', JSON.stringify(clients));
   }, [clients]);
   
   useEffect(() => {
+    localStorage.setItem('globalorators_drills', JSON.stringify(exercises));
     localStorage.setItem('nubianfit_exercises', JSON.stringify(exercises));
   }, [exercises]);
   
   useEffect(() => {
+    localStorage.setItem('globalorators_curriculums', JSON.stringify(programs));
     localStorage.setItem('nubianfit_programs', JSON.stringify(programs));
   }, [programs]);
   
   useEffect(() => {
+    localStorage.setItem('globalorators_sessions', JSON.stringify(scheduledWorkouts));
     localStorage.setItem('nubianfit_workouts', JSON.stringify(scheduledWorkouts));
   }, [scheduledWorkouts]);
 
   useEffect(() => {
+    localStorage.setItem('globalorators_metrics', JSON.stringify(metrics));
     localStorage.setItem('nubianfit_metrics', JSON.stringify(metrics));
   }, [metrics]);
 
   useEffect(() => {
+    localStorage.setItem('globalorators_messages', JSON.stringify(messages));
     localStorage.setItem('nubianfit_messages', JSON.stringify(messages));
   }, [messages]);
 
   useEffect(() => {
+    localStorage.setItem('globalorators_habits', JSON.stringify(habitLogs));
     localStorage.setItem('nubianfit_habits', JSON.stringify(habitLogs));
   }, [habitLogs]);
 
@@ -479,10 +486,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setIsLoading(true);
     try {
       // Check auth / log in if needed
-      const token = localStorage.getItem('nubianfit_token');
+      const token = localStorage.getItem('globalorators_token') || localStorage.getItem('nubianfit_token');
       if (!token) {
         try {
-          await authApi.login('coach@nubianfit.com', 'Coach@123');
+          await authApi.login('coach@globalorators.com', 'Coach@123');
         } catch {
           // continue even if login fails
         }

@@ -5,7 +5,7 @@ FRONTEND_PORT=3000
 BACKEND_PORT=8005
 
 echo "=================================================="
-echo " Starting NubianFit Application Services "
+echo " Starting Global Orators Application Services "
 echo "=================================================="
 
 # Function to free a port by finding and killing its process
@@ -39,7 +39,7 @@ free_port $BACKEND_PORT
 cleanup() {
   echo ""
   echo "=================================================="
-  echo "       Stopping NubianFit Servers...              "
+  echo "    Stopping Global Orators Servers...            "
   echo "=================================================="
   kill "$BACKEND_PID" 2>/dev/null || true
   kill "$FRONTEND_PID" 2>/dev/null || true
@@ -79,7 +79,7 @@ npm run dev > /dev/null 2>&1 &
 FRONTEND_PID=$!
 
 echo "=================================================="
-echo " 🏋️ NubianFit Services successfully started!"
+echo " Global Orators Services successfully started!"
 echo " - Frontend: http://localhost:$FRONTEND_PORT"
 echo " - Backend:  http://localhost:$BACKEND_PORT"
 echo " - API Docs: http://localhost:$BACKEND_PORT/docs"
