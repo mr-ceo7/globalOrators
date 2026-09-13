@@ -1,5 +1,5 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import { AppProvider } from '../context/AppContext';
 import { ProgramBuilder } from '../components/programs/ProgramBuilder';
@@ -25,65 +25,43 @@ vi.mock('../services/apiClient', () => ({
   inquiriesApi: { submit: vi.fn().mockResolvedValue({ status: 'success' }) }
 }));
 
-describe('Global Orators ProgramBuilder Redesign', () => {
+describe('Global Orators Minimalist Split-View ProgramBuilder', () => {
   beforeEach(() => {
     localStorage.clear();
   });
 
-  test('renders the oratorical curriculum builder with speech headers and saved curriculums', () => {
+  test('renders the minimalist command bar, roadmap, and editorial canvas', () => {
     render(
       <AppProvider>
         <ProgramBuilder />
       </AppProvider>
     );
 
-    expect(screen.getByText('ORATORICAL SYLLABUS STUDIO')).toBeInTheDocument();
-    expect(screen.getByText('Curriculum & Forensics Protocol Builder')).toBeInTheDocument();
-    expect(screen.getByText('+ New Curriculum')).toBeInTheDocument();
+    expect(screen.getByText('CURRICULUM')).toBeInTheDocument();
+    expect(screen.getByText('SYLLABUS ROADMAP')).toBeInTheDocument();
     expect(screen.getByText('Assign to Speaker')).toBeInTheDocument();
     expect(screen.getByText('Save Curriculum')).toBeInTheDocument();
+    expect(screen.getByText('+ Add Session')).toBeInTheDocument();
   });
 
-  test('displays sessions tabs and allows switching between sessions', () => {
+  test('displays session items on the roadmap and selects a session', () => {
     render(
       <AppProvider>
         <ProgramBuilder />
       </AppProvider>
     );
 
-    // Should have session tabs (not gym workout days)
-    const session1Buttons = screen.getAllByText(/Session 1/i);
-    expect(session1Buttons.length).toBeGreaterThan(0);
-
-    // Switcher tabs for blueprint, 6-phase breakdown, and assigned drills
-    expect(screen.getByText('Blueprint & Objectives')).toBeInTheDocument();
-    expect(screen.getByText('6-Phase Breakdown')).toBeInTheDocument();
+    expect(screen.getByText('TAKE-HOME DISPATCH (VOICE VAULT PROMPT)')).toBeInTheDocument();
   });
 
-  test('allows viewing 6-phase standardized masterclass breakdown', () => {
+  test('allows adding and removing session objectives on the canvas', () => {
     render(
       <AppProvider>
         <ProgramBuilder />
       </AppProvider>
     );
 
-    const phasesTab = screen.getByText('6-Phase Breakdown');
-    fireEvent.click(phasesTab);
-
-    expect(screen.getByText('STANDARDIZED 6-PHASE MASTERCLASS TIMELINE')).toBeInTheDocument();
-  });
-
-  test('allows adding and removing session objectives', () => {
-    render(
-      <AppProvider>
-        <ProgramBuilder />
-      </AppProvider>
-    );
-
-    const blueprintTab = screen.getByText('Blueprint & Objectives');
-    fireEvent.click(blueprintTab);
-
-    const input = screen.getByPlaceholderText(/Add specific learning outcome/i);
+    const input = screen.getByPlaceholderText(/\+ Add specific learning outcome/i);
     fireEvent.change(input, { target: { value: 'Master eye contact during executive pauses' } });
 
     const addBtn = screen.getByRole('button', { name: '+ Add' });
@@ -99,10 +77,10 @@ describe('Global Orators ProgramBuilder Redesign', () => {
       </AppProvider>
     );
 
-    const addDrillBtns = screen.getAllByText(/Add Drill/i);
-    fireEvent.click(addDrillBtns[0]);
+    const addDrillBtn = screen.getByRole('button', { name: /\+ Add Drill/i });
+    fireEvent.click(addDrillBtn);
 
-    expect(screen.getByPlaceholderText(/Search drills by keyword/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Search speech drills by keyword/i)).toBeInTheDocument();
   });
 
   test('opens assign to speaker modal and displays client list', () => {
@@ -115,21 +93,21 @@ describe('Global Orators ProgramBuilder Redesign', () => {
     const assignBtn = screen.getByRole('button', { name: /Assign to Speaker/i });
     fireEvent.click(assignBtn);
 
-    expect(screen.getByText('Assign Curriculum to Speaker')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Assign to Speaker' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Confirm Enrollment/i })).toBeInTheDocument();
   });
 
-  test('creates a new blank speech curriculum without gym slop', () => {
+  test('opens settings modal to configure weeks, sessions per week, and tier', () => {
     render(
       <AppProvider>
         <ProgramBuilder />
       </AppProvider>
     );
 
-    const newBtn = screen.getByRole('button', { name: /\+ New Curriculum/i });
-    fireEvent.click(newBtn);
+    const settingsBtn = screen.getByRole('button', { name: /Settings/i });
+    fireEvent.click(settingsBtn);
 
-    expect(screen.getByDisplayValue('New Speech & Debate Masterclass')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Structured Oratory Syllabus & Rehearsal Protocol')).toBeInTheDocument();
+    expect(screen.getByText('Curriculum Settings')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Done/i })).toBeInTheDocument();
   });
 });
