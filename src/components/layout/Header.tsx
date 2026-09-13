@@ -10,7 +10,8 @@ import {
   Sun,
   Moon,
   Mic,
-  ScrollText
+  ScrollText,
+  Globe
 } from 'lucide-react';
 
 import { useApp } from '../../context/AppContext';
@@ -42,7 +43,8 @@ export const Header: React.FC<HeaderProps> = ({
     scheduledWorkouts,
     openWorkoutLogger,
     theme,
-    toggleTheme
+    toggleTheme,
+    setCurrentPortal
   } = useApp();
 
 
@@ -273,6 +275,26 @@ export const Header: React.FC<HeaderProps> = ({
         )}
 
 
+        {/* Speaker App Direct Portal Link */}
+        <button
+          onClick={() => setCurrentPortal('speaker_app')}
+          className="hidden xl:flex items-center gap-1.5 h-9 px-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800 text-xs font-semibold transition-colors"
+          title="Open Speaker App (app.globaloratorsproject.com)"
+        >
+          <Mic className="h-3.5 w-3.5 text-emerald-400" />
+          <span>Speaker App</span>
+        </button>
+
+        {/* Public Site Direct Portal Link */}
+        <button
+          onClick={() => setCurrentPortal('landing')}
+          className="hidden xl:flex items-center gap-1.5 h-9 px-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800 text-xs font-semibold transition-colors"
+          title="Return to Public Site (globaloratorsproject.com)"
+        >
+          <Globe className="h-3.5 w-3.5 text-emerald-400" />
+          <span>Public Site</span>
+        </button>
+
         {/* Theme Toggle Button (Desktop Only) */}
         <button
           id="theme-toggle-btn"
@@ -418,6 +440,30 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 capitalize">
                   {theme} mode
                 </span>
+              </button>
+
+              {/* Speaker App Portal (Mobile) */}
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setCurrentPortal('speaker_app');
+                }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs text-slate-200 hover:text-white hover:bg-slate-800 transition-colors"
+              >
+                <Mic className="h-4 w-4 shrink-0 text-emerald-400" />
+                <span className="font-semibold">Speaker App</span>
+              </button>
+
+              {/* Public Site (Mobile) */}
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setCurrentPortal('landing');
+                }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs text-slate-200 hover:text-white hover:bg-slate-800 transition-colors"
+              >
+                <Globe className="h-4 w-4 shrink-0 text-emerald-400" />
+                <span className="font-semibold">Public Site</span>
               </button>
 
               {/* Install PWA (Mobile) */}

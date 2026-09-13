@@ -2,10 +2,14 @@
 FastAPI Backend API Test Suite
 """
 
+import os
+os.environ["TESTING"] = "true"
+
 import pytest
 import httpx
-from app.main import app
 from app.config import settings
+settings.TESTING = True
+from app.main import app
 
 
 @pytest.mark.asyncio

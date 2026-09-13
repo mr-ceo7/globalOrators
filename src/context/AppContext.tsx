@@ -228,6 +228,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Portal & Subdomain Routing
   const [currentPortal, setCurrentPortalState] = useState<PortalView>(() => {
     if (typeof window !== 'undefined') {
+      const hostname = window.location.hostname.toLowerCase();
+      if (hostname.startsWith('coach.')) return 'coach_os';
+      if (hostname.startsWith('app.')) return 'speaker_app';
+      if (hostname === 'globaloratorsproject.com' || hostname === 'www.globaloratorsproject.com') {
+        const pathname = window.location.pathname.toLowerCase();
+        if (pathname === '/onboarding') return 'onboarding';
+        return 'landing';
+      }
+
       const pathname = window.location.pathname.toLowerCase();
       if (pathname === '/coach' || pathname === '/coach_os') return 'coach_os';
       if (pathname === '/app' || pathname === '/speaker' || pathname === '/speaker_app') return 'speaker_app';
@@ -239,10 +248,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (portalParam === 'app' || portalParam === 'speaker_app') return 'speaker_app';
       if (portalParam === 'onboarding') return 'onboarding';
       if (portalParam === 'landing') return 'landing';
-
-      const hostname = window.location.hostname.toLowerCase();
-      if (hostname.startsWith('coach.')) return 'coach_os';
-      if (hostname.startsWith('app.')) return 'speaker_app';
     }
     const saved = localStorage.getItem('globalorators_portal');
     if (saved && ['landing', 'speaker_app', 'coach_os', 'onboarding'].includes(saved)) {
@@ -300,15 +305,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const setCurrentPortal = useCallback((portal: PortalView) => {
     setCurrentPortalState(portal);
     localStorage.setItem('globalorators_portal', portal);
-    if (typeof window !== 'undefined' && window.history) {
-      let targetPath = '/';
-      if (portal === 'coach_os') targetPath = '/coach';
-      else if (portal === 'speaker_app') targetPath = '/speaker';
-      else if (portal === 'onboarding') targetPath = '/onboarding';
-      else targetPath = '/';
+    if (typeof window !== 'undefined') {
+      const hostname = window.location.hostname.toLowerCase();
+      const isCustomDomain = hostname.includes('globaloratorsproject.com');
 
-      setCurrentPathState(targetPath);
-      window.history.pushState({}, '', targetPath);
+      if (isCustomDomain) {
+        if (portal === 'coach_os' && !hostname.startsWith('coach.')) {
+          window.location.href = 'https://coach.globaloratorsproject.com';
+          return;
+        }
+        if (portal === 'speaker_app' && !hostname.startsWith('app.')) {
+          window.location.href = 'https://app.globaloratorsproject.com';
+          return;
+        }
+        if (portal === 'landing' && (hostname.startsWith('coach.') || hostname.startsWith('app.'))) {
+          window.location.href = 'https://globaloratorsproject.com';
+          return;
+        }
+        if (portal === 'onboarding' && (hostname.startsWith('coach.') || hostname.startsWith('app.'))) {
+          window.location.href = 'https://globaloratorsproject.com/onboarding';
+          return;
+        }
+      }
+
+      if (window.history) {
+        let targetPath = '/';
+        if (portal === 'coach_os') targetPath = '/coach';
+        else if (portal === 'speaker_app') targetPath = '/speaker';
+        else if (portal === 'onboarding') targetPath = '/onboarding';
+        else targetPath = '/';
+
+        setCurrentPathState(targetPath);
+        window.history.pushState({}, '', targetPath);
+      }
     }
   }, []);
 

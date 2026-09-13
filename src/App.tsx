@@ -134,9 +134,16 @@ const MainLayout: React.FC = () => {
 const AppContent: React.FC = () => {
   const { currentPortal } = useApp();
 
+  const isPreviewOrDev = typeof window !== 'undefined' && (
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname.includes('.vercel.app') ||
+    new URLSearchParams(window.location.search).has('debug_domains')
+  );
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans antialiased">
-      {currentPortal !== 'landing' && currentPortal !== 'onboarding' && <SubdomainSwitcher />}
+      {isPreviewOrDev && currentPortal !== 'landing' && currentPortal !== 'onboarding' && <SubdomainSwitcher />}
       {currentPortal === 'landing' && <LandingPage />}
       {currentPortal === 'speaker_app' && <ClientPortal />}
       {currentPortal === 'onboarding' && <OnboardingFlow />}
