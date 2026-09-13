@@ -32,7 +32,8 @@ import {
   Download,
   Target,
   FileText,
-  Layers
+  Layers,
+  Briefcase
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { BranchType, SpeakerOnboardingData, ScheduledWorkout } from '../../types';
@@ -88,6 +89,20 @@ export const ClientPortal: React.FC = () => {
            programs.find(p => p.id === 'prog-exec-speaking-1') ||
            programs[0];
   }, [programs, pairedClient]);
+
+  // True if speaker is on an Executive Public Speaking / Boardroom Pitching track
+  const isExecutive = useMemo(() => {
+    const profileText = `${profile.missionFocus || ''} ${profile.primaryDiscipline || ''} ${profile.speakingGoal || ''} ${profile.institution || ''} ${profile.coreFocus || ''}`.toLowerCase();
+    const isProfileExec = profileText.includes('executive') || 
+                          profileText.includes('pitch') || 
+                          profileText.includes('board') || 
+                          profileText.includes('keynote') || 
+                          profileText.includes('capital') || 
+                          profileText.includes('presentation skills');
+    if (isProfileExec) return true;
+    if (pairedClient && (pairedClient.currentProgramId === 'prog-exec-speaking-1' || pairedClient.goal === 'Executive & Board Pitching')) return true;
+    return false;
+  }, [profile, pairedClient]);
 
   // Derived Dynamic Roadmap Sessions (Tuesdays and Thursdays, 90 mins)
   const roadmapSessions = useMemo(() => {
@@ -168,7 +183,7 @@ export const ClientPortal: React.FC = () => {
     catharsisScore: number;
   } | null>(null);
 
-  // Journal entries for Catharsis Vault
+  // Journal entries for Catharsis Vault (Foundation Track)
   const [journalText, setJournalText] = useState('');
   const [journalFeelBefore, setJournalFeelBefore] = useState('Anxious & Suppressed');
   const [journalEntries, setJournalEntries] = useState<{
@@ -186,6 +201,38 @@ export const ClientPortal: React.FC = () => {
       feelBefore: 'Guarded & Tense',
       feelAfter: 'Lighter, Empowered & Grounded',
       audioLength: '3 min 12 sec'
+    }
+  ]);
+
+  // Executive Speech Vault State (Executive Track)
+  const [execArena, setExecArena] = useState('Series A / Growth Capital Venture Pitch');
+  const [execSimulationText, setExecSimulationText] = useState('');
+  const [execEntries, setExecEntries] = useState<{
+    id: string;
+    date: string;
+    arena: string;
+    summary: string;
+    wpm: number;
+    blufScore: number;
+    coachStatus: string;
+  }[]>([
+    {
+      id: 'exec-1',
+      date: 'Yesterday, 4:15 PM',
+      arena: 'Series A / Growth Capital Venture Pitch',
+      summary: 'Delivered the 60-second genesis without hedging. Anchored value thesis around African logistics efficiency.',
+      wpm: 138,
+      blufScore: 96,
+      coachStatus: 'Reviewed by Coach Qassim • Approved'
+    },
+    {
+      id: 'exec-2',
+      date: '3 days ago',
+      arena: 'Executive Boardroom Strategic Review',
+      summary: 'Simulated 5-minute capex allocation defense with deliberate 2-second pauses before financial answers.',
+      wpm: 134,
+      blufScore: 94,
+      coachStatus: 'Reviewed by Coach Qassim • Strong Gravitas'
     }
   ]);
 
@@ -267,9 +314,33 @@ export const ClientPortal: React.FC = () => {
     return chatMessages;
   }, [messages, pairedClient, chatMessages]);
 
-  // Demo Profile switcher (Allows seamless switching between Academy & Foundation personas)
-  const handleSwitchBranchDemo = (targetBranch: BranchType) => {
-    if (targetBranch === 'Academy') {
+  // Demo Profile switcher (Allows seamless switching between Executive, Debate & Foundation personas)
+  const handleSwitchBranchDemo = (target: 'Executive' | 'Academy' | 'Foundation') => {
+    if (target === 'Executive') {
+      const executiveProfile: SpeakerOnboardingData = {
+        branch: 'Academy',
+        fullName: 'Dr. Arthur Vance',
+        email: 'arthur.vance@executive.org',
+        age: 42,
+        phone: '+254 700 889 900',
+        institution: 'Sovereign Advisory & Enterprise Capital',
+        primaryDiscipline: 'Executive Public Speaking & Boardroom Rhetoric',
+        coreFocus: 'High-Stakes Persuasion & Presence',
+        missionFocus: 'Executive Public Speaking & Presentation Skills',
+        speakingGoal: 'Executive & Board Pitching',
+        experienceLevel: 'Master Orator',
+        vocalBaselinePace: 138,
+        emotionalOpennessRating: 9,
+        selectedHabits: [
+          'Vocal Hydration (2.5L + Warm Lemon Water)',
+          'Diaphragmatic Breathwork (5 Min Morning Routine)',
+          'BLUF Executive Case Prep (10 Min Daily)'
+        ],
+        bioNotes: 'Managing Director refining boardroom delivery, shareholder addresses, and keynote composure.'
+      };
+      setActiveSpeakerProfile(executiveProfile);
+      showToast('Switched to Executive Public Speaking demo profile.');
+    } else if (target === 'Academy') {
       const academyProfile: SpeakerOnboardingData = {
         branch: 'Academy',
         fullName: 'Kwame Mensah',
@@ -292,7 +363,7 @@ export const ClientPortal: React.FC = () => {
         bioNotes: 'Lead debater on the Global Orators Pan-African tournament squad.'
       };
       setActiveSpeakerProfile(academyProfile);
-      showToast('Switched to Global Orators Academy demo profile.');
+      showToast('Switched to Global Orators Academy debate profile.');
     } else {
       const foundationProfile: SpeakerOnboardingData = {
         branch: 'Foundation',
@@ -369,6 +440,26 @@ export const ClientPortal: React.FC = () => {
     showToast('Reflection logged in your private Catharsis Vault.');
   };
 
+  // Add Executive Simulation Entry
+  const handleSaveExecSimulation = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!execSimulationText.trim()) return;
+
+    const newEntry = {
+      id: `exec-${Date.now()}`,
+      date: 'Just now',
+      arena: execArena,
+      summary: execSimulationText.trim(),
+      wpm: profile.vocalBaselinePace || 138,
+      blufScore: 95,
+      coachStatus: 'Queued for Coach Qassim Review'
+    };
+
+    setExecEntries([newEntry, ...execEntries]);
+    setExecSimulationText('');
+    showToast('Simulation logged in your Executive Speech Vault.');
+  };
+
   // Send message to coach
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -400,7 +491,7 @@ export const ClientPortal: React.FC = () => {
       <header className="sticky top-0 z-30 bg-slate-950/85 backdrop-blur-md border-b border-slate-800/80 px-4 sm:px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3 min-w-0">
           <div className={`w-9 h-9 shrink-0 rounded-xl flex items-center justify-center font-black text-sm text-slate-950 shadow-md ${
-            isAcademy ? 'bg-[#C89630]' : 'bg-teal-400'
+            isExecutive ? 'bg-[#C89630]' : isAcademy ? 'bg-[#C89630]' : 'bg-teal-400'
           }`}>
             {profile.fullName.charAt(0)}
           </div>
@@ -410,11 +501,13 @@ export const ClientPortal: React.FC = () => {
                 {profile.fullName}
               </span>
               <span className={`text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded border ${
-                isAcademy
+                isExecutive
                   ? 'bg-amber-500/10 text-[#C89630] border-[#C89630]/30'
-                  : 'bg-teal-500/10 text-teal-300 border-teal-500/30'
+                  : isAcademy
+                    ? 'bg-amber-500/10 text-[#C89630] border-[#C89630]/30'
+                    : 'bg-teal-500/10 text-teal-300 border-teal-500/30'
               }`}>
-                {profile.branch} Track
+                {isExecutive ? 'Executive Track' : `${profile.branch} Track`}
               </span>
             </div>
             <p className="text-[10px] font-mono text-slate-400 truncate max-w-[200px] xs:max-w-xs sm:max-w-md">
@@ -428,17 +521,25 @@ export const ClientPortal: React.FC = () => {
           {/* Quick Demo Track Toggle */}
           <div className="hidden md:flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-xl p-1 text-[11px]">
             <button
-              onClick={() => handleSwitchBranchDemo('Academy')}
+              onClick={() => handleSwitchBranchDemo('Executive')}
               className={`px-2 py-1 rounded-lg font-semibold transition-all ${
-                isAcademy ? 'bg-emerald-500 text-slate-950' : 'text-slate-400 hover:text-white'
+                isExecutive ? 'bg-[#C89630] text-slate-950 font-bold' : 'text-slate-400 hover:text-white'
               }`}
             >
-              Academy Track
+              Executive Track
+            </button>
+            <button
+              onClick={() => handleSwitchBranchDemo('Academy')}
+              className={`px-2 py-1 rounded-lg font-semibold transition-all ${
+                !isExecutive && isAcademy ? 'bg-emerald-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              Debate Track
             </button>
             <button
               onClick={() => handleSwitchBranchDemo('Foundation')}
               className={`px-2 py-1 rounded-lg font-semibold transition-all ${
-                !isAcademy ? 'bg-teal-500 text-slate-950' : 'text-slate-400 hover:text-white'
+                !isExecutive && !isAcademy ? 'bg-teal-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'
               }`}
             >
               Foundation Track
@@ -487,8 +588,8 @@ export const ClientPortal: React.FC = () => {
         <div className="max-w-5xl mx-auto flex items-center gap-1.5 sm:gap-2">
           {[
             { id: 'practice', label: 'Daily Drill Studio', icon: Mic },
-            { id: 'catharsis', label: 'Catharsis & Voice Vault', icon: Heart },
-            { id: 'schedule', label: 'My Sessions & Rounds', icon: Calendar },
+            { id: 'catharsis', label: isExecutive ? 'Executive Speech Vault' : 'Catharsis & Voice Vault', icon: isExecutive ? Briefcase : Heart },
+            { id: 'schedule', label: isExecutive ? 'Executive Syllabus & Roadmap' : 'My Sessions & Rounds', icon: Calendar },
             { id: 'habits', label: 'Daily Orator Rituals', icon: CheckCircle2 },
             { id: 'coach', label: 'Coach Qassim (2-Way)', icon: MessageSquare }
           ].map(tab => {
@@ -500,9 +601,11 @@ export const ClientPortal: React.FC = () => {
                 onClick={() => setSpeakerTab(tab.id as any)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
                   isActive
-                    ? isAcademy
-                      ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
-                      : 'bg-teal-500 text-slate-950 shadow-md shadow-teal-500/20'
+                    ? isExecutive
+                      ? 'bg-[#C89630] text-slate-950 shadow-md shadow-[#C89630]/20'
+                      : isAcademy
+                        ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
+                        : 'bg-teal-500 text-slate-950 shadow-md shadow-teal-500/20'
                     : 'text-slate-400 hover:text-white hover:bg-slate-850'
                 }`}
               >
@@ -581,18 +684,28 @@ export const ClientPortal: React.FC = () => {
           </div>
 
           <div className="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-3.5 sm:p-4.5 transition-colors hover:border-slate-700/80">
-            <div className="text-[9px] sm:text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold">Catharsis Index</div>
-            <div className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-teal-400 mt-1 tracking-tight">
-              {profile.emotionalOpennessRating * 10}%
+            <div className="text-[9px] sm:text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold">
+              {isExecutive ? 'Executive Composure' : isAcademy ? 'Argumentative Rigor' : 'Catharsis Index'}
             </div>
-            <div className="text-[10px] font-mono text-teal-400 mt-1">Vulnerability Level</div>
+            <div className={`text-xl sm:text-2xl md:text-3xl font-serif font-bold mt-1 tracking-tight ${
+              isExecutive ? 'text-[#C89630]' : isAcademy ? 'text-emerald-400' : 'text-teal-400'
+            }`}>
+              {isExecutive ? '96%' : `${profile.emotionalOpennessRating * 10}%`}
+            </div>
+            <div className={`text-[10px] font-mono mt-1 ${
+              isExecutive ? 'text-[#C89630]' : isAcademy ? 'text-emerald-400' : 'text-teal-400'
+            }`}>
+              {isExecutive ? 'High-Stakes Gravitas' : isAcademy ? 'WUDC Standard' : 'Vulnerability Level'}
+            </div>
           </div>
 
           <div className="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-3.5 sm:p-4.5 transition-colors hover:border-slate-700/80">
             <div className="text-[9px] sm:text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold">Rehearsals Logged</div>
             <div className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-white mt-1 tracking-tight">
               18
-              <span className="font-mono text-[10px] sm:text-xs font-normal text-slate-400 uppercase tracking-wider ml-1">Rounds</span>
+              <span className="font-mono text-[10px] sm:text-xs font-normal text-slate-400 uppercase tracking-wider ml-1">
+                {isExecutive ? 'Sessions' : 'Rounds'}
+              </span>
             </div>
             <div className="text-[10px] font-mono text-emerald-400 mt-1">+4 this week</div>
           </div>
@@ -705,9 +818,19 @@ export const ClientPortal: React.FC = () => {
                         <div className="text-[9px] text-emerald-400">2 'ums' in 2 min</div>
                       </div>
                       <div className="bg-slate-900 border border-slate-800 rounded-xl p-3">
-                        <div className="text-[10px] text-slate-400">Emotional Resonance</div>
-                        <div className="text-base font-bold text-teal-400 mt-0.5">{recordedFeedback.catharsisScore}%</div>
-                        <div className="text-[9px] text-teal-400">Deep conviction</div>
+                        <div className="text-[10px] text-slate-400">
+                          {isExecutive ? 'Executive Gravitas' : 'Emotional Resonance'}
+                        </div>
+                        <div className={`text-base font-bold mt-0.5 ${
+                          isExecutive ? 'text-[#C89630]' : 'text-teal-400'
+                        }`}>
+                          {recordedFeedback.catharsisScore}%
+                        </div>
+                        <div className={`text-[9px] ${
+                          isExecutive ? 'text-[#C89630]' : 'text-teal-400'
+                        }`}>
+                          {isExecutive ? 'Commanding composure' : 'Deep conviction'}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -717,9 +840,101 @@ export const ClientPortal: React.FC = () => {
           </div>
         )}
 
-        {/* TAB 2: Catharsis & Voice Vault (Speaking as Escapism) */}
+        {/* TAB 2: Catharsis & Voice Vault or Executive Speech Vault */}
         {speakerTab === 'catharsis' && (
           <div className="space-y-6 animate-fadeIn">
+            {isExecutive ? (
+              <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 sm:p-8">
+                <div className="max-w-2xl mb-6">
+                  <span className="text-[10px] uppercase font-bold tracking-widest text-[#C89630] px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20">
+                    High-Stakes Rehearsal & Simulation Vault
+                  </span>
+                  <h2 className="text-xl sm:text-2xl font-serif font-black text-white mt-2">
+                    Executive Speech & Pitch Vault
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-300 mt-1 leading-relaxed">
+                    Log and review simulated investor presentations, boardroom defenses, shareholder addresses, and keynote drafts. Calibrate your Bottom Line Upfront (BLUF) delivery and tactical pause execution with Coach Qassim.
+                  </p>
+                </div>
+
+                {/* New Executive Simulation Form */}
+                <form onSubmit={handleSaveExecSimulation} className="bg-slate-950 border border-slate-800 rounded-2xl p-5 mb-8 space-y-4">
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
+                      Target Presentation Arena & Objective
+                    </label>
+                    <select
+                      value={execArena}
+                      onChange={(e) => setExecArena(e.target.value)}
+                      className="w-full h-9 px-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:border-[#C89630] focus:outline-hidden"
+                    >
+                      <option>Series A / Growth Capital Venture Pitch</option>
+                      <option>Executive Boardroom Strategic Review</option>
+                      <option>Global Industry Keynote (1,000+ Attendees)</option>
+                      <option>All-Hands Townhall & Vision Address</option>
+                      <option>Crisis Communications & Media Defense</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
+                      Keynote / Speech Outline & Core Thesis (BLUF)
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={execSimulationText}
+                      onChange={(e) => setExecSimulationText(e.target.value)}
+                      placeholder="Outline your primary thesis, bottom-line upfront declaration, data proof-points, and anticipated boardroom objections..."
+                      className="w-full p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:border-[#C89630] focus:outline-hidden"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2">
+                    <div className="text-[10px] text-slate-500 flex items-center gap-1.5">
+                      <ShieldCheck className="w-3.5 h-3.5 text-[#C89630]" />
+                      <span>Encrypted executive repository • Reviewed by Head Coach Qassim</span>
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="px-5 py-2 rounded-xl bg-[#C89630] hover:bg-[#d6a543] text-slate-950 font-bold text-xs shadow-md shadow-[#C89630]/20 cursor-pointer"
+                    >
+                      Log into Executive Vault
+                    </button>
+                  </div>
+                </form>
+
+                {/* Past Executive Simulations */}
+                <h3 className="text-xs uppercase font-bold text-slate-400 tracking-wider mb-3">
+                  Executive Rehearsal & Pitch History
+                </h3>
+                <div className="space-y-3">
+                  {execEntries.map(entry => (
+                    <div key={entry.id} className="bg-slate-950 border border-slate-850 rounded-2xl p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-mono text-slate-400">{entry.date}</span>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30 font-medium">
+                            {entry.arena}
+                          </span>
+                        </div>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-mono">
+                          {entry.coachStatus}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-200 leading-relaxed mb-3">
+                        "{entry.summary}"
+                      </p>
+                      <div className="flex items-center gap-4 text-[10px] pt-2 border-t border-slate-900 text-slate-400 font-mono">
+                        <span>Pacing: <strong className="text-white">{entry.wpm} WPM</strong></span>
+                        <span>•</span>
+                        <span>BLUF Score: <strong className="text-[#C89630]">{entry.blufScore}%</strong></span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
             <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 sm:p-8">
               <div className="max-w-2xl mb-6">
                 <span className="text-[10px] uppercase font-bold tracking-widest text-teal-400 px-2.5 py-0.5 rounded-full bg-teal-500/10 border border-teal-500/20">
@@ -805,6 +1020,7 @@ export const ClientPortal: React.FC = () => {
                 ))}
               </div>
             </div>
+            )}
           </div>
         )}
 
@@ -1045,8 +1261,13 @@ export const ClientPortal: React.FC = () => {
 
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setIsLiveRehearsalOpen(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition-all shadow-sm cursor-pointer"
+                    onClick={() => {
+                      setActiveChamberTitle(isExecutive ? 'Executive Public Speaking Chamber' : 'Live Rehearsal Chamber');
+                      setIsLiveRehearsalOpen(true);
+                    }}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-slate-950 text-xs font-bold transition-all shadow-sm cursor-pointer ${
+                      isExecutive ? 'bg-[#C89630] hover:bg-[#d6a543]' : 'bg-emerald-500 hover:bg-emerald-400'
+                    }`}
                     title="Start Live Rehearsal Room"
                   >
                     <Video className="w-3.5 h-3.5" />
@@ -1068,7 +1289,9 @@ export const ClientPortal: React.FC = () => {
                     <div
                       className={`max-w-[85%] sm:max-w-md p-3.5 rounded-2xl text-xs leading-relaxed ${
                         msg.sender === 'client'
-                          ? 'bg-emerald-500 text-slate-950 font-medium rounded-br-none'
+                          ? isExecutive
+                            ? 'bg-[#C89630] text-slate-950 font-medium rounded-br-none'
+                            : 'bg-emerald-500 text-slate-950 font-medium rounded-br-none'
                           : 'bg-slate-950 border border-slate-800 text-slate-200 rounded-bl-none'
                       }`}
                     >
@@ -1085,12 +1308,20 @@ export const ClientPortal: React.FC = () => {
                   type="text"
                   value={clientMessageInput}
                   onChange={(e) => setClientMessageInput(e.target.value)}
-                  placeholder="Ask Coach Qassim about your speech, pacing, or catharsis..."
+                  placeholder={
+                    isExecutive
+                      ? "Ask Coach Qassim about your pitch deck, boardroom presentation, or pacing..."
+                      : "Ask Coach Qassim about your speech, pacing, or catharsis..."
+                  }
                   className="flex-1 h-10 px-4 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:border-emerald-500 focus:outline-hidden"
                 />
                 <button
                   type="submit"
-                  className="h-10 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-500/20 cursor-pointer"
+                  className={`h-10 px-4 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer ${
+                    isExecutive
+                      ? 'bg-[#C89630] hover:bg-[#d6a543] text-slate-950 shadow-[#C89630]/20'
+                      : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/20'
+                  }`}
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Send</span>

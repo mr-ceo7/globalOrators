@@ -14,6 +14,52 @@ import {
 
 export const INITIAL_CLIENTS: Client[] = [
   {
+    "id": "client-exec-1",
+    "name": "Dr. Arthur Vance",
+    "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
+    "email": "arthur.vance@executive.org",
+    "phone": "+254 700 889 900",
+    "age": 42,
+    "gender": "Male",
+    "status": "Active",
+    "branch": "Academy",
+    "missionFocus": "Executive Public Speaking & Presentation Skills",
+    "catharsisScore": 96,
+    "goal": "Executive & Board Pitching",
+    "experienceLevel": "Master Orator",
+    "startDate": "2026-08-01",
+    "currentProgramId": "prog-exec-speaking-1",
+    "currentProgramName": "Executive Public Speaking & Presentation Skills Programme",
+    "complianceRate": 98,
+    "workoutsCompleted": 18,
+    "totalWorkoutsAssigned": 18,
+    "lastActive": "Today at 08:30 AM",
+    "startingWeightKg": 138,
+    "currentWeightKg": 138,
+    "targetWeightKg": 138,
+    "heightCm": 185,
+    "bodyFatPercentage": 96.0,
+    "targetBodyFat": 98.0,
+    "injuriesAndHealth": [
+      "Boardroom cadence pacing maintenance under hostile investor Q&A"
+    ],
+    "medicalAlerts": "Apply 2-second deliberate pause before responding to valuation or capex questions.",
+    "customCoachNotes": [
+      "Boardroom pitch deck structure anchored around BLUF (Bottom Line Upfront).",
+      "Executive presence calibrated at 138 WPM. Excellent gravitas and command of floor.",
+      "4-week, 8-session executive protocol scheduled for Tuesdays and Thursdays (90 mins)."
+    ],
+    "onboardingSurvey": {
+      "gymAccess": "Executive Boardrooms & Investor Demo Days (Teleconference & In-Person Pitching)",
+      "weeklyAvailabilityDays": 2,
+      "dietaryRestrictions": "Managing Director, Sovereign Advisory & Enterprise Capital",
+      "sleepAvgHours": 7.0,
+      "stressLevel": "High",
+      "favoriteExercises": "Executive Boardroom Pitch & Objection Handling, Strategic Pauses & Cadence Deceleration",
+      "leastFavoriteExercises": "Diaphragmatic Resonance Vowel Hums"
+    }
+  },
+  {
     "id": "client-1",
     "name": "Marcus Vance",
     "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",

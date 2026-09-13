@@ -81,7 +81,13 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
   const [audioLevel, setAudioLevel] = useState<number>(0);
   const [copied, setCopied] = useState<boolean>(false);
 
-  // Parliamentary Debate Countdown Timer
+  // Executive Room check
+  const isExecutiveRoom = useMemo(() => {
+    const text = `${roomTitle || ''} ${speakerName || ''} ${branch || ''}`.toLowerCase();
+    return text.includes('executive') || text.includes('pitch') || text.includes('board') || text.includes('keynote') || text.includes('capital') || text.includes('vance');
+  }, [roomTitle, speakerName, branch]);
+
+  // Parliamentary / Executive Countdown Timer
   const [timerPreset, setTimerPreset] = useState<TimerPreset>(branch === 'Foundation' ? 300 : 420);
   const [secondsRemaining, setSecondsRemaining] = useState<number>(timerPreset);
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false);
@@ -846,7 +852,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
                 <span>Speech & Floor Timer</span>
               </div>
               <span className="text-[10px] font-mono text-slate-400">
-                {branch === 'Foundation' ? 'Catharsis Sprint' : 'British Parliamentary'}
+                {isExecutiveRoom ? 'Executive Presentation Sprint' : branch === 'Foundation' ? 'Catharsis Sprint' : 'British Parliamentary'}
               </span>
             </div>
 
@@ -856,9 +862,23 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
                 {formatTime(secondsRemaining)}
               </div>
 
-              {/* POI Phase Indicator */}
+              {/* Phase Indicator */}
               <div className="mt-2.5">
-                {isBPMode ? (
+                {isExecutiveRoom ? (
+                  isProtectedFirstMinute ? (
+                    <span className="inline-block text-[10px] font-mono tracking-widest uppercase bg-slate-800 text-slate-300 px-3 py-1 rounded-full border border-slate-700">
+                      Opening Hook • Uninterrupted Flow
+                    </span>
+                  ) : isPoiFloorOpen ? (
+                    <span className="inline-block text-[10px] font-mono tracking-widest uppercase bg-amber-500/20 text-amber-300 px-3 py-1 rounded-full border border-amber-500/40 animate-pulse">
+                      Executive Delivery • Cadence & Presence
+                    </span>
+                  ) : (
+                    <span className="inline-block text-[10px] font-mono tracking-widest uppercase bg-slate-800 text-slate-300 px-3 py-1 rounded-full border border-slate-700">
+                      BLUF Conclusion • High-Conviction Close
+                    </span>
+                  )
+                ) : isBPMode ? (
                   isProtectedFirstMinute ? (
                     <span className="inline-block text-[10px] font-mono tracking-widest uppercase bg-slate-800 text-slate-300 px-3 py-1 rounded-full border border-slate-700">
                       Protected Period • No POIs
@@ -890,8 +910,8 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
                     : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200'
                 }`}
               >
-                <div className="text-xs font-bold">7:00 BP Speech</div>
-                <div className="text-[10px] text-slate-400 font-mono">Full Standard Round</div>
+                <div className="text-xs font-bold">{isExecutiveRoom ? '7:00 Boardroom Defense' : '7:00 BP Speech'}</div>
+                <div className="text-[10px] text-slate-400 font-mono">{isExecutiveRoom ? 'Q&A Stress Test & Close' : 'Full Standard Round'}</div>
               </button>
 
               <button
@@ -902,8 +922,8 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
                     : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200'
                 }`}
               >
-                <div className="text-xs font-bold">5:00 Catharsis</div>
-                <div className="text-[10px] text-slate-400 font-mono">Vocal Release Flow</div>
+                <div className="text-xs font-bold">{isExecutiveRoom ? '5:00 Venture Pitch' : '5:00 Catharsis'}</div>
+                <div className="text-[10px] text-slate-400 font-mono">{isExecutiveRoom ? 'Investor Thesis & Ask' : 'Vocal Release Flow'}</div>
               </button>
 
               <button
@@ -914,8 +934,8 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
                     : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200'
                 }`}
               >
-                <div className="text-xs font-bold">3:00 Rebuttal</div>
-                <div className="text-[10px] text-slate-400 font-mono">Clash & Extension</div>
+                <div className="text-xs font-bold">{isExecutiveRoom ? '3:00 Exec Summary' : '3:00 Rebuttal'}</div>
+                <div className="text-[10px] text-slate-400 font-mono">{isExecutiveRoom ? 'BLUF Problem & Solution' : 'Clash & Extension'}</div>
               </button>
 
               <button
@@ -926,8 +946,8 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
                     : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200'
                 }`}
               >
-                <div className="text-xs font-bold">1:00 POI / Hook</div>
-                <div className="text-[10px] text-slate-400 font-mono">Impromptu Sprint</div>
+                <div className="text-xs font-bold">{isExecutiveRoom ? '1:00 Elevator Hook' : '1:00 POI / Hook'}</div>
+                <div className="text-[10px] text-slate-400 font-mono">{isExecutiveRoom ? 'High-Stakes Introduction' : 'Impromptu Sprint'}</div>
               </button>
             </div>
 
@@ -963,7 +983,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-slate-400">
                 <FileText className="w-3.5 h-3.5 text-[#C89630]" />
-                <span>Coach Live Evaluation Rubric</span>
+                <span>{isExecutiveRoom ? 'Executive Delivery & Poise Rubric' : 'Coach Live Evaluation Rubric'}</span>
               </div>
               <span className="text-xs font-mono text-[#C89630] font-bold">
                 {rubricScore}/10 Score
@@ -973,7 +993,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
             {/* Dialectic Clash & Poise Slider */}
             <div>
               <div className="flex justify-between text-xs font-medium text-slate-300 mb-1.5">
-                <span>Dialectical Clash & Poise</span>
+                <span>{isExecutiveRoom ? 'Executive Presence & Conviction' : 'Dialectical Clash & Poise'}</span>
                 <span className="font-mono text-slate-400">{rubricScore} / 10</span>
               </div>
               <input
@@ -1007,12 +1027,16 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
             {/* Rehearsal Critique Notes */}
             <div>
               <label className="block text-xs font-mono uppercase tracking-wider text-slate-400 mb-1.5">
-                Rehearsal Critique & Refutation Notes
+                {isExecutiveRoom ? 'Executive Critique & Boardroom Delivery Notes' : 'Rehearsal Critique & Refutation Notes'}
               </label>
               <textarea
                 value={rehearsalNotes}
                 onChange={(e) => setRehearsalNotes(e.target.value)}
-                placeholder="Jot down specific feedback on framing, syllogistic structure, eye contact, vocal variety, or rebuttal execution..."
+                placeholder={
+                  isExecutiveRoom
+                    ? 'Jot down specific feedback on executive composure, BLUF framing, vocal resonance, strategic pauses, and objection handling...'
+                    : 'Jot down specific feedback on framing, syllogistic structure, eye contact, vocal variety, or rebuttal execution...'
+                }
                 rows={3}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-[#C89630] resize-none"
               />
