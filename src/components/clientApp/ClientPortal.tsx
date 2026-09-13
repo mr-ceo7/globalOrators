@@ -39,6 +39,7 @@ import { useApp } from '../../context/AppContext';
 import { BranchType, SpeakerOnboardingData, ScheduledWorkout } from '../../types';
 import { resolveSpeakerCurriculum } from '../../utils/curriculumResolver';
 import { LiveRehearsalRoom } from '../live/LiveRehearsalRoom';
+import { SEOHead } from '../common/SEOHead';
 
 export const ClientPortal: React.FC = () => {
   const { 
@@ -487,6 +488,12 @@ export const ClientPortal: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-emerald-500 selection:text-slate-950">
+      <SEOHead
+        title="Speaker Practice Studio"
+        description="Private rehearsal vault, catharsis voice recorder, and drill studio for Global Orators speakers."
+        canonicalPath="/speaker"
+        noIndex={true}
+      />
       {/* 1. Speaker App Top Header */}
       <header className="sticky top-0 z-30 bg-slate-950/85 backdrop-blur-md border-b border-slate-800/80 px-4 sm:px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3 min-w-0">

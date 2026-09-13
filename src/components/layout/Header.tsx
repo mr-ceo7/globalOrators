@@ -127,9 +127,9 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Center on mobile, Left on desktop: View Title */}
       <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none md:pointer-events-auto md:static md:translate-x-0 md:translate-y-0 text-center md:text-left flex flex-col">
-        <h1 className="text-sm md:text-base font-bold text-white tracking-tight flex items-center justify-center md:justify-start gap-1.5 truncate max-w-[130px] sm:max-w-none">
+        <span role="heading" aria-level={2} className="text-sm md:text-base font-bold text-white tracking-tight flex items-center justify-center md:justify-start gap-1.5 truncate max-w-[130px] sm:max-w-none">
           {getBreadcrumbTitle()}
-        </h1>
+        </span>
         <span className="text-[10px] sm:text-[11px] text-slate-400 hidden sm:inline-block">
           Global Orators Coaching Suite
         </span>

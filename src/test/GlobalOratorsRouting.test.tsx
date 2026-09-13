@@ -166,9 +166,13 @@ describe('Global Orators Dedicated Routing & SEO Tests', () => {
     const metaDescription = document.querySelector('meta[name="description"]');
     expect(metaDescription?.getAttribute('content')).toBe('Custom test meta description for search engine ranking.');
 
+    // Verify robots meta tag (index, follow by default)
+    const metaRobots = document.querySelector('meta[name="robots"]');
+    expect(metaRobots?.getAttribute('content')).toContain('index, follow');
+
     // Verify canonical link
     const canonicalLink = document.querySelector('link[rel="canonical"]');
-    expect(canonicalLink?.getAttribute('href')).toBe('https://globalorators.org/test-path');
+    expect(canonicalLink?.getAttribute('href')).toBe('https://globaloratorsproject.com/test-path');
 
     // Verify JSON-LD script
     const jsonLdScript = document.getElementById('seo-json-ld');
@@ -183,7 +187,7 @@ describe('Global Orators Dedicated Routing & SEO Tests', () => {
     expect(ogDesc?.getAttribute('content')).toBe('Custom test meta description for search engine ranking.');
 
     const ogImage = document.querySelector('meta[property="og:image"]');
-    expect(ogImage?.getAttribute('content')).toBe('https://globalorators.org/images/og-preview.jpg');
+    expect(ogImage?.getAttribute('content')).toBe('https://globaloratorsproject.com/images/og-preview.jpg');
 
     const ogWidth = document.querySelector('meta[property="og:image:width"]');
     expect(ogWidth?.getAttribute('content')).toBe('1200');
@@ -193,6 +197,58 @@ describe('Global Orators Dedicated Routing & SEO Tests', () => {
     expect(twitterCard?.getAttribute('content')).toBe('summary_large_image');
 
     const twitterImage = document.querySelector('meta[name="twitter:image"]');
-    expect(twitterImage?.getAttribute('content')).toBe('https://globalorators.org/images/og-preview.jpg');
+    expect(twitterImage?.getAttribute('content')).toBe('https://globaloratorsproject.com/images/og-preview.jpg');
+  });
+
+  test('should set noindex, nofollow when noIndex prop is true', () => {
+    render(
+      <SEOHead
+        title="Private Portal"
+        description="Private internal area"
+        canonicalPath="/coach"
+        noIndex={true}
+      />
+    );
+
+    const metaRobots = document.querySelector('meta[name="robots"]');
+    expect(metaRobots?.getAttribute('content')).toBe('noindex, nofollow');
+  });
+
+  test('should verify exactly one h1 element is rendered on HomePage', () => {
+    render(
+      <AppProvider>
+        <NavigationTester />
+      </AppProvider>
+    );
+
+    const h1Elements = screen.getAllByRole('heading', { level: 1 });
+    expect(h1Elements).toHaveLength(1);
+    expect(h1Elements[0]).toHaveTextContent(/Words Shape Nations/i);
+  });
+
+  test('should navigate to /apply and transition to onboarding portal', async () => {
+    const ApplyTester: React.FC = () => {
+      const { navigate, currentPath, currentPortal } = useApp();
+      return (
+        <div>
+          <div data-testid="portal-val">{currentPortal}</div>
+          <div data-testid="path-val">{currentPath}</div>
+          <button onClick={() => navigate('/apply')}>Apply Now</button>
+        </div>
+      );
+    };
+
+    render(
+      <AppProvider>
+        <ApplyTester />
+      </AppProvider>
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('Apply Now'));
+    });
+
+    expect(screen.getByTestId('path-val')).toHaveTextContent('/apply');
+    expect(screen.getByTestId('portal-val')).toHaveTextContent('onboarding');
   });
 });

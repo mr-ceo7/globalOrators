@@ -6,6 +6,7 @@ export interface SEOHeadProps {
   canonicalPath?: string;
   ogType?: string;
   ogImage?: string;
+  noIndex?: boolean;
   jsonLd?: Record<string, any>;
 }
 
@@ -15,6 +16,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
   canonicalPath = '/',
   ogType = 'website',
   ogImage = '/images/og-preview.jpg',
+  noIndex = false,
   jsonLd,
 }) => {
   useEffect(() => {
@@ -31,10 +33,24 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
     }
     metaDesc.setAttribute('content', description);
 
+    // 2b. Set Meta Robots Directives
+    let metaRobots = document.querySelector('meta[name="robots"]');
+    if (!metaRobots) {
+      metaRobots = document.createElement('meta');
+      metaRobots.setAttribute('name', 'robots');
+      document.head.appendChild(metaRobots);
+    }
+    metaRobots.setAttribute(
+      'content',
+      noIndex
+        ? 'noindex, nofollow'
+        : 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1'
+    );
+
     // 3. Set Canonical Link (Production canonical domain for SEO indexing)
     const baseDomain = typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('localhost') && !window.location.origin.includes('127.0.0.1')
       ? window.location.origin
-      : 'https://globalorators.org';
+      : 'https://globaloratorsproject.com';
     const canonicalUrl = `${baseDomain}${canonicalPath.startsWith('/') ? canonicalPath : `/${canonicalPath}`}`;
 
     let linkCanonical = document.querySelector('link[rel="canonical"]');
@@ -104,7 +120,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
     if (typeof window !== 'undefined') {
       window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
     }
-  }, [title, description, canonicalPath, ogType, ogImage, jsonLd]);
+  }, [title, description, canonicalPath, ogType, ogImage, noIndex, jsonLd]);
 
   return null;
 };

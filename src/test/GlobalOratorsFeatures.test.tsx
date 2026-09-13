@@ -241,7 +241,7 @@ describe('Global Orators Landing Page & Features Tests', () => {
     expect(mobileToggleBtn).toBeInTheDocument();
 
     // Verify desktop standard nav has Home, About, Academy
-    expect(screen.getAllByRole('button', { name: 'Home' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('link', { name: 'Home' }).length).toBeGreaterThan(0);
     expect(screen.getAllByRole('link', { name: 'About' }).length).toBeGreaterThan(0);
     expect(screen.getAllByRole('link', { name: 'Academy' }).length).toBeGreaterThan(0);
     expect(screen.getAllByRole('link', { name: 'Foundation' }).length).toBeGreaterThan(0);
@@ -254,8 +254,8 @@ describe('Global Orators Landing Page & Features Tests', () => {
       fireEvent.click(mobileToggleBtn!);
     });
 
-    // Check that standard nav buttons/links are rendered in mobile drawer
-    expect(screen.getAllByRole('button', { name: 'Home' }).length).toBeGreaterThan(1);
+    // Check that standard nav links are rendered in mobile drawer
+    expect(screen.getAllByRole('link', { name: 'Home' }).length).toBeGreaterThan(1);
     expect(screen.getAllByRole('link', { name: 'About' }).length).toBeGreaterThan(1);
     expect(screen.getAllByRole('link', { name: 'Academy' }).length).toBeGreaterThan(1);
     expect(screen.getAllByRole('link', { name: 'Foundation' }).length).toBeGreaterThan(1);

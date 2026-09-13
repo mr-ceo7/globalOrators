@@ -1,0 +1,19 @@
+# robots.txt for https://globaloratorsproject.com
+User-agent: *
+Allow: /
+Allow: /about
+Allow: /academy
+Allow: /foundation
+Allow: /escapism
+Allow: /tournaments
+Allow: /testimonials
+Allow: /apply
+
+# Disallow private operational dashboards, live rooms and API endpoints
+Disallow: /coach
+Disallow: /speaker
+Disallow: /rehearsal/
+Disallow: /signaling/
+Disallow: /api/
+
+Sitemap: https://globaloratorsproject.com/sitemap.xml

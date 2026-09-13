@@ -40,6 +40,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onStartOnboarding }) =
                 className="h-64 sm:h-80 lg:h-full lg:min-h-[380px] w-full object-cover object-[center_32%] filter contrast-[1.02]"
                 loading="eager"
                 fetchPriority="high"
+                decoding="async"
+                width={800}
+                height={600}
                 onError={() => setImgError(true)}
               />
             ) : (

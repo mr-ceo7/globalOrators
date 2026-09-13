@@ -5,7 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Global Orators | Debate Training, Speaker Development & Voice Programs</title>
     <meta name="description" content="Pan-African debate training, sovereign leadership development, and healing-centered vocal expression programs for African youth." />
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+    <meta name="google-site-verification" content="GOP_SEARCH_CONSOLE_VERIFICATION_PENDING" />
     <link rel="canonical" href="https://globaloratorsproject.com" />
+    
+    <!-- Core Web Vitals: Preload LCP Hero Image -->
+    <link rel="preload" as="image" href="/images/hero-orator.jpg" fetchpriority="high" />
     
     <!-- Early theme detection to prevent flash of incorrect theme (FOUC) -->
     <script>
@@ -77,8 +82,20 @@
           "@id": "https://globaloratorsproject.com/#organization",
           "name": "Global Orators Project",
           "url": "https://globaloratorsproject.com",
-          "logo": "https://globaloratorsproject.com/logo-icon.png",
-          "description": "Pan-African debate training, sovereign leadership development, and healing-centered vocal programs for African youth.",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://globaloratorsproject.com/logo-icon.png",
+            "width": 512,
+            "height": 512
+          },
+          "image": "https://globaloratorsproject.com/images/og-preview.jpg",
+          "description": "Pan-African debate training, sovereign leadership development, and healing-centered vocal expression programs for African youth.",
+          "founder": {
+            "@type": "Person",
+            "name": "Geoffrey Anyona",
+            "jobTitle": "Founder & Forensics Director"
+          },
+          "areaServed": "Africa",
           "address": {
             "@type": "PostalAddress",
             "addressLocality": "Nairobi",
@@ -91,6 +108,29 @@
           "url": "https://globaloratorsproject.com",
           "name": "Global Orators",
           "publisher": {
+            "@id": "https://globaloratorsproject.com/#organization"
+          },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://globaloratorsproject.com/?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "Course",
+          "@id": "https://globaloratorsproject.com/academy#course",
+          "name": "British Parliamentary Forensics & Executive Rhetoric",
+          "description": "12-week intensive debate cohort mastering first principles analysis, cross-examination, and boardroom negotiation.",
+          "provider": {
+            "@id": "https://globaloratorsproject.com/#organization"
+          }
+        },
+        {
+          "@type": "Course",
+          "@id": "https://globaloratorsproject.com/foundation#course",
+          "name": "Youth Fellowship & Safe Speech Circles",
+          "description": "100% grant-funded therapeutic speech circles, vocal pacing calibration, and leadership mentorship for under-resourced youth.",
+          "provider": {
             "@id": "https://globaloratorsproject.com/#organization"
           }
         }

@@ -171,9 +171,16 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
                   </a>
                 </li>
                 <li>
-                  <button onClick={() => onStartOnboarding()} className="hover:text-slate-100 transition-colors cursor-pointer">
+                  <a 
+                    href="/apply"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onStartOnboarding();
+                    }} 
+                    className="hover:text-slate-100 transition-colors cursor-pointer"
+                  >
                     Speaker Onboarding
-                  </button>
+                  </a>
                 </li>
               </ul>
             </div>

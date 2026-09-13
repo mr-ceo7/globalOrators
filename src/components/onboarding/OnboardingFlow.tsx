@@ -22,6 +22,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { SEOHead } from '../common/SEOHead';
 import { BranchType, SpeakingGoal, ExperienceLevel, SpeakerOnboardingData } from '../../types';
 import {
   sanitizeText,
@@ -1268,6 +1269,11 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between py-6 px-4 sm:px-6">
+      <SEOHead
+        title="Apply to Global Orators | Fellowship & Academy Intake"
+        description="Apply for Global Orators Academy debate cohorts or the 100% grant-funded Foundation fellowship. Begin your personalized orator diagnostic."
+        canonicalPath="/apply"
+      />
       {/* Top Header */}
       <div className="max-w-2xl mx-auto w-full flex items-center justify-between pb-6 border-b border-slate-850">
         <button

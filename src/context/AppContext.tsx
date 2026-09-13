@@ -233,20 +233,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (hostname.startsWith('app.')) return 'speaker_app';
       if (hostname === 'globaloratorsproject.com' || hostname === 'www.globaloratorsproject.com') {
         const pathname = window.location.pathname.toLowerCase();
-        if (pathname === '/onboarding') return 'onboarding';
+        if (pathname === '/onboarding' || pathname === '/apply') return 'onboarding';
         return 'landing';
       }
 
       const pathname = window.location.pathname.toLowerCase();
       if (pathname === '/coach' || pathname === '/coach_os') return 'coach_os';
       if (pathname === '/app' || pathname === '/speaker' || pathname === '/speaker_app') return 'speaker_app';
-      if (pathname === '/onboarding') return 'onboarding';
+      if (pathname === '/onboarding' || pathname === '/apply') return 'onboarding';
 
       const params = new URLSearchParams(window.location.search);
       const portalParam = params.get('portal');
       if (portalParam === 'coach' || portalParam === 'coach_os') return 'coach_os';
       if (portalParam === 'app' || portalParam === 'speaker_app') return 'speaker_app';
-      if (portalParam === 'onboarding') return 'onboarding';
+      if (portalParam === 'onboarding' || portalParam === 'apply') return 'onboarding';
       if (portalParam === 'landing') return 'landing';
     }
     const saved = localStorage.getItem('globalorators_portal');
@@ -269,7 +269,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
       // Synchronize portal state
-      if (cleanPath === '/onboarding') {
+      if (cleanPath === '/onboarding' || cleanPath === '/apply') {
         setCurrentPortalState('onboarding');
       } else if (cleanPath === '/coach' || cleanPath === '/coach_os') {
         setCurrentPortalState('coach_os');
@@ -287,7 +287,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const handlePopState = () => {
       const pathname = window.location.pathname.toLowerCase() || '/';
       setCurrentPathState(pathname);
-      if (pathname === '/onboarding') {
+      if (pathname === '/onboarding' || pathname === '/apply') {
         setCurrentPortalState('onboarding');
       } else if (pathname === '/coach' || pathname === '/coach_os') {
         setCurrentPortalState('coach_os');

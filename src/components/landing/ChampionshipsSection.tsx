@@ -24,6 +24,9 @@ export const ChampionshipsSection: React.FC = () => {
           alt="Geoffrey Anyona, debaters, and delegation celebrating championship victory with trophy and medals" 
           className="w-full h-56 sm:h-80 md:h-96 object-cover object-[center_25%] filter contrast-[1.03]" 
           loading="lazy" 
+          decoding="async"
+          width={1200}
+          height={600}
         />
         <figcaption className="px-4 py-2.5 sm:py-3 bg-slate-900 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] font-mono">
           <div className="flex items-center gap-2">

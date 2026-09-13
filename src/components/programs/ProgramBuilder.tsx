@@ -404,9 +404,9 @@ export const ProgramBuilder: React.FC<{
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <h1 className="text-lg md:text-xl font-serif font-bold text-white tracking-tight group-hover:text-[#C89630] transition-colors">
+                  <h2 className="text-lg md:text-xl font-serif font-bold text-white tracking-tight group-hover:text-[#C89630] transition-colors">
                     {activeProgram.title}
-                  </h1>
+                  </h2>
                   <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors shrink-0" />
                 </div>
               </div>

@@ -24,11 +24,11 @@ export const HomePage: React.FC<HomePageProps> = ({
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     'name': 'Global Orators Project',
-    'url': 'https://globalorators.org',
+    'url': 'https://globaloratorsproject.com',
     'description': 'Premier Pan-African parliamentary debate training, sovereign leadership development, and healing-centered voice programs.',
     'potentialAction': {
       '@type': 'SearchAction',
-      'target': 'https://globalorators.org/?q={search_term_string}',
+      'target': 'https://globaloratorsproject.com/?q={search_term_string}',
       'query-input': 'required name=search_term_string'
     }
   };

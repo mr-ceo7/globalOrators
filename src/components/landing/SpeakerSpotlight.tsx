@@ -57,8 +57,12 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
                 <div className="flex items-center gap-3">
                   <img 
                     src="/images/hero-orator.jpg" 
-                    alt="Imani" 
+                    alt="Imani, Public Speaker and Orator Fellow" 
                     className="w-10 h-10 rounded-full object-cover object-top border border-slate-700 shrink-0" 
+                    width={40}
+                    height={40}
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div>
                     <div className="font-serif font-bold text-slate-100 text-sm">Imani</div>
@@ -85,6 +89,9 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
                     alt="Imani studying and drafting philosophical debate arguments in her notebook" 
                     className="w-full h-full object-cover object-[center_20%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500" 
                     loading="lazy" 
+                    decoding="async"
+                    width={500}
+                    height={350}
                   />
                 </div>
                 <figcaption className="p-3.5 bg-slate-900 border-t border-slate-800 space-y-1">
@@ -106,6 +113,9 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
                     alt="Imani passionately dialoguing and smiling with fellow debaters during an assembly circle" 
                     className="w-full h-full object-cover object-[center_25%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500" 
                     loading="lazy" 
+                    decoding="async"
+                    width={500}
+                    height={350}
                   />
                 </div>
                 <figcaption className="p-3.5 bg-slate-900 border-t border-slate-800 space-y-1">
@@ -160,8 +170,12 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
                 <div className="flex items-center gap-3">
                   <img 
                     src="/images/milo-podium.jpg" 
-                    alt="Milo Brian" 
+                    alt="Milo Brian, Legal Scholar and Parliamentary Debater" 
                     className="w-10 h-10 rounded-full object-cover object-top border border-slate-700 shrink-0" 
+                    width={40}
+                    height={40}
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div>
                     <div className="font-serif font-bold text-slate-100 text-sm">Milo Brian</div>
@@ -188,6 +202,9 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
                     alt="Milo Brian delivering an award-winning speech at the podium with microphone" 
                     className="w-full h-full object-cover object-[center_15%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500" 
                     loading="lazy" 
+                    decoding="async"
+                    width={500}
+                    height={350}
                   />
                 </div>
                 <figcaption className="p-3.5 bg-slate-900 border-t border-slate-800 space-y-1">
@@ -209,6 +226,9 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
                     alt="Milo Brian reviewing debate frameworks and poetry in front of a green chalkboard" 
                     className="w-full h-full object-cover object-[center_30%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500" 
                     loading="lazy" 
+                    decoding="async"
+                    width={500}
+                    height={350}
                   />
                 </div>
                 <figcaption className="p-3.5 bg-slate-900 border-t border-slate-800 space-y-1">

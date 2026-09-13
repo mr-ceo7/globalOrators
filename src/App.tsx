@@ -25,6 +25,7 @@ import { SubdomainSwitcher } from './components/common/SubdomainSwitcher';
 import { LandingPage } from './components/landing/LandingPage';
 import { OnboardingFlow } from './components/onboarding/OnboardingFlow';
 import { ClientPortal } from './components/clientApp/ClientPortal';
+import { SEOHead } from './components/common/SEOHead';
 
 const MainLayout: React.FC = () => {
   const { activeTab, setActiveTab } = useApp();
@@ -46,6 +47,12 @@ const MainLayout: React.FC = () => {
 
   return (
     <div className="flex-1 bg-slate-950 text-slate-100 flex font-sans antialiased selection:bg-emerald-500 selection:text-slate-950 min-h-[calc(100vh-42px)]">
+      <SEOHead
+        title="Coach Operating System"
+        description="Private coaching dashboard and forensics workbench for Global Orators accredited debate coaches."
+        canonicalPath="/coach"
+        noIndex={true}
+      />
       {/* Initial App Load Splash Screen */}
       <AnimatePresence>
         {isLoadingApp && (

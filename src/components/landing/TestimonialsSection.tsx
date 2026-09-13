@@ -44,6 +44,9 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
               alt="African youth mentor coaching children and teenagers in a community storytelling circle in Nairobi" 
               className="w-full h-56 sm:h-72 md:h-80 object-cover object-[center_35%] filter contrast-[1.05]" 
               loading="lazy" 
+              decoding="async"
+              width={1000}
+              height={500}
             />
             <figcaption className="px-4 py-2.5 bg-slate-900 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[10px] font-mono uppercase tracking-widest text-slate-400">
               <span className="text-[#A06C18] dark:text-[#E3B95C] font-semibold">Community Storytelling Circle · Nairobi Shelter Network</span>
@@ -60,8 +63,12 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
                 <div className="flex items-center gap-3">
                   <img 
                     src="/images/hero-orator.jpg" 
-                    alt="Imani" 
+                    alt="Imani, Public Speaker and Orator Fellow" 
                     className="w-10 h-10 rounded-full object-cover object-top border border-slate-700 shrink-0" 
+                    width={40}
+                    height={40}
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div>
                     <div className="font-serif font-bold text-slate-100">Imani</div>
@@ -82,8 +89,12 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
                 <div className="flex items-center gap-3">
                   <img 
                     src="/images/milo-podium.jpg" 
-                    alt="Milo Brian" 
+                    alt="Milo Brian, Legal Scholar and Debater" 
                     className="w-10 h-10 rounded-full object-cover object-top border border-slate-700 shrink-0" 
+                    width={40}
+                    height={40}
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div>
                     <div className="font-serif font-bold text-slate-100">Milo Brian</div>

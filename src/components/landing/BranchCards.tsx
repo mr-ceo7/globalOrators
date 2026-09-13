@@ -36,6 +36,9 @@ export const BranchCards: React.FC<BranchCardsProps> = ({
                   alt="Obed and debaters in the motion preparation chamber at Global Orators Academy" 
                   className="w-full h-44 sm:h-52 object-cover object-[center_35%]"
                   loading="lazy"
+                  decoding="async"
+                  width={600}
+                  height={350}
                 />
                 <figcaption className="px-3.5 py-2 bg-slate-950/80 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono">
                   <span className="text-slate-300 uppercase tracking-wider font-semibold">Motion Deliberation Chamber</span>
@@ -121,6 +124,9 @@ export const BranchCards: React.FC<BranchCardsProps> = ({
                   alt="Geoffrey Anyona and youth scholars in community mentorship assembly" 
                   className="w-full h-44 sm:h-52 object-cover object-[center_35%]"
                   loading="lazy"
+                  decoding="async"
+                  width={600}
+                  height={350}
                 />
                 <figcaption className="px-3.5 py-2 bg-slate-950/80 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono">
                   <span className="text-slate-300 uppercase tracking-wider font-semibold">Youth Outreach Assembly</span>

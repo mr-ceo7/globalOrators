@@ -21,8 +21,12 @@ export const MissionSection: React.FC = () => {
           <div className="flex items-center gap-3.5">
             <img 
               src="/images/geoffrey-founder.jpg" 
-              alt="Geoffrey Anyona" 
+              alt="Geoffrey Anyona, Founder and Forensics Director of The Global Orators Project" 
               className="w-12 h-12 rounded-full object-cover object-top border-2 border-[#C89630]/40 shrink-0" 
+              width={48}
+              height={48}
+              loading="lazy"
+              decoding="async"
             />
             <div>
               <div className="font-serif font-bold text-slate-100 text-sm sm:text-base">Geoffrey Anyona</div>
@@ -62,6 +66,9 @@ export const MissionSection: React.FC = () => {
               alt="Geoffrey Anyona reflecting with pen in hand during an international debate assembly"
               className="w-full h-44 sm:h-52 object-cover object-[center_25%] filter contrast-[1.03]"
               loading="lazy"
+              decoding="async"
+              width={600}
+              height={350}
             />
             <figcaption className="px-3.5 py-2 bg-slate-950/80 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono">
               <span className="text-slate-300 uppercase tracking-wider font-semibold">Founding Inquiry</span>
