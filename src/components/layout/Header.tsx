@@ -109,9 +109,7 @@ export const Header: React.FC<HeaderProps> = ({
           className="md:hidden shrink-0 active:scale-95 transition-transform text-left flex items-center gap-2"
           title="Go to Dashboard"
         >
-          <div className="w-7 h-7 shrink-0 rounded-md bg-[#181B1F] border border-stone-800 flex items-center justify-center p-0.5 shadow-sm">
-            <NubianFitLogo className="w-full h-full" colorMode="gold" />
-          </div>
+          <NubianFitLogo className="w-7 h-7 shrink-0" colorMode="gold" />
           <div className="flex flex-col items-stretch">
             <span className="font-serif font-black text-[14px] tracking-tight text-slate-100 block leading-none">
               Global<span className="text-[#C89630]">orators</span>

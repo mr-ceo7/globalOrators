@@ -40,9 +40,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
           }}
           className="flex items-center gap-2.5 sm:gap-3 cursor-pointer group shrink-0"
         >
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-[#181B1F] border border-stone-800 text-[#FFFFFF] flex items-center justify-center p-1 shadow-md group-hover:border-[#C89630]/60 transition-colors">
-            <NubianFitLogo className="w-full h-full" colorMode="gold" />
-          </div>
+          <NubianFitLogo className="w-8 h-8 sm:w-9 sm:h-9 shrink-0 transition-transform group-hover:scale-105" colorMode="gold" />
           <div>
             <div className="text-sm sm:text-base lg:text-lg font-serif font-black tracking-tight text-slate-100 leading-none">
               Global <span className="text-[#A06C18] dark:text-[#E3B95C]">Orators</span>

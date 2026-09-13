@@ -76,8 +76,8 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
         transition={{ delay: 0.8, duration: 0.6 }}
         className="absolute bottom-12 flex flex-col items-stretch w-[128px]"
       >
-        <span className="font-logo text-[18px] tracking-wide text-logo-nubian lowercase block text-center leading-none">
-          global<span className="text-logo-fit">orators</span>
+        <span className="font-logo text-[18px] tracking-wide text-logo-nubian block text-center leading-none">
+          Global<span className="text-logo-fit">orators</span>
         </span>
         <div className="flex justify-between text-[8px] text-slate-400 font-bold tracking-normal lowercase mt-2 w-full leading-none">
           <span>speak</span>

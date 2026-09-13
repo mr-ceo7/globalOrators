@@ -47,17 +47,13 @@ export const Sidebar: React.FC = () => {
       <div className="flex items-center justify-between p-4 h-16 border-b border-slate-800/80">
         <div className="flex items-center gap-3 overflow-hidden cursor-pointer" onClick={() => setActiveTab('dashboard')}>
           {isCollapsed ? (
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center p-1 rounded-lg bg-[#181B1F] border border-stone-800 shadow-sm">
-              <NubianFitLogo className="w-full h-full" colorMode="gold" />
-            </div>
+            <NubianFitLogo className="w-9 h-9 shrink-0" colorMode="gold" />
           ) : (
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 shrink-0 rounded-lg bg-[#181B1F] border border-stone-800 flex items-center justify-center p-1 shadow-sm">
-                <NubianFitLogo className="w-full h-full" colorMode="gold" />
-              </div>
+              <NubianFitLogo className="w-8 h-8 shrink-0" colorMode="gold" />
               <div className="flex flex-col items-stretch">
                 <span className="font-serif font-black text-[16px] tracking-tight text-slate-100 block leading-none">
-                  global<span className="text-[#C89630]">orators</span>
+                  Global<span className="text-[#C89630]">orators</span>
                 </span>
                 <div className="flex justify-between text-[8px] text-slate-400 font-mono tracking-widest uppercase mt-1 w-full leading-none">
                   <span>speak</span>
@@ -65,7 +61,7 @@ export const Sidebar: React.FC = () => {
                   <span>impact</span>
                 </div>
               </div>
-              <span className="text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 leading-none self-start mt-0.5">
+              <span className="text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-md bg-[#C89630]/10 text-[#C89630] border border-[#C89630]/30 leading-none self-start mt-0.5">
                 Coach
               </span>
             </div>

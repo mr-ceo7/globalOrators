@@ -19,9 +19,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
           <div className="md:col-span-5 space-y-3">
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-[#181B1F] border border-stone-800 text-white flex items-center justify-center p-0.5">
-                <NubianFitLogo className="w-full h-full" colorMode="gold" />
-              </div>
+              <NubianFitLogo className="w-8 h-8 shrink-0" colorMode="gold" />
               <div className="font-serif font-black text-slate-100 text-sm tracking-tight">
                 Global <span className="text-[#A06C18] dark:text-[#E3B95C]">Orators</span> Project
               </div>

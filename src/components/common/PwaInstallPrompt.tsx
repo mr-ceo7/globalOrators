@@ -86,9 +86,7 @@ export const PwaInstallPrompt: React.FC<PwaInstallPromptProps> = ({ isOpen, onCl
 
           {/* Header */}
           <div className="mb-4 text-left flex items-start gap-3">
-            <div className="w-10 h-10 shrink-0 rounded-xl bg-[#181B1F] border border-stone-800 flex items-center justify-center p-1 shadow-md">
-              <NubianFitLogo className="w-full h-full" colorMode="gold" />
-            </div>
+            <NubianFitLogo className="w-10 h-10 shrink-0" colorMode="gold" />
             <div>
               <h3 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
                 Install <span className="font-extrabold text-white tracking-tight">Global <span className="text-[#C89630]">Orators</span></span>
