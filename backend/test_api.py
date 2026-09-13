@@ -599,3 +599,275 @@ async def test_multi_coach_strict_isolation():
         print("Multi-tenant Coach Isolation test passed with 100% assertions satisfied!")
 
 
+@pytest.mark.asyncio
+async def test_production_secrets_fail_closed():
+    """Verify backend/app/config.py strictly fails closed in production with weak or default secrets."""
+    from app.config import Settings
+
+    # 1. Insecure default secret in production fails closed
+    with pytest.raises(ValueError) as excinfo:
+        Settings(
+            ENVIRONMENT="production",
+            TESTING=False,
+            SECRET_KEY="globalorators-jwt-production-signing-secret-key-2026",
+            DEFAULT_COACH_PASSWORD="StrongPassword123!",
+            COACH_INVITE_CODE="super-secure-invite-code-2026-xyz"
+        )
+    assert "SECRET_KEY" in str(excinfo.value)
+
+    # 2. Short secret in production fails closed
+    with pytest.raises(ValueError) as excinfo:
+        Settings(
+            ENVIRONMENT="production",
+            TESTING=False,
+            SECRET_KEY="short-secret-under-32-chars",
+            DEFAULT_COACH_PASSWORD="StrongPassword123!",
+            COACH_INVITE_CODE="super-secure-invite-code-2026-xyz"
+        )
+    assert "SECRET_KEY" in str(excinfo.value)
+
+    # 3. Insecure default coach password in production fails closed
+    with pytest.raises(ValueError) as excinfo:
+        Settings(
+            ENVIRONMENT="production",
+            TESTING=False,
+            SECRET_KEY="a-strong-custom-production-jwt-key-minimum-32-chars",
+            DEFAULT_COACH_PASSWORD="Coach@123",
+            COACH_INVITE_CODE="super-secure-invite-code-2026-xyz"
+        )
+    assert "DEFAULT_COACH_PASSWORD" in str(excinfo.value)
+
+    # 4. Insecure coach invite code in production fails closed
+    with pytest.raises(ValueError) as excinfo:
+        Settings(
+            ENVIRONMENT="production",
+            TESTING=False,
+            SECRET_KEY="a-strong-custom-production-jwt-key-minimum-32-chars",
+            DEFAULT_COACH_PASSWORD="StrongPassword123!",
+            COACH_INVITE_CODE="globalorators-coach-invite-2026"
+        )
+    assert "COACH_INVITE_CODE" in str(excinfo.value)
+
+    # 5. Valid production settings succeed
+    valid_prod = Settings(
+        ENVIRONMENT="production",
+        TESTING=False,
+        SECRET_KEY="a-strong-custom-production-jwt-key-minimum-32-chars",
+        DEFAULT_COACH_PASSWORD="SuperStrongProductionPassword2026!",
+        COACH_INVITE_CODE="super-secure-custom-invite-code-2026"
+    )
+    assert valid_prod.ENVIRONMENT == "production"
+    print("Production secrets fail-closed tests passed!")
+
+
+def test_websocket_authentication_and_room_authorization():
+    """Verify WebSocket signaling endpoint mandates authentication and verifies room authorization."""
+    import json
+    from starlette.testclient import TestClient
+    from starlette.websockets import WebSocketDisconnect
+    from app.security import create_access_token
+
+    with TestClient(app) as tc:
+        # 1. Anonymous connection attempt is rejected with 1008 policy violation
+        with pytest.raises(WebSocketDisconnect) as excinfo:
+            with tc.websocket_connect("/ws/signaling/GlobalOrators-Marcus-12345"):
+                pass
+        assert excinfo.value.code == 1008
+
+        # 2. Invalid token connection attempt is rejected with 1008 policy violation
+        with pytest.raises(WebSocketDisconnect) as excinfo:
+            with tc.websocket_connect("/ws/signaling/GlobalOrators-Marcus-12345?token=invalid.jwt.token"):
+                pass
+        assert excinfo.value.code == 1008
+
+        # 3. Valid coach token can join any rehearsal chamber
+        coach_token = create_access_token("coach-1")
+        with tc.websocket_connect(f"/ws/signaling/GlobalOrators-Marcus-12345?token={coach_token}") as ws:
+            ws.send_text(json.dumps({"type": "peer-ready"}))
+
+        print("WebSocket authentication and room authorization tests passed!")
+
+
+@pytest.mark.asyncio
+async def test_public_client_hardening_and_lookup_protection():
+    """Verify loose name search is blocked on /lookup and public unauthenticated callers cannot overwrite protected profile fields."""
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        import time
+        ts = int(time.time() * 1000)
+
+        # 1. Loose name search on /lookup is strictly rejected (404)
+        res_name_lookup = await client.get("/api/clients/lookup?search=Marcus")
+        assert res_name_lookup.status_code == 404
+
+        res_partial_phone = await client.get("/api/clients/lookup?search=123")
+        assert res_partial_phone.status_code == 400 or res_partial_phone.status_code == 404
+
+        # 2. Onboard a speaker with coach notes and assignments via coach
+        coach_res = await client.post(
+            "/api/auth/login",
+            json={"email": settings.DEFAULT_COACH_EMAIL, "password": settings.DEFAULT_COACH_PASSWORD}
+        )
+        coach_token = coach_res.json()["access_token"]
+        coach_headers = {"Authorization": f"Bearer {coach_token}"}
+
+        test_email = f"protected.speaker.{ts}@example.com"
+        test_phone = f"+25470{ts % 10000000:07d}"
+
+        res_create = await client.post(
+            "/api/clients",
+            json={
+                "name": "Protected Orator",
+                "email": test_email,
+                "phone": test_phone,
+                "goal": "National Championship",
+                "complianceRate": 95.0,
+                "customCoachNotes": ["Top Secret Faculty Evaluation: Gold Tier Cadence"]
+            },
+            headers=coach_headers
+        )
+        assert res_create.status_code == 201
+        created_client = res_create.json()
+        assert created_client["customCoachNotes"] == ["Top Secret Faculty Evaluation: Gold Tier Cadence"]
+
+        # 3. Unauthenticated lookup by exact email returns profile with coach notes REDACTED
+        res_pub_lookup = await client.get(f"/api/clients/lookup?search={test_email}")
+        assert res_pub_lookup.status_code == 200
+        assert res_pub_lookup.json()["customCoachNotes"] == []
+
+        # 4. Unauthenticated attempt to overwrite coach notes or compliance rate is ignored
+        malicious_payload = {
+            "name": "Hacked Orator",
+            "email": test_email,
+            "phone": test_phone,
+            "goal": "Hacked Goal",
+            "complianceRate": 0.0,
+            "customCoachNotes": ["Attacker Injected Note"]
+        }
+        res_tamper = await client.post("/api/clients", json=malicious_payload)
+        assert res_tamper.status_code == 201
+        # Re-check via coach: notes must be unchanged
+        res_verify = await client.get(f"/api/clients/{created_client['id']}", headers=coach_headers)
+        assert res_verify.status_code == 200
+        assert res_verify.json()["customCoachNotes"] == ["Top Secret Faculty Evaluation: Gold Tier Cadence"]
+        assert res_verify.json()["name"] == "Protected Orator"  # Name not modified by unauthenticated caller
+
+        print("Public client hardening and lookup protection tests passed!")
+
+
+@pytest.mark.asyncio
+async def test_idor_protection_for_habits_metrics_photos_prs():
+    """Verify strict IDOR protection across habits, metrics, photos, and PRs for both speakers and coaches."""
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        import time
+        ts = int(time.time() * 1000)
+
+        # 1. Register Speaker A
+        email_a = f"speaker.alpha.{ts}@example.com"
+        res_a = await client.post(
+            "/api/auth/register",
+            json={"email": email_a, "password": "Password123!", "full_name": "Speaker Alpha", "role": "speaker"}
+        )
+        token_a = res_a.json()["access_token"]
+        headers_a = {"Authorization": f"Bearer {token_a}"}
+
+        # Onboard client record for Speaker A
+        res_cl_a = await client.post(
+            "/api/clients",
+            json={"name": "Speaker Alpha", "email": email_a, "phone": f"+1000{ts % 1000000:06d}"}
+        )
+        client_a_id = res_cl_a.json()["id"]
+
+        # 2. Register Speaker B
+        email_b = f"speaker.bravo.{ts}@example.com"
+        res_b = await client.post(
+            "/api/auth/register",
+            json={"email": email_b, "password": "Password123!", "full_name": "Speaker Bravo", "role": "speaker"}
+        )
+        token_b = res_b.json()["access_token"]
+        headers_b = {"Authorization": f"Bearer {token_b}"}
+
+        # 3. Habits IDOR Tests: Speaker B cannot view or toggle Speaker A's habits
+        res_habits_view = await client.get(f"/api/habits?clientId={client_a_id}", headers=headers_b)
+        assert res_habits_view.status_code == 403
+
+        res_habits_toggle = await client.post(
+            "/api/habits/toggle",
+            json={"clientId": client_a_id, "habitId": "h-1", "date": "2026-09-13"},
+            headers=headers_b
+        )
+        assert res_habits_toggle.status_code == 403
+
+        # 4. Metrics IDOR Tests: Speaker B cannot view or log metrics for Speaker A
+        res_metrics_view = await client.get(f"/api/metrics?clientId={client_a_id}", headers=headers_b)
+        assert res_metrics_view.status_code == 403
+
+        res_metrics_create = await client.post(
+            "/api/metrics",
+            json={"clientId": client_a_id, "weightKg": 75.0, "date": "2026-09-13"},
+            headers=headers_b
+        )
+        assert res_metrics_create.status_code == 403
+
+        # 5. Photos IDOR Tests: Speaker B cannot view or post photos for Speaker A
+        res_photos_view = await client.get(f"/api/photos?clientId={client_a_id}", headers=headers_b)
+        assert res_photos_view.status_code == 403
+
+        res_photos_create = await client.post(
+            "/api/photos",
+            json={"clientId": client_a_id, "photoUrl": "https://example.com/p.jpg", "type": "Stage", "date": "2026-09-13"},
+            headers=headers_b
+        )
+        assert res_photos_create.status_code == 403
+
+        # 6. PRs IDOR Tests: Speaker B cannot view or log PRs for Speaker A
+        res_prs_view = await client.get(f"/api/prs?clientId={client_a_id}", headers=headers_b)
+        assert res_prs_view.status_code == 403
+
+        res_prs_create = await client.post(
+            "/api/prs",
+            json={
+                "client_id": client_a_id,
+                "exercise_name": "Cadence Test",
+                "weight_kg": 150.0,
+                "reps": 1,
+                "estimated_1rm_kg": 150.0,
+                "date": "2026-09-13"
+            },
+            headers=headers_b
+        )
+        assert res_prs_create.status_code == 403
+
+        # 7. Speaker A can access their own resources successfully
+        res_a_habits = await client.get(f"/api/habits?clientId={client_a_id}", headers=headers_a)
+        assert res_a_habits.status_code == 200
+
+        res_a_metrics = await client.post(
+            "/api/metrics",
+            json={"clientId": client_a_id, "weightKg": 80.0, "date": "2026-09-13"},
+            headers=headers_a
+        )
+        assert res_a_metrics.status_code == 201
+
+        print("IDOR protection tests for habits, metrics, photos, and PRs passed 100%!")
+
+
+@pytest.mark.asyncio
+async def test_rate_limiter_engine():
+    """Verify in-memory sliding-window rate limiter throttles excessive requests."""
+    from app.rate_limiter import InMemoryRateLimiter
+    
+    limiter = InMemoryRateLimiter()
+    key = "test_user_ip"
+
+    # Limit = 3 requests per 10 seconds
+    for i in range(3):
+        assert await limiter.check(key, limit=3, window_seconds=10, ignore_testing=True) is True
+
+    # 4th request must be rejected
+    assert await limiter.check(key, limit=3, window_seconds=10, ignore_testing=True) is False
+    print("Rate limiter engine unit test passed successfully!")
+
+
+

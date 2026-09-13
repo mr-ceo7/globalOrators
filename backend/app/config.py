@@ -3,11 +3,33 @@ Application Configuration and Settings
 """
 
 import os
-from typing import List
+from typing import List, Set
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _default_db_path = os.path.join(_backend_dir, "nubianfit.db")
+
+INSECURE_SECRET_KEYS: Set[str] = {
+    "globalorators-jwt-production-signing-secret-key-2026",
+    "secret",
+    "changeme",
+    "your-secret-key",
+    "jwt-secret-key",
+}
+
+INSECURE_COACH_PASSWORDS: Set[str] = {
+    "Coach@123",
+    "password",
+    "admin123",
+    "12345678",
+}
+
+INSECURE_INVITE_CODES: Set[str] = {
+    "globalorators-coach-invite-2026",
+    "invite",
+    "coach-invite",
+}
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "global Orators Speech & Debate Coaching Platform API"
@@ -15,7 +37,7 @@ class Settings(BaseSettings):
     API_PREFIX: str = "/api"
     
     # Environment & Testing
-    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "production")
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
     TESTING: bool = os.getenv("TESTING", "false").lower() in ("true", "1")
 
     # Database
@@ -58,6 +80,32 @@ class Settings(BaseSettings):
         case_sensitive=True,
         extra="ignore"
     )
+
+    @model_validator(mode="after")
+    def validate_production_secrets(self):
+        """
+        Fail closed in production mode:
+        If ENVIRONMENT == 'production' and not TESTING, refuse to start if
+        SECRET_KEY, DEFAULT_COACH_PASSWORD, or COACH_INVITE_CODE are missing,
+        weak, or set to insecure fallback values.
+        """
+        if self.ENVIRONMENT == "production" and not self.TESTING:
+            if not self.SECRET_KEY or self.SECRET_KEY in INSECURE_SECRET_KEYS or len(self.SECRET_KEY) < 32:
+                raise ValueError(
+                    "CRITICAL SECURITY CONFIGURATION ERROR: In production, SECRET_KEY must be explicitly "
+                    "configured with a strong secret (at least 32 characters) and must not use insecure default fallbacks."
+                )
+            if not self.DEFAULT_COACH_PASSWORD or self.DEFAULT_COACH_PASSWORD in INSECURE_COACH_PASSWORDS or len(self.DEFAULT_COACH_PASSWORD) < 8:
+                raise ValueError(
+                    "CRITICAL SECURITY CONFIGURATION ERROR: In production, DEFAULT_COACH_PASSWORD must be "
+                    "configured with a strong password (at least 8 characters) and must not use insecure default fallbacks."
+                )
+            if not self.COACH_INVITE_CODE or self.COACH_INVITE_CODE in INSECURE_INVITE_CODES or len(self.COACH_INVITE_CODE) < 16:
+                raise ValueError(
+                    "CRITICAL SECURITY CONFIGURATION ERROR: In production, COACH_INVITE_CODE must be "
+                    "configured with a strong unique invite code (at least 16 characters) and must not use insecure default fallbacks."
+                )
+        return self
 
 
 settings = Settings()

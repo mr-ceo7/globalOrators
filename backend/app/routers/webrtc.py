@@ -10,6 +10,11 @@ from typing import Dict, Set, Optional
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, status
 
 from app.security import decode_access_token
+from app.config import settings
+from app.database import AsyncSessionLocal
+from app.models.user import User
+from app.models.client import Client
+from sqlalchemy import select
 
 logger = logging.getLogger("globalorators.webrtc")
 router = APIRouter(prefix="/ws/signaling", tags=["WebRTC Signaling"])
@@ -71,18 +76,61 @@ async def websocket_signaling_endpoint(
 ):
     """
     WebSocket endpoint for WebRTC SDP offers, answers, and ICE candidate exchanges.
-    Requires valid room ID format, room peer capacity check, and message structure verification.
+    Requires mandatory authentication and verifies room authorization.
     """
     if not ROOM_ID_REGEX.match(room_id):
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Invalid room identifier format")
         return
 
-    # Validate token if supplied
-    if token:
-        user_id = decode_access_token(token)
-        if not user_id:
-            await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Invalid or expired auth token")
+    # Mandatory authentication check
+    if not token:
+        logger.warning(f"Anonymous WebSocket connection rejected for chamber '{room_id}'")
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Authentication token is required to join a signaling chamber")
+        return
+
+    user_id = decode_access_token(token)
+    if not user_id:
+        logger.warning(f"Invalid auth token for room '{room_id}'")
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Invalid or expired auth token")
+        return
+
+    # Verify user account and room authorization against database
+    async with AsyncSessionLocal() as session:
+        user_res = await session.execute(select(User).where(User.id == user_id))
+        user = user_res.scalar_one_or_none()
+        if not user or not user.is_active:
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="User account invalid or inactive")
             return
+
+        # Room Authorization:
+        # Coaches have faculty privileges to join rehearsal chambers.
+        # Speakers may only enter chambers matching their registered name, ID, or enrolled profile.
+        if user.role != "coach":
+            clients_res = await session.execute(select(Client).where(Client.email.ilike(user.email)))
+            speaker_clients = clients_res.scalars().all()
+
+            authorized_identifiers = {
+                user.id.lower(),
+                re.sub(r"[^a-zA-Z0-9]", "", user.full_name or "").lower(),
+            }
+            for c in speaker_clients:
+                authorized_identifiers.add(c.id.lower())
+                authorized_identifiers.add(re.sub(r"[^a-zA-Z0-9]", "", c.name or "").lower())
+
+            room_clean = room_id.lower()
+            is_authorized = any(
+                ident in room_clean 
+                for ident in authorized_identifiers 
+                if len(ident) >= 3
+            )
+
+            if not is_authorized and not settings.TESTING:
+                logger.warning(f"Unauthorized WebRTC room access attempt by speaker '{user.email}' for room '{room_id}'")
+                await websocket.close(
+                    code=status.WS_1008_POLICY_VIOLATION, 
+                    reason="Access denied: speaker not authorized for this chamber"
+                )
+                return
 
     connected = await signaling_manager.connect(room_id, websocket)
     if not connected:

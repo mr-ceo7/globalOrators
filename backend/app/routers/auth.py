@@ -14,11 +14,16 @@ from app.models.user import User
 from app.schemas.auth import LoginRequest, RegisterRequest, UserResponse, TokenResponse
 from app.security import verify_password, get_password_hash, create_access_token
 from app.config import settings
+from app.rate_limiter import rate_limit
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
-@router.post("/register", response_model=TokenResponse)
+@router.post(
+    "/register", 
+    response_model=TokenResponse,
+    dependencies=[Depends(rate_limit(limit=10, window_seconds=60, key_prefix="auth_register"))]
+)
 async def register(req: RegisterRequest, db: AsyncSession = Depends(get_db)):
     """Register a new account (speakers by default; coach role requires valid invite code)."""
     desired_role = req.role if req.role in ["coach", "speaker"] else "speaker"
@@ -60,7 +65,11 @@ async def register(req: RegisterRequest, db: AsyncSession = Depends(get_db)):
     )
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post(
+    "/login", 
+    response_model=TokenResponse,
+    dependencies=[Depends(rate_limit(limit=10, window_seconds=60, key_prefix="auth_login"))]
+)
 async def login(req: LoginRequest, db: AsyncSession = Depends(get_db)):
     """Log in with email and password to receive JWT token."""
     email_clean = req.email.strip().lower()
@@ -89,7 +98,11 @@ from app.models.client import Client
 from app.schemas.auth import LoginRequest, RegisterRequest, UserResponse, TokenResponse, GoogleAuthRequest
 
 
-@router.post("/google", response_model=TokenResponse)
+@router.post(
+    "/google", 
+    response_model=TokenResponse,
+    dependencies=[Depends(rate_limit(limit=20, window_seconds=60, key_prefix="auth_google"))]
+)
 async def google_auth(req: GoogleAuthRequest, db: AsyncSession = Depends(get_db)):
     """Authenticate with Google ID token from One Tap or Google Sign-In."""
     google_id = None

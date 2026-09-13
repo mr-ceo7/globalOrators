@@ -14,12 +14,18 @@ from app.dependencies import get_db, require_coach
 from app.models.inquiry import Inquiry
 from app.models.user import User
 from app.schemas.inquiry import InquiryCreate, InquiryResponse
+from app.rate_limiter import rate_limit
 
 logger = logging.getLogger("globalorators.inquiries")
 router = APIRouter(prefix="/inquiries", tags=["Inquiries"])
 
 
-@router.post("", response_model=InquiryResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "", 
+    response_model=InquiryResponse, 
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(rate_limit(limit=10, window_seconds=60, key_prefix="inquiries"))]
+)
 async def submit_inquiry(
     inquiry_in: InquiryCreate,
     db: AsyncSession = Depends(get_db)

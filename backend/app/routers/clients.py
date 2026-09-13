@@ -15,6 +15,7 @@ from app.models.client import Client
 from app.models.activity import ActivityFeedItem
 from app.models.user import User
 from app.schemas.client import ClientCreate, ClientUpdate, ClientResponse, AddCoachNoteRequest
+from app.rate_limiter import rate_limit
 
 router = APIRouter(prefix="/clients", tags=["Clients"])
 
@@ -61,20 +62,31 @@ async def list_clients(
     result = await db.execute(query)
     clients = result.scalars().all()
     
-    # Redact sensitive coach notes for non-coach callers
-    if current_user.role != "coach":
-        for c in clients:
-            c.custom_coach_notes = []
-    return clients
+    # Redact sensitive coach notes for non-coach callers without mutating ORM models
+    output = []
+    for c in clients:
+        c_resp = ClientResponse.model_validate(c)
+        if current_user.role != "coach":
+            c_resp.custom_coach_notes = []
+        output.append(c_resp)
+    return output
 
 
-@router.get("/lookup", response_model=ClientResponse)
+@router.get(
+    "/lookup", 
+    response_model=ClientResponse,
+    dependencies=[Depends(rate_limit(limit=15, window_seconds=60, key_prefix="clients_lookup"))]
+)
 async def lookup_client(
-    search: str = Query(..., description="Email or phone of the speaker to lookup"),
+    search: str = Query(..., description="Exact email or phone number of the speaker to lookup"),
     db: AsyncSession = Depends(get_db),
     user: Optional[User] = Depends(get_optional_user)
 ):
-    """Lookup a speaker profile by exact email or phone. Sensitive coach notes are redacted for non-coach callers."""
+    """
+    Lookup a speaker profile by exact email or phone digits.
+    Name-based enumeration is strictly prohibited to prevent profile scraping.
+    Sensitive internal coach notes and compliance metrics are redacted for non-coach callers.
+    """
     search_term = search.strip()
     if not search_term or len(search_term) < 4:
         raise HTTPException(status_code=400, detail="Search query must be at least 4 characters")
@@ -82,12 +94,20 @@ async def lookup_client(
     search_lower = search_term.lower()
     phone_digits = "".join(c for c in search_term if c.isdigit())
 
-    conditions = [
-        Client.email.ilike(search_lower),
-        Client.name.ilike(search_lower)
-    ]
-    if len(phone_digits) >= 6:
+    conditions = []
+    # Match by exact email
+    if "@" in search_lower:
+        conditions.append(Client.email.ilike(search_lower))
+
+    # Match by phone digits (require at least 7 digits for phone match)
+    if len(phone_digits) >= 7:
         conditions.append(Client.phone.ilike(f"%{phone_digits}%"))
+
+    if not conditions:
+        raise HTTPException(
+            status_code=404, 
+            detail="Speaker profile not found. Please lookup using exact email or phone number."
+        )
 
     result = await db.execute(
         select(Client).where(or_(*conditions)).order_by(Client.id.desc())
@@ -96,11 +116,11 @@ async def lookup_client(
     if not client:
         raise HTTPException(status_code=404, detail="Speaker profile not found")
     
-    # Redact internal coach notes if requester is unauthenticated or not a coach
+    resp = ClientResponse.model_validate(client)
     if not user or user.role != "coach":
-        client.custom_coach_notes = []
+        resp.custom_coach_notes = []
         
-    return client
+    return resp
 
 
 @router.get("/{client_id}", response_model=ClientResponse)
@@ -131,18 +151,30 @@ async def get_client(
                 status_code=status.HTTP_403_FORBIDDEN, 
                 detail="Access denied to other orator profiles"
             )
-        client.custom_coach_notes = []
+
+    resp = ClientResponse.model_validate(client)
+    if current_user.role != "coach":
+        resp.custom_coach_notes = []
         
-    return client
+    return resp
 
 
-@router.post("", response_model=ClientResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "", 
+    response_model=ClientResponse, 
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(rate_limit(limit=15, window_seconds=60, key_prefix="clients_create"))]
+)
 async def create_client(
     client_in: ClientCreate,
     db: AsyncSession = Depends(get_db),
     user: Optional[User] = Depends(get_optional_user)
 ):
-    """Create a new client or update existing client if email or phone matches."""
+    """
+    Onboard a new speaker or update existing record during speaker self-onboarding.
+    Public unauthenticated callers are strictly restricted from modifying coach assignments,
+    coach notes, compliance rates, or account status of existing profiles.
+    """
     # Check if a client with the same email or phone already exists
     existing = None
     if client_in.email and client_in.email.strip():
@@ -165,18 +197,31 @@ async def create_client(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="A speaker with this email or phone is already enrolled with another coach"
                 )
-        update_data = client_in.model_dump(exclude_unset=True)
-        # Protect coach notes from being overwritten by public unauthenticated callers
-        if not user or user.role != "coach":
-            update_data.pop("custom_coach_notes", None)
-            update_data.pop("compliance_rate", None)
-            
-        for key, value in update_data.items():
-            setattr(existing, key, value)
+            update_data = client_in.model_dump(exclude_unset=True)
+            for key, value in update_data.items():
+                setattr(existing, key, value)
+        else:
+            # Unauthenticated public caller: Strictly whitelist safe onboarding survey fields only
+            # Prevent privilege escalation and mutation of coach assignments or notes
+            safe_allowed_keys = {
+                "onboarding_survey", "goal", "branch", "mission_focus", 
+                "experience_level", "current_weight_kg", "target_weight_kg", 
+                "starting_weight_kg", "avatar"
+            }
+            submitted_data = client_in.model_dump(exclude_unset=True)
+            for key, value in submitted_data.items():
+                if key in safe_allowed_keys:
+                    setattr(existing, key, value)
+
         existing.last_active = "Just now"
         await db.commit()
         await db.refresh(existing)
-        return existing
+        
+        # Redact coach notes for public response without mutating database model
+        resp = ClientResponse.model_validate(existing)
+        if not user or user.role != "coach":
+            resp.custom_coach_notes = []
+        return resp
 
     client_id = f"client-{int(time.time() * 1000)}"
     client_dict = client_in.model_dump()
@@ -185,10 +230,9 @@ async def create_client(
     if user and user.role == "coach":
         client_dict["coach_id"] = user.id
     else:
-        client_dict["coach_id"] = "coach-1" # Public registrations routed to default head coach
-
-    if not user or user.role != "coach":
+        client_dict["coach_id"] = "coach-1"  # Public registrations routed to default head coach
         client_dict["custom_coach_notes"] = []
+        client_dict["status"] = "Active"
 
     new_client = Client(
         id=client_id,
@@ -218,6 +262,21 @@ async def create_client(
     await db.commit()
     await db.refresh(new_client)
     return new_client
+
+
+@router.post(
+    "/onboard", 
+    response_model=ClientResponse, 
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(rate_limit(limit=15, window_seconds=60, key_prefix="clients_onboard"))]
+)
+async def onboard_speaker(
+    client_in: ClientCreate,
+    db: AsyncSession = Depends(get_db),
+    user: Optional[User] = Depends(get_optional_user)
+):
+    """Dedicated public endpoint for self-onboarding new speakers with scoped privileges."""
+    return await create_client(client_in=client_in, db=db, user=user)
 
 
 @router.patch("/{client_id}", response_model=ClientResponse)
