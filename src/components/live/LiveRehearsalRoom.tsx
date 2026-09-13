@@ -239,11 +239,15 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
         const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const wsHost = window.location.hostname === 'localhost' ? 'localhost:8005' : window.location.host;
         const authToken = localStorage.getItem('globalorators_token') || localStorage.getItem('nubianfit_token') || '';
-        const wsUrl = `${wsProtocol}//${wsHost}/ws/signaling/${safeRoomId}${authToken ? `?token=${encodeURIComponent(authToken)}` : ''}`;
+        const wsUrl = `${wsProtocol}//${wsHost}/ws/signaling/${safeRoomId}`;
         const ws = new WebSocket(wsUrl);
 
         ws.onmessage = (e) => handleSignalingData(e.data);
         ws.onopen = () => {
+          // In-band authentication handshake frame: bearer token is not exposed in query strings or server access logs
+          if (authToken) {
+            ws.send(JSON.stringify({ type: 'auth', token: authToken, roomId: safeRoomId }));
+          }
           sendSignalingMessage({ type: 'peer-ready' });
         };
         websocketRef.current = ws;

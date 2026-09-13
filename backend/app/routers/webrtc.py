@@ -5,9 +5,11 @@ Enables direct peer-to-peer WebRTC connection between Coach and Speaker across t
 
 import json
 import re
+import asyncio
 import logging
 from typing import Dict, Set, Optional
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, status
+from starlette.websockets import WebSocketState
 
 from app.security import decode_access_token
 from app.config import settings
@@ -23,7 +25,26 @@ router = APIRouter(prefix="/ws/signaling", tags=["WebRTC Signaling"])
 ROOM_ID_REGEX = re.compile(r"^[a-zA-Z0-9_\-]{3,64}$")
 MAX_PEERS_PER_ROOM = 4
 MAX_MESSAGE_SIZE = 65536  # 64 KB
-ALLOWED_MESSAGE_TYPES = {"offer", "answer", "ice-candidate", "peer-ready", "candidate", "ping", "pong"}
+ALLOWED_MESSAGE_TYPES = {
+    "offer", "answer", "ice-candidate", "peer-ready", 
+    "candidate", "ping", "pong", "auth", "auth-success", "peer-left"
+}
+
+
+def extract_speaker_id_from_room(room_id: str) -> Optional[str]:
+    """
+    Extracts the target speaker ID from room format:
+    GlobalOrators-{speakerName}-{speakerId}
+    e.g., GlobalOrators-MarcusVance-c-exec-1 -> c-exec-1
+          GlobalOrators-KofiMensah-user-123 -> user-123
+    """
+    if room_id.startswith("GlobalOrators-"):
+        parts = room_id.split("-")
+        if len(parts) >= 3:
+            return "-".join(parts[2:]).strip()
+        elif len(parts) == 2:
+            return parts[1].strip()
+    return room_id.strip()
 
 
 class SignalingConnectionManager:
@@ -35,17 +56,22 @@ class SignalingConnectionManager:
     def get_peer_count(self, room_id: str) -> int:
         return len(self.active_rooms.get(room_id, set()))
 
-    async def connect(self, room_id: str, websocket: WebSocket) -> bool:
-        if self.get_peer_count(room_id) >= MAX_PEERS_PER_ROOM:
-            logger.warning(f"Connection rejected for room '{room_id}': max peer limit reached ({MAX_PEERS_PER_ROOM})")
-            await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Room capacity reached")
-            return False
-
-        await websocket.accept()
+    def add_peer(self, room_id: str, websocket: WebSocket):
         if room_id not in self.active_rooms:
             self.active_rooms[room_id] = set()
         self.active_rooms[room_id].add(websocket)
         logger.info(f"Signaling peer joined room '{room_id}'. Total peers: {len(self.active_rooms[room_id])}")
+
+    async def connect(self, room_id: str, websocket: WebSocket) -> bool:
+        if self.get_peer_count(room_id) >= MAX_PEERS_PER_ROOM:
+            logger.warning(f"Connection rejected for room '{room_id}': max peer limit reached ({MAX_PEERS_PER_ROOM})")
+            if websocket.client_state == WebSocketState.CONNECTED:
+                await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Room capacity reached")
+            return False
+
+        if websocket.client_state != WebSocketState.CONNECTED:
+            await websocket.accept()
+        self.add_peer(room_id, websocket)
         return True
 
     def disconnect(self, room_id: str, websocket: WebSocket):
@@ -76,21 +102,46 @@ async def websocket_signaling_endpoint(
 ):
     """
     WebSocket endpoint for WebRTC SDP offers, answers, and ICE candidate exchanges.
-    Requires mandatory authentication and verifies room authorization.
+    Supports in-band handshake authentication as well as legacy query tokens.
+    Enforces exact room authorization and capacity limits.
     """
     if not ROOM_ID_REGEX.match(room_id):
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Invalid room identifier format")
         return
 
-    # Mandatory authentication check
-    if not token:
-        logger.warning(f"Anonymous WebSocket connection rejected for chamber '{room_id}'")
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Authentication token is required to join a signaling chamber")
+    if signaling_manager.get_peer_count(room_id) >= MAX_PEERS_PER_ROOM:
+        logger.warning(f"Connection rejected for chamber '{room_id}': capacity reached")
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Room capacity reached")
         return
 
-    user_id = decode_access_token(token)
+    # In-band authentication handshake:
+    # If token is not provided in query params, accept the connection and require the first
+    # frame to be an auth frame {"type": "auth", "token": "..."} within 5 seconds.
+    auth_token = token
+    if not auth_token:
+        await websocket.accept()
+        try:
+            raw_auth = await asyncio.wait_for(websocket.receive_text(), timeout=5.0)
+            parsed_auth = json.loads(raw_auth)
+            if not isinstance(parsed_auth, dict) or parsed_auth.get("type") != "auth" or not parsed_auth.get("token"):
+                logger.warning(f"Invalid in-band auth payload for chamber '{room_id}'")
+                await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="First frame must be a valid auth payload")
+                return
+            auth_token = parsed_auth.get("token")
+        except asyncio.TimeoutError:
+            logger.warning(f"In-band auth handshake timed out for chamber '{room_id}'")
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Authentication handshake timed out")
+            return
+        except Exception as e:
+            logger.warning(f"In-band auth error for chamber '{room_id}': {e}")
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Malformed authentication handshake")
+            return
+
+    user_id = decode_access_token(auth_token)
     if not user_id:
         logger.warning(f"Invalid auth token for room '{room_id}'")
+        if websocket.client_state != WebSocketState.CONNECTED:
+            await websocket.accept()
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Invalid or expired auth token")
         return
 
@@ -99,42 +150,50 @@ async def websocket_signaling_endpoint(
         user_res = await session.execute(select(User).where(User.id == user_id))
         user = user_res.scalar_one_or_none()
         if not user or not user.is_active:
+            if websocket.client_state != WebSocketState.CONNECTED:
+                await websocket.accept()
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="User account invalid or inactive")
             return
 
         # Room Authorization:
         # Coaches have faculty privileges to join rehearsal chambers.
-        # Speakers may only enter chambers matching their registered name, ID, or enrolled profile.
+        # Speakers may only enter chambers matching their registered ID or client ID.
         if user.role != "coach":
             clients_res = await session.execute(select(Client).where(Client.email.ilike(user.email)))
             speaker_clients = clients_res.scalars().all()
 
-            authorized_identifiers = {
-                user.id.lower(),
-                re.sub(r"[^a-zA-Z0-9]", "", user.full_name or "").lower(),
-            }
+            authorized_ids = {user.id.lower()}
             for c in speaker_clients:
-                authorized_identifiers.add(c.id.lower())
-                authorized_identifiers.add(re.sub(r"[^a-zA-Z0-9]", "", c.name or "").lower())
+                authorized_ids.add(c.id.lower())
 
-            room_clean = room_id.lower()
-            is_authorized = any(
-                ident in room_clean 
-                for ident in authorized_identifiers 
-                if len(ident) >= 3
+            target_speaker_id = extract_speaker_id_from_room(room_id)
+            target_clean = (target_speaker_id or "").lower()
+
+            is_authorized = (
+                target_clean in authorized_ids 
+                or room_id.lower() in authorized_ids
             )
 
-            if not is_authorized and not settings.TESTING:
+            if not is_authorized:
                 logger.warning(f"Unauthorized WebRTC room access attempt by speaker '{user.email}' for room '{room_id}'")
+                if websocket.client_state != WebSocketState.CONNECTED:
+                    await websocket.accept()
                 await websocket.close(
                     code=status.WS_1008_POLICY_VIOLATION, 
                     reason="Access denied: speaker not authorized for this chamber"
                 )
                 return
 
-    connected = await signaling_manager.connect(room_id, websocket)
-    if not connected:
-        return
+    # Connection accepted and authenticated
+    if websocket.client_state != WebSocketState.CONNECTED:
+        await websocket.accept()
+    signaling_manager.add_peer(room_id, websocket)
+
+    # Acknowledge successful auth handshake
+    try:
+        await websocket.send_text(json.dumps({"type": "auth-success", "roomId": room_id}))
+    except Exception:
+        pass
 
     try:
         while True:
@@ -152,6 +211,9 @@ async def websocket_signaling_endpoint(
                 if not msg_type or msg_type not in ALLOWED_MESSAGE_TYPES:
                     logger.debug(f"Ignored unsupported signaling message type '{msg_type}' in room '{room_id}'")
                     continue
+                # If subsequent auth frame received, ignore
+                if msg_type == "auth":
+                    continue
             except json.JSONDecodeError:
                 logger.warning(f"Ignored non-JSON signaling message in room '{room_id}'")
                 continue
@@ -162,4 +224,3 @@ async def websocket_signaling_endpoint(
     except Exception as e:
         logger.error(f"Signaling exception in room '{room_id}': {e}")
         signaling_manager.disconnect(room_id, websocket)
-

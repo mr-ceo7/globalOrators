@@ -660,29 +660,107 @@ async def test_production_secrets_fail_closed():
     print("Production secrets fail-closed tests passed!")
 
 
-def test_websocket_authentication_and_room_authorization():
-    """Verify WebSocket signaling endpoint mandates authentication and verifies room authorization."""
+@pytest.mark.asyncio
+async def test_websocket_authentication_and_room_authorization():
+    """Verify WebSocket signaling endpoint mandates in-band authentication and enforces exact room authorization."""
     import json
+    import time
     from starlette.testclient import TestClient
     from starlette.websockets import WebSocketDisconnect
     from app.security import create_access_token
+    from app.database import AsyncSessionLocal
+    from app.models.user import User
+    from app.models.client import Client
+    from datetime import datetime, timezone
+
+    ts = int(time.time() * 1000)
+    speaker_a_id = f"user-speaker-a-{ts}"
+    client_a_id = f"client-a-{ts}"
+    speaker_b_id = f"user-speaker-b-{ts}"
+    client_b_id = f"client-b-{ts}"
+
+    async with AsyncSessionLocal() as session:
+        user_a = User(
+            id=speaker_a_id,
+            email=f"alpha.{ts}@example.com",
+            hashed_password="hash",
+            full_name="Speaker Alpha",
+            role="speaker",
+            is_active=True,
+            created_at=datetime.now(timezone.utc)
+        )
+        cl_a = Client(
+            id=client_a_id,
+            coach_id="coach-1",
+            name="Speaker Alpha",
+            email=f"alpha.{ts}@example.com",
+            phone=f"+25470{ts % 10000000:07d}",
+            status="Active"
+        )
+        user_b = User(
+            id=speaker_b_id,
+            email=f"bravo.{ts}@example.com",
+            hashed_password="hash",
+            full_name="Speaker Bravo",
+            role="speaker",
+            is_active=True,
+            created_at=datetime.now(timezone.utc)
+        )
+        cl_b = Client(
+            id=client_b_id,
+            coach_id="coach-1",
+            name="Speaker Bravo",
+            email=f"bravo.{ts}@example.com",
+            phone=f"+25471{ts % 10000000:07d}",
+            status="Active"
+        )
+        session.add_all([user_a, cl_a, user_b, cl_b])
+        await session.commit()
+
+    coach_token = create_access_token("coach-1")
+    token_a = create_access_token(speaker_a_id)
+    token_b = create_access_token(speaker_b_id)
 
     with TestClient(app) as tc:
-        # 1. Anonymous connection attempt is rejected with 1008 policy violation
-        with pytest.raises(WebSocketDisconnect) as excinfo:
-            with tc.websocket_connect("/ws/signaling/GlobalOrators-Marcus-12345"):
-                pass
-        assert excinfo.value.code == 1008
+        # 1. Anonymous connection without query token: if client attempts signaling without auth frame, rejected with 1008
+        with tc.websocket_connect(f"/ws/signaling/GlobalOrators-SpeakerAlpha-{client_a_id}") as ws:
+            ws.send_text(json.dumps({"type": "peer-ready"}))
+            with pytest.raises(WebSocketDisconnect) as excinfo:
+                ws.receive_text()
+            assert excinfo.value.code == 1008
 
-        # 2. Invalid token connection attempt is rejected with 1008 policy violation
-        with pytest.raises(WebSocketDisconnect) as excinfo:
-            with tc.websocket_connect("/ws/signaling/GlobalOrators-Marcus-12345?token=invalid.jwt.token"):
-                pass
-        assert excinfo.value.code == 1008
+        # 2. In-band authentication handshake with invalid token is rejected with 1008
+        with tc.websocket_connect(f"/ws/signaling/GlobalOrators-SpeakerAlpha-{client_a_id}") as ws:
+            ws.send_text(json.dumps({"type": "auth", "token": "invalid.jwt.token"}))
+            with pytest.raises(WebSocketDisconnect) as excinfo:
+                ws.receive_text()
+            assert excinfo.value.code == 1008
 
-        # 3. Valid coach token can join any rehearsal chamber
-        coach_token = create_access_token("coach-1")
-        with tc.websocket_connect(f"/ws/signaling/GlobalOrators-Marcus-12345?token={coach_token}") as ws:
+        # 3. Successful in-band authentication handshake by Coach
+        with tc.websocket_connect(f"/ws/signaling/GlobalOrators-SpeakerAlpha-{client_a_id}") as ws:
+            ws.send_text(json.dumps({"type": "auth", "token": coach_token}))
+            ack = json.loads(ws.receive_text())
+            assert ack.get("type") == "auth-success"
+            ws.send_text(json.dumps({"type": "peer-ready"}))
+
+        # 4. Successful in-band authentication handshake by Speaker A in their own room
+        with tc.websocket_connect(f"/ws/signaling/GlobalOrators-SpeakerAlpha-{client_a_id}") as ws:
+            ws.send_text(json.dumps({"type": "auth", "token": token_a}))
+            ack = json.loads(ws.receive_text())
+            assert ack.get("type") == "auth-success"
+            ws.send_text(json.dumps({"type": "peer-ready"}))
+
+        # 5. Exact room authorization: Speaker B is rejected when attempting to enter Speaker A's room
+        with tc.websocket_connect(f"/ws/signaling/GlobalOrators-SpeakerAlpha-{client_a_id}") as ws:
+            ws.send_text(json.dumps({"type": "auth", "token": token_b}))
+            with pytest.raises(WebSocketDisconnect) as excinfo:
+                ws.receive_text()
+            assert excinfo.value.code == 1008
+
+        # 6. Backward-compatible query string token authentication
+        with tc.websocket_connect(f"/ws/signaling/GlobalOrators-SpeakerAlpha-{client_a_id}?token={coach_token}") as ws:
+            ack = json.loads(ws.receive_text())
+            assert ack.get("type") == "auth-success"
             ws.send_text(json.dumps({"type": "peer-ready"}))
 
         print("WebSocket authentication and room authorization tests passed!")
@@ -855,8 +933,9 @@ async def test_idor_protection_for_habits_metrics_photos_prs():
 
 @pytest.mark.asyncio
 async def test_rate_limiter_engine():
-    """Verify in-memory sliding-window rate limiter throttles excessive requests."""
-    from app.rate_limiter import InMemoryRateLimiter
+    """Verify sliding-window rate limiter throttles excessive requests and enforces trusted proxy boundary."""
+    from app.rate_limiter import InMemoryRateLimiter, is_trusted_proxy, get_client_ip
+    from starlette.requests import Request
     
     limiter = InMemoryRateLimiter()
     key = "test_user_ip"
@@ -867,7 +946,36 @@ async def test_rate_limiter_engine():
 
     # 4th request must be rejected
     assert await limiter.check(key, limit=3, window_seconds=10, ignore_testing=True) is False
-    print("Rate limiter engine unit test passed successfully!")
+
+    # Trusted proxy verification
+    assert is_trusted_proxy("127.0.0.1") is True
+    assert is_trusted_proxy("::1") is True
+    assert is_trusted_proxy("10.0.4.15") is True
+    assert is_trusted_proxy("172.20.0.1") is True
+    assert is_trusted_proxy("192.168.1.100") is True
+    assert is_trusted_proxy("203.0.113.195") is False  # Public untrusted IP
+    assert is_trusted_proxy("198.51.100.2") is False
+
+    # Anti-spoofing check for get_client_ip:
+    # 1. Untrusted peer IP sending spoofed X-Forwarded-For is ignored
+    scope_untrusted = {
+        "type": "http",
+        "client": ("203.0.113.195", 54321),
+        "headers": [(b"x-forwarded-for", b"8.8.8.8, 1.1.1.1")],
+    }
+    req_untrusted = Request(scope_untrusted)
+    assert get_client_ip(req_untrusted) == "203.0.113.195"
+
+    # 2. Trusted proxy peer IP honors X-Forwarded-For
+    scope_trusted = {
+        "type": "http",
+        "client": ("127.0.0.1", 54321),
+        "headers": [(b"x-forwarded-for", b"198.51.100.42, 10.0.0.1")],
+    }
+    req_trusted = Request(scope_trusted)
+    assert get_client_ip(req_trusted) == "198.51.100.42"
+
+    print("Rate limiter engine and trusted proxy unit tests passed successfully!")
 
 
 

@@ -1,11 +1,27 @@
+databases:
+  - name: globalorators-db
+    databaseName: globalorators
+    user: globalorators_user
+    plan: starter
+    region: oregon
+    postgresMajorVersion: "16"
+
 services:
   - type: web
     name: globalorators-backend
     env: python
-    plan: free
+    plan: starter
     region: oregon
     buildCommand: pip install -r backend/requirements.txt && python backend/seed_data.py
     startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: DATABASE_URL
-        value: sqlite+aiosqlite:///./globalorators.db
+        fromDatabase:
+          name: globalorators-db
+          property: connectionString
+      - key: ENVIRONMENT
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: COACH_SECRET_KEY
+        generateValue: true

@@ -524,50 +524,116 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
       }
 
-      const [
-        fetchedClients,
-        fetchedExercises,
-        fetchedPrograms,
-        fetchedWorkouts,
-        fetchedMetrics,
-        fetchedPrs,
-        fetchedHabits,
-        fetchedPhotos,
-        fetchedMessages,
-        fetchedActivity
-      ] = await Promise.all([
-        clientsApi.getAll().catch(() => null),
-        exercisesApi.getAll().catch(() => null),
-        programsApi.getAll().catch(() => null),
-        workoutsApi.getAll().catch(() => null),
-        metricsApi.getAll().catch(() => null),
-        prsApi.getAll().catch(() => null),
-        habitsApi.getAll().catch(() => null),
-        photosApi.getAll().catch(() => null),
-        messagesApi.getAll().catch(() => null),
-        activityApi.getAll().catch(() => null),
+      const results = await Promise.allSettled([
+        clientsApi.getAll(),
+        exercisesApi.getAll(),
+        programsApi.getAll(),
+        workoutsApi.getAll(),
+        metricsApi.getAll(),
+        prsApi.getAll(),
+        habitsApi.getAll(),
+        photosApi.getAll(),
+        messagesApi.getAll(),
+        activityApi.getAll(),
       ]);
 
-      if (fetchedClients && fetchedClients.length > 0) {
-        setClients(fetchedClients);
+      const [
+        clientsRes,
+        exercisesRes,
+        programsRes,
+        workoutsRes,
+        metricsRes,
+        prsRes,
+        habitsRes,
+        photosRes,
+        messagesRes,
+        activityRes
+      ] = results;
+
+      const failedEndpoints: string[] = [];
+
+      if (clientsRes.status === 'fulfilled') {
+        if (clientsRes.value && clientsRes.value.length > 0) {
+          setClients(clientsRes.value);
+        }
+      } else {
+        failedEndpoints.push('speakers');
+        console.error('Failed to sync speakers from API:', clientsRes.reason);
+      }
+
+      if (exercisesRes.status === 'fulfilled') {
+        if (exercisesRes.value && exercisesRes.value.length > 0) setExercises(exercisesRes.value);
+      } else {
+        failedEndpoints.push('drills');
+        console.error('Failed to sync drills from API:', exercisesRes.reason);
+      }
+
+      if (programsRes.status === 'fulfilled') {
+        if (programsRes.value && programsRes.value.length > 0) setPrograms(programsRes.value);
+      } else {
+        failedEndpoints.push('curriculums');
+        console.error('Failed to sync curriculums from API:', programsRes.reason);
+      }
+
+      if (workoutsRes.status === 'fulfilled') {
+        if (workoutsRes.value && workoutsRes.value.length > 0) setScheduledWorkouts(workoutsRes.value);
+      } else {
+        failedEndpoints.push('rehearsals');
+        console.error('Failed to sync rehearsals from API:', workoutsRes.reason);
+      }
+
+      if (metricsRes.status === 'fulfilled') {
+        if (metricsRes.value && metricsRes.value.length > 0) setMetrics(metricsRes.value);
+      } else {
+        console.error('Failed to sync metrics from API:', metricsRes.reason);
+      }
+
+      if (prsRes.status === 'fulfilled') {
+        if (prsRes.value && prsRes.value.length > 0) setPersonalRecords(prsRes.value);
+      } else {
+        console.error('Failed to sync personal records from API:', prsRes.reason);
+      }
+
+      if (habitsRes.status === 'fulfilled') {
+        if (habitsRes.value && habitsRes.value.length > 0) setHabitLogs(habitsRes.value);
+      } else {
+        console.error('Failed to sync habits from API:', habitsRes.reason);
+      }
+
+      if (photosRes.status === 'fulfilled') {
+        if (photosRes.value && photosRes.value.length > 0) setPhotos(photosRes.value);
+      } else {
+        console.error('Failed to sync photos from API:', photosRes.reason);
+      }
+
+      if (messagesRes.status === 'fulfilled') {
+        if (messagesRes.value && messagesRes.value.length > 0) setMessages(messagesRes.value);
+      } else {
+        console.error('Failed to sync messages from API:', messagesRes.reason);
+      }
+
+      if (activityRes.status === 'fulfilled') {
+        if (activityRes.value && activityRes.value.length > 0) setActivityFeed(activityRes.value);
+      } else {
+        console.error('Failed to sync activity from API:', activityRes.reason);
+      }
+
+      if (failedEndpoints.length > 0) {
+        setIsBackendConnected(false);
+        const hasAuthToken = Boolean(localStorage.getItem('globalorators_token') || localStorage.getItem('nubianfit_token'));
+        if (hasAuthToken) {
+          showToast(`Offline mode: unable to synchronize ${failedEndpoints.join(', ')}.`);
+        }
+      } else {
         setIsBackendConnected(true);
       }
-      if (fetchedExercises && fetchedExercises.length > 0) setExercises(fetchedExercises);
-      if (fetchedPrograms && fetchedPrograms.length > 0) setPrograms(fetchedPrograms);
-      if (fetchedWorkouts && fetchedWorkouts.length > 0) setScheduledWorkouts(fetchedWorkouts);
-      if (fetchedMetrics && fetchedMetrics.length > 0) setMetrics(fetchedMetrics);
-      if (fetchedPrs && fetchedPrs.length > 0) setPersonalRecords(fetchedPrs);
-      if (fetchedHabits && fetchedHabits.length > 0) setHabitLogs(fetchedHabits);
-      if (fetchedPhotos && fetchedPhotos.length > 0) setPhotos(fetchedPhotos);
-      if (fetchedMessages && fetchedMessages.length > 0) setMessages(fetchedMessages);
-      if (fetchedActivity && fetchedActivity.length > 0) setActivityFeed(fetchedActivity);
     } catch (err) {
-      console.warn('FastAPI backend not reachable, using offline store:', err);
+      console.error('Backend synchronization failure, using offline store:', err);
       setIsBackendConnected(false);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [showToast]);
 
   useEffect(() => {
     refreshFromBackend();
@@ -1219,6 +1285,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       })
       .catch(err => {
         console.warn('Backend client persistence failed (local fallback retained):', err);
+        showToast('Offline mode: Profile saved locally. Cloud sync pending.');
       });
   }, [setCurrentPortal, showToast]);
 
