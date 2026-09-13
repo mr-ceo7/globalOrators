@@ -537,7 +537,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
 
         {/* Studio Engine Switcher & Actions */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          {/* Mode Switcher: Self-Hosted Jitsi (Multi-Party) vs Native P2P (1-on-1) */}
+          {/* Mode Switcher: Sovereign Chamber (SFU) vs Native P2P (1-on-1) */}
           <div className="hidden md:flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-mono">
             <button
               onClick={() => setStudioMode('jitsi')}
@@ -546,10 +546,10 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
                   ? 'bg-[#C89630] text-slate-950 font-bold shadow-sm'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
-              title={`Multi-speaker parliamentary debate chamber routed through ${jitsiDomain}`}
+              title="Sovereign multi-participant chamber"
             >
               <Server className="w-3.5 h-3.5" />
-              <span>Self-Hosted Jitsi</span>
+              <span>{isExecutiveRoom ? 'Sovereign Chamber' : 'Self-Hosted Jitsi'}</span>
             </button>
             <button
               onClick={() => setStudioMode('native')}
@@ -622,10 +622,12 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
               <div className="mb-2 px-3 py-1.5 rounded-lg bg-slate-900/90 border border-slate-800 flex items-center justify-between text-xs font-mono text-slate-400">
                 <div className="flex items-center gap-2 truncate">
                   <Server className="w-3.5 h-3.5 text-[#C89630]" />
-                  <span className="text-slate-200 font-medium">Self-Hosted Server:</span>
-                  <span className="text-[#C89630]">{jitsiDomain}</span>
-                  <span className="hidden sm:inline text-[10px] text-emerald-400 bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800/40">
-                    AD-FREE SFU
+                  <span className="text-slate-200 font-medium">Sovereign SFU:</span>
+                  <span className="text-[#C89630]">
+                    {jitsiDomain.includes('trycloudflare') ? 'Private Faculty Node' : jitsiDomain}
+                  </span>
+                  <span className="hidden sm:inline text-[9px] text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/40 uppercase tracking-wider">
+                    High-Def Voice
                   </span>
                 </div>
                 <div className="flex items-center gap-3">
@@ -723,7 +725,10 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
                   )}
 
                   <div className="absolute top-3 left-3 bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded-md border border-slate-800 text-[10px] font-mono uppercase tracking-wider text-slate-200 flex items-center gap-2">
-                    <span className={`w-2 h-2 rounded-full ${isRemoteConnected ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'}`} />
+                    <span className={`text-[9px] font-bold ${isRemoteConnected ? 'text-emerald-400' : 'text-amber-400'}`}>
+                      {isRemoteConnected ? 'CONNECTED' : 'STANDBY'}
+                    </span>
+                    <span className="text-slate-700">|</span>
                     <span>
                       {userRole === 'coach' ? `${speakerName} (Speaker)` : 'Head Coach Tyrese / Qassim'}
                     </span>
@@ -756,7 +761,8 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
                   )}
 
                   <div className="absolute top-3 left-3 bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded-md border border-slate-800 text-[10px] font-mono uppercase tracking-wider text-slate-200 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-[#C89630]" />
+                    <span className="text-[9px] text-[#C89630] font-bold">LOCAL</span>
+                    <span className="text-slate-700">|</span>
                     <span>{userRole === 'coach' ? 'You (Coach Lead)' : `You (${speakerName})`}</span>
                   </div>
 
@@ -866,34 +872,34 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
               <div className="mt-2.5">
                 {isExecutiveRoom ? (
                   isProtectedFirstMinute ? (
-                    <span className="inline-block text-[10px] font-mono tracking-widest uppercase bg-slate-800 text-slate-300 px-3 py-1 rounded-full border border-slate-700">
+                    <span className="inline-block text-[10px] font-mono tracking-widest uppercase bg-slate-900 text-slate-300 px-3 py-1 rounded-lg border border-slate-800">
                       Opening Hook • Uninterrupted Flow
                     </span>
                   ) : isPoiFloorOpen ? (
-                    <span className="inline-block text-[10px] font-mono tracking-widest uppercase bg-amber-500/20 text-amber-300 px-3 py-1 rounded-full border border-amber-500/40 animate-pulse">
+                    <span className="inline-block text-[10px] font-mono tracking-widest uppercase bg-amber-500/15 text-amber-300 px-3 py-1 rounded-lg border border-amber-500/30">
                       Executive Delivery • Cadence & Presence
                     </span>
                   ) : (
-                    <span className="inline-block text-[10px] font-mono tracking-widest uppercase bg-slate-800 text-slate-300 px-3 py-1 rounded-full border border-slate-700">
+                    <span className="inline-block text-[10px] font-mono tracking-widest uppercase bg-slate-900 text-slate-300 px-3 py-1 rounded-lg border border-slate-800">
                       BLUF Conclusion • High-Conviction Close
                     </span>
                   )
                 ) : isBPMode ? (
                   isProtectedFirstMinute ? (
-                    <span className="inline-block text-[10px] font-mono tracking-widest uppercase bg-slate-800 text-slate-300 px-3 py-1 rounded-full border border-slate-700">
+                    <span className="inline-block text-[10px] font-mono tracking-widest uppercase bg-slate-900 text-slate-300 px-3 py-1 rounded-lg border border-slate-800">
                       Protected Period • No POIs
                     </span>
                   ) : isPoiFloorOpen ? (
-                    <span className="inline-block text-[10px] font-mono tracking-widest uppercase bg-amber-500/20 text-amber-300 px-3 py-1 rounded-full border border-amber-500/40 animate-pulse">
+                    <span className="inline-block text-[10px] font-mono tracking-widest uppercase bg-amber-500/15 text-amber-300 px-3 py-1 rounded-lg border border-amber-500/30">
                       Floor Open • POIs Permitted
                     </span>
                   ) : (
-                    <span className="inline-block text-[10px] font-mono tracking-widest uppercase bg-slate-800 text-slate-300 px-3 py-1 rounded-full border border-slate-700">
+                    <span className="inline-block text-[10px] font-mono tracking-widest uppercase bg-slate-900 text-slate-300 px-3 py-1 rounded-lg border border-slate-800">
                       Protected Final Minute • Conclude
                     </span>
                   )
                 ) : (
-                  <span className="inline-block text-[10px] font-mono tracking-widest uppercase bg-emerald-500/15 text-emerald-300 px-3 py-1 rounded-full border border-emerald-500/30">
+                  <span className="inline-block text-[10px] font-mono tracking-widest uppercase bg-emerald-500/15 text-emerald-300 px-3 py-1 rounded-lg border border-emerald-500/30">
                     Vocal Cadence Flow
                   </span>
                 )}
@@ -1068,17 +1074,20 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
       {/* Architectural Bottom Status Bar */}
       <footer className="h-9 px-4 sm:px-6 bg-slate-950 border-t border-slate-800 flex items-center justify-between text-[11px] font-mono text-slate-500 shrink-0">
         <div className="flex items-center gap-2 truncate">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-          <span className="truncate">
+          <span className="text-slate-400 font-medium truncate">
             {studioMode === 'jitsi' 
-              ? `Dedicated SFU • ${jitsiDomain}` 
-              : 'End-to-End Encrypted Speech Chamber • Direct P2P'}
+              ? (jitsiDomain.includes('trycloudflare') ? 'Sovereign SFU Infrastructure' : `Dedicated SFU · ${jitsiDomain}`) 
+              : 'End-to-End Encrypted Speech Chamber · Direct P2P'}
+          </span>
+          <span className="text-slate-800">|</span>
+          <span className="text-emerald-400 font-semibold tracking-wider uppercase text-[10px]">
+            {isExecutiveRoom ? 'Executive Faculty Protocol' : 'Chamber Secured'}
           </span>
         </div>
         <div className="hidden sm:flex items-center gap-3">
-          <span>Room ID: {safeRoomId}</span>
-          <span>•</span>
-          <span>Zero Ads Guarantee</span>
+          <span>Chamber: <strong className="text-slate-400 font-medium">{safeRoomId}</strong></span>
+          <span className="text-slate-800">|</span>
+          <span>Zero Ads · End-to-End Encrypted</span>
         </div>
       </footer>
     </div>
