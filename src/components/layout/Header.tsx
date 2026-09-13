@@ -112,7 +112,7 @@ export const Header: React.FC<HeaderProps> = ({
           <NubianFitLogo className="w-7 h-7 shrink-0" colorMode="gold" />
           <div className="flex flex-col items-stretch">
             <span className="font-serif font-black text-[14px] tracking-tight text-slate-100 block leading-none">
-              Global<span className="text-[#C89630]">orators</span>
+              Global<span className="text-[#C89630]">Orators</span>
             </span>
             <div className="flex justify-between text-[7px] text-slate-400 font-mono tracking-widest uppercase mt-1 w-full leading-none">
               <span>speak</span>

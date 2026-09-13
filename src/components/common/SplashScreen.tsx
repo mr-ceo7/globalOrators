@@ -6,7 +6,7 @@
 import React, { useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Loader } from './Loader';
-import logoIcon from '../../logo-icon.png';
+import { NubianFitLogo } from './NubianFitLogo';
 
 
 interface SplashScreenProps {
@@ -46,10 +46,9 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
         transition={{ delay: 0.2, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
         className="absolute bottom-[calc(50%+5.5rem)] sm:bottom-[calc(50%+7rem)] md:bottom-[calc(50%+8rem)] flex justify-center z-10"
       >
-        <img
-          src={logoIcon}
-          alt="Global Orators Brand Mark"
-          className="h-24 w-24 sm:h-32 sm:w-32 md:h-40 md:w-40 object-contain filter drop-shadow-[0_10px_25px_rgba(16,185,129,0.25)]"
+        <NubianFitLogo
+          className="h-24 w-24 sm:h-32 sm:w-32 md:h-40 md:w-40 drop-shadow-[0_10px_25px_rgba(200,150,48,0.35)]"
+          colorMode="gold"
         />
       </motion.div>
 
@@ -77,7 +76,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
         className="absolute bottom-12 flex flex-col items-stretch w-[128px]"
       >
         <span className="font-logo text-[18px] tracking-wide text-logo-nubian block text-center leading-none">
-          Global<span className="text-logo-fit">orators</span>
+          Global<span className="text-logo-fit">Orators</span>
         </span>
         <div className="flex justify-between text-[8px] text-slate-400 font-bold tracking-normal lowercase mt-2 w-full leading-none">
           <span>speak</span>
