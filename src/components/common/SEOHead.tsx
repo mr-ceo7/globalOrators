@@ -32,7 +32,9 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
     metaDesc.setAttribute('content', description);
 
     // 3. Set Canonical Link (Production canonical domain for SEO indexing)
-    const baseDomain = 'https://globalorators.org';
+    const baseDomain = typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('localhost') && !window.location.origin.includes('127.0.0.1')
+      ? window.location.origin
+      : 'https://globalorators.org';
     const canonicalUrl = `${baseDomain}${canonicalPath.startsWith('/') ? canonicalPath : `/${canonicalPath}`}`;
 
     let linkCanonical = document.querySelector('link[rel="canonical"]');

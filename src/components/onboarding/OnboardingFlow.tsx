@@ -679,7 +679,7 @@ export const getStep3Config = (branch: BranchType, missionFocus: string): Step3P
         { value: 'Varsity / Advanced', label: 'Casual Conversationalist (3-6 yrs)' },
         { value: 'Master Orator', label: 'Confident Communicator (6+ yrs)' }
       ],
-      formatSectionLabel: 'Desensitization Exercise Format',
+      formatSectionLabel: 'Desensitization Drill Format',
       formatSectionSub: 'Select Progression Format',
       formats: [
         {

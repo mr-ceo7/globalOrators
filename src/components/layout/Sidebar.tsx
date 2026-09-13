@@ -11,7 +11,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { useApp, NavigationTab } from '../../context/AppContext';
-import { NubianFitLogo } from '../common/NubianFitLogo';
+import { GlobalOratorsLogo } from '../common/GlobalOratorsLogo';
 
 
 export const Sidebar: React.FC = () => {
@@ -47,10 +47,10 @@ export const Sidebar: React.FC = () => {
       <div className="flex items-center justify-between p-4 h-16 border-b border-slate-800/80">
         <div className="flex items-center gap-3 overflow-hidden cursor-pointer" onClick={() => setActiveTab('dashboard')}>
           {isCollapsed ? (
-            <NubianFitLogo className="w-9 h-9 shrink-0" colorMode="gold" />
+            <GlobalOratorsLogo className="w-9 h-9 shrink-0" colorMode="gold" />
           ) : (
             <div className="flex items-center gap-2.5">
-              <NubianFitLogo className="w-8 h-8 shrink-0" colorMode="gold" />
+              <GlobalOratorsLogo className="w-8 h-8 shrink-0" colorMode="gold" />
               <div className="flex flex-col items-stretch">
                 <span className="font-serif font-black text-[16px] tracking-tight text-slate-100 block leading-none">
                   Global<span className="text-[#C89630]">Orators</span>

@@ -17,7 +17,7 @@ import {
   Target
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import { Client, ClientStatus, FitnessGoal, ExperienceLevel } from '../../types';
+import { Client, ClientStatus, SpeakingGoal, ExperienceLevel } from '../../types';
 import { ClientProfileModal } from './ClientProfileModal';
 
 export const ClientRoster: React.FC<{
@@ -49,11 +49,11 @@ export const ClientRoster: React.FC<{
   const [formBranch, setFormBranch] = useState<'Academy' | 'Foundation'>('Academy');
   const [formMissionFocus, setFormMissionFocus] = useState('Pan-African Championship Debate & Leadership');
   const [formStatus, setFormStatus] = useState<ClientStatus>('Active');
-  const [formGoal, setFormGoal] = useState<FitnessGoal>('Competitive Debate');
+  const [formGoal, setFormGoal] = useState<SpeakingGoal>('Competitive Debate');
   const [formExperience, setFormExperience] = useState<ExperienceLevel>('Varsity / Advanced');
   const [formWeight, setFormWeight] = useState(135);
   const [formTargetWeight, setFormTargetWeight] = useState(145);
-  const [formHeight, setFormHeight] = useState(178);
+  const [formHeight, setFormHeight] = useState(90);
   const [formBodyFat, setFormBodyFat] = useState(92);
   const [formTargetBodyFat, setFormTargetBodyFat] = useState(95);
   const [formInjuries, setFormInjuries] = useState('');
@@ -536,7 +536,7 @@ export const ClientRoster: React.FC<{
                   <label className="block text-slate-400 font-bold uppercase text-[10px] mb-1">Oratorical Goal</label>
                   <select
                     value={formGoal}
-                    onChange={(e) => setFormGoal(e.target.value as FitnessGoal)}
+                    onChange={(e) => setFormGoal(e.target.value as SpeakingGoal)}
                     className="w-full h-9 px-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:border-emerald-500 focus:outline-hidden"
                   >
                     <option value="Competitive Debate">Competitive Debate (Parliamentary / Policy)</option>
@@ -584,7 +584,7 @@ export const ClientRoster: React.FC<{
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-400 font-bold uppercase text-[10px] mb-1">Height (cm)</label>
+                  <label className="block text-slate-400 font-bold uppercase text-[10px] mb-1">Target Speech Duration (Min)</label>
                   <input
                     type="number"
                     value={formHeight}

@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 
 import { useApp } from '../../context/AppContext';
-import { NubianFitLogo } from '../common/NubianFitLogo';
+import { GlobalOratorsLogo } from '../common/GlobalOratorsLogo';
 
 
 interface HeaderProps {
@@ -109,7 +109,7 @@ export const Header: React.FC<HeaderProps> = ({
           className="md:hidden shrink-0 active:scale-95 transition-transform text-left flex items-center gap-2"
           title="Go to Dashboard"
         >
-          <NubianFitLogo className="w-7 h-7 shrink-0" colorMode="gold" />
+          <GlobalOratorsLogo className="w-7 h-7 shrink-0" colorMode="gold" />
           <div className="flex flex-col items-stretch">
             <span className="font-serif font-black text-[14px] tracking-tight text-slate-100 block leading-none">
               Global<span className="text-[#C89630]">Orators</span>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
-import { NubianFitLogo } from '../common/NubianFitLogo';
+import { GlobalOratorsLogo } from '../common/GlobalOratorsLogo';
 
 interface LandingFooterProps {
   onStartOnboarding: (branch?: 'Academy' | 'Foundation') => void;
@@ -19,7 +19,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
           <div className="md:col-span-5 space-y-3">
             <div className="flex items-center gap-2.5">
-              <NubianFitLogo className="w-8 h-8 shrink-0" colorMode="gold" />
+              <GlobalOratorsLogo className="w-8 h-8 shrink-0" colorMode="gold" />
               <div className="font-serif font-black text-slate-100 text-sm tracking-tight">
                 Global <span className="text-[#A06C18] dark:text-[#E3B95C]">Orators</span> Project
               </div>

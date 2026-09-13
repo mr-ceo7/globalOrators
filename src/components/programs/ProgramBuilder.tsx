@@ -530,7 +530,7 @@ export const ProgramBuilder: React.FC<{
                         }`}
                         title="Link with next drill as rapid-fire debate pairing"
                       >
-                        {item.isSupersetWithNext ? '🔗 Linked Round' : '+ Link Round'}
+                        {item.isSupersetWithNext ? 'Linked Round' : '+ Link Round'}
                       </button>
 
                       {/* Move controls */}
@@ -640,7 +640,7 @@ export const ProgramBuilder: React.FC<{
                       onClick={() => handleAddSet(item.id)}
                       className="text-[11px] font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1"
                     >
-                      <Plus className="h-3 w-3" /> Add Round / Rep
+                      <Plus className="h-3 w-3" /> Add Drill Round
                     </button>
                     <span className="text-[10px] text-slate-400">Cadence: {item.tempo || 'Measured & Deliberate'}</span>
                   </div>

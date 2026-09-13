@@ -78,7 +78,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         status: 'Scheduled'
       });
     } else {
-      toastMessage('Please create a workout or schedule first in Program Builder');
+      toastMessage('Please create a rehearsal session or schedule first in Curriculum Protocols');
       setActiveTab('programs');
     }
   };

@@ -6,7 +6,7 @@
 import React, { useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Loader } from './Loader';
-import { NubianFitLogo } from './NubianFitLogo';
+import { GlobalOratorsLogo } from './GlobalOratorsLogo';
 
 
 interface SplashScreenProps {
@@ -46,7 +46,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
         transition={{ delay: 0.2, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
         className="absolute bottom-[calc(50%+5.5rem)] sm:bottom-[calc(50%+7rem)] md:bottom-[calc(50%+8rem)] flex justify-center z-10"
       >
-        <NubianFitLogo
+        <GlobalOratorsLogo
           className="h-24 w-24 sm:h-32 sm:w-32 md:h-40 md:w-40 drop-shadow-[0_10px_25px_rgba(200,150,48,0.35)]"
           colorMode="gold"
         />

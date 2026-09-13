@@ -17,7 +17,7 @@ import {
   Bell
 } from 'lucide-react';
 import { promptInstall, isPwaInstalled, isIosDevice, subscribeToInstallPrompt, BeforeInstallPromptEvent } from '../../utils/pwa';
-import { NubianFitLogo } from './NubianFitLogo';
+import { GlobalOratorsLogo } from './GlobalOratorsLogo';
 
 
 interface PwaInstallPromptProps {
@@ -86,7 +86,7 @@ export const PwaInstallPrompt: React.FC<PwaInstallPromptProps> = ({ isOpen, onCl
 
           {/* Header */}
           <div className="mb-4 text-left flex items-start gap-3">
-            <NubianFitLogo className="w-10 h-10 shrink-0" colorMode="gold" />
+            <GlobalOratorsLogo className="w-10 h-10 shrink-0" colorMode="gold" />
             <div>
               <h3 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
                 Install <span className="font-extrabold text-white tracking-tight">Global <span className="text-[#C89630]">Orators</span></span>
