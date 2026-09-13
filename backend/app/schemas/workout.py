@@ -8,6 +8,7 @@ from app.schemas.common import CamelModel
 
 
 class ScheduledWorkoutBase(CamelModel):
+    coach_id: Optional[str] = None
     client_id: str
     client_name: str = ""
     client_avatar: str = ""

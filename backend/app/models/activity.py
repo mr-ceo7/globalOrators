@@ -13,6 +13,7 @@ class ActivityFeedItem(Base):
     __tablename__ = "activity_feed"
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True, index=True)
+    coach_id: Mapped[Optional[str]] = mapped_column(String(64), index=True, nullable=True)
     type: Mapped[str] = mapped_column(String(64), nullable=False)
     client_id: Mapped[str] = mapped_column(String(64), index=True, default="")
     client_name: Mapped[str] = mapped_column(String(255), default="")

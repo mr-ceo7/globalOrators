@@ -13,6 +13,7 @@ class ChatMessage(Base):
     __tablename__ = "messages"
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True, index=True)
+    coach_id: Mapped[Optional[str]] = mapped_column(String(64), index=True, nullable=True)
     client_id: Mapped[str] = mapped_column(String(64), index=True, nullable=False)
     sender: Mapped[str] = mapped_column(String(32), nullable=False)  # 'coach' or 'client'
     text: Mapped[str] = mapped_column(Text, default="")

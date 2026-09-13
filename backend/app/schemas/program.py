@@ -8,6 +8,7 @@ from app.schemas.common import CamelModel
 
 
 class ProgramBase(CamelModel):
+    coach_id: Optional[str] = None
     title: str
     subtitle: str = ""
     description: str = ""
@@ -24,6 +25,7 @@ class ProgramBase(CamelModel):
 
 class ProgramCreate(CamelModel):
     id: Optional[str] = None
+    coach_id: Optional[str] = None
     title: str
     subtitle: str = ""
     description: str = ""

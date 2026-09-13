@@ -7,8 +7,9 @@ from datetime import datetime, date, timedelta
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, or_
 
+from app.config import settings
 from app.dependencies import get_db, get_current_user, require_coach
 from app.models.program import TrainingProgram
 from app.models.client import Client
@@ -32,8 +33,13 @@ async def list_programs(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """List all training programs."""
-    query = select(TrainingProgram)
+    """List training programs (coaches see global templates and their own curriculums)."""
+    query = select(TrainingProgram).where(
+        or_(
+            TrainingProgram.coach_id == current_user.id,
+            TrainingProgram.coach_id.is_(None)
+        )
+    )
     if goal:
         query = query.where(TrainingProgram.goal == goal)
     if difficulty:
@@ -54,6 +60,16 @@ async def get_program(
     prog = result.scalar_one_or_none()
     if not prog:
         raise HTTPException(status_code=404, detail="Program not found")
+        
+    # Verify access: can only view if global template or owned by this coach/speaker
+    if prog.coach_id and prog.coach_id != current_user.id:
+        is_default_coach = (
+            current_user.email.lower() == settings.DEFAULT_COACH_EMAIL.lower() 
+            or current_user.id == "coach-1"
+        )
+        if not is_default_coach and current_user.role == "coach":
+            raise HTTPException(status_code=403, detail="Access denied: this curriculum belongs to another coach")
+            
     return prog
 
 
@@ -63,7 +79,7 @@ async def save_or_create_program(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_coach)
 ):
-    """Create or update a training program (Coach only)."""
+    """Create or update a training program (Coach only, scoped to own workspace)."""
     now_str = date.today().isoformat()
     prog_id = program_in.id or f"prog-{int(time.time() * 1000)}"
     
@@ -72,6 +88,16 @@ async def save_or_create_program(
     existing = result.scalar_one_or_none()
     
     if existing:
+        is_default_coach = (
+            current_user.email.lower() == settings.DEFAULT_COACH_EMAIL.lower() 
+            or current_user.id == "coach-1"
+        )
+        if existing.coach_id and existing.coach_id != current_user.id and not is_default_coach:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied: you cannot modify another coach's curriculum"
+            )
+            
         update_dict = program_in.model_dump(exclude_unset=True)
         update_dict["updated_at"] = now_str
         for k, v in update_dict.items():
@@ -82,6 +108,7 @@ async def save_or_create_program(
     else:
         new_prog = TrainingProgram(
             id=prog_id,
+            coach_id=current_user.id,
             title=program_in.title,
             subtitle=program_in.subtitle,
             description=program_in.description,
@@ -109,11 +136,21 @@ async def update_program(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_coach)
 ):
-    """Update program details (Coach only)."""
+    """Update program details (Coach only, scoped to own workspace)."""
     result = await db.execute(select(TrainingProgram).where(TrainingProgram.id == program_id))
     prog = result.scalar_one_or_none()
     if not prog:
         raise HTTPException(status_code=404, detail="Program not found")
+        
+    is_default_coach = (
+        current_user.email.lower() == settings.DEFAULT_COACH_EMAIL.lower() 
+        or current_user.id == "coach-1"
+    )
+    if prog.coach_id and prog.coach_id != current_user.id and not is_default_coach:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied: you cannot modify another coach's curriculum"
+        )
     
     update_data = program_in.model_dump(exclude_unset=True)
     update_data["updated_at"] = date.today().isoformat()
@@ -142,6 +179,17 @@ async def assign_program(
     client = client_res.scalar_one_or_none()
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
+        
+    # Verify client ownership
+    is_default_coach = (
+        current_user.email.lower() == settings.DEFAULT_COACH_EMAIL.lower() 
+        or current_user.id == "coach-1"
+    )
+    if not is_default_coach and client.coach_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied: you can only assign curriculums to your own speakers"
+        )
         
     # Update client
     client.current_program_id = program.id

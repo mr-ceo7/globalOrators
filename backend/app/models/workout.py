@@ -13,6 +13,7 @@ class ScheduledWorkout(Base):
     __tablename__ = "scheduled_workouts"
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True, index=True)
+    coach_id: Mapped[Optional[str]] = mapped_column(String(64), index=True, nullable=True)
     client_id: Mapped[str] = mapped_column(String(64), index=True, nullable=False)
     client_name: Mapped[str] = mapped_column(String(255), default="")
     client_avatar: Mapped[str] = mapped_column(String(512), default="")

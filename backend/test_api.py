@@ -421,3 +421,177 @@ async def test_security_controls():
 
         print("Security regression tests passed successfully!")
 
+
+@pytest.mark.asyncio
+async def test_multi_coach_strict_isolation():
+    """Verify strict multi-tenant coach isolation across speakers, curriculums, workouts, and messaging."""
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        import time
+        ts = int(time.time() * 1000)
+        
+        # 1. Register Coach A
+        res_a = await client.post(
+            "/api/auth/register",
+            json={
+                "email": f"coach.alpha.{ts}@globalorators.org",
+                "password": "Password123!",
+                "full_name": "Coach Alpha",
+                "role": "coach",
+                "coach_invite_code": settings.COACH_INVITE_CODE
+            }
+        )
+        assert res_a.status_code == 200
+        token_a = res_a.json()["access_token"]
+        headers_a = {"Authorization": f"Bearer {token_a}"}
+        
+        # 2. Register Coach B
+        res_b = await client.post(
+            "/api/auth/register",
+            json={
+                "email": f"coach.bravo.{ts}@globalorators.org",
+                "password": "Password123!",
+                "full_name": "Coach Bravo",
+                "role": "coach",
+                "coach_invite_code": settings.COACH_INVITE_CODE
+            }
+        )
+        assert res_b.status_code == 200
+        token_b = res_b.json()["access_token"]
+        headers_b = {"Authorization": f"Bearer {token_b}"}
+
+        # Verify Coach B starts with empty roster (strict isolation, no seed data)
+        res_b_init = await client.get("/api/clients", headers=headers_b)
+        assert res_b_init.status_code == 200
+        assert len(res_b_init.json()) == 0
+
+        # 3. Coach A onboards a private speaker
+        speaker_email = f"marcus.orator.{ts}@rome.org"
+        speaker_phone = f"+1555{ts % 10000000:07d}"
+        res_spk_a = await client.post(
+            "/api/clients",
+            json={
+                "name": "Marcus Aurelius",
+                "email": speaker_email,
+                "phone": speaker_phone,
+                "goal": "Stoic Keynote Oratory",
+                "experienceLevel": "Advanced",
+                "customCoachNotes": ["Private observation: exceptional vocal cadence"]
+            },
+            headers=headers_a
+        )
+        assert res_spk_a.status_code == 201
+        spk_a = res_spk_a.json()
+        spk_a_id = spk_a["id"]
+
+        # Coach A sees Marcus
+        res_a_clients = await client.get("/api/clients", headers=headers_a)
+        assert res_a_clients.status_code == 200
+        assert any(c["id"] == spk_a_id for c in res_a_clients.json())
+
+        # 4. Coach B cannot see Marcus in roster
+        res_b_clients = await client.get("/api/clients", headers=headers_b)
+        assert res_b_clients.status_code == 200
+        assert not any(c["id"] == spk_a_id for c in res_b_clients.json())
+
+        # 5. Coach B forbidden from viewing Marcus's profile directly
+        res_b_view = await client.get(f"/api/clients/{spk_a_id}", headers=headers_b)
+        assert res_b_view.status_code == 403
+
+        # 6. Coach B forbidden from updating Marcus
+        res_b_update = await client.patch(
+            f"/api/clients/{spk_a_id}",
+            json={"goal": "Hacked Goal"},
+            headers=headers_b
+        )
+        assert res_b_update.status_code == 403
+
+        # 7. Coach B forbidden from adding notes to Marcus
+        res_b_note = await client.post(
+            f"/api/clients/{spk_a_id}/notes",
+            json={"note": "Unauthorized spy note"},
+            headers=headers_b
+        )
+        assert res_b_note.status_code == 403
+
+        # 8. Coach B forbidden from deleting Marcus
+        res_b_del = await client.delete(f"/api/clients/{spk_a_id}", headers=headers_b)
+        assert res_b_del.status_code == 403
+
+        # 9. Coach A creates a custom training program / curriculum
+        res_prog_a = await client.post(
+            "/api/programs",
+            json={
+                "title": "Classical Rhetoric & Decorum",
+                "subtitle": "Ciceronian Delivery Standard",
+                "goal": "Keynote Delivery",
+                "durationWeeks": 6,
+                "daysPerWeek": 3,
+                "days": [{"day": 1, "title": "Cadence Drill", "exercises": []}]
+            },
+            headers=headers_a
+        )
+        assert res_prog_a.status_code in (200, 201)
+        prog_a = res_prog_a.json()
+        prog_a_id = prog_a["id"]
+
+        # Coach B cannot see Coach A's curriculum in program list
+        res_b_progs = await client.get("/api/programs", headers=headers_b)
+        assert res_b_progs.status_code == 200
+        assert not any(p["id"] == prog_a_id for p in res_b_progs.json())
+
+        # Coach B forbidden from viewing or modifying Coach A's program directly
+        res_b_prog_view = await client.get(f"/api/programs/{prog_a_id}", headers=headers_b)
+        assert res_b_prog_view.status_code == 403
+
+        res_b_prog_edit = await client.put(
+            f"/api/programs/{prog_a_id}",
+            json={"title": "Unauthorized Modification"},
+            headers=headers_b
+        )
+        assert res_b_prog_edit.status_code == 403
+
+        # 10. Coach A schedules a rehearsal session for Marcus
+        res_sched = await client.post(
+            "/api/workouts",
+            json={
+                "clientId": spk_a_id,
+                "clientName": "Marcus Aurelius",
+                "workoutTitle": "Keynote Rehearsal - Act I",
+                "date": "2026-09-20",
+                "time": "10:00 AM",
+                "status": "Scheduled"
+            },
+            headers=headers_a
+        )
+        assert res_sched.status_code == 201
+        sched_id = res_sched.json()["id"]
+
+        # Coach B cannot see Coach A's rehearsal in workout list
+        res_b_workouts = await client.get("/api/workouts", headers=headers_b)
+        assert res_b_workouts.status_code == 200
+        assert not any(w["id"] == sched_id for w in res_b_workouts.json())
+
+        # Coach B forbidden from getting, modifying, or deleting Coach A's scheduled session
+        assert (await client.get(f"/api/workouts/{sched_id}", headers=headers_b)).status_code == 403
+        assert (await client.patch(f"/api/workouts/{sched_id}", json={"durationMin": 90}, headers=headers_b)).status_code == 403
+        assert (await client.delete(f"/api/workouts/{sched_id}", headers=headers_b)).status_code == 403
+
+        # 11. Coach B forbidden from messaging Coach A's speaker or snooping on chat
+        res_b_msg = await client.post(
+            "/api/messages",
+            json={
+                "clientId": spk_a_id,
+                "sender": "coach",
+                "text": "Hello unauthorized speaker"
+            },
+            headers=headers_b
+        )
+        assert res_b_msg.status_code == 403
+
+        res_b_msg_list = await client.get(f"/api/messages?clientId={spk_a_id}", headers=headers_b)
+        assert res_b_msg_list.status_code == 403
+
+        print("Multi-tenant Coach Isolation test passed with 100% assertions satisfied!")
+
+

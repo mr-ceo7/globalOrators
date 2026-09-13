@@ -7,6 +7,7 @@ from app.schemas.common import CamelModel
 
 
 class ActivityFeedItemBase(CamelModel):
+    coach_id: Optional[str] = None
     type: str
     client_id: str = ""
     client_name: str = ""

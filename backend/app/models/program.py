@@ -2,7 +2,7 @@
 Training Program ORM Model
 """
 
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from sqlalchemy import String, Integer, Text, JSON
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -13,6 +13,7 @@ class TrainingProgram(Base):
     __tablename__ = "programs"
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True, index=True)
+    coach_id: Mapped[Optional[str]] = mapped_column(String(64), index=True, nullable=True)
     title: Mapped[str] = mapped_column(String(255), index=True, nullable=False)
     subtitle: Mapped[str] = mapped_column(String(255), default="")
     description: Mapped[str] = mapped_column(Text, default="")

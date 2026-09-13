@@ -86,6 +86,7 @@ async def seed_database(force: bool = False):
         for item in data.get("clients", []):
             c = Client(
                 id=item["id"],
+                coach_id="coach-1",
                 name=item["name"],
                 avatar=item.get("avatar", ""),
                 email=item.get("email", ""),
@@ -140,6 +141,7 @@ async def seed_database(force: bool = False):
         for item in data.get("programs", []):
             prog = TrainingProgram(
                 id=item["id"],
+                coach_id="coach-1",
                 title=item["title"],
                 subtitle=item.get("subtitle", ""),
                 description=item.get("description", ""),
@@ -160,6 +162,7 @@ async def seed_database(force: bool = False):
         for item in data.get("scheduledWorkouts", []):
             sw = ScheduledWorkout(
                 id=item["id"],
+                coach_id="coach-1",
                 client_id=item["clientId"],
                 client_name=item.get("clientName", ""),
                 client_avatar=item.get("clientAvatar", ""),
@@ -243,6 +246,7 @@ async def seed_database(force: bool = False):
         for item in data.get("messages", []):
             msg = ChatMessage(
                 id=item["id"],
+                coach_id="coach-1",
                 client_id=item["clientId"],
                 sender=item.get("sender", "coach"),
                 text=item.get("text", ""),
@@ -257,6 +261,7 @@ async def seed_database(force: bool = False):
         for item in data.get("activityFeed", []):
             act = ActivityFeedItem(
                 id=item["id"],
+                coach_id="coach-1",
                 type=item.get("type", "check_in_submitted"),
                 client_id=item.get("clientId", ""),
                 client_name=item.get("clientName", ""),

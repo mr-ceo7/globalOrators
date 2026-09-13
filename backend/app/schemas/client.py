@@ -18,6 +18,7 @@ class OnboardingSurveySchema(CamelModel):
 
 
 class ClientBase(CamelModel):
+    coach_id: Optional[str] = None
     name: str
     avatar: str = ""
     email: str = ""
@@ -47,6 +48,7 @@ class ClientBase(CamelModel):
 
 
 class ClientCreate(CamelModel):
+    coach_id: Optional[str] = None
     name: str
     avatar: str = ""
     email: str = ""

@@ -16,6 +16,7 @@ class ChatAttachmentSchema(CamelModel):
 
 
 class ChatMessageBase(CamelModel):
+    coach_id: Optional[str] = None
     client_id: str
     sender: str
     text: str = ""

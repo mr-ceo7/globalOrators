@@ -44,11 +44,19 @@ export const CoachDashboard: React.FC<{
   const [activeMobileSection, setActiveMobileSection] = React.useState<'schedule' | 'activity' | 'watchlist'>('schedule');
 
 
+  const formattedToday = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric'
+  });
+
   // Calculated metrics
   const activeClientsCount = clients.filter(c => c.status === 'Active').length;
   const todayWorkouts = scheduledWorkouts.filter(w => w.date === todayStr);
   const completedTodayCount = todayWorkouts.filter(w => w.status === 'Completed').length;
   const pendingCheckinsCount = clients.filter(c => c.status === 'Needs Check-in').length;
+  const firstPendingClient = clients.find(c => c.status === 'Needs Check-in');
+  const inactiveCount = clients.filter(c => c.status !== 'Active').length;
   
   const avgCompliance = Math.round(
     clients.reduce((acc, c) => acc + c.complianceRate, 0) / (clients.length || 1)
@@ -59,18 +67,20 @@ export const CoachDashboard: React.FC<{
   return (
     <div className="space-y-6 pb-12">
       {/* Welcome Banner */}
-      <div className="rounded-2xl bg-slate-900 border border-slate-800 p-6 shadow-sm">
+      <div className="rounded-2xl bg-slate-900 border border-slate-800 p-5 sm:p-6 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-3 mb-2">
-              <span className="text-xs text-slate-400 font-medium">Sunday, August 16</span>
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="text-[10px] font-mono tracking-widest uppercase text-slate-400">
+                Dispatch Desk • {formattedToday}
+              </span>
             </div>
 
-            <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
-              Speaker & Debater Overview
-            </h2>
-            <p className="text-sm text-slate-300 mt-1 max-w-2xl">
-              You have <strong className="text-emerald-400 font-semibold">{todayWorkouts.length} sessions</strong> scheduled today with {completedTodayCount} logged. {pendingCheckinsCount > 0 ? `${pendingCheckinsCount} speaker requires rehearsal review.` : 'All speaker check-ins are up to date.'}
+            <h1 className="text-2xl md:text-3xl font-serif font-bold text-white tracking-tight">
+              Speaker & Debater Command
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl leading-relaxed">
+              You have <strong className="text-emerald-400 font-semibold">{todayWorkouts.length} rehearsal sessions</strong> scheduled today with {completedTodayCount} logged. {pendingCheckinsCount > 0 ? `${pendingCheckinsCount} speaker requires delivery evaluation.` : 'All speaker evaluations are up to date.'}
             </p>
           </div>
 
@@ -78,7 +88,7 @@ export const CoachDashboard: React.FC<{
             <button
               id="dashboard-onboard-client-btn"
               onClick={handleOpenClient}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white text-xs font-semibold border border-slate-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white text-xs font-semibold border border-slate-700 transition-colors cursor-pointer"
             >
               <Users className="h-4 w-4 text-emerald-400" />
               <span>Add Speaker</span>
@@ -87,7 +97,7 @@ export const CoachDashboard: React.FC<{
             <button
               id="dashboard-build-program-btn"
               onClick={handleOpenProgram}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition-colors shadow-sm"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition-colors shadow-sm cursor-pointer"
             >
               <BookOpen className="h-4 w-4" />
               <span>Create Curriculum</span>
@@ -95,6 +105,7 @@ export const CoachDashboard: React.FC<{
           </div>
         </div>
       </div>
+
       {/* 4 Primary Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Card 1: Active Speakers */}
@@ -103,8 +114,8 @@ export const CoachDashboard: React.FC<{
           className="p-3.5 sm:p-5 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 transition-all cursor-pointer group shadow-sm"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400">Active Roster</span>
-            <div className="h-7 w-7 sm:h-9 sm:w-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
+            <span className="text-[10px] sm:text-xs font-mono uppercase tracking-widest text-slate-400">Active Roster</span>
+            <div className="h-7 w-7 sm:h-9 sm:w-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-105 transition-transform">
               <Users className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
           </div>
@@ -112,8 +123,8 @@ export const CoachDashboard: React.FC<{
             <span className="text-xl sm:text-3xl font-extrabold text-white">{activeClientsCount}</span>
             <span className="text-[10px] sm:text-xs text-slate-400">/ {clients.length}</span>
           </div>
-          <div className="mt-1 sm:mt-2 flex items-center text-[10px] sm:text-xs text-emerald-400 font-medium">
-            <span className="truncate">2 onboarding • 1 review</span>
+          <div className="mt-1 sm:mt-2 flex items-center text-[10px] sm:text-xs text-emerald-400 font-medium truncate">
+            <span className="truncate">{activeClientsCount} active • {inactiveCount} pending review</span>
           </div>
         </div>
 
@@ -123,8 +134,8 @@ export const CoachDashboard: React.FC<{
           className="p-3.5 sm:p-5 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 transition-all cursor-pointer group shadow-sm"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400">Today's Sessions</span>
-            <div className="h-7 w-7 sm:h-9 sm:w-9 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform">
+            <span className="text-[10px] sm:text-xs font-mono uppercase tracking-widest text-slate-400">Today's Sessions</span>
+            <div className="h-7 w-7 sm:h-9 sm:w-9 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:scale-105 transition-transform">
               <Mic className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
           </div>
@@ -132,7 +143,7 @@ export const CoachDashboard: React.FC<{
             <span className="text-xl sm:text-3xl font-extrabold text-white">{completedTodayCount}</span>
             <span className="text-[10px] sm:text-xs text-slate-400">/ {todayWorkouts.length}</span>
           </div>
-          <div className="mt-1 sm:mt-2 flex items-center text-[10px] sm:text-xs text-cyan-400 font-medium">
+          <div className="mt-1 sm:mt-2 flex items-center text-[10px] sm:text-xs text-cyan-400 font-medium truncate">
             <span className="truncate">{todayWorkouts.length - completedTodayCount} scheduled</span>
           </div>
         </div>
@@ -143,17 +154,17 @@ export const CoachDashboard: React.FC<{
           className="p-3.5 sm:p-5 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 transition-all cursor-pointer group shadow-sm"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400">Speech Reviews</span>
-            <div className="h-7 w-7 sm:h-9 sm:w-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform">
+            <span className="text-[10px] sm:text-xs font-mono uppercase tracking-widest text-slate-400">Speech Reviews</span>
+            <div className="h-7 w-7 sm:h-9 sm:w-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 group-hover:scale-105 transition-transform">
               <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
           </div>
           <div className="mt-2.5 sm:mt-3 flex items-baseline gap-1 sm:gap-2">
             <span className="text-xl sm:text-3xl font-extrabold text-white">{pendingCheckinsCount}</span>
-            <span className="text-[10px] sm:text-xs text-amber-400/80 font-medium">Feedback</span>
+            <span className="text-[10px] sm:text-xs text-amber-400/80 font-medium">pending</span>
           </div>
           <div className="mt-1 sm:mt-2 flex items-center text-[10px] sm:text-xs text-slate-400 font-medium truncate">
-            <span className="truncate">Lucas M. impromptu video</span>
+            <span className="truncate">{firstPendingClient ? `${firstPendingClient.name} evaluation` : 'All evaluations cleared'}</span>
           </div>
         </div>
 
@@ -163,8 +174,8 @@ export const CoachDashboard: React.FC<{
           className="p-3.5 sm:p-5 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 transition-all cursor-pointer group shadow-sm"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400">Avg Fluency</span>
-            <div className="h-7 w-7 sm:h-9 sm:w-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
+            <span className="text-[10px] sm:text-xs font-mono uppercase tracking-widest text-slate-400">Avg Fluency</span>
+            <div className="h-7 w-7 sm:h-9 sm:w-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-105 transition-transform">
               <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
           </div>
@@ -173,7 +184,7 @@ export const CoachDashboard: React.FC<{
             <span className="text-[10px] sm:text-xs text-slate-400">score</span>
           </div>
           <div className="mt-1 sm:mt-2 flex items-center text-[10px] sm:text-xs text-slate-400 font-medium truncate">
-            <span className="truncate">{totalCompletedWorkoutsAllTime} speeches done</span>
+            <span className="truncate">{totalCompletedWorkoutsAllTime} deliveries logged</span>
           </div>
         </div>
       </div>
@@ -233,8 +244,8 @@ export const CoachDashboard: React.FC<{
 
           <div className="space-y-3">
             {todayWorkouts.length === 0 ? (
-              <div className="p-8 text-center bg-slate-900/60 rounded-2xl border border-slate-800 text-slate-400 text-xs">
-                No speech sessions scheduled for today. Click "Log Session" to assign a rehearsal.
+              <div className="p-8 text-center bg-slate-900/60 rounded-2xl border border-slate-800 text-slate-400 text-xs leading-relaxed">
+                No speech sessions scheduled for today. Assign a rehearsal session from the speaker profile or calendar.
               </div>
             ) : (
               todayWorkouts.map((workout) => {

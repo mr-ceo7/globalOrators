@@ -6,8 +6,9 @@ import time
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, or_
 
+from app.config import settings
 from app.dependencies import get_db, get_current_user, require_coach
 from app.models.workout import ScheduledWorkout
 from app.models.client import Client
@@ -31,8 +32,25 @@ async def list_workouts(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """List scheduled workouts with optional filtering."""
+    """List scheduled workouts with coach isolation and optional filtering."""
     query = select(ScheduledWorkout)
+    
+    # Coach isolation
+    if current_user.role == "coach":
+        is_default_coach = (
+            current_user.email.lower() == settings.DEFAULT_COACH_EMAIL.lower() 
+            or current_user.id == "coach-1"
+        )
+        if is_default_coach:
+            query = query.where(or_(ScheduledWorkout.coach_id == current_user.id, ScheduledWorkout.coach_id.is_(None)))
+        else:
+            query = query.where(ScheduledWorkout.coach_id == current_user.id)
+    else:
+        # Speaker isolation
+        speaker_res = await db.execute(select(Client.id).where(Client.email.ilike(current_user.email)))
+        speaker_ids = speaker_res.scalars().all()
+        query = query.where(ScheduledWorkout.client_id.in_(speaker_ids))
+        
     if client_id:
         query = query.where(ScheduledWorkout.client_id == client_id)
     if date:
@@ -50,11 +68,31 @@ async def get_workout(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Get single workout details."""
+    """Get single workout details with coach isolation."""
     result = await db.execute(select(ScheduledWorkout).where(ScheduledWorkout.id == workout_id))
     w = result.scalar_one_or_none()
     if not w:
         raise HTTPException(status_code=404, detail="Workout not found")
+        
+    if current_user.role == "coach":
+        is_default_coach = (
+            current_user.email.lower() == settings.DEFAULT_COACH_EMAIL.lower() 
+            or current_user.id == "coach-1"
+        )
+        if not is_default_coach and w.coach_id and w.coach_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied: session belongs to another coach"
+            )
+    else:
+        client_res = await db.execute(select(Client).where(Client.id == w.client_id))
+        client = client_res.scalar_one_or_none()
+        if client and client.email and client.email.lower() != current_user.email.lower():
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied to other orator rehearsal sessions"
+            )
+            
     return w
 
 
@@ -64,11 +102,35 @@ async def create_or_schedule_workout(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Schedule a workout."""
+    """Schedule a workout with coach isolation."""
     w_id = workout_in.id or f"sched-{int(time.time() * 1000)}"
     w_dict = workout_in.model_dump(exclude_unset=True)
     w_dict["id"] = w_id
     
+    # Check client ownership
+    client_res = await db.execute(select(Client).where(Client.id == workout_in.client_id))
+    client = client_res.scalar_one_or_none()
+    
+    if current_user.role == "coach":
+        is_default_coach = (
+            current_user.email.lower() == settings.DEFAULT_COACH_EMAIL.lower() 
+            or current_user.id == "coach-1"
+        )
+        if client and not is_default_coach and client.coach_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied: speaker belongs to another coach"
+            )
+        w_dict["coach_id"] = current_user.id
+    else:
+        if client and client.email and client.email.lower() != current_user.email.lower():
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied to schedule rehearsals for other speakers"
+            )
+        if client and client.coach_id:
+            w_dict["coach_id"] = client.coach_id
+            
     new_w = ScheduledWorkout(**w_dict)
     db.add(new_w)
     await db.commit()
@@ -84,11 +146,30 @@ async def update_workout_log(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Update workout details or live log data."""
+    """Update workout details or live log data with coach isolation."""
     result = await db.execute(select(ScheduledWorkout).where(ScheduledWorkout.id == workout_id))
     w = result.scalar_one_or_none()
     if not w:
         raise HTTPException(status_code=404, detail="Workout not found")
+        
+    if current_user.role == "coach":
+        is_default_coach = (
+            current_user.email.lower() == settings.DEFAULT_COACH_EMAIL.lower() 
+            or current_user.id == "coach-1"
+        )
+        if not is_default_coach and w.coach_id and w.coach_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied: session belongs to another coach"
+            )
+    else:
+        client_res = await db.execute(select(Client).where(Client.id == w.client_id))
+        client = client_res.scalar_one_or_none()
+        if client and client.email and client.email.lower() != current_user.email.lower():
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied"
+            )
     
     update_data = workout_in.model_dump(exclude_unset=True)
     for field, val in update_data.items():
@@ -106,11 +187,22 @@ async def complete_workout(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Complete a workout, update client statistics, and broadcast to activity feed."""
+    """Complete a workout, update client statistics, and broadcast to coach-isolated activity feed."""
     result = await db.execute(select(ScheduledWorkout).where(ScheduledWorkout.id == workout_id))
     w = result.scalar_one_or_none()
     if not w:
         raise HTTPException(status_code=404, detail="Workout not found")
+        
+    if current_user.role == "coach":
+        is_default_coach = (
+            current_user.email.lower() == settings.DEFAULT_COACH_EMAIL.lower() 
+            or current_user.id == "coach-1"
+        )
+        if not is_default_coach and w.coach_id and w.coach_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied: session belongs to another coach"
+            )
     
     w.status = "Completed"
     w.duration_min = req.duration_min or w.duration_min or 55
@@ -131,9 +223,10 @@ async def complete_workout(
         if client.total_workouts_assigned and client.total_workouts_assigned > 0:
             client.compliance_rate = round(min(100.0, (client.workouts_completed / client.total_workouts_assigned) * 100), 1)
             
-    # Activity feed
+    # Activity feed with coach isolation
     activity = ActivityFeedItem(
         id=f"act-{int(time.time() * 1000)}",
+        coach_id=w.coach_id or (client.coach_id if client else None),
         type="workout_completed",
         client_id=w.client_id,
         client_name=w.client_name or (client.name if client else "Client"),
@@ -156,11 +249,21 @@ async def delete_workout(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_coach)
 ):
-    """Delete scheduled workout (Coach only)."""
+    """Delete scheduled workout (Coach only, own sessions)."""
     result = await db.execute(select(ScheduledWorkout).where(ScheduledWorkout.id == workout_id))
     w = result.scalar_one_or_none()
     if not w:
         raise HTTPException(status_code=404, detail="Workout not found")
+        
+    is_default_coach = (
+        current_user.email.lower() == settings.DEFAULT_COACH_EMAIL.lower() 
+        or current_user.id == "coach-1"
+    )
+    if not is_default_coach and w.coach_id and w.coach_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied: you can only delete your own rehearsal sessions"
+        )
     
     await db.delete(w)
     await db.commit()
