@@ -19,6 +19,12 @@ class RegisterRequest(BaseModel):
     role: Optional[str] = "coach"
 
 
+class GoogleAuthRequest(BaseModel):
+    credential: str
+    role: Optional[str] = "speaker" # "coach" or "speaker"
+    client_id: Optional[str] = None
+
+
 class UserResponse(BaseModel):
     id: str
     email: str

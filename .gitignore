@@ -19,3 +19,6 @@ backend/.venv/
 # Databases
 *.db
 *.sqlite3
+.vercel
+.env*.local
+scratch/

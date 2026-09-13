@@ -167,16 +167,30 @@ export interface WorkoutExerciseItem {
   isSupersetWithNext?: boolean; // e.g. back-to-back cross-fire / rebuttal drill
 }
 
+export interface SessionPhase {
+  id: string;
+  phaseName: string; // e.g. "Review & Warm-Up", "Core Concept / Instruction", "Demonstration & Analysis", "Practical Speaking Drills", "Feedback & Assessment", "Practice Assignment"
+  durationMin: number; // e.g. 10, 15, 20, 30, 10, 5
+  description: string;
+}
+
 export interface WorkoutDay {
   id: string;
   dayNumber: number;
-  name: string; // e.g. "Day 1: Persuasive Hooks & Case Architecture"
+  name: string; // e.g. "Session 1: Communication Assessment & Baseline"
   focus: string;
   estimatedDurationMin: number;
   warmupNotes?: string;
   cooldownNotes?: string;
+  objectives?: string[]; // Specific lesson objectives from executive curriculum
+  phases?: SessionPhase[]; // 6 distinct 90-min executive coaching phases
+  assignmentNotes?: string; // Practice assignment between sessions
   exercises: WorkoutExerciseItem[];
 }
+
+export type CurriculumSession = WorkoutDay;
+export type CurriculumProgram = TrainingProgram;
+export type SpeakingDrill = WorkoutExerciseItem;
 
 export interface TrainingProgram {
   id: string;
@@ -212,6 +226,10 @@ export interface ScheduledWorkout {
   coachFeedback?: string;
   totalVolumeKg?: number; // Total Speaking Time or Cumulative Volume
   prCount?: number;
+  objectives?: string[];
+  phases?: SessionPhase[];
+  assignmentNotes?: string;
+  chamberRoomName?: string;
   exercises: WorkoutExerciseItem[];
 }
 

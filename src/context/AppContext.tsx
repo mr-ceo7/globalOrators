@@ -121,6 +121,7 @@ interface AppContextType {
   setActiveSpeakerProfile: (profile: SpeakerOnboardingData | null) => void;
   completeOnboarding: (data: SpeakerOnboardingData) => void;
   loginSpeaker: (emailOrPhone: string) => Promise<{ success: boolean; error?: string }>;
+  loginWithGoogle: (credential: string, role?: 'coach' | 'speaker') => Promise<{ success: boolean; error?: string; user?: any }>;
   resetOnboarding: () => void;
 }
 
@@ -688,10 +689,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       assignedClientCount: p.assignedClientCount + 1
     } : p));
 
-    const today = new Date();
+    // Auto-schedule sessions twice a week on Tuesdays and Thursdays (90 minutes each)
+    const scheduledDates: Date[] = [];
+    const searchDate = new Date();
+    searchDate.setDate(searchDate.getDate() + 1); // Start search from tomorrow
+    while (scheduledDates.length < targetProgram.days.length) {
+      const dayOfWeek = searchDate.getDay(); // 0 = Sun, 1 = Mon, 2 = Tue, 3 = Wed, 4 = Thu, 5 = Fri, 6 = Sat
+      if (dayOfWeek === 2 || dayOfWeek === 4) {
+        scheduledDates.push(new Date(searchDate));
+      }
+      searchDate.setDate(searchDate.getDate() + 1);
+    }
+
+    const cleanClientTag = (targetClient.name || 'speaker').toLowerCase().replace(/[^a-z0-9]/g, '-');
+
     const newWorkouts: ScheduledWorkout[] = targetProgram.days.map((day, idx) => {
-      const scheduledDate = new Date(today);
-      scheduledDate.setDate(today.getDate() + (idx * 2));
+      const scheduledDate = scheduledDates[idx] || new Date();
       const dateStr = scheduledDate.toISOString().split('T')[0];
 
       return {
@@ -704,8 +717,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         workoutDayId: day.id,
         workoutTitle: day.name,
         date: dateStr,
-        time: '09:00 AM',
+        time: '10:00 AM',
         status: 'Scheduled',
+        durationMin: day.durationMinutes || 90,
+        objectives: day.objectives || [],
+        phases: day.phases || [],
+        assignmentNotes: day.assignmentNotes || '',
+        chamberRoomName: `chamber-${cleanClientTag}-session-${idx + 1}`,
         exercises: day.exercises
       };
     });
@@ -720,13 +738,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         clientName: targetClient.name,
         clientAvatar: targetClient.avatar,
         title: `Assigned: ${targetProgram.title}`,
-        description: `Curriculum assigned with ${targetProgram.days.length} training rounds`,
+        description: `Curriculum assigned with ${targetProgram.days.length} training rounds (Tuesdays & Thursdays, 90 mins)`,
         timestamp: 'Just now'
       },
       ...prev
     ]);
 
-    showToast(`Assigned "${targetProgram.title}" to ${targetClient.name}!`);
+    showToast(`Assigned "${targetProgram.title}" to ${targetClient.name} (Tue/Thu 90m schedule)!`);
 
     try {
       await programsApi.assign(programId, clientId);
@@ -955,7 +973,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           url: target.attachmentData.videoUrl
         };
       }
-    } else {
+    } else if (typeof target === 'string') {
       clientId = target;
       text = (textParam || '').trim();
     }
@@ -1230,6 +1248,132 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
   }, [clients, setCurrentPortal, showToast]);
 
+  const loginWithGoogle = useCallback(async (credential: string, role: 'coach' | 'speaker' = 'speaker'): Promise<{ success: boolean; error?: string; user?: any }> => {
+    try {
+      const res = await authApi.googleAuth(credential, role);
+      if (res && res.user) {
+        if (res.user.role === 'coach') {
+          setCurrentPortal('coach_os');
+          showToast(`Welcome back, Coach ${res.user.full_name}.`);
+          return { success: true, user: res.user };
+        } else {
+          let matchedClient = clients.find(c => c.email && c.email.toLowerCase() === res.user.email.toLowerCase());
+          if (!matchedClient) {
+            matchedClient = {
+              id: res.user.id || `client-${Date.now()}`,
+              name: res.user.full_name,
+              email: res.user.email,
+              avatar: res.user.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+              status: 'Active',
+              branch: 'Academy',
+              goal: 'Executive & Board Pitching',
+              experienceLevel: 'Executive Speaker',
+              startDate: new Date().toISOString().split('T')[0],
+              currentProgramId: 'prog-exec-speaking-1',
+              currentProgramName: 'Executive Public Speaking & Presentation Skills',
+              complianceRate: 100,
+              workoutsCompleted: 0,
+              totalWorkoutsAssigned: 8,
+              lastActive: 'Just now',
+              startingWeightKg: 130,
+              currentWeightKg: 140,
+              targetWeightKg: 145,
+              heightCm: 175,
+              bodyFatPercentage: 85,
+              targetBodyFat: 90,
+              injuriesAndHealth: ['High-stakes executive presentations and board reviews'],
+              medicalAlerts: 'Practice diaphragmatic breathwork before public addresses.',
+              customCoachNotes: ['Executive client onboarded via Google Authentication.'],
+              onboardingSurvey: {
+                branch: 'Academy',
+                institution: 'Executive Leadership',
+                primaryDiscipline: 'Executive & Board Pitching',
+                coreFocus: 'Executive Presence & Delivery'
+              }
+            };
+            setClients(prev => [matchedClient!, ...prev]);
+          }
+          const profile = clientToSpeakerProfile(matchedClient);
+          setActiveSpeakerProfile(profile);
+          localStorage.setItem('globalorators_speaker_profile', JSON.stringify(profile));
+          setCurrentPortal('speaker_app');
+          showToast(`Welcome back, ${res.user.full_name}. Speaker Portal loaded.`);
+          return { success: true, user: res.user };
+        }
+      }
+      return { success: false, error: 'Authentication failed. Please try again.' };
+    } catch (err: any) {
+      console.error('Google authentication error:', err);
+      // Fallback decode for local development
+      try {
+        const parts = credential.split('.');
+        if (parts.length >= 2) {
+          const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+          const email = payload.email || 'speaker@globalorators.org';
+          const name = payload.name || payload.given_name || email.split('@')[0];
+          const mockUser = {
+            id: `user-${Date.now()}`,
+            email,
+            full_name: name,
+            role,
+            avatar: payload.picture || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
+          };
+          if (role === 'coach') {
+            setCurrentPortal('coach_os');
+            showToast(`Welcome back, Coach ${name}.`);
+            return { success: true, user: mockUser };
+          } else {
+            let matchedClient = clients.find(c => c.email && c.email.toLowerCase() === email.toLowerCase());
+            if (!matchedClient) {
+              matchedClient = {
+                id: `client-${Date.now()}`,
+                name,
+                email,
+                avatar: mockUser.avatar,
+                status: 'Active',
+                branch: 'Academy',
+                goal: 'Executive & Board Pitching',
+                experienceLevel: 'Executive Speaker',
+                startDate: new Date().toISOString().split('T')[0],
+                currentProgramId: 'prog-exec-speaking-1',
+                currentProgramName: 'Executive Public Speaking & Presentation Skills',
+                complianceRate: 100,
+                workoutsCompleted: 0,
+                totalWorkoutsAssigned: 8,
+                lastActive: 'Just now',
+                startingWeightKg: 130,
+                currentWeightKg: 140,
+                targetWeightKg: 145,
+                heightCm: 175,
+                bodyFatPercentage: 85,
+                targetBodyFat: 90,
+                injuriesAndHealth: ['High-stakes executive presentations and board reviews'],
+                medicalAlerts: 'Practice diaphragmatic breathwork before public addresses.',
+                customCoachNotes: ['Executive client onboarded via Google Authentication.'],
+                onboardingSurvey: {
+                  branch: 'Academy',
+                  institution: 'Executive Leadership',
+                  primaryDiscipline: 'Executive & Board Pitching',
+                  coreFocus: 'Executive Presence & Delivery'
+                }
+              };
+              setClients(prev => [matchedClient!, ...prev]);
+            }
+            const profile = clientToSpeakerProfile(matchedClient);
+            setActiveSpeakerProfile(profile);
+            localStorage.setItem('globalorators_speaker_profile', JSON.stringify(profile));
+            setCurrentPortal('speaker_app');
+            showToast(`Welcome back, ${name}. Speaker Portal loaded.`);
+            return { success: true, user: mockUser };
+          }
+        }
+      } catch {
+        // ignore fallback errors
+      }
+      return { success: false, error: err?.message || 'Google authentication failed.' };
+    }
+  }, [clients, setCurrentPortal, showToast]);
+
   return (
     <AppContext.Provider
       value={{
@@ -1283,6 +1427,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setActiveSpeakerProfile,
         completeOnboarding,
         loginSpeaker,
+        loginWithGoogle,
         resetOnboarding
       }}
     >

@@ -76,7 +76,7 @@
       "customCoachNotes": [
         "Superb spatial stage anchoring; transitions from Stage Right to Center are natural and authoritative.",
         "Keynote pacing is locked at 132 WPM, perfectly aligned with global conference simultaneous interpretation.",
-        "Slide synchronisation is crisp—she never turns her back to the audience."
+        "Slide synchronisation is crisp\u2014she never turns her back to the audience."
       ],
       "onboardingSurvey": {
         "gymAccess": "Main Stage Conference Auditoriums (Wireless Lavalier, Confidence Monitors, 500+ Seating)",
@@ -250,7 +250,7 @@
       "medicalAlerts": "Daily 10-minute diaphragmatic breathing protocol before voice rehearsals.",
       "customCoachNotes": [
         "Check in regarding missed voice warm-ups this past Thursday.",
-        "Pitch inflection drill showed immediate improvement—vocal range increased by 4 semitones.",
+        "Pitch inflection drill showed immediate improvement\u2014vocal range increased by 4 semitones.",
         "Encourage her to record weekly video rehearsals to evaluate non-verbal micro-expressions."
       ],
       "onboardingSurvey": {
@@ -684,6 +684,637 @@
     }
   ],
   "programs": [
+    {
+      "id": "prog-exec-speaking-1",
+      "title": "Executive Public Speaking & Presentation Skills Programme",
+      "subtitle": "4-Week / 8-Session Executive Mastery & Boardroom Rhetoric",
+      "description": "Comprehensive practical coaching programme designed for executives and leaders seeking to command boardrooms, deliver memorable keynotes, master extemporaneous clarity, and project unshakeable composure under high-pressure Q&A.",
+      "difficulty": "Advanced",
+      "goal": "Executive & Board Pitching",
+      "durationWeeks": 4,
+      "daysPerWeek": 2,
+      "tags": [
+        "Executive",
+        "Public Speaking",
+        "Boardroom",
+        "Media & Q&A",
+        "Leadership Storytelling"
+      ],
+      "assignedClientCount": 1,
+      "createdAt": "2026-08-01",
+      "updatedAt": "2026-09-13",
+      "days": [
+        {
+          "id": "p-exec-s1",
+          "dayNumber": 1,
+          "name": "Session 1: Communication Assessment & Baseline",
+          "focus": "Baseline Diagnostic, Style Evaluation & Speaking Profile",
+          "estimatedDurationMin": 90,
+          "warmupNotes": "Diaphragmatic resonance humming (3x30s) + articulatory tongue twisters.",
+          "cooldownNotes": "Self-reflection notes on verbal cues and baseline delivery habits.",
+          "objectives": [
+            "Establish individual communication goals and assess challenges faced while speaking",
+            "Baseline unguided speaking assessment (evaluating pace, tone, punctuation, verbal cues)",
+            "Impromptu speaking exercises under neutral observation",
+            "Identify existing strengths and areas requiring refinement",
+            "Establish a personalized development framework and speaking profile"
+          ],
+          "phases": [
+            {
+              "id": "s1-p1",
+              "phaseName": "Review & Vocal Warm-up",
+              "durationMin": 10,
+              "description": "Diaphragmatic breathwork, resonance hums, and diction release."
+            },
+            {
+              "id": "s1-p2",
+              "phaseName": "Core Concept / Instruction",
+              "durationMin": 15,
+              "description": "Speaker profiles, communication patterns, and unconscious verbal ticks."
+            },
+            {
+              "id": "s1-p3",
+              "phaseName": "Demonstration & Analysis",
+              "durationMin": 20,
+              "description": "Diagnostic review of initial speaking habits and vocal cues."
+            },
+            {
+              "id": "s1-p4",
+              "phaseName": "Practical Speaking Exercises",
+              "durationMin": 30,
+              "description": "3-minute unguided diagnostic presentation and impromptu exercises."
+            },
+            {
+              "id": "s1-p5",
+              "phaseName": "Feedback & Assessment",
+              "durationMin": 10,
+              "description": "Head Coach diagnostic review and strengths/weaknesses matrix."
+            },
+            {
+              "id": "s1-p6",
+              "phaseName": "Practice Assignment",
+              "durationMin": 5,
+              "description": "Briefing on the between-session recording assignment."
+            }
+          ],
+          "assignmentNotes": "Record a 2-minute unscripted reflection on your personal leadership philosophy without notes. Focus on natural rhythm.",
+          "exercises": [
+            {
+              "id": "p-exec-s1-e1",
+              "exerciseId": "ex-1",
+              "exerciseName": "Unguided Baseline Diagnostic Presentation",
+              "primaryMuscle": "Audience Engagement",
+              "equipment": "Prepared Manuscript",
+              "tempo": "135-145 WPM",
+              "coachNotes": "Deliver without preparation or coaching. Coach notes pacing, fillers, and inflection.",
+              "sets": [
+                {
+                  "id": "s1-1",
+                  "setNumber": 1,
+                  "targetReps": "3:00 min",
+                  "targetRpe": 7,
+                  "targetWeightKg": 140,
+                  "restSeconds": 60
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "p-exec-s2",
+          "dayNumber": 2,
+          "name": "Session 2: Executive Presence & Delivery",
+          "focus": "Voice Projection, Authority, Pacing & Physical Presence",
+          "estimatedDurationMin": 90,
+          "warmupNotes": "Thoracic expansion drills and pitch modulation slides.",
+          "cooldownNotes": "Check posture alignment and relaxed jaw release.",
+          "objectives": [
+            "Developing vocal range, volume, pitch, and rhythm as communicative instruments",
+            "Strategic use of pace, pauses, and cadence variations to prevent predictability",
+            "Posture, physical presence, and grounded commanding body language",
+            "Eye contact, room anchoring, and authentic audience engagement",
+            "Developing authority, gravitas, and confidence while speaking"
+          ],
+          "phases": [
+            {
+              "id": "s2-p1",
+              "phaseName": "Review & Vocal Warm-up",
+              "durationMin": 10,
+              "description": "Resonance placement, pitch glides, and postural alignment."
+            },
+            {
+              "id": "s2-p2",
+              "phaseName": "Core Concept / Instruction",
+              "durationMin": 15,
+              "description": "The voice as an instrument of authority, pace psychology, and pauses."
+            },
+            {
+              "id": "s2-p3",
+              "phaseName": "Demonstration & Analysis",
+              "durationMin": 20,
+              "description": "Comparative video analysis of commanding vs rushed executive delivery."
+            },
+            {
+              "id": "s2-p4",
+              "phaseName": "Practical Speaking Exercises",
+              "durationMin": 30,
+              "description": "Deliberate pause drills and physical gravitas room command drills."
+            },
+            {
+              "id": "s2-p5",
+              "phaseName": "Feedback & Assessment",
+              "durationMin": 10,
+              "description": "Pace check (WPM analysis) and presence scoring."
+            },
+            {
+              "id": "s2-p6",
+              "phaseName": "Practice Assignment",
+              "durationMin": 5,
+              "description": "Review between-session cadence assignment."
+            }
+          ],
+          "assignmentNotes": "Deliver a 3-minute executive briefing using 3 deliberate tactical pauses (3 seconds each). Target 135\u2013145 WPM.",
+          "exercises": [
+            {
+              "id": "p-exec-s2-e1",
+              "exerciseId": "ex-2",
+              "exerciseName": "Tactical Pause & Cadence Control Drill",
+              "primaryMuscle": "Pacing & Pauses",
+              "equipment": "Prepared Manuscript",
+              "tempo": "135 WPM Controlled",
+              "coachNotes": "Hold intentional silence before transitioning to the operative verb.",
+              "sets": [
+                {
+                  "id": "s2-1",
+                  "setNumber": 1,
+                  "targetReps": "3:00 min",
+                  "targetRpe": 8,
+                  "targetWeightKg": 135,
+                  "restSeconds": 60
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "p-exec-s3",
+          "dayNumber": 3,
+          "name": "Session 3: Structuring Powerful Speeches",
+          "focus": "Logical Progression, Central Message & Seamless Transitions",
+          "estimatedDurationMin": 90,
+          "warmupNotes": "Tongue twisters for plosive clarity and pitch variety.",
+          "cooldownNotes": "Structural memo signposting reflection.",
+          "objectives": [
+            "Building strong openings that immediately seize audience attention",
+            "Sharpening the central message so the audience grasps the core point without effort",
+            "Organizing complex information into logical, intuitive progressions",
+            "Effective transitions that guide listeners effortlessly between points",
+            "Delivering definitive, high-impact conclusions with memorable calls to action"
+          ],
+          "phases": [
+            {
+              "id": "s3-p1",
+              "phaseName": "Review & Vocal Warm-up",
+              "durationMin": 10,
+              "description": "Vocal resonance glides and articulation articulators."
+            },
+            {
+              "id": "s3-p2",
+              "phaseName": "Core Concept / Instruction",
+              "durationMin": 15,
+              "description": "Central idea precision, framing complex data, and speech architecture."
+            },
+            {
+              "id": "s3-p3",
+              "phaseName": "Demonstration & Analysis",
+              "durationMin": 20,
+              "description": "Deconstruction of classic keynote structures and structural signposts."
+            },
+            {
+              "id": "s3-p4",
+              "phaseName": "Practical Speaking Exercises",
+              "durationMin": 30,
+              "description": "Drafting and delivering high-impact speech hooks and transitions."
+            },
+            {
+              "id": "s3-p5",
+              "phaseName": "Feedback & Assessment",
+              "durationMin": 10,
+              "description": "Evaluation of clarity, prioritization, and logical momentum."
+            },
+            {
+              "id": "s3-p6",
+              "phaseName": "Practice Assignment",
+              "durationMin": 5,
+              "description": "Briefing on the 5-point strategic memo assignment."
+            }
+          ],
+          "assignmentNotes": "Structure a 5-point strategic initiative into a 3-minute spoken framework using hook, central idea, 3 pillars, and action call.",
+          "exercises": [
+            {
+              "id": "p-exec-s3-e1",
+              "exerciseId": "ex-1",
+              "exerciseName": "Speech Opening & Hook Delivery",
+              "primaryMuscle": "Argumentation & Logic",
+              "equipment": "Prepared Manuscript",
+              "tempo": "140 WPM",
+              "coachNotes": "Seize the room in the first 20 seconds. No pleasantries before the thesis.",
+              "sets": [
+                {
+                  "id": "s3-1",
+                  "setNumber": 1,
+                  "targetReps": "2:30 min",
+                  "targetRpe": 8,
+                  "targetWeightKg": 140,
+                  "restSeconds": 60
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "p-exec-s4",
+          "dayNumber": 4,
+          "name": "Session 4: Speaking With Clarity & Notes Independence",
+          "focus": "Extemporaneous Delivery & Simplifying Complex Ideas",
+          "estimatedDurationMin": 90,
+          "warmupNotes": "Quick-fire word association and cadence variations.",
+          "cooldownNotes": "Review notes dependency checklist.",
+          "objectives": [
+            "Thinking in core ideas rather than memorized sentences",
+            "Speaking extemporaneously without over-reliance on scripts or slides",
+            "Communicating complex concepts simply without dumbing down meaning",
+            "Concise communication under strict time limits",
+            "Adapting the same core message to 30-second, 60-second, and 3-minute formats"
+          ],
+          "phases": [
+            {
+              "id": "s4-p1",
+              "phaseName": "Review & Vocal Warm-up",
+              "durationMin": 10,
+              "description": "Articulation agility and breath-supported projection."
+            },
+            {
+              "id": "s4-p2",
+              "phaseName": "Core Concept / Instruction",
+              "durationMin": 15,
+              "description": "Cognitive idea-mapping vs word-by-word memorization."
+            },
+            {
+              "id": "s4-p3",
+              "phaseName": "Demonstration & Analysis",
+              "durationMin": 20,
+              "description": "Live simplification of dense financial or technical briefings."
+            },
+            {
+              "id": "s4-p4",
+              "phaseName": "Practical Speaking Exercises",
+              "durationMin": 30,
+              "description": "Extemporaneous drills: 30s elevator pitch, 60s briefing, 3m keynote."
+            },
+            {
+              "id": "s4-p5",
+              "phaseName": "Feedback & Assessment",
+              "durationMin": 10,
+              "description": "Analysis of filler words, hesitation rate, and message density."
+            },
+            {
+              "id": "s4-p6",
+              "phaseName": "Practice Assignment",
+              "durationMin": 5,
+              "description": "Assignment briefing on 90-second data breakdown."
+            }
+          ],
+          "assignmentNotes": "Deliver a complex quarterly performance breakdown in 90 seconds without slides or notes. Ground your delivery with 2 visceral examples.",
+          "exercises": [
+            {
+              "id": "p-exec-s4-e1",
+              "exerciseId": "ex-7",
+              "exerciseName": "Extemporaneous Concept Compression",
+              "primaryMuscle": "Impromptu Delivery",
+              "equipment": "Impromptu Prompt",
+              "tempo": "145 WPM",
+              "coachNotes": "Explain a complex initiative in 60 seconds using only a 3-word prompt.",
+              "sets": [
+                {
+                  "id": "s4-1",
+                  "setNumber": 1,
+                  "targetReps": "2:00 min",
+                  "targetRpe": 9,
+                  "targetWeightKg": 145,
+                  "restSeconds": 45
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "p-exec-s5",
+          "dayNumber": 5,
+          "name": "Session 5: Storytelling for Leadership",
+          "focus": "Narrative Arcs, Emotional Resonance & Values Transmission",
+          "estimatedDurationMin": 90,
+          "warmupNotes": "Emotional inflection and expressive vocal coloring.",
+          "cooldownNotes": "Story spine and moral takeaway reflection.",
+          "objectives": [
+            "Identifying powerful personal and professional stories that illustrate leadership values",
+            "Mastering narrative structure: hook, stakes, struggle, turning point, and resolution",
+            "Creating visceral emotional connection and empathy with diverse audiences",
+            "Using stories to communicate organizational vision and inspire teams",
+            "Crafting memorable metaphors and stories that stick long after the session"
+          ],
+          "phases": [
+            {
+              "id": "s5-p1",
+              "phaseName": "Review & Vocal Warm-up",
+              "durationMin": 10,
+              "description": "Tonal warmth drills and emotional vocal coloring."
+            },
+            {
+              "id": "s5-p2",
+              "phaseName": "Core Concept / Instruction",
+              "durationMin": 15,
+              "description": "The leadership narrative arc: turning raw events into sovereign lessons."
+            },
+            {
+              "id": "s5-p3",
+              "phaseName": "Demonstration & Analysis",
+              "durationMin": 20,
+              "description": "Case study of iconic leadership speeches that shifted organizational history."
+            },
+            {
+              "id": "s5-p4",
+              "phaseName": "Practical Speaking Exercises",
+              "durationMin": 30,
+              "description": "The Leadership Crucible Drill: sharing a defining high-stakes moment."
+            },
+            {
+              "id": "s5-p5",
+              "phaseName": "Feedback & Assessment",
+              "durationMin": 10,
+              "description": "Authenticity, emotional vulnerability, and narrative pacing review."
+            },
+            {
+              "id": "s5-p6",
+              "phaseName": "Practice Assignment",
+              "durationMin": 5,
+              "description": "Refinement briefing for the 4-minute leadership story."
+            }
+          ],
+          "assignmentNotes": "Refine and record a 4-minute leadership crucible narrative. Focus on emotional vulnerability followed by resolute moral conviction.",
+          "exercises": [
+            {
+              "id": "p-exec-s5-e1",
+              "exerciseId": "ex-5",
+              "exerciseName": "The Leadership Crucible Story Arc",
+              "primaryMuscle": "Rhetoric & Storytelling",
+              "equipment": "Prepared Manuscript",
+              "tempo": "130 WPM Reflective",
+              "coachNotes": "Take time on the moment of crisis. Let the audience feel the stakes before the resolution.",
+              "sets": [
+                {
+                  "id": "s5-1",
+                  "setNumber": 1,
+                  "targetReps": "4:00 min",
+                  "targetRpe": 8,
+                  "targetWeightKg": 130,
+                  "restSeconds": 60
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "p-exec-s6",
+          "dayNumber": 6,
+          "name": "Session 6: Persuasive Communication & Stakeholder Influence",
+          "focus": "Classical Rhetoric (Ethos, Logos, Pathos) & Board Alignment",
+          "estimatedDurationMin": 90,
+          "warmupNotes": "Diaphragmatic power projection and tonal conviction switches.",
+          "cooldownNotes": "Rhetorical balance checklist.",
+          "objectives": [
+            "Classical rhetoric integration: balancing credibility (ethos), logic (logos), and emotion (pathos)",
+            "Building instant authority and trust with cynical or resistant stakeholders",
+            "Connecting empirical data and business logic directly with human impact",
+            "Adapting persuasion styles for different stakeholder groups (investors, board, public)",
+            "Delivering an unshakeable, high-conviction call to action"
+          ],
+          "phases": [
+            {
+              "id": "s6-p1",
+              "phaseName": "Review & Vocal Warm-up",
+              "durationMin": 10,
+              "description": "Diaphragmatic resonance power and authoritative cadence."
+            },
+            {
+              "id": "s6-p2",
+              "phaseName": "Core Concept / Instruction",
+              "durationMin": 15,
+              "description": "Ethos, logos, pathos balance in boardroom persuasion."
+            },
+            {
+              "id": "s6-p3",
+              "phaseName": "Demonstration & Analysis",
+              "durationMin": 20,
+              "description": "Analyzing board pitch simulations and high-stakes capital allocations."
+            },
+            {
+              "id": "s6-p4",
+              "phaseName": "Practical Speaking Exercises",
+              "durationMin": 30,
+              "description": "The Hostile Board Simulation: pitching under skeptical scrutiny."
+            },
+            {
+              "id": "s6-p5",
+              "phaseName": "Feedback & Assessment",
+              "durationMin": 10,
+              "description": "Rhetorical credibility, argument resilience, and conviction score."
+            },
+            {
+              "id": "s6-p6",
+              "phaseName": "Practice Assignment",
+              "durationMin": 5,
+              "description": "Assignment briefing on executive committee funding pitch."
+            }
+          ],
+          "assignmentNotes": "Deliver a 4-minute pitch convincing an executive board to fund a high-stakes initiative. Blend empirical projections with moral urgency.",
+          "exercises": [
+            {
+              "id": "p-exec-s6-e1",
+              "exerciseId": "ex-1",
+              "exerciseName": "High-Stakes Boardroom Persuasion",
+              "primaryMuscle": "Argumentation & Logic",
+              "equipment": "Prepared Manuscript",
+              "tempo": "140 WPM",
+              "coachNotes": "Lead with credibility, fortify with indisputable logic, close on moral vision.",
+              "sets": [
+                {
+                  "id": "s6-1",
+                  "setNumber": 1,
+                  "targetReps": "4:00 min",
+                  "targetRpe": 9,
+                  "targetWeightKg": 140,
+                  "restSeconds": 60
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "p-exec-s7",
+          "dayNumber": 7,
+          "name": "Session 7: Handling Questions & High-Pressure Communication",
+          "focus": "Media Inquiries, Hostile Questions & Crisis Composure",
+          "estimatedDurationMin": 90,
+          "warmupNotes": "Breath control under stress and rapid articulation reflex drills.",
+          "cooldownNotes": "Q&A debrief and pivot reflection.",
+          "objectives": [
+            "Impromptu response frameworks (PREP and Bridge-and-Pivot techniques)",
+            "Staying composed, measured, and calm under intense questioning",
+            "Answering difficult, loaded, or aggressive questions directly and effectively",
+            "Managing media-style questioning and rapid-fire press scrums",
+            "Avoiding defensive postures, speculation traps, and emotional escalation"
+          ],
+          "phases": [
+            {
+              "id": "s7-p1",
+              "phaseName": "Review & Vocal Warm-up",
+              "durationMin": 10,
+              "description": "Heart-rate lowering breathwork and articulatory agility."
+            },
+            {
+              "id": "s7-p2",
+              "phaseName": "Core Concept / Instruction",
+              "durationMin": 15,
+              "description": "Psychological composure, the Bridge-and-Pivot method, and media traps."
+            },
+            {
+              "id": "s7-p3",
+              "phaseName": "Demonstration & Analysis",
+              "durationMin": 20,
+              "description": "Deconstructing press conference masterclasses and crisis management."
+            },
+            {
+              "id": "s7-p4",
+              "phaseName": "Practical Speaking Exercises",
+              "durationMin": 30,
+              "description": "Live Fire Q&A Simulation: 5 rapid challenging cross-examinations."
+            },
+            {
+              "id": "s7-p5",
+              "phaseName": "Feedback & Assessment",
+              "durationMin": 10,
+              "description": "Composure under pressure, non-verbal stillness, and pivot precision."
+            },
+            {
+              "id": "s7-p6",
+              "phaseName": "Practice Assignment",
+              "durationMin": 5,
+              "description": "Assignment briefing on 5 recorded hostile Q&A responses."
+            }
+          ],
+          "assignmentNotes": "Record responses to 5 difficult stakeholder questions using the Bridge-and-Pivot technique. Keep all responses under 45 seconds.",
+          "exercises": [
+            {
+              "id": "p-exec-s7-e1",
+              "exerciseId": "ex-7",
+              "exerciseName": "Hostile Press & Board Q&A Crossfire",
+              "primaryMuscle": "Cross-Examination",
+              "equipment": "Cross-Examination",
+              "tempo": "Calm, Deliberate Cadence",
+              "coachNotes": "Acknowledge the core question, bridge to strategic truth, pivot to forward solution.",
+              "sets": [
+                {
+                  "id": "s7-1",
+                  "setNumber": 1,
+                  "targetReps": "3:00 min",
+                  "targetRpe": 9,
+                  "targetWeightKg": 135,
+                  "restSeconds": 45
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "p-exec-s8",
+          "dayNumber": 8,
+          "name": "Session 8: Final Executive Speaking Simulation",
+          "focus": "Capstone Keynote, Simulated Press Q&A & Baseline Comparison",
+          "estimatedDurationMin": 90,
+          "warmupNotes": "Full vocal resonance and diaphragm grounding routine.",
+          "cooldownNotes": "Portfolio debrief and graduation roadmap.",
+          "objectives": [
+            "Deliver a prepared 7-minute executive keynote presentation",
+            "Impromptu speaking on an unexpected corporate or industry scenario",
+            "Simulated Q&A with challenging pushback and press inquiries",
+            "Comprehensive final performance assessment and scorecard",
+            "Direct comparison with initial Day 1 baseline (pacing, presence, structure, poise)",
+            "Establish next-stage sovereign leadership development priorities and maintenance plan"
+          ],
+          "phases": [
+            {
+              "id": "s8-p1",
+              "phaseName": "Review & Vocal Warm-up",
+              "durationMin": 10,
+              "description": "Complete physiological grounding, resonance hums, and focus alignment."
+            },
+            {
+              "id": "s8-p2",
+              "phaseName": "Core Concept / Instruction",
+              "durationMin": 15,
+              "description": "Final executive review: presence, mastery, and enduring impact."
+            },
+            {
+              "id": "s8-p3",
+              "phaseName": "Demonstration & Analysis",
+              "durationMin": 20,
+              "description": "Mental readiness protocol and performance state calibration."
+            },
+            {
+              "id": "s8-p4",
+              "phaseName": "Practical Speaking Exercises",
+              "durationMin": 30,
+              "description": "Full Capstone: 7-Minute Keynote + 5-Minute Press & Board Q&A."
+            },
+            {
+              "id": "s8-p5",
+              "phaseName": "Feedback & Assessment",
+              "durationMin": 10,
+              "description": "Day 1 Baseline vs Day 8 Graduation Scorecard & comparative playback."
+            },
+            {
+              "id": "s8-p6",
+              "phaseName": "Practice Assignment",
+              "durationMin": 5,
+              "description": "Personal executive voice manifesto and ongoing maintenance rituals."
+            }
+          ],
+          "assignmentNotes": "Review your baseline vs graduation recording comparison. Establish your weekly 15-minute maintenance ritual in the Speaker App.",
+          "exercises": [
+            {
+              "id": "p-exec-s8-e1",
+              "exerciseId": "ex-1",
+              "exerciseName": "Capstone Executive Keynote & Board Q&A",
+              "primaryMuscle": "Audience Engagement",
+              "equipment": "Prepared Manuscript",
+              "tempo": "140 WPM Sovereign",
+              "coachNotes": "Command the entire chamber. Seamless synthesis of structure, presence, story, and poise.",
+              "sets": [
+                {
+                  "id": "s8-1",
+                  "setNumber": 1,
+                  "targetReps": "7:00 min",
+                  "targetRpe": 10,
+                  "targetWeightKg": 140,
+                  "restSeconds": 60
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
     {
       "id": "prog-1",
       "title": "8-Week Championship Debate Masterclass",

@@ -24,6 +24,10 @@ class Settings(BaseSettings):
     DEFAULT_COACH_EMAIL: str = "coach@globalorators.com"
     DEFAULT_COACH_PASSWORD: str = "Coach@123"
     
+    # Google OAuth / One Tap
+    GOOGLE_CLIENT_ID: str = "664033502342-9sijfg71v3c0i0riah1hhhgdufalfvk5.apps.googleusercontent.com"
+    GOOGLE_CLIENT_SECRET: str = "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"
+    
     # CORS
     CORS_ORIGINS: List[str] = [
         "http://localhost:3000",

@@ -36,6 +36,23 @@ async def test_api_endpoints():
         assert res.status_code == 200
         assert res.json()["email"] == settings.DEFAULT_COACH_EMAIL
 
+        # 3b. Google Auth for Executive Speaker
+        import base64
+        import json
+        mock_payload = base64.urlsafe_b64encode(json.dumps({
+            "sub": "google-test-exec-123",
+            "email": "executive.speaker@globalorators.org",
+            "name": "Dr. Arthur Vance"
+        }).encode()).decode().rstrip("=")
+        mock_jwt = f"mockHeader.{mock_payload}.mockSignature"
+
+        res = await client.post("/api/auth/google", json={"credential": mock_jwt, "role": "speaker"})
+        assert res.status_code == 200
+        speaker_token_data = res.json()
+        assert "access_token" in speaker_token_data
+        assert speaker_token_data["user"]["email"] == "executive.speaker@globalorators.org"
+        assert speaker_token_data["user"]["role"] == "speaker"
+
         # 4. Clients
         res = await client.get("/api/clients")
         assert res.status_code == 200

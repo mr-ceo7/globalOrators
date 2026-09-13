@@ -111,14 +111,31 @@ export const authApi = {
     });
     if (data?.access_token) {
       localStorage.setItem('nubianfit_token', data.access_token);
+      localStorage.setItem('globalorators_token', data.access_token);
       localStorage.setItem('nubianfit_user', JSON.stringify(data.user));
+      localStorage.setItem('globalorators_user', JSON.stringify(data.user));
+    }
+    return data;
+  },
+  googleAuth: async (credential: string, role: 'coach' | 'speaker' = 'speaker') => {
+    const data = await api.post<{ access_token: string; token_type: string; user: any }>('/auth/google', {
+      credential,
+      role
+    });
+    if (data?.access_token) {
+      localStorage.setItem('nubianfit_token', data.access_token);
+      localStorage.setItem('globalorators_token', data.access_token);
+      localStorage.setItem('nubianfit_user', JSON.stringify(data.user));
+      localStorage.setItem('globalorators_user', JSON.stringify(data.user));
     }
     return data;
   },
   me: () => api.get<any>('/auth/me'),
   logout: () => {
     localStorage.removeItem('nubianfit_token');
+    localStorage.removeItem('globalorators_token');
     localStorage.removeItem('nubianfit_user');
+    localStorage.removeItem('globalorators_user');
   },
 };
 

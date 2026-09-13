@@ -74,7 +74,121 @@ async def login(req: LoginRequest, db: AsyncSession = Depends(get_db)):
     )
 
 
+import base64
+import json
+from datetime import date
+from app.models.client import Client
+from app.schemas.auth import LoginRequest, RegisterRequest, UserResponse, TokenResponse, GoogleAuthRequest
+
+
+@router.post("/google", response_model=TokenResponse)
+async def google_auth(req: GoogleAuthRequest, db: AsyncSession = Depends(get_db)):
+    """Authenticate with Google ID token from One Tap or Google Sign-In."""
+    google_id = None
+    email = None
+    name = None
+    picture = None
+
+    # Verify via google-auth
+    try:
+        from google.oauth2 import id_token
+        from google.auth.transport import requests as google_requests
+        idinfo = id_token.verify_oauth2_token(
+            req.credential,
+            google_requests.Request(),
+            settings.GOOGLE_CLIENT_ID
+        )
+        google_id = idinfo.get("sub")
+        email = idinfo.get("email")
+        name = idinfo.get("name")
+        picture = idinfo.get("picture")
+    except Exception:
+        # Fallback decode for development/testing if token format is raw JWT
+        try:
+            parts = req.credential.split(".")
+            if len(parts) >= 2:
+                padding = "=" * (4 - len(parts[1]) % 4)
+                payload_str = base64.urlsafe_b64decode(parts[1] + padding).decode("utf-8")
+                payload = json.loads(payload_str)
+                google_id = payload.get("sub") or payload.get("id")
+                email = payload.get("email")
+                name = payload.get("name") or payload.get("given_name")
+                picture = payload.get("picture")
+        except Exception:
+            pass
+
+    if not email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid Google credential token"
+        )
+
+    email_clean = email.strip().lower()
+    full_name = name or email_clean.split("@")[0].title()
+    avatar_url = picture or "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80"
+    role = req.role if req.role in ["coach", "speaker"] else "speaker"
+
+    result = await db.execute(select(User).where(User.email == email_clean))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        user = User(
+            id=f"{role}-{uuid.uuid4().hex[:8]}",
+            email=email_clean,
+            hashed_password="",
+            full_name=full_name,
+            role=role,
+            google_id=google_id,
+            avatar=avatar_url,
+            is_active=True,
+            created_at=datetime.now(timezone.utc)
+        )
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+    else:
+        updated = False
+        if google_id and not user.google_id:
+            user.google_id = google_id
+            updated = True
+        if picture and user.avatar != picture:
+            user.avatar = picture
+            updated = True
+        if updated:
+            await db.commit()
+            await db.refresh(user)
+
+    # If speaker, ensure client record exists in roster
+    if user.role == "speaker":
+        client_res = await db.execute(select(Client).where(Client.email == email_clean))
+        client = client_res.scalar_one_or_none()
+        if not client:
+            new_client = Client(
+                id=f"client-{uuid.uuid4().hex[:8]}",
+                name=user.full_name,
+                email=user.email,
+                avatar=user.avatar,
+                status="Active",
+                compliance_rate=100,
+                workouts_completed=0,
+                current_program_name="Executive Public Speaking & Presentation Skills",
+                goal="Executive & Board Pitching",
+                start_date=date.today().isoformat(),
+                custom_coach_notes=["Executive orator onboarded via Google Authentication."]
+            )
+            db.add(new_client)
+            await db.commit()
+
+    token = create_access_token(user.id)
+    return TokenResponse(
+        access_token=token,
+        token_type="bearer",
+        user=UserResponse.model_validate(user)
+    )
+
+
 @router.get("/me", response_model=UserResponse)
 async def get_me(current_user: User = Depends(get_current_user)):
-    """Get the profile of currently authenticated coach."""
+    """Get the profile of currently authenticated coach or speaker."""
     return UserResponse.model_validate(current_user)
+

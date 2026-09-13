@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, ArrowRight, Loader2, AlertCircle, Mic, Phone, Mail } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { sanitizeText } from '../../utils/sanitization';
+import { GoogleAuthButton } from '../auth/GoogleAuthButton';
 
 interface SpeakerLoginModalProps {
   isOpen: boolean;
@@ -127,6 +128,25 @@ export const SpeakerLoginModal: React.FC<SpeakerLoginModalProps> = ({
             </div>
           </div>
         )}
+
+        {/* Google One Tap & Google Sign In */}
+        <div className="mb-5 space-y-3">
+          <GoogleAuthButton
+            role="speaker"
+            text="continue_with"
+            enableOneTap={true}
+            onSuccess={() => onClose()}
+            onError={(err) => setErrorMsg(err)}
+          />
+
+          <div className="relative flex items-center justify-center py-2">
+            <div className="border-t border-slate-800 w-full" />
+            <span className="bg-[#101318] px-2.5 text-[10px] font-mono tracking-widest text-slate-500 uppercase shrink-0">
+              Or Lookup Record
+            </span>
+            <div className="border-t border-slate-800 w-full" />
+          </div>
+        </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
