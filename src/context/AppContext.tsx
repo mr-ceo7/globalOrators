@@ -406,12 +406,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [activeWorkoutToLog, setActiveWorkoutToLog] = useState<ScheduledWorkout | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const showToast = (msg: string) => {
+  const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage(null);
     }, 3500);
-  };
+  }, []);
 
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = getSavedTheme();
