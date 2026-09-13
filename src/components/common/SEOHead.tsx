@@ -14,7 +14,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
   description,
   canonicalPath = '/',
   ogType = 'website',
-  ogImage = '/images/hero-orator.jpg',
+  ogImage = '/images/og-preview.jpg',
   jsonLd,
 }) => {
   useEffect(() => {
@@ -43,7 +43,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
     }
     linkCanonical.setAttribute('href', canonicalUrl);
 
-    // 4. Set OpenGraph Meta Tags
+    // 4. OpenGraph & Twitter Meta Tag Helpers
     const setMetaProperty = (prop: string, content: string) => {
       let el = document.querySelector(`meta[property="${prop}"]`);
       if (!el) {
@@ -54,12 +54,37 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
       el.setAttribute('content', content);
     };
 
+    const setMetaName = (name: string, content: string) => {
+      let el = document.querySelector(`meta[name="${name}"]`);
+      if (!el) {
+        el = document.createElement('meta');
+        el.setAttribute('name', name);
+        document.head.appendChild(el);
+      }
+      el.setAttribute('content', content);
+    };
+
+    const ogImageUrl = ogImage.startsWith('http') ? ogImage : `${baseDomain}${ogImage.startsWith('/') ? ogImage : `/${ogImage}`}`;
+
+    setMetaProperty('og:site_name', 'Global Orators');
     setMetaProperty('og:title', fullTitle);
     setMetaProperty('og:description', description);
     setMetaProperty('og:url', canonicalUrl);
     setMetaProperty('og:type', ogType);
-    const ogImageUrl = ogImage.startsWith('http') ? ogImage : `${baseDomain}${ogImage.startsWith('/') ? ogImage : `/${ogImage}`}`;
     setMetaProperty('og:image', ogImageUrl);
+    setMetaProperty('og:image:secure_url', ogImageUrl);
+    setMetaProperty('og:image:type', ogImageUrl.endsWith('.png') ? 'image/png' : 'image/jpeg');
+    setMetaProperty('og:image:width', '1200');
+    setMetaProperty('og:image:height', '630');
+    setMetaProperty('og:image:alt', `${title} - Global Orators`);
+    setMetaProperty('og:locale', 'en_US');
+
+    // Twitter Card
+    setMetaName('twitter:card', 'summary_large_image');
+    setMetaName('twitter:title', fullTitle);
+    setMetaName('twitter:description', description);
+    setMetaName('twitter:image', ogImageUrl);
+    setMetaName('twitter:image:alt', `${title} - Global Orators`);
 
     // 5. Inject Structured Data JSON-LD
     if (jsonLd) {

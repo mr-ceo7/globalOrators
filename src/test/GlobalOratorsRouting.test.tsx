@@ -174,5 +174,25 @@ describe('Global Orators Dedicated Routing & SEO Tests', () => {
     const jsonLdScript = document.getElementById('seo-json-ld');
     expect(jsonLdScript).toBeInTheDocument();
     expect(jsonLdScript?.textContent).toContain('Test Forensic Course');
+
+    // Verify OpenGraph tags
+    const ogTitle = document.querySelector('meta[property="og:title"]');
+    expect(ogTitle?.getAttribute('content')).toContain('Custom Test Page Title');
+
+    const ogDesc = document.querySelector('meta[property="og:description"]');
+    expect(ogDesc?.getAttribute('content')).toBe('Custom test meta description for search engine ranking.');
+
+    const ogImage = document.querySelector('meta[property="og:image"]');
+    expect(ogImage?.getAttribute('content')).toBe('https://globalorators.org/images/og-preview.jpg');
+
+    const ogWidth = document.querySelector('meta[property="og:image:width"]');
+    expect(ogWidth?.getAttribute('content')).toBe('1200');
+
+    // Verify Twitter card tags
+    const twitterCard = document.querySelector('meta[name="twitter:card"]');
+    expect(twitterCard?.getAttribute('content')).toBe('summary_large_image');
+
+    const twitterImage = document.querySelector('meta[name="twitter:image"]');
+    expect(twitterImage?.getAttribute('content')).toBe('https://globalorators.org/images/og-preview.jpg');
   });
 });
