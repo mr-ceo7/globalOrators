@@ -2,9 +2,12 @@
 Application Configuration and Settings
 """
 
+import os
 from typing import List
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+_backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_default_db_path = os.path.join(_backend_dir, "nubianfit.db")
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "global Orators Speech & Debate Coaching Platform API"
@@ -12,7 +15,7 @@ class Settings(BaseSettings):
     API_PREFIX: str = "/api"
     
     # Database
-    DATABASE_URL: str = "sqlite+aiosqlite:///./nubianfit.db"
+    DATABASE_URL: str = f"sqlite+aiosqlite:///{_default_db_path}"
     
     # JWT Authentication
     SECRET_KEY: str = "globalorators-super-secret-jwt-signing-key-2026-secure"

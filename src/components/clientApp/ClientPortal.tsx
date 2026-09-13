@@ -449,7 +449,7 @@ export const ClientPortal: React.FC = () => {
             onClick={() => setCurrentPortal('coach_os')}
             aria-label="Open Coach OS"
             className="p-2 sm:px-2.5 sm:py-1.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-colors"
-            title="Open Coach OS (coach.globalorators.com)"
+            title="Open Coach OS (coach.globaloratorsproject.com)"
           >
             <ShieldCheck className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-teal-400" />
             <span className="hidden md:inline">Coach OS</span>
@@ -459,7 +459,7 @@ export const ClientPortal: React.FC = () => {
             onClick={() => setCurrentPortal('landing')}
             aria-label="Return to Public Site"
             className="p-2 sm:px-2.5 sm:py-1.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-            title="Return to Landing Page (globalorators.com)"
+            title="Return to Landing Page (globaloratorsproject.com)"
           >
             <Globe className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-emerald-400" />
             <span className="hidden md:inline">Public Site</span>

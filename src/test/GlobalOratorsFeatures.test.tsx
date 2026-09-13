@@ -99,16 +99,16 @@ describe('Global Orators Landing Page & Features Tests', () => {
     expect(screen.getByText(/a generation that can speak must also learn to think/i)).toBeInTheDocument();
   }, 15000);
 
-  test('should render SubdomainSwitcher with globalorators.com, app, and coach domains', () => {
+  test('should render SubdomainSwitcher with globaloratorsproject.com, app, and coach domains', () => {
     render(
       <AppProvider>
         <SubdomainSwitcher />
       </AppProvider>
     );
 
-    expect(screen.getAllByText('globalorators.com').length).toBeGreaterThan(0);
-    expect(screen.getByText('app.globalorators.com')).toBeInTheDocument();
-    expect(screen.getByText('coach.globalorators.com')).toBeInTheDocument();
+    expect(screen.getAllByText('globaloratorsproject.com').length).toBeGreaterThan(0);
+    expect(screen.getByText('app.globaloratorsproject.com')).toBeInTheDocument();
+    expect(screen.getByText('coach.globaloratorsproject.com')).toBeInTheDocument();
   });
 
   test('should render Client-Side Speaker App with drill studio, catharsis vault, and habit tracking', () => {
