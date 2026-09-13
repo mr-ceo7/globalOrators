@@ -54,7 +54,7 @@ async def test_api_endpoints():
         assert speaker_token_data["user"]["role"] == "speaker"
 
         # 4. Clients
-        res = await client.get("/api/clients")
+        res = await client.get("/api/clients", headers=headers)
         assert res.status_code == 200
         clients = res.json()
         assert len(clients) >= 6
@@ -65,26 +65,27 @@ async def test_api_endpoints():
         # Add Coach note to first client
         res = await client.post(
             f"/api/clients/{first_client['id']}/notes",
-            json={"note": "Test note from automated test"}
+            json={"note": "Test note from automated test"},
+            headers=headers
         )
         assert res.status_code == 200
         assert res.json()["customCoachNotes"][0] == "Test note from automated test"
 
         # 5. Exercises
-        res = await client.get("/api/exercises")
+        res = await client.get("/api/exercises", headers=headers)
         assert res.status_code == 200
         exercises = res.json()
         assert len(exercises) >= 15
         assert "primaryMuscle" in exercises[0]
 
         # 6. Programs
-        res = await client.get("/api/programs")
+        res = await client.get("/api/programs", headers=headers)
         assert res.status_code == 200
         programs = res.json()
         assert len(programs) >= 3
 
         # 7. Scheduled Workouts
-        res = await client.get("/api/workouts")
+        res = await client.get("/api/workouts", headers=headers)
         assert res.status_code == 200
         workouts = res.json()
         assert len(workouts) >= 6
@@ -97,23 +98,24 @@ async def test_api_endpoints():
                 "coachFeedback": "Strong work",
                 "rating": 5,
                 "durationMin": 60
-            }
+            },
+            headers=headers
         )
         assert res.status_code == 200
         assert res.json()["status"] == "Completed"
 
         # 9. Metrics
-        res = await client.get("/api/metrics")
+        res = await client.get("/api/metrics", headers=headers)
         assert res.status_code == 200
         assert len(res.json()) >= 12
 
         # 10. PRs
-        res = await client.get("/api/prs")
+        res = await client.get("/api/prs", headers=headers)
         assert res.status_code == 200
         assert len(res.json()) >= 8
 
         # 11. Habits & Toggle
-        res = await client.get("/api/habits")
+        res = await client.get("/api/habits", headers=headers)
         assert res.status_code == 200
         toggle_res = await client.post(
             "/api/habits/toggle",
@@ -121,17 +123,18 @@ async def test_api_endpoints():
                 "clientId": first_client["id"],
                 "date": "2026-08-16",
                 "habitId": "h-1"
-            }
+            },
+            headers=headers
         )
         assert toggle_res.status_code == 200
 
         # 12. Photos
-        res = await client.get("/api/photos")
+        res = await client.get("/api/photos", headers=headers)
         assert res.status_code == 200
         assert len(res.json()) >= 6
 
         # 13. Messages
-        res = await client.get(f"/api/messages?clientId={first_client['id']}")
+        res = await client.get(f"/api/messages?clientId={first_client['id']}", headers=headers)
         assert res.status_code == 200
 
         # Send Message
@@ -141,13 +144,14 @@ async def test_api_endpoints():
                 "clientId": first_client["id"],
                 "sender": "coach",
                 "text": "Keep up the momentum!"
-            }
+            },
+            headers=headers
         )
         assert res.status_code == 201
         assert res.json()["text"] == "Keep up the momentum!"
 
         # 14. Activity Feed
-        res = await client.get("/api/activity")
+        res = await client.get("/api/activity", headers=headers)
         assert res.status_code == 200
         assert len(res.json()) >= 5
 
@@ -211,8 +215,8 @@ async def test_api_endpoints():
         )
         assert res_bad_org.status_code == 422
 
-        # List inquiries
-        res = await client.get("/api/inquiries")
+        # List inquiries (secured with require_coach)
+        res = await client.get("/api/inquiries", headers=headers)
         assert res.status_code == 200
         assert len(res.json()) >= 1
 
@@ -297,3 +301,123 @@ async def test_api_endpoints():
         assert res_update.json()["currentWeightKg"] == 144.0
 
         print("All API endpoints tested and passed flawlessly!")
+
+
+@pytest.mark.asyncio
+async def test_security_controls():
+    """Security regression tests verifying P0 and P1 audit remediation."""
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        # 1. Unauthenticated requests to private business routes return 401 Unauthorized
+        for route in [
+            "/api/clients",
+            "/api/workouts",
+            "/api/programs",
+            "/api/exercises",
+            "/api/inquiries",
+            "/api/metrics",
+            "/api/prs",
+            "/api/habits",
+            "/api/photos",
+            "/api/activity",
+        ]:
+            res = await client.get(route)
+            assert res.status_code == 401, f"Expected 401 for unauthenticated GET {route}, got {res.status_code}"
+
+        # 2. Coach registration requires valid coach_invite_code
+        import time
+        t_id = int(time.time() * 1000)
+        
+        # 2a. Attempting coach registration without invite code fails (403)
+        res_rogue_coach = await client.post(
+            "/api/auth/register",
+            json={
+                "email": f"rogue.coach.{t_id}@example.com",
+                "password": "Password123!",
+                "full_name": "Rogue Coach",
+                "role": "coach"
+            }
+        )
+        assert res_rogue_coach.status_code == 403
+
+        # 2b. Attempting coach registration with wrong invite code fails (403)
+        res_bad_invite = await client.post(
+            "/api/auth/register",
+            json={
+                "email": f"bad.invite.{t_id}@example.com",
+                "password": "Password123!",
+                "full_name": "Bad Invite Coach",
+                "role": "coach",
+                "coach_invite_code": "wrong-secret-code"
+            }
+        )
+        assert res_bad_invite.status_code == 403
+
+        # 2c. Valid coach registration with correct invite code succeeds (200)
+        res_valid_coach = await client.post(
+            "/api/auth/register",
+            json={
+                "email": f"valid.coach.{t_id}@example.com",
+                "password": "Password123!",
+                "full_name": "Valid Coach",
+                "role": "coach",
+                "coach_invite_code": settings.COACH_INVITE_CODE
+            }
+        )
+        assert res_valid_coach.status_code == 200
+        coach_token = res_valid_coach.json()["access_token"]
+        coach_headers = {"Authorization": f"Bearer {coach_token}"}
+
+        # 2d. Public registration without invite code defaults safely to 'speaker'
+        res_speaker_reg = await client.post(
+            "/api/auth/register",
+            json={
+                "email": f"speaker.{t_id}@example.com",
+                "password": "Password123!",
+                "full_name": "Registered Speaker",
+                "role": "speaker"
+            }
+        )
+        assert res_speaker_reg.status_code == 200
+        speaker_token = res_speaker_reg.json()["access_token"]
+        speaker_headers = {"Authorization": f"Bearer {speaker_token}"}
+        assert res_speaker_reg.json()["user"]["role"] == "speaker"
+
+        # 3. Google Auth Token Forgery Protection
+        # Arbitrary fabricated credentials without valid signature or mockHeader format fail (401)
+        res_forged_google = await client.post(
+            "/api/auth/google",
+            json={
+                "credential": "forged.payloadWithoutGoogleSignature.fakeSig",
+                "role": "coach"
+            }
+        )
+        assert res_forged_google.status_code == 401
+
+        # 4. Speaker Role Boundary & Tenant Isolation
+        # Speaker cannot create an exercise (Coach required) -> 403
+        res_spk_ex = await client.post(
+            "/api/exercises",
+            json={
+                "name": "Unauthorized Drill",
+                "primaryMuscle": "Articulation",
+                "equipment": "Floor",
+                "difficulty": "Advanced",
+                "instructions": ["Should fail"]
+            },
+            headers=speaker_headers
+        )
+        assert res_spk_ex.status_code == 403
+
+        # Speaker cannot access coach inquiries admin list -> 403
+        res_spk_inq = await client.get("/api/inquiries", headers=speaker_headers)
+        assert res_spk_inq.status_code == 403
+
+        # Speaker listing clients only receives their own record, with coach notes redacted
+        res_spk_clients = await client.get("/api/clients", headers=speaker_headers)
+        assert res_spk_clients.status_code == 200
+        for item in res_spk_clients.json():
+            assert item.get("customCoachNotes") == []
+
+        print("Security regression tests passed successfully!")
+

@@ -8,10 +8,11 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.dependencies import get_db
+from app.dependencies import get_db, get_current_user, require_coach
 from app.models.workout import ScheduledWorkout
 from app.models.client import Client
 from app.models.activity import ActivityFeedItem
+from app.models.user import User
 from app.schemas.workout import (
     ScheduledWorkoutCreate,
     ScheduledWorkoutUpdate,
@@ -27,7 +28,8 @@ async def list_workouts(
     client_id: Optional[str] = Query(None, alias="clientId"),
     date: Optional[str] = None,
     status_filter: Optional[str] = Query(None, alias="status"),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """List scheduled workouts with optional filtering."""
     query = select(ScheduledWorkout)
@@ -43,7 +45,11 @@ async def list_workouts(
 
 
 @router.get("/{workout_id}", response_model=ScheduledWorkoutResponse)
-async def get_workout(workout_id: str, db: AsyncSession = Depends(get_db)):
+async def get_workout(
+    workout_id: str, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """Get single workout details."""
     result = await db.execute(select(ScheduledWorkout).where(ScheduledWorkout.id == workout_id))
     w = result.scalar_one_or_none()
@@ -55,7 +61,8 @@ async def get_workout(workout_id: str, db: AsyncSession = Depends(get_db)):
 @router.post("", response_model=ScheduledWorkoutResponse, status_code=status.HTTP_201_CREATED)
 async def create_or_schedule_workout(
     workout_in: ScheduledWorkoutCreate,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Schedule a workout."""
     w_id = workout_in.id or f"sched-{int(time.time() * 1000)}"
@@ -74,7 +81,8 @@ async def create_or_schedule_workout(
 async def update_workout_log(
     workout_id: str,
     workout_in: ScheduledWorkoutUpdate,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Update workout details or live log data."""
     result = await db.execute(select(ScheduledWorkout).where(ScheduledWorkout.id == workout_id))
@@ -95,7 +103,8 @@ async def update_workout_log(
 async def complete_workout(
     workout_id: str,
     req: CompleteWorkoutRequest,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Complete a workout, update client statistics, and broadcast to activity feed."""
     result = await db.execute(select(ScheduledWorkout).where(ScheduledWorkout.id == workout_id))
@@ -142,8 +151,12 @@ async def complete_workout(
 
 
 @router.delete("/{workout_id}")
-async def delete_workout(workout_id: str, db: AsyncSession = Depends(get_db)):
-    """Delete scheduled workout."""
+async def delete_workout(
+    workout_id: str, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_coach)
+):
+    """Delete scheduled workout (Coach only)."""
     result = await db.execute(select(ScheduledWorkout).where(ScheduledWorkout.id == workout_id))
     w = result.scalar_one_or_none()
     if not w:

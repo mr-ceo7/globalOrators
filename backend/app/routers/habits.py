@@ -9,8 +9,9 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.dependencies import get_db
+from app.dependencies import get_db, get_current_user
 from app.models.habit import ClientDailyHabitLog
+from app.models.user import User
 from app.schemas.habit import (
     ClientDailyHabitLogCreate,
     ClientDailyHabitLogResponse,
@@ -24,7 +25,8 @@ router = APIRouter(prefix="/habits", tags=["Habits"])
 async def list_habit_logs(
     client_id: Optional[str] = Query(None, alias="clientId"),
     date_val: Optional[str] = Query(None, alias="date"),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """List habit logs."""
     query = select(ClientDailyHabitLog)
@@ -40,7 +42,8 @@ async def list_habit_logs(
 @router.post("", response_model=ClientDailyHabitLogResponse, status_code=status.HTTP_201_CREATED)
 async def create_habit_log(
     log_in: ClientDailyHabitLogCreate,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Create or save a daily habit log."""
     log_id = log_in.id or f"habit-{int(time.time() * 1000)}"
@@ -57,7 +60,8 @@ async def create_habit_log(
 @router.post("/toggle", response_model=ClientDailyHabitLogResponse)
 async def toggle_habit(
     req: ToggleHabitRequest,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Toggle completion status of a specific habit for a client date."""
     result = await db.execute(

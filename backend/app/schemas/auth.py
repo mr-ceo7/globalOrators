@@ -16,13 +16,15 @@ class RegisterRequest(BaseModel):
     password: str
     full_name: str
     avatar: Optional[str] = None
-    role: Optional[str] = "coach"
+    role: Optional[str] = "speaker"
+    coach_invite_code: Optional[str] = None
 
 
 class GoogleAuthRequest(BaseModel):
     credential: str
     role: Optional[str] = "speaker" # "coach" or "speaker"
     client_id: Optional[str] = None
+    coach_invite_code: Optional[str] = None
 
 
 class UserResponse(BaseModel):

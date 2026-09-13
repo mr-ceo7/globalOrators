@@ -8,8 +8,9 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.dependencies import get_db
+from app.dependencies import get_db, get_current_user, require_coach
 from app.models.exercise import Exercise
+from app.models.user import User
 from app.schemas.exercise import ExerciseCreate, ExerciseUpdate, ExerciseResponse
 
 router = APIRouter(prefix="/exercises", tags=["Exercises"])
@@ -23,7 +24,8 @@ async def list_exercises(
     equipment: Optional[str] = None,
     difficulty: Optional[str] = None,
     search: Optional[str] = None,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """List all exercises with optional filtering by skill/muscle, format/equipment, difficulty, or search term."""
     query = select(Exercise)
@@ -44,7 +46,11 @@ async def list_exercises(
 
 
 @router.get("/{exercise_id}", response_model=ExerciseResponse)
-async def get_exercise(exercise_id: str, db: AsyncSession = Depends(get_db)):
+async def get_exercise(
+    exercise_id: str, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """Get single exercise details."""
     result = await db.execute(select(Exercise).where(Exercise.id == exercise_id))
     ex = result.scalar_one_or_none()
@@ -54,8 +60,12 @@ async def get_exercise(exercise_id: str, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("", response_model=ExerciseResponse, status_code=status.HTTP_201_CREATED)
-async def create_exercise(exercise_in: ExerciseCreate, db: AsyncSession = Depends(get_db)):
-    """Create a new custom exercise."""
+async def create_exercise(
+    exercise_in: ExerciseCreate, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_coach)
+):
+    """Create a new custom exercise (Coach only)."""
     ex_id = f"ex-{int(time.time() * 1000)}"
     ex_dict = exercise_in.model_dump()
     ex_dict["is_custom"] = True
@@ -71,9 +81,10 @@ async def create_exercise(exercise_in: ExerciseCreate, db: AsyncSession = Depend
 async def update_exercise(
     exercise_id: str,
     exercise_in: ExerciseUpdate,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_coach)
 ):
-    """Update exercise details."""
+    """Update exercise details (Coach only)."""
     result = await db.execute(select(Exercise).where(Exercise.id == exercise_id))
     ex = result.scalar_one_or_none()
     if not ex:
@@ -89,8 +100,12 @@ async def update_exercise(
 
 
 @router.delete("/{exercise_id}")
-async def delete_exercise(exercise_id: str, db: AsyncSession = Depends(get_db)):
-    """Delete exercise."""
+async def delete_exercise(
+    exercise_id: str, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_coach)
+):
+    """Delete exercise (Coach only)."""
     result = await db.execute(select(Exercise).where(Exercise.id == exercise_id))
     ex = result.scalar_one_or_none()
     if not ex:
@@ -99,3 +114,4 @@ async def delete_exercise(exercise_id: str, db: AsyncSession = Depends(get_db)):
     await db.delete(ex)
     await db.commit()
     return {"message": "Exercise deleted successfully", "id": exercise_id}
+

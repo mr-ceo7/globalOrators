@@ -8,10 +8,11 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.dependencies import get_db
+from app.dependencies import get_db, get_current_user
 from app.models.metric import MetricEntry
 from app.models.client import Client
 from app.models.activity import ActivityFeedItem
+from app.models.user import User
 from app.schemas.metric import MetricEntryCreate, MetricEntryResponse
 
 router = APIRouter(prefix="/metrics", tags=["Metrics"])
@@ -20,7 +21,8 @@ router = APIRouter(prefix="/metrics", tags=["Metrics"])
 @router.get("", response_model=List[MetricEntryResponse])
 async def list_metrics(
     client_id: Optional[str] = Query(None, alias="clientId"),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """List biometric metric entries, optionally filtered by client."""
     query = select(MetricEntry)
@@ -34,7 +36,8 @@ async def list_metrics(
 @router.post("", response_model=MetricEntryResponse, status_code=status.HTTP_201_CREATED)
 async def create_metric_entry(
     metric_in: MetricEntryCreate,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Add a new biometric entry and update client current weight."""
     m_id = metric_in.id or f"m-{int(time.time() * 1000)}"
@@ -72,7 +75,11 @@ async def create_metric_entry(
 
 
 @router.delete("/{metric_id}")
-async def delete_metric_entry(metric_id: str, db: AsyncSession = Depends(get_db)):
+async def delete_metric_entry(
+    metric_id: str, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """Delete metric entry."""
     result = await db.execute(select(MetricEntry).where(MetricEntry.id == metric_id))
     m = result.scalar_one_or_none()

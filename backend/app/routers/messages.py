@@ -9,8 +9,9 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.dependencies import get_db
+from app.dependencies import get_db, get_current_user
 from app.models.message import ChatMessage
+from app.models.user import User
 from app.schemas.message import ChatMessageCreate, ChatMessageResponse
 
 router = APIRouter(prefix="/messages", tags=["Messages"])
@@ -19,7 +20,8 @@ router = APIRouter(prefix="/messages", tags=["Messages"])
 @router.get("", response_model=List[ChatMessageResponse])
 async def list_messages(
     client_id: Optional[str] = Query(None, alias="clientId"),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """List chat messages, optionally filtered by client."""
     query = select(ChatMessage)
@@ -33,7 +35,8 @@ async def list_messages(
 @router.post("", response_model=ChatMessageResponse, status_code=status.HTTP_201_CREATED)
 async def send_message(
     msg_in: ChatMessageCreate,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Send a new message."""
     now_str = datetime.now().strftime("%I:%M %p")

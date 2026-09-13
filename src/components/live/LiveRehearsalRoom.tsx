@@ -232,7 +232,8 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
       try {
         const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const wsHost = window.location.hostname === 'localhost' ? 'localhost:8005' : window.location.host;
-        const wsUrl = `${wsProtocol}//${wsHost}/ws/signaling/${safeRoomId}`;
+        const authToken = localStorage.getItem('globalorators_token') || localStorage.getItem('nubianfit_token') || '';
+        const wsUrl = `${wsProtocol}//${wsHost}/ws/signaling/${safeRoomId}${authToken ? `?token=${encodeURIComponent(authToken)}` : ''}`;
         const ws = new WebSocket(wsUrl);
 
         ws.onmessage = (e) => handleSignalingData(e.data);

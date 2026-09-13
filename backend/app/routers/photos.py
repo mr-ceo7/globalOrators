@@ -8,8 +8,9 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.dependencies import get_db
+from app.dependencies import get_db, get_current_user
 from app.models.photo import ProgressPhoto
+from app.models.user import User
 from app.schemas.photo import ProgressPhotoCreate, ProgressPhotoResponse
 
 router = APIRouter(prefix="/photos", tags=["Photos"])
@@ -18,7 +19,8 @@ router = APIRouter(prefix="/photos", tags=["Photos"])
 @router.get("", response_model=List[ProgressPhotoResponse])
 async def list_photos(
     client_id: Optional[str] = Query(None, alias="clientId"),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """List progress photos, optionally filtered by client."""
     query = select(ProgressPhoto)
@@ -32,7 +34,8 @@ async def list_photos(
 @router.post("", response_model=ProgressPhotoResponse, status_code=status.HTTP_201_CREATED)
 async def create_photo(
     photo_in: ProgressPhotoCreate,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Add a progress photo entry."""
     p_id = photo_in.id or f"photo-{int(time.time() * 1000)}"
@@ -47,7 +50,11 @@ async def create_photo(
 
 
 @router.delete("/{photo_id}")
-async def delete_photo(photo_id: str, db: AsyncSession = Depends(get_db)):
+async def delete_photo(
+    photo_id: str, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """Delete progress photo."""
     result = await db.execute(select(ProgressPhoto).where(ProgressPhoto.id == photo_id))
     p = result.scalar_one_or_none()

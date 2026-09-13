@@ -20,21 +20,29 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @router.post("/register", response_model=TokenResponse)
 async def register(req: RegisterRequest, db: AsyncSession = Depends(get_db)):
-    """Register a new coach account."""
+    """Register a new account (speakers by default; coach role requires valid invite code)."""
+    desired_role = req.role if req.role in ["coach", "speaker"] else "speaker"
+    if desired_role == "coach":
+        if not req.coach_invite_code or req.coach_invite_code != settings.COACH_INVITE_CODE:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Valid coach invite code required to create a coach account"
+            )
+
     # Check if user already exists
     existing = await db.execute(select(User).where(User.email == req.email.strip().lower()))
     if existing.scalar_one_or_none():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="A coach with this email already exists"
+            detail="An account with this email already exists"
         )
     
     new_user = User(
-        id=f"coach-{uuid.uuid4().hex[:8]}",
+        id=f"{desired_role}-{uuid.uuid4().hex[:8]}",
         email=req.email.strip().lower(),
         hashed_password=get_password_hash(req.password),
         full_name=req.full_name,
-        role=req.role or "coach",
+        role=desired_role,
         avatar=req.avatar or "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
         is_active=True,
         created_at=datetime.now(timezone.utc)
@@ -103,35 +111,41 @@ async def google_auth(req: GoogleAuthRequest, db: AsyncSession = Depends(get_db)
         name = idinfo.get("name")
         picture = idinfo.get("picture")
     except Exception:
-        # Fallback decode for development/testing if token format is raw JWT
-        try:
-            parts = req.credential.split(".")
-            if len(parts) >= 2:
-                padding = "=" * (4 - len(parts[1]) % 4)
-                payload_str = base64.urlsafe_b64decode(parts[1] + padding).decode("utf-8")
-                payload = json.loads(payload_str)
-                google_id = payload.get("sub") or payload.get("id")
-                email = payload.get("email")
-                name = payload.get("name") or payload.get("given_name")
-                picture = payload.get("picture")
-        except Exception:
-            pass
+        # Strictly restricted to TESTING environment and mock header signatures
+        if settings.TESTING and req.credential.startswith("mockHeader."):
+            try:
+                parts = req.credential.split(".")
+                if len(parts) >= 2:
+                    padding = "=" * (4 - len(parts[1]) % 4)
+                    payload_str = base64.urlsafe_b64decode(parts[1] + padding).decode("utf-8")
+                    payload = json.loads(payload_str)
+                    google_id = payload.get("sub") or payload.get("id")
+                    email = payload.get("email")
+                    name = payload.get("name") or payload.get("given_name")
+                    picture = payload.get("picture")
+            except Exception:
+                pass
 
     if not email:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid Google credential token"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Google credentials or token verification failed"
         )
 
     email_clean = email.strip().lower()
     full_name = name or email_clean.split("@")[0].title()
     avatar_url = picture or "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80"
-    role = req.role if req.role in ["coach", "speaker"] else "speaker"
 
     result = await db.execute(select(User).where(User.email == email_clean))
     user = result.scalar_one_or_none()
 
     if not user:
+        # Determine role: only allow coach if invite code is provided and matches
+        if req.role == "coach" and req.coach_invite_code == settings.COACH_INVITE_CODE:
+            role = "coach"
+        else:
+            role = "speaker"
+
         user = User(
             id=f"{role}-{uuid.uuid4().hex[:8]}",
             email=email_clean,
@@ -147,6 +161,7 @@ async def google_auth(req: GoogleAuthRequest, db: AsyncSession = Depends(get_db)
         await db.commit()
         await db.refresh(user)
     else:
+        role = user.role
         updated = False
         if google_id and not user.google_id:
             user.google_id = google_id

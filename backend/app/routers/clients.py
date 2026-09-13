@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete, or_
 
-from app.dependencies import get_db, get_optional_user
+from app.dependencies import get_db, get_current_user, get_optional_user, require_coach
 from app.models.client import Client
 from app.models.activity import ActivityFeedItem
 from app.models.user import User
@@ -22,10 +22,16 @@ router = APIRouter(prefix="/clients", tags=["Clients"])
 async def list_clients(
     status_filter: Optional[str] = Query(None, alias="status"),
     search: Optional[str] = None,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
-    """List all clients with optional filtering."""
+    """List clients. Coaches see all roster clients; speakers only see their own profile."""
     query = select(Client)
+    
+    # Speaker isolation: speakers can only view their own client profile
+    if current_user.role != "coach":
+        query = query.where(Client.email.ilike(current_user.email))
+    
     if status_filter:
         query = query.where(Client.status == status_filter)
     if search:
@@ -42,18 +48,25 @@ async def list_clients(
         query = query.where(or_(*conditions))
     
     result = await db.execute(query)
-    return result.scalars().all()
+    clients = result.scalars().all()
+    
+    # Redact sensitive coach notes for non-coach callers
+    if current_user.role != "coach":
+        for c in clients:
+            c.custom_coach_notes = []
+    return clients
 
 
 @router.get("/lookup", response_model=ClientResponse)
 async def lookup_client(
-    search: str = Query(..., description="Email, phone, or name of the speaker to lookup"),
-    db: AsyncSession = Depends(get_db)
+    search: str = Query(..., description="Email or phone of the speaker to lookup"),
+    db: AsyncSession = Depends(get_db),
+    user: Optional[User] = Depends(get_optional_user)
 ):
-    """Lookup a speaker profile by email, phone, or name for authentication and portal entry."""
+    """Lookup a speaker profile by exact email or phone. Sensitive coach notes are redacted for non-coach callers."""
     search_term = search.strip()
-    if not search_term:
-        raise HTTPException(status_code=400, detail="Search term cannot be empty")
+    if not search_term or len(search_term) < 4:
+        raise HTTPException(status_code=400, detail="Search query must be at least 4 characters")
 
     search_lower = search_term.lower()
     phone_digits = "".join(c for c in search_term if c.isdigit())
@@ -71,16 +84,35 @@ async def lookup_client(
     client = result.scalars().first()
     if not client:
         raise HTTPException(status_code=404, detail="Speaker profile not found")
+    
+    # Redact internal coach notes if requester is unauthenticated or not a coach
+    if not user or user.role != "coach":
+        client.custom_coach_notes = []
+        
     return client
 
 
 @router.get("/{client_id}", response_model=ClientResponse)
-async def get_client(client_id: str, db: AsyncSession = Depends(get_db)):
-    """Retrieve single client details."""
+async def get_client(
+    client_id: str, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Retrieve single client details. Non-coaches can only view their own profile."""
     result = await db.execute(select(Client).where(Client.id == client_id))
     client = result.scalar_one_or_none()
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
+        
+    if current_user.role != "coach" and (not client.email or client.email.lower() != current_user.email.lower()):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="Access denied to other orator profiles"
+        )
+        
+    if current_user.role != "coach":
+        client.custom_coach_notes = []
+        
     return client
 
 
@@ -104,6 +136,11 @@ async def create_client(
 
     if existing:
         update_data = client_in.model_dump(exclude_unset=True)
+        # Protect coach notes from being overwritten by public unauthenticated callers
+        if not user or user.role != "coach":
+            update_data.pop("custom_coach_notes", None)
+            update_data.pop("compliance_rate", None)
+            
         for key, value in update_data.items():
             setattr(existing, key, value)
         existing.last_active = "Just now"
@@ -114,6 +151,10 @@ async def create_client(
     client_id = f"client-{int(time.time() * 1000)}"
     
     client_dict = client_in.model_dump()
+    # If not coach, do not allow setting coach notes on creation
+    if not user or user.role != "coach":
+        client_dict["custom_coach_notes"] = []
+
     new_client = Client(
         id=client_id,
         workouts_completed=0,
@@ -148,15 +189,26 @@ async def create_client(
 async def update_client(
     client_id: str,
     client_in: ClientUpdate,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Update client information."""
     result = await db.execute(select(Client).where(Client.id == client_id))
     client = result.scalar_one_or_none()
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
+        
+    if current_user.role != "coach" and (not client.email or client.email.lower() != current_user.email.lower()):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="Access denied to update other orator profiles"
+        )
     
     update_data = client_in.model_dump(exclude_unset=True)
+    if current_user.role != "coach":
+        update_data.pop("custom_coach_notes", None)
+        update_data.pop("compliance_rate", None)
+        
     for field, val in update_data.items():
         setattr(client, field, val)
         
@@ -169,9 +221,10 @@ async def update_client(
 async def add_coach_note(
     client_id: str,
     note_req: AddCoachNoteRequest,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_coach)
 ):
-    """Add a coach note to client profile."""
+    """Add a coach note to client profile (Coach only)."""
     result = await db.execute(select(Client).where(Client.id == client_id))
     client = result.scalar_one_or_none()
     if not client:
@@ -187,8 +240,12 @@ async def add_coach_note(
 
 
 @router.delete("/{client_id}")
-async def delete_client(client_id: str, db: AsyncSession = Depends(get_db)):
-    """Delete client."""
+async def delete_client(
+    client_id: str, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_coach)
+):
+    """Delete client (Coach only)."""
     result = await db.execute(select(Client).where(Client.id == client_id))
     client = result.scalar_one_or_none()
     if not client:
@@ -197,3 +254,4 @@ async def delete_client(client_id: str, db: AsyncSession = Depends(get_db)):
     await db.delete(client)
     await db.commit()
     return {"message": "Client deleted successfully", "id": client_id}
+

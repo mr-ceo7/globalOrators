@@ -9,11 +9,12 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.dependencies import get_db
+from app.dependencies import get_db, get_current_user, require_coach
 from app.models.program import TrainingProgram
 from app.models.client import Client
 from app.models.workout import ScheduledWorkout
 from app.models.activity import ActivityFeedItem
+from app.models.user import User
 from app.schemas.program import (
     ProgramCreate,
     ProgramUpdate,
@@ -28,7 +29,8 @@ router = APIRouter(prefix="/programs", tags=["Programs"])
 async def list_programs(
     goal: Optional[str] = None,
     difficulty: Optional[str] = None,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """List all training programs."""
     query = select(TrainingProgram)
@@ -42,7 +44,11 @@ async def list_programs(
 
 
 @router.get("/{program_id}", response_model=ProgramResponse)
-async def get_program(program_id: str, db: AsyncSession = Depends(get_db)):
+async def get_program(
+    program_id: str, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """Get single program details."""
     result = await db.execute(select(TrainingProgram).where(TrainingProgram.id == program_id))
     prog = result.scalar_one_or_none()
@@ -52,8 +58,12 @@ async def get_program(program_id: str, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("", response_model=ProgramResponse, status_code=status.HTTP_201_CREATED)
-async def save_or_create_program(program_in: ProgramCreate, db: AsyncSession = Depends(get_db)):
-    """Create or update a training program."""
+async def save_or_create_program(
+    program_in: ProgramCreate, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_coach)
+):
+    """Create or update a training program (Coach only)."""
     now_str = date.today().isoformat()
     prog_id = program_in.id or f"prog-{int(time.time() * 1000)}"
     
@@ -96,9 +106,10 @@ async def save_or_create_program(program_in: ProgramCreate, db: AsyncSession = D
 async def update_program(
     program_id: str,
     program_in: ProgramUpdate,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_coach)
 ):
-    """Update program details."""
+    """Update program details (Coach only)."""
     result = await db.execute(select(TrainingProgram).where(TrainingProgram.id == program_id))
     prog = result.scalar_one_or_none()
     if not prog:
@@ -118,9 +129,10 @@ async def update_program(
 async def assign_program(
     program_id: str,
     req: AssignProgramRequest,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_coach)
 ):
-    """Assign training program to a client and auto-schedule upcoming workouts."""
+    """Assign training program to a client and auto-schedule upcoming workouts (Coach only)."""
     prog_res = await db.execute(select(TrainingProgram).where(TrainingProgram.id == program_id))
     program = prog_res.scalar_one_or_none()
     if not program:
@@ -187,8 +199,12 @@ async def assign_program(
 
 
 @router.delete("/{program_id}")
-async def delete_program(program_id: str, db: AsyncSession = Depends(get_db)):
-    """Delete training program."""
+async def delete_program(
+    program_id: str, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_coach)
+):
+    """Delete training program (Coach only)."""
     result = await db.execute(select(TrainingProgram).where(TrainingProgram.id == program_id))
     prog = result.scalar_one_or_none()
     if not prog:

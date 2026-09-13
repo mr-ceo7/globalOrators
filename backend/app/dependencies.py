@@ -78,3 +78,16 @@ async def get_optional_user(
         return result.scalar_one_or_none()
     except Exception:
         return None
+
+
+async def require_coach(
+    current_user: User = Depends(get_current_user)
+) -> User:
+    """Ensure authenticated user has coach privileges."""
+    if current_user.role != "coach":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Coach privileges required to access this resource"
+        )
+    return current_user
+
