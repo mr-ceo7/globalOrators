@@ -1,235 +1,245 @@
-# Global Orators Full Application Audit
+# Global Orators Production Readiness Audit
 
-**Audit date:** 2026-09-13  
-**Scope:** Dynamic-data integrity, demo/mock/static content, persistence, authentication fallbacks, deployment configuration, and production validation  
+**Audit date:** 2026-09-14
+**Scope:** Full application audit focused on demo/mock/static behavior, dynamic-data integrity, persistence, authentication, deployment configuration, and production validation
 **Verdict:** **NO-GO for professional public production**
 
-The application is a substantial working prototype and the frontend/backend test suites pass, but production-visible workflows still use fictional seed data, hardcoded personas, simulated results, browser-only state, and fallback authentication. A passing build does not prove that the product is dynamic or that user actions survive a new browser, device, deployment, or database failure.
+The latest remediation is meaningful: the frontend no longer imports the large mock-data collection, business collections initialize empty, automatic coach login was removed, the Google button no longer displays a mock-token simulator, and Render no longer runs the demo seed script during its build. The application still is not a trustworthy production system because several user-facing workflows can fabricate records or claims, keep data only in React/browser state, or fall back to unverified identity data.
 
 ## Executive summary
 
-The application is not currently a clean production system. The main issue is not the presence of test fixtures by itself; it is that fixture data and demo behavior are wired into the runtime path:
+The app now has a real API/database path for the core coach records, but it is not yet consistently API-first:
 
-- `src/context/AppContext.tsx` imports `src/data/mockData.ts` and initializes every business collection from it when local storage is empty.
-- API responses with an empty array do **not** replace the initial state, so stale mock data remains visible when the real account has no records.
-- `refreshFromBackend()` silently attempts to log in as `coach@globalorators.com` using `Coach@123` when no browser token exists.
-- Speaker portal content includes default identities, demo persona switching, hardcoded scores, synthetic coach messages, simulated recording metrics, and local-only journals.
-- Render builds and application startup run `seed_data.py`, inserting fictional clients, programs, metrics, photos, messages, and activity records into the production database.
-- `.env.example` contains a live-looking Google OAuth client secret rather than a placeholder.
-- Deployment environment names do not match the backend settings: Render defines `JWT_SECRET` and `COACH_SECRET_KEY`, while the backend reads `SECRET_KEY` and `COACH_INVITE_CODE`.
+- Google authentication still falls back to decoding an arbitrary JWT-shaped string in the browser and creating a synthetic user/client when the backend rejects the credential.
+- The speaker portal still generates roadmap sessions, habit logs, profile defaults, evaluation entries, journal entries, and executive simulations locally.
+- Recording controls do not record or analyze audio; they present “Analysis coming soon” behavior and local UI state.
+- Portal copy and metrics contain fixed claims such as `42 min estimated duration`, `Optimal Cadence`, `Top 5% Tier`, `High-Stakes Gravitas`, and `Voice Dispatch · Circle 07 Briefing` without a complete persisted source of truth.
+- Failed mutations commonly leave optimistic records in UI state after the API call fails. There is no rollback, durable retry queue, or pending/failed status.
+- The repository still contains `src/data/mockData.ts`, `backend/seed_data.json`, and a local `start.sh` path that seeds a database. These are not currently used by the Render production build, but they remain easy to reintroduce and require isolation.
+- Production configuration still has insecure development defaults in source, a hardcoded Google client ID fallback, and a production startup bootstrap account that needs an explicit credential-rotation and ownership procedure.
+
+Passing automated tests proves that the current implementation behaves as tested; it does not prove that production users see only authenticated, persisted, server-derived data.
 
 ## Severity summary
 
 | Severity | Count | Meaning |
 |---|---:|---|
-| Critical | 5 | Demo or fabricated behavior can appear to real users, or production authentication/configuration is unsafe |
-| High | 7 | User data is not reliably dynamic, durable, or operationally trustworthy |
-| Medium | 5 | Product behavior is misleading or incomplete under normal production conditions |
+| Critical | 3 | Authentication or user-facing behavior can fabricate identity or production records |
+| High | 7 | Core workflows are not durably dynamic, can misrepresent saved state, or expose unsupported claims |
+| Medium | 5 | Deployment hygiene, maintainability, and operational safeguards are incomplete |
 
 ## Critical findings
 
-### C1. Runtime mock data is a production fallback
+### C1. Google authentication still has an unsafe synthetic-user fallback
 
 **Evidence**
 
-- `src/context/AppContext.tsx` imports ten `INITIAL_*` collections from `src/data/mockData.ts`.
-- The file is 2,866 lines long and contains fictional clients, exercises, programs, schedules, metrics, personal records, habits, photos, messages, and activity.
-- State initialization falls back to those collections when local storage is empty.
-- `refreshFromBackend()` only calls `setClients`, `setExercises`, and similar setters when the API returns a non-empty array. A valid empty production response therefore leaves fictional local records on screen.
+- `src/context/AppContext.tsx` catches a failed `authApi.googleAuth()` call and decodes `credential.split('.')[1]` with `atob`.
+- It then constructs a local `mockUser`, accepts fallback email/name values, and creates a client with fixed program, health, performance, and coaching fields.
+- The fallback can return `{ success: true }` without a server-issued user or token.
 
 **Impact**
 
-New or empty accounts can see other people's fictional records. A network failure or empty API response can look like a successful populated account. This fails the requirement that displayed records originate from the authenticated user's backend data.
+A failed verification, unavailable backend, malformed credential, or service misconfiguration can appear as a successful login. The resulting speaker profile is not authenticated, not guaranteed to exist in the database, and is populated with fabricated records.
 
 **Required fix**
 
-Remove `mockData.ts` from the production runtime bundle. Initialize business collections as empty, show explicit loading/empty/error states, and always replace state with successful API responses, including empty arrays. Keep fixtures in test-only files.
+Delete the fallback decode and synthetic-client branch. Google login must fail closed unless the backend verifies the credential and returns a real authenticated user/session. Keep mock authentication only in isolated test fixtures guarded by `TESTING`.
 
-### C2. Automatic login uses hardcoded coach credentials
+### C2. Production-facing portal metrics and identity claims are fabricated or not fully persisted
 
 **Evidence**
 
-`src/context/AppContext.tsx` calls:
+`ClientPortal.tsx` still renders fixed or branch-derived claims including:
 
-```ts
-authApi.login('coach@globalorators.com', 'Coach@123')
-```
+- `42 min estimated duration`
+- `Optimal Cadence`
+- `Top 5% Tier`
+- `High-Stakes Gravitas`
+- `WUDC Standard`
+- fixed roadmap/session descriptions and objective text
+- `Voice Dispatch · Circle 07 Briefing`
+- `Verified Dispatch`
+- hardcoded WPM/BLUF/evaluation values in locally created entries
 
-`src/services/apiClient.ts` repeats the same credentials during token renewal.
+The portal also displays a guest/default classification when persisted profile/session data is absent rather than clearly showing an unavailable state.
 
 **Impact**
 
-The public frontend contains a credential pair intended to access the coach account. It also creates an implicit shared account and can silently turn an unauthenticated browser into a coach session. This is unacceptable for a production application.
+Professional users can interpret invented scores, rankings, credentials, delivery analyses, or coach-authored dispatches as real evidence. This is a data-integrity and product-trust failure, not merely placeholder copy.
 
 **Required fix**
 
-Delete automatic credential login and client-side token renewal by password. Require an explicit authenticated session, use an HttpOnly secure cookie or a short-lived token exchange, and display an authentication error instead of entering offline/demo mode.
+Source every metric, ranking, session objective, duration, dispatch, and verification label from persisted records and authenticated ownership. If a record does not exist, render an explicit empty or “not yet available” state. Do not infer professional claims from branch names or hardcoded labels.
 
-### C3. Google authentication still has a fabricated-token fallback
+### C3. Production writes can appear successful while remaining only local
 
 **Evidence**
 
-- `src/components/auth/GoogleAuthButton.tsx` renders a fallback simulator with a hardcoded `mockHeader.<payload>.mockSignature`.
-- `src/context/AppContext.tsx` decodes arbitrary JWT-shaped payloads after Google authentication fails and constructs a local user.
-- The fallback creates a client with hardcoded program, metrics, health, and coaching values.
+- `journalEntries` and `execEntries` in `ClientPortal.tsx` are React state only.
+- Recording handlers only toggle local recording state and show “Analysis coming soon”; there is no `MediaRecorder`, upload, storage, transcription, or analysis API.
+- Audio dispatch playback is a toast/message interaction rather than playback of a stored audio resource.
+- `AppContext` optimistically inserts photos, messages, habits, and other records, logs API failures, and leaves the optimistic record in state.
 
 **Impact**
 
-If the Google script is blocked or backend verification fails, the UI can present a successful-looking authenticated speaker without a verified identity or durable account. A production login control must fail closed.
+Users can see “saved,” “uploaded,” “sent,” or completed activity that disappears on refresh or never reached the server. A professional portal cannot claim durable workflow completion when the backend failed.
 
 **Required fix**
 
-Remove the fallback simulator and client-side payload decoding from production code. Keep mock Google credentials exclusively in isolated test fixtures behind a test build.
-
-### C4. Speaker portal contains explicit demo persona switching
-
-**Evidence**
-
-`ClientPortal.tsx` includes “Switch Demo Persona” controls for:
-
-- Executive Track (Dr. Vance)
-- Debate Track (Kwame)
-- Foundation Track (Nia)
-
-Each action replaces the active profile with a hardcoded object and displays a demo toast.
-
-**Impact**
-
-Real users can switch into fictional identities and see data unrelated to their account. This is a direct violation of the requested no-demo/no-mock requirement.
-
-**Required fix**
-
-Remove the controls and hardcoded personas. Derive the portal only from the authenticated speaker and records returned by the API.
-
-### C5. Production database is seeded with fictional records
-
-**Evidence**
-
-- `render.yaml` runs `python backend/seed_data.py` as part of the production build.
-- `backend/app/main.py` runs `seed_database(force=False)` during every application startup.
-- `backend/seed_data.json` contains 6 clients, 16 exercises, 4 programs, 6 scheduled workouts, 12 metrics, 8 personal records, 2 habit logs, 6 photos, 7 messages, and 5 activity items.
-- Records include names such as Marcus Vance, Elena Rostova, Dr. Arthur Vance, and example.com addresses.
-
-**Impact**
-
-Production starts with fabricated user history and media. The database is not a clean tenant environment, and new users may be exposed to seed content through the frontend fallback or broad coach views.
-
-**Required fix**
-
-Separate schema migration from demo seeding. Never run demo seed data in the production build or startup lifecycle. If a production bootstrap account is required, create only the required administrator with a one-time migration and force password rotation.
+Either implement authenticated persistence and processing for journals, evaluations, recordings, dispatches, and habits, or disable those controls and label them unavailable. Every mutation must reconcile with the server response and roll back or expose a durable pending/failed state when persistence fails.
 
 ## High findings
 
-### H1. Speaker profile has a hardcoded default identity
+### H1. Habit creation fabricates a fixed five-item log and has an invalid client fallback
 
-When no local profile exists, `AppContext` initializes `activeSpeakerProfile` as Kofi Mensah with a fixed email, phone, mission, age, habits, and bio. `ClientPortal` has a second fallback identity for Nia Adebayo.
+`toggleHabitCompletion()` creates five hardcoded habits with fixed values when no daily log exists. `ClientPortal.tsx` also uses `pairedClient?.id || 'client-1'`.
 
-**Impact:** A visitor can reach a populated speaker portal without a verified speaker record.
+**Impact:** An unpaired or unauthenticated speaker can write activity under a fabricated client ID, and the displayed habit set may not match server-defined habits or the speaker’s onboarding selections.
 
-### H2. Portal metrics are fabricated or hardcoded
+**Required fix:** Require an authenticated client ID, load server-defined habit templates, and create/update only the requested server record. Never use `client-1` as a production fallback.
 
-`ClientPortal.tsx` displays fixed values including `94.2%` clarity, `96%` BLUF/argumentative score, `18` sessions/rounds, `+4 this week`, `Week 3 · Session 2 · 42 min`, and fixed objective text. These are not sourced from metric, workout, or evaluation APIs.
+### H2. Roadmap sessions are generated in the browser when persisted workouts are missing
 
-**Impact:** The product presents performance claims that are not calculated from persisted evidence.
+When no persisted workouts are available, the portal derives sessions from program days using fixed Tuesday/Thursday scheduling, dates, times, room names, and status values.
 
-### H3. Recording results are random simulations
+**Impact:** A schedule can look confirmed even when no coach created or persisted it. Browser-generated sessions can conflict with the coach calendar and other devices.
 
-The portal does not use `MediaRecorder` or an analysis service for its “voice recorder.” `handleStopRecording()` generates WPM with `Math.random()` and assigns fixed clarity/filler values.
+**Required fix:** Render only persisted scheduled workouts/session records. Provide an empty state and a coach action when no schedule exists.
 
-**Impact:** “Instant delivery metrics” are fabricated and cannot be trusted by a professional speaker or coach.
+### H3. Onboarding fills missing user data with invented production values
 
-### H4. Coach messages and replies are simulated
+`completeOnboarding()` assigns fallback phone numbers, ages, body/health measurements, medical notes, program IDs, and fixed program names when the user did not provide those fields.
 
-`AppContext.sendMessage()` persists the initial message attempt but then schedules random canned client/coach replies with `setTimeout` and updates local state without a corresponding backend message. `ClientPortal` also initializes a canned welcome conversation whenever the profile persona changes.
+**Impact:** Incomplete onboarding becomes false client health/profile data and may be displayed to coaches or used in program logic.
 
-**Impact:** Users can believe a coach or speaker replied when no real message exists.
+**Required fix:** Keep optional fields null/unknown, validate required fields, and let the backend assign programs and defaults through explicit domain rules. Never create health or identity facts merely to satisfy a UI shape.
 
-### H5. Journals and executive simulations are local component state only
+### H4. Local profile storage can outlive authentication and influence the portal
 
-`journalEntries` and `execEntries` are initialized with fictional entries and updated with `setJournalEntries`/`setExecEntries`. There is no API call or database model for these records.
+The speaker profile is stored in `localStorage` and hydrated independently of a verified active session. Tokens and user metadata are also stored in `localStorage`.
 
-**Impact:** Entries disappear on refresh, device change, logout, or cache clearing, and the initial history is presented as real activity.
+**Impact:** A shared browser can reopen a previous speaker profile; XSS can access bearer tokens; clearing or modifying browser storage changes apparent identity and state.
 
-### H6. Habit state is duplicated and not reliably persisted
+**Required fix:** Treat the server session as authoritative, clear profile state on logout/401, scope profile data to the authenticated subject, and migrate bearer-token handling to secure HttpOnly cookies or a short-lived server exchange where practical.
 
-The portal maintains its own `habitsStatus` object and toggles it locally. `AppContext.toggleHabitCompletion()` has a backend call, but the portal does not use that shared action for its primary habit controls.
+### H5. Development seed fixtures remain close to runtime paths
 
-**Impact:** Habit completion shown to the speaker can diverge from the backend and from the coach view.
+`src/data/mockData.ts` and `backend/seed_data.json` remain in the repository. `backend/app/main.py` still imports `seed_database`, and `start.sh` automatically runs `backend/seed_data.py` when the local SQLite file is missing.
 
-### H7. Local storage is used as the business-data source and fallback
+Render’s current production configuration no longer runs the seed script during build, and production lifespan creates only a coach bootstrap user. However, the retained import and terminology make accidental production seeding easy.
 
-The context serializes clients, drills, programs, sessions, metrics, messages, habits, and speaker profiles into `localStorage`. This is acceptable for non-sensitive preferences such as theme, but not as a source of truth for business records or authentication.
+**Required fix:** Move fixtures into clearly isolated test/development packages, exclude them from production packaging where possible, remove the production module import, and make seeding an explicit developer command rather than automatic startup behavior.
 
-**Impact:** Browser-specific stale data can override server state; records are readable and modifiable by any script running in the origin; clearing storage changes the apparent account state.
+### H6. Hardcoded Google client ID fallback creates deployment ambiguity
+
+`GoogleAuthButton.tsx` uses a literal Google client ID when `VITE_GOOGLE_CLIENT_ID` is missing. The client ID is public rather than a secret, but this fallback can silently point a deployment at the wrong OAuth project/origins.
+
+**Required fix:** Require `VITE_GOOGLE_CLIENT_ID` in production and fail with a configuration error when absent. Keep the value only in deployment configuration.
+
+### H7. Coach/client messaging and other mutations lack authoritative failure handling
+
+`sendMessage`, photo creation, habit toggles, and several other actions update React state before the API call. Errors are logged with `console.warn`, but the temporary record remains and no retry or failed status is exposed.
+
+**Impact:** The UI can diverge from the database and users cannot tell whether the action is durable.
+
+**Required fix:** Replace optimistic persistence with server-confirmed updates, or implement explicit pending/failed records, rollback, retry, and idempotency.
 
 ## Medium findings
 
-### M1. Hardcoded placeholder media is used as real profile and exercise content
+### M1. Insecure development defaults remain in backend source
 
-The runtime contains many Unsplash avatar/photo URLs, default photo form values, fallback avatars, and `demo_video_placeholder_url` fields. These may be acceptable for a clearly labeled content library, but they are currently mixed with seeded user records and production portal history.
+`backend/app/config.py` still contains default values for the JWT secret, coach password, and invite code. Production validation rejects these values, which is an improvement, but source-level defaults are still risky and can be used accidentally in non-production deployments exposed to real data.
 
-### M2. Fallback and offline wording presents local state as saved
+**Required fix:** Require secrets outside test mode, use a dedicated local `.env`, and make startup fail for any environment intended to serve non-test users.
 
-Several actions optimistically update UI and retain local state after backend failure, showing messages such as “Offline mode: Profile saved locally. Cloud sync pending.” This is not durable persistence and has no retry queue or conflict resolution.
+### M2. Production bootstrap account needs an explicit operational procedure
 
-### M3. Deployment secret names are inconsistent
+Production startup creates `coach-1` if it does not exist using `DEFAULT_COACH_PASSWORD`. Render generates that value, but the repository does not establish how the credential is delivered securely, rotated, or forced to change after first login.
 
-`render.yaml` generates `JWT_SECRET` and `COACH_SECRET_KEY`, while `backend/app/config.py` reads `SECRET_KEY` and `COACH_INVITE_CODE`. Production secret validation therefore does not validate the variables Render actually provisions, and the invite code is not supplied by the deployment file.
+**Required fix:** Use a one-time provisioning/migration process, force password rotation, audit the bootstrap account, and document secret ownership and recovery.
 
-### M4. `.env.example` contains a credential-like Google secret
+### M3. Health endpoint reports application health without dependency readiness
 
-`.env.example` includes `GOOGLE_CLIENT_SECRET="GOCSPX-..."`. Even if the credential has been revoked, it must not be distributed as an example value. It should be rotated and replaced with an obvious placeholder.
+`/health` returns `healthy` without checking database connectivity, migration state, OAuth configuration, or required downstream services.
 
-### M5. The entire frontend ships as one oversized bundle
+**Required fix:** Split liveness and readiness checks and include database/service dependency status without exposing secrets.
 
-The production build emits a 1,153 kB minified JavaScript chunk and a Vite warning above the 500 kB threshold. This is not a demo-data failure, but it increases first-load cost and makes the large portal code harder to operate safely.
+### M4. Production bundle remains oversized
+
+The current build emits a `1,063.96 kB` minified JavaScript chunk and Vite warns above the 500 kB threshold.
+
+**Impact:** Slower first load, especially for mobile speakers, and larger blast radius for changes.
+
+**Required fix:** Code-split coach and speaker portals, lazy-load heavy live/rehearsal modules, and set performance budgets.
+
+### M5. Test suite passes but does not prove cross-session persistence
+
+The current tests validate rendering and mocked API behavior. They do not demonstrate that journals, recordings, evaluations, audio dispatches, habits, or onboarding data survive reload and a second authenticated browser session.
+
+**Required fix:** Add API/integration tests and end-to-end flows against a disposable database for every production-visible write.
 
 ## Dynamic-data trace
 
-| User-facing surface | Current source | Dynamic/persistent? | Result |
+| Surface | Current source | Durable and authenticated? | Result |
 |---|---|---:|---|
-| Coach roster | API plus local storage and `INITIAL_CLIENTS` fallback | Partially | **Fail** |
-| Programs and drills | API plus local storage and mock collections | Partially | **Fail** |
-| Speaker identity | API lookup plus local profile/default profiles | Partially | **Fail** |
-| Today's metrics | Profile fields plus hardcoded values | No | **Fail** |
-| Session roadmap | API workouts, otherwise generated from program days | Partially | **Fail** |
-| Voice recording metrics | Random client-side values | No | **Fail** |
-| Coach thread | API message attempt plus canned local replies | Partially | **Fail** |
-| Journals and executive simulations | Component state only | No | **Fail** |
-| Habits | Duplicate local state and API toggle | Partially | **Fail** |
-| Photos | API model plus placeholder URLs/default form URL | Partially | **Needs cleanup** |
-| Live rehearsal signaling | Jitsi/native WebRTC path exists | Partially | Requires deployed-service verification |
-| Theme and portal selection | Local storage | Yes, appropriate preference state | **Pass** |
+| Coach roster | API; empty initial state | Mostly | **Conditional** |
+| Programs/exercises/workouts | API, plus browser-generated roadmap fallback | Partially | **Fail** |
+| Speaker identity | API lookup, local profile, Google synthetic fallback | No | **Fail** |
+| Portal metrics/rankings | API fields plus fixed claims/values | No | **Fail** |
+| Session roadmap | Persisted workouts or generated local schedule | Partially | **Fail** |
+| Voice recording analysis | Local start/stop UI; no recorder or analyzer | No | **Fail** |
+| Coach messaging | API send plus optimistic local state | Partially | **Fail** |
+| Journals/simulations | React component state | No | **Fail** |
+| Habits | API toggle plus fixed local five-item fallback | Partially | **Fail** |
+| Photos | API create plus optimistic local item | Partially | **Needs correction** |
+| Live rehearsal | Jitsi/native WebRTC path and feedback API tests | Requires deployed verification | **Conditional** |
+| Theme/portal selection | Local storage preference | Yes, appropriate | **Pass** |
+
+## What improved since the previous audit
+
+- Production frontend business collections no longer import `src/data/mockData.ts`.
+- Successful empty API arrays now replace state instead of leaving fixture data visible.
+- Automatic hardcoded coach login and password renewal were removed.
+- The Google UI mock-token simulator was removed and now fails closed when GSI is unavailable.
+- Demo persona-switcher controls and default fictional speaker profiles were removed.
+- Render no longer runs `python backend/seed_data.py` during the production build.
+- Production startup no longer loads the full demo dataset; it creates only the bootstrap coach if needed.
+- `.env.example` no longer contains a Google client secret value; it uses a placeholder.
+- Empty-state regression coverage was added.
+
+These changes reduce the original demo-data exposure but do not satisfy the full production dynamic-data gate.
 
 ## Validation performed
 
 | Check | Result | Notes |
 |---|---|---|
 | Frontend TypeScript check | **Passed** | `npm run lint` |
-| Frontend production build | **Passed with warning** | 1,153 kB minified JS chunk |
-| Frontend tests | **Passed** | 12 files, 85 tests |
+| Frontend production build | **Passed with warning** | 1,063.96 kB minified JS chunk |
+| Frontend tests | **Passed** | 13 files, 88 tests |
 | Backend tests | **Passed** | 8 tests; 330 warnings |
-| Static/demo search | **Failed** | Runtime mock data, demo personas, simulated metrics, and seed data remain |
-| Production configuration audit | **Failed** | Secret-name mismatch and credential-like value in `.env.example` |
-| Dynamic persistence audit | **Failed** | Multiple user-facing workflows are local-only or simulated |
+| Production dependency audit | **Passed** | `npm audit --omit=dev --audit-level=high`: 0 vulnerabilities |
+| Runtime demo/static search | **Failed** | Synthetic Google fallback, fixed portal claims, generated sessions, local-only workflows, and fixed habit data remain |
+| Persistence audit | **Failed** | Several mutations remain optimistic/local-only without rollback or durable retry |
+| Deployment/release audit | **Incomplete** | Repository configuration inspected; deployed database, OAuth origins, backups, monitoring, rate limiting, and live signaling were not verified |
 
 ## Required release gate
 
-The release remains blocked until all of the following are complete:
+Do not approve public professional production until all of the following are complete:
 
-1. Remove `src/data/mockData.ts` from production runtime imports and delete every business-data fallback to it.
-2. Remove hardcoded coach auto-login, password renewal, Google simulator, arbitrary JWT decoding, default speaker identities, and demo persona switching.
-3. Remove fabricated portal metrics and calculate displayed values from persisted records or show an explicit empty state.
-4. Implement real recording storage and analysis, or label the feature as unavailable and remove simulated scores.
-5. Persist journals, executive simulations, voice notes, evaluations, and habit changes through authenticated API endpoints.
-6. Remove canned automatic coach/client replies; all messages must come from the message service and display delivery status.
-7. Stop production build/startup from running `seed_data.py`; migrate only intentional system/bootstrap data.
-8. Remove fictional seed records and placeholder/example identities from the production database.
-9. Align Render variables with backend settings (`SECRET_KEY`, `COACH_INVITE_CODE`, and the intended Google variables), then rotate any exposed credentials.
-10. Add tests asserting that an empty API response renders an empty state and never renders fixture records.
-11. Add end-to-end tests proving that a new user's profile, habits, journal/evaluation records, and messages persist after reload and from a second browser session.
-12. Verify the actual deployed environment, database, OAuth redirect origins, Jitsi service, backups, monitoring, and rate limiting rather than relying on repository configuration alone.
+1. Remove arbitrary client-side Google credential decoding and synthetic-user/client creation; require a verified backend session.
+2. Remove all fixed production-facing metrics, rankings, verification labels, audio dispatch claims, and hardcoded evaluation values.
+3. Remove browser-generated roadmap sessions and the `client-1` fallback; display an empty state when the server has no record.
+4. Implement persisted journal, simulation/evaluation, recording, transcription/analysis, audio dispatch, and habit workflows, or disable them until implemented.
+5. Make every mutation server-authoritative with rollback or an explicit pending/failed/retry state.
+6. Stop creating invented phone, health, body, medical, program, and identity values during onboarding.
+7. Isolate or delete `src/data/mockData.ts` and `backend/seed_data.json`; remove automatic seed imports from production-adjacent startup code.
+8. Require production OAuth configuration rather than using a hardcoded Google client ID fallback.
+9. Remove insecure backend defaults outside test-only configuration and document bootstrap credential rotation.
+10. Add cross-session end-to-end tests against a disposable database for profile, habits, messages, journals, evaluations, recordings, and schedules.
+11. Inspect the actual production database for old fictional rows and delete or quarantine any seeded records.
+12. Verify deployed OAuth origins, Jitsi/signaling, database backups and restore, monitoring/alerting, rate limiting across instances, and incident recovery.
 
 ## Final assessment
 
-**The app is not production-ready for professional use today.** It is suitable for continued development or a controlled internal demo/staging environment after clearly labeling the demo paths. It should not be marketed as a dynamic production speaker platform until the runtime fixtures, fabricated interactions, hardcoded credentials, and local-only workflows are removed and the release gate is revalidated.
+**The app is improved but not production-ready for professional use today.** It is suitable for continued development or a controlled staging/internal demonstration. The remaining issue is no longer simply “mock data exists in the repository”; production-visible workflows still allow unverified identity, fabricated claims, generated schedules, and local-only actions. The release should remain **NO-GO** until the release gate is completed and the deployed environment is independently verified.
