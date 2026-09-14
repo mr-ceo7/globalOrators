@@ -107,4 +107,90 @@ describe('Empty State Rendering (Audit Gate Item 9)', () => {
     // No default Kofi Mensah or any hardcoded identity
     expect(capturedProfile).toBeNull();
   });
+
+  test('completeOnboarding fails closed and does NOT touch localStorage when database persistence fails', async () => {
+    const { clientsApi } = await import('../services/apiClient');
+    (clientsApi.create as any).mockRejectedValueOnce(new Error('Network error: server unreachable'));
+
+    let contextInstance: ReturnType<typeof useApp> | null = null;
+    const capture = vi.fn((ctx: ReturnType<typeof useApp>) => { contextInstance = ctx; });
+
+    render(
+      <AppProvider>
+        <ContextInspector onContext={capture} />
+      </AppProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('inspector')).toBeInTheDocument();
+    });
+
+    const testData = {
+      branch: 'Academy' as const,
+      fullName: 'Fail Closed Candidate',
+      email: 'fail.closed@example.com',
+      missionFocus: 'Executive & Board Pitching',
+      speakingGoal: 'Executive & Board Pitching' as const,
+      experienceLevel: 'Novice Speaker' as const,
+      vocalBaselinePace: 140,
+      emotionalOpennessRating: 8,
+      selectedHabits: []
+    };
+
+    const res = await contextInstance!.completeOnboarding(testData);
+    expect(res.success).toBe(false);
+
+    // Assert fail-closed: NO profile saved to localStorage
+    expect(localStorage.getItem('globalorators_speaker_profile')).toBeNull();
+    // Portal must NOT switch to speaker_app
+    expect(contextInstance!.currentPortal).not.toBe('speaker_app');
+  });
+
+  test('completeOnboarding succeeds and writes to localStorage ONLY after database returns success', async () => {
+    const { clientsApi } = await import('../services/apiClient');
+    (clientsApi.create as any).mockResolvedValueOnce({
+      id: 'client-persisted-999',
+      name: 'Persisted Speaker',
+      email: 'persisted@example.com'
+    });
+
+    let contextInstance: ReturnType<typeof useApp> | null = null;
+    const capture = vi.fn((ctx: ReturnType<typeof useApp>) => { contextInstance = ctx; });
+
+    render(
+      <AppProvider>
+        <ContextInspector onContext={capture} />
+      </AppProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('inspector')).toBeInTheDocument();
+    });
+
+    const testData = {
+      branch: 'Academy' as const,
+      fullName: 'Persisted Speaker',
+      email: 'persisted@example.com',
+      missionFocus: 'Executive & Board Pitching',
+      speakingGoal: 'Executive & Board Pitching' as const,
+      experienceLevel: 'Novice Speaker' as const,
+      vocalBaselinePace: 140,
+      emotionalOpennessRating: 8,
+      selectedHabits: []
+    };
+
+    let res: any;
+    await waitFor(async () => {
+      res = await contextInstance!.completeOnboarding(testData);
+    });
+    expect(res.success).toBe(true);
+
+    // Profile must be in localStorage after verified server persistence
+    const saved = JSON.parse(localStorage.getItem('globalorators_speaker_profile')!);
+    expect(saved.fullName).toBe('Persisted Speaker');
+    
+    await waitFor(() => {
+      expect(contextInstance!.currentPortal).toBe('speaker_app');
+    });
+  });
 });

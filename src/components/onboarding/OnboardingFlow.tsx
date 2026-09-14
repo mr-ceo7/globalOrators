@@ -19,7 +19,8 @@ import {
   Award,
   BookOpen,
   Building2,
-  AlertCircle
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { SEOHead } from '../common/SEOHead';
@@ -1021,6 +1022,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     : (hasPreselectedBranch ? 2 : 1);
 
   const [currentStep, setCurrentStep] = useState<number>(resolvedInitialStep);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const initialMission = resolvedBranch === 'Academy'
     ? 'Pan-African Leadership & Cognitive Deconditioning'
@@ -1214,57 +1216,63 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     setCurrentStep(prev => Math.min(prev + 1, 5));
   };
 
-  const handleFinish = () => {
-    localStorage.removeItem('globalorators_selected_branch');
-    const sanitizedName = sanitizeText(fullName, 80) || (branch === 'Academy' ? 'Kwame Mensah' : 'Nia Adebayo');
-    const sanitizedEmailVal = sanitizeEmail(email) || 'speaker@globalorators.org';
-    const sanitizedPhoneVal = sanitizePhone(phone) || undefined;
-    const sanitizedInstitution = sanitizeText(institution, 120) || 'Independent Orator';
-    const sanitizedOtherDesc = sanitizeMultiline(otherDescription, 1000);
-    const sanitizedFormatDesc = sanitizeText(customFormatDescription, 150);
-    const sanitizedPriorityDesc = sanitizeText(customPriorityDescription, 150);
-    const sanitizedCustomHabit = sanitizeText(customHabitDescription, 150);
+  const handleFinish = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      localStorage.removeItem('globalorators_selected_branch');
+      const sanitizedName = sanitizeText(fullName, 80) || 'Speaker Candidate';
+      const sanitizedEmailVal = sanitizeEmail(email) || '';
+      const sanitizedPhoneVal = sanitizePhone(phone) || undefined;
+      const sanitizedInstitution = sanitizeText(institution, 120) || 'Independent Orator';
+      const sanitizedOtherDesc = sanitizeMultiline(otherDescription, 1000);
+      const sanitizedFormatDesc = sanitizeText(customFormatDescription, 150);
+      const sanitizedPriorityDesc = sanitizeText(customPriorityDescription, 150);
+      const sanitizedCustomHabit = sanitizeText(customHabitDescription, 150);
 
-    const resolvedMission = (missionFocus === 'Other Speaking Pursuit' && sanitizedOtherDesc.trim())
-      ? `Other: ${sanitizedOtherDesc.trim()}`
-      : missionFocus;
+      const resolvedMission = (missionFocus === 'Other Speaking Pursuit' && sanitizedOtherDesc.trim())
+        ? `Other: ${sanitizedOtherDesc.trim()}`
+        : missionFocus;
 
-    const resolvedDiscipline = (primaryDiscipline === 'Other / Custom Arena' && sanitizedFormatDesc.trim())
-      ? `Other: ${sanitizedFormatDesc.trim()}`
-      : primaryDiscipline;
+      const resolvedDiscipline = (primaryDiscipline === 'Other / Custom Arena' && sanitizedFormatDesc.trim())
+        ? `Other: ${sanitizedFormatDesc.trim()}`
+        : primaryDiscipline;
 
-    const resolvedFocus = (coreFocus === 'Other / Custom Priority' && sanitizedPriorityDesc.trim())
-      ? `Other: ${sanitizedPriorityDesc.trim()}`
-      : coreFocus;
+      const resolvedFocus = (coreFocus === 'Other / Custom Priority' && sanitizedPriorityDesc.trim())
+        ? `Other: ${sanitizedPriorityDesc.trim()}`
+        : coreFocus;
 
-    const resolvedHabits = selectedHabits.map(h => {
-      if (h === 'Other / Custom Ritual' && sanitizedCustomHabit.trim()) {
-        return `Other: ${sanitizedCustomHabit.trim()}`;
-      }
-      return h;
-    });
+      const resolvedHabits = selectedHabits.map(h => {
+        if (h === 'Other / Custom Ritual' && sanitizedCustomHabit.trim()) {
+          return `Other: ${sanitizedCustomHabit.trim()}`;
+        }
+        return h;
+      });
 
-    const data: SpeakerOnboardingData = {
-      branch,
-      fullName: sanitizedName,
-      email: sanitizedEmailVal,
-      phone: sanitizedPhoneVal,
-      institution: sanitizedInstitution,
-      age: sanitizeInteger(age, 12, 75, 20),
-      primaryDiscipline: resolvedDiscipline,
-      coreFocus: resolvedFocus,
-      missionFocus: resolvedMission,
-      speakingGoal,
-      experienceLevel,
-      vocalBaselinePace: sanitizeInteger(vocalBaselinePace, 100, 200, 140),
-      emotionalOpennessRating: sanitizeInteger(emotionalOpennessRating, 1, 10, 8),
-      selectedHabits: resolvedHabits,
-      bioNotes: sanitizedOtherDesc.trim()
-        ? `${branch} member from ${sanitizedInstitution}. Custom Objective: ${sanitizedOtherDesc.trim()}. Primary discipline: ${resolvedDiscipline}, specializing in ${resolvedFocus}.`
-        : `${branch} member from ${sanitizedInstitution}. Primary discipline: ${resolvedDiscipline}, specializing in ${resolvedFocus}. Mission: ${missionFocus}.`
-    };
+      const data: SpeakerOnboardingData = {
+        branch,
+        fullName: sanitizedName,
+        email: sanitizedEmailVal,
+        phone: sanitizedPhoneVal,
+        institution: sanitizedInstitution,
+        age: sanitizeInteger(age, 12, 75, 20),
+        primaryDiscipline: resolvedDiscipline,
+        coreFocus: resolvedFocus,
+        missionFocus: resolvedMission,
+        speakingGoal,
+        experienceLevel,
+        vocalBaselinePace: sanitizeInteger(vocalBaselinePace, 100, 200, 140),
+        emotionalOpennessRating: sanitizeInteger(emotionalOpennessRating, 1, 10, 8),
+        selectedHabits: resolvedHabits,
+        bioNotes: sanitizedOtherDesc.trim()
+          ? `${branch} member from ${sanitizedInstitution}. Custom Objective: ${sanitizedOtherDesc.trim()}. Primary discipline: ${resolvedDiscipline}, specializing in ${resolvedFocus}.`
+          : `${branch} member from ${sanitizedInstitution}. Primary discipline: ${resolvedDiscipline}, specializing in ${resolvedFocus}. Mission: ${missionFocus}.`
+      };
 
-    completeOnboarding(data);
+      await completeOnboarding(data);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -2340,10 +2348,22 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         ) : (
           <button
             onClick={handleFinish}
-            className="px-6 py-2.5 rounded-xl bg-[#C89630] text-slate-950 font-serif font-bold text-xs hover:bg-[#B37D22] flex items-center gap-2 shadow-xl shadow-[#C89630]/25 ml-auto cursor-pointer"
+            disabled={isSubmitting}
+            className={`px-6 py-2.5 rounded-xl bg-[#C89630] text-slate-950 font-serif font-bold text-xs hover:bg-[#B37D22] flex items-center gap-2 shadow-xl shadow-[#C89630]/25 ml-auto cursor-pointer transition-opacity ${
+              isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
+            }`}
           >
-            <span>Enter My Speaker Portal</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span>Registering Protocol...</span>
+              </>
+            ) : (
+              <>
+                <span>Enter My Speaker Portal</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </>
+            )}
           </button>
         )}
       </div>

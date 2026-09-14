@@ -109,7 +109,7 @@ interface AppContextType {
   // Speaker Client App Profile & Onboarding
   activeSpeakerProfile: SpeakerOnboardingData | null;
   setActiveSpeakerProfile: (profile: SpeakerOnboardingData | null) => void;
-  completeOnboarding: (data: SpeakerOnboardingData) => void;
+  completeOnboarding: (data: SpeakerOnboardingData) => Promise<{ success: boolean; error?: string }>;
   loginSpeaker: (emailOrPhone: string) => Promise<{ success: boolean; error?: string }>;
   loginWithGoogle: (credential: string, role?: 'coach' | 'speaker') => Promise<{ success: boolean; error?: string; user?: any }>;
   resetOnboarding: () => void;
@@ -1048,9 +1048,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const completeOnboarding = useCallback((data: SpeakerOnboardingData) => {
-    setActiveSpeakerProfile(data);
-    localStorage.setItem('globalorators_speaker_profile', JSON.stringify(data));
+  const completeOnboarding = useCallback(async (data: SpeakerOnboardingData): Promise<{ success: boolean; error?: string }> => {
+    // Determine program assignment based on goal & branch
+    let programId = 'prog-1';
+    let programName = '8-Week Championship Debate Masterclass';
+    if (
+      data.speakingGoal === 'Executive & Board Pitching' || 
+      (data.primaryDiscipline && data.primaryDiscipline.toLowerCase().includes('pitch')) ||
+      (data.primaryDiscipline && data.primaryDiscipline.toLowerCase().includes('executive'))
+    ) {
+      programId = 'prog-exec-speaking-1';
+      programName = 'Executive Public Speaking & Presentation Skills';
+    } else if (data.branch === 'Foundation') {
+      programId = 'prog-3';
+      programName = '6-Week Impromptu Fluency & Extemporaneous Protocol';
+    }
 
     // Register or sync client in Coach OS
     const newClientEntry: Client = {
@@ -1071,8 +1083,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       goal: data.speakingGoal,
       experienceLevel: data.experienceLevel,
       startDate: new Date().toISOString().split('T')[0],
-      currentProgramId: data.branch === 'Academy' ? 'prog-1' : 'prog-3',
-      currentProgramName: data.branch === 'Academy' ? '8-Week Championship Debate Masterclass' : '6-Week Impromptu Fluency & Extemporaneous Protocol',
+      currentProgramId: programId,
+      currentProgramName: programName,
       complianceRate: 100,
       workoutsCompleted: 0,
       totalWorkoutsAssigned: 12,
@@ -1112,21 +1124,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } as any
     };
 
-    setClients(prev => [newClientEntry, ...prev.filter(c => c.email !== data.email)]);
-    setCurrentPortal('speaker_app');
-    showToast(`Welcome ${data.fullName}. Your ${data.branch} protocol is initialized.`);
+    try {
+      // Must persist to backend database first (Fail-Closed, No Offline Mode)
+      const persisted = await clientsApi.create(newClientEntry);
+      if (!persisted || !persisted.id) {
+        throw new Error('Database server returned an invalid response.');
+      }
 
-    // Persist to backend SQLite database
-    clientsApi.create(newClientEntry)
-      .then(persisted => {
-        if (persisted && persisted.id) {
-          setClients(prev => prev.map(c => c.id === newClientEntry.id ? persisted : c));
-        }
-      })
-      .catch(err => {
-        console.warn('Backend client persistence failed:', err);
-        showToast('Unable to save profile to server. Please check your connection and try again.');
-      });
+      const resolvedClient: Client = {
+        ...newClientEntry,
+        id: persisted.id
+      };
+
+      // 1. Update in-memory roster with verified server record
+      setClients(prev => [resolvedClient, ...prev.filter(c => c.email !== data.email && c.id !== resolvedClient.id)]);
+      setSelectedClientId(resolvedClient.id);
+
+      // 2. Only NOW set active profile and persist session to localStorage
+      setActiveSpeakerProfile(data);
+      localStorage.setItem('globalorators_speaker_profile', JSON.stringify(data));
+
+      // 3. Switch portal to speaker app
+      setCurrentPortal('speaker_app');
+      showToast(`Welcome ${data.fullName}. Your ${data.branch} protocol is initialized.`);
+      return { success: true };
+    } catch (err: any) {
+      console.error('Backend client persistence failed (fail-closed):', err);
+      const errorMsg = err?.message || 'Unable to register profile to server. Please check your connection and try again.';
+      showToast(errorMsg);
+      // DO NOT set active speaker profile
+      // DO NOT save to localStorage
+      // DO NOT switch portal
+      return { success: false, error: errorMsg };
+    }
   }, [setCurrentPortal, showToast]);
 
   const loginSpeaker = useCallback(async (emailOrPhone: string): Promise<{ success: boolean; error?: string }> => {
