@@ -40,6 +40,7 @@ import { BranchType, SpeakerOnboardingData, ScheduledWorkout } from '../../types
 import { resolveSpeakerCurriculum } from '../../utils/curriculumResolver';
 import { LiveRehearsalRoom } from '../live/LiveRehearsalRoom';
 import { SEOHead } from '../common/SEOHead';
+import { SpeakerMobileBottomNav } from './SpeakerMobileBottomNav';
 
 export type SpeakerTabType = 'today' | 'practice' | 'catharsis' | 'schedule' | 'habits' | 'progress' | 'coach';
 
@@ -675,8 +676,8 @@ export const ClientPortal: React.FC = () => {
         </div>
       </header>
 
-      {/* 2. Speaker Segmented Navigation Bar */}
-      <div className="bg-slate-900/70 border-b border-slate-800/80 px-4 sm:px-6 py-2 overflow-x-auto no-scrollbar">
+      {/* 2. Speaker Segmented Navigation Bar (Desktop md+) */}
+      <div className="hidden md:block bg-slate-900/70 border-b border-slate-800/80 px-4 sm:px-6 py-2 overflow-x-auto no-scrollbar">
         <div role="tablist" aria-label="Speaker Navigation" className="max-w-5xl mx-auto flex items-center gap-1.5 sm:gap-2">
           {[
             { id: 'today', label: "Today's Floor", icon: Compass },
@@ -716,7 +717,7 @@ export const ClientPortal: React.FC = () => {
       </div>
 
       {/* 3. Main Portal Body */}
-      <main className="flex-1 max-w-5xl mx-auto w-full p-4 sm:p-6 lg:p-8">
+      <main className="flex-1 max-w-5xl mx-auto w-full p-4 sm:p-6 lg:p-8 pb-24 md:pb-8">
         {/* TAB 0: TODAY'S COMMAND CENTER */}
         {speakerTab === 'today' && (
           <div className="space-y-6 animate-fadeIn">
@@ -1906,6 +1907,25 @@ export const ClientPortal: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* Mobile Bottom Navigation (Visible on mobile screens < md) */}
+      <SpeakerMobileBottomNav
+        speakerTab={speakerTab}
+        setSpeakerTab={setSpeakerTab}
+        onOpenLiveRehearsal={() => {
+          setActiveChamberTitle(
+            isExecutive 
+              ? 'The 60-Second Venture Genesis' 
+              : isAcademy 
+                ? 'Syllogistic Framing & Whip Extension' 
+                : 'Unfiltered Cathartic Voice Journaling'
+          );
+          setIsLiveRehearsalOpen(true);
+        }}
+        isExecutive={isExecutive}
+        isAcademy={isAcademy}
+        unreadCount={0}
+      />
 
       {/* Embedded Live Rehearsal Studio Modal */}
       <LiveRehearsalRoom
