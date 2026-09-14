@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, ArrowRight, Loader2, AlertCircle, Mic, Phone, Mail } from 'lucide-react';
+import { X, ArrowRight, Loader2, AlertCircle, Mail, KeyRound, ArrowLeft, RefreshCw } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { sanitizeText } from '../../utils/sanitization';
 import { GoogleAuthButton } from '../auth/GoogleAuthButton';
@@ -15,21 +15,37 @@ export const SpeakerLoginModal: React.FC<SpeakerLoginModalProps> = ({
   onClose,
   onStartOnboarding
 }) => {
-  const { loginSpeaker } = useApp();
-  const [identifier, setIdentifier] = useState('');
+  const { sendSpeakerOtp, verifySpeakerOtp } = useApp();
+  const [step, setStep] = useState<'email' | 'otp'>('email');
+  const [email, setEmail] = useState('');
+  const [otpCode, setOtpCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [infoMsg, setInfoMsg] = useState<string | null>(null);
+  const emailInputRef = useRef<HTMLInputElement | null>(null);
+  const otpInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (isOpen) {
+      setStep('email');
       setErrorMsg(null);
-      setIdentifier('');
+      setInfoMsg(null);
+      setEmail('');
+      setOtpCode('');
       setTimeout(() => {
-        inputRef.current?.focus();
-      }, 50);
+        emailInputRef.current?.focus();
+      }, 60);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (step === 'otp') {
+      setTimeout(() => {
+        otpInputRef.current?.focus();
+      }, 60);
+    }
+  }, [step]);
 
   // Handle ESC key to close
   useEffect(() => {
@@ -44,11 +60,58 @@ export const SpeakerLoginModal: React.FC<SpeakerLoginModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
-    const sanitized = sanitizeText(identifier, 100);
-    if (!sanitized) {
-      setErrorMsg('Please enter your email or phone number.');
+    const sanitized = sanitizeText(email, 120).toLowerCase().trim();
+    if (!sanitized || !sanitized.includes('@')) {
+      setErrorMsg('Please enter a valid email address.');
+      return;
+    }
+
+    setLoading(true);
+    setErrorMsg(null);
+    setInfoMsg(null);
+
+    try {
+      const result = await sendSpeakerOtp(sanitized);
+      if (result.success) {
+        setStep('otp');
+        setInfoMsg(`Passcode dispatched to ${sanitized}. Valid for 10 minutes.`);
+      } else {
+        setErrorMsg(result.error || 'Unable to dispatch verification passcode. Please verify your email.');
+      }
+    } catch {
+      setErrorMsg('Unable to connect to authentication server. Please check your connection.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    if (!email.trim() || resending) return;
+    setResending(true);
+    setErrorMsg(null);
+    try {
+      const result = await sendSpeakerOtp(email.trim().toLowerCase());
+      if (result.success) {
+        setInfoMsg(`A fresh passcode was dispatched to ${email.trim().toLowerCase()}.`);
+      } else {
+        setErrorMsg(result.error || 'Failed to resend code.');
+      }
+    } catch {
+      setErrorMsg('Failed to resend passcode.');
+    } finally {
+      setResending(false);
+    }
+  };
+
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanCode = sanitizeText(otpCode, 10).trim();
+    const cleanEmail = sanitizeText(email, 120).toLowerCase().trim();
+
+    if (!cleanCode || cleanCode.length < 6) {
+      setErrorMsg('Please enter the complete 6-digit passcode.');
       return;
     }
 
@@ -56,14 +119,14 @@ export const SpeakerLoginModal: React.FC<SpeakerLoginModalProps> = ({
     setErrorMsg(null);
 
     try {
-      const result = await loginSpeaker(sanitized);
+      const result = await verifySpeakerOtp(cleanEmail, cleanCode);
       if (result.success) {
         onClose();
       } else {
-        setErrorMsg(result.error || 'No speaker profile found matching this email or phone.');
+        setErrorMsg(result.error || 'Invalid or expired verification code.');
       }
     } catch {
-      setErrorMsg('Unable to connect to speaker registry. Please verify your connection.');
+      setErrorMsg('Authentication error. Please check your passcode and retry.');
     } finally {
       setLoading(false);
     }
@@ -71,7 +134,7 @@ export const SpeakerLoginModal: React.FC<SpeakerLoginModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fadeIn"
       role="dialog"
       aria-modal="true"
       aria-labelledby="speaker-login-title"
@@ -98,10 +161,12 @@ export const SpeakerLoginModal: React.FC<SpeakerLoginModalProps> = ({
             id="speaker-login-title"
             className="text-xl sm:text-2xl font-serif font-black tracking-tight text-white"
           >
-            Access Your Protocol
+            {step === 'email' ? 'Access Your Protocol' : 'Verify Identity'}
           </h2>
           <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
-            Enter the email address or phone number linked to your Global Orators onboarding calibration.
+            {step === 'email'
+              ? 'Enter your registered email address to receive a secure single-use passcode.'
+              : `Enter the 6-digit passcode dispatched to ${email}.`}
           </p>
         </div>
 
@@ -129,105 +194,173 @@ export const SpeakerLoginModal: React.FC<SpeakerLoginModalProps> = ({
           </div>
         )}
 
-        {/* Google One Tap & Google Sign In */}
-        <div className="mb-5 space-y-3">
-          <GoogleAuthButton
-            role="speaker"
-            text="continue_with"
-            enableOneTap={true}
-            onSuccess={() => onClose()}
-            onError={(err) => setErrorMsg(err)}
-          />
-
-          <div className="relative flex items-center justify-center py-2">
-            <div className="border-t border-slate-800 w-full" />
-            <span className="bg-[#101318] px-2.5 text-[10px] font-mono tracking-widest text-slate-500 uppercase shrink-0">
-              Or Lookup Record
-            </span>
-            <div className="border-t border-slate-800 w-full" />
+        {/* Info Alert */}
+        {infoMsg && !errorMsg && (
+          <div className="mb-5 p-3 rounded-xl bg-emerald-950/30 border border-emerald-800/40 text-emerald-300 text-xs flex items-start gap-2.5">
+            <Mail className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+            <span className="flex-1 font-medium">{infoMsg}</span>
           </div>
-        </div>
+        )}
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-[11px] font-mono uppercase tracking-wider text-slate-300 mb-2">
-              Email Address or Phone Number
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
-                {identifier.includes('@') ? (
-                  <Mail className="w-4 h-4 text-[#C89630]" />
-                ) : identifier.replace(/\D/g, '').length >= 3 ? (
-                  <Phone className="w-4 h-4 text-[#C89630]" />
-                ) : (
-                  <Mic className="w-4 h-4" />
-                )}
-              </div>
-              <input
-                ref={inputRef}
-                type="text"
-                value={identifier}
-                onChange={(e) => {
-                  setIdentifier(e.target.value);
-                  if (errorMsg) setErrorMsg(null);
-                }}
-                placeholder="e.g. kassimmusa322@gmail.com or +254746957502"
-                className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-900 border border-slate-800 focus:border-[#C89630] focus:ring-1 focus:ring-[#C89630] outline-hidden text-sm text-white placeholder-slate-500 transition-all font-sans"
-                disabled={loading}
+        {step === 'email' ? (
+          <>
+            {/* Google One Tap & Google Sign In */}
+            <div className="mb-5 space-y-3">
+              <GoogleAuthButton
+                role="speaker"
+                text="continue_with"
+                enableOneTap={true}
+                onSuccess={() => onClose()}
+                onError={(err) => setErrorMsg(err)}
               />
+
+              <div className="relative flex items-center justify-center py-2">
+                <div className="border-t border-slate-800 w-full" />
+                <span className="bg-[#101318] px-2.5 text-[10px] font-mono tracking-widest text-slate-500 uppercase shrink-0">
+                  Or Email Passcode
+                </span>
+                <div className="border-t border-slate-800 w-full" />
+              </div>
             </div>
-          </div>
 
-          <button
-            type="submit"
-            disabled={loading || !identifier.trim()}
-            className="w-full py-3 px-4 rounded-xl bg-[#C89630] hover:bg-[#B37D22] disabled:opacity-50 text-slate-950 font-serif font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-[#C89630]/20 transition-all cursor-pointer disabled:cursor-not-allowed mt-2"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
-                <span>Locating Speaker Record...</span>
-              </>
-            ) : (
-              <>
-                <span>Enter Speaker Portal</span>
-                <ArrowRight className="w-4 h-4" />
-              </>
-            )}
-          </button>
-        </form>
+            {/* Email Form */}
+            <form onSubmit={handleSendCode} className="space-y-4">
+              <div>
+                <label htmlFor="speaker-email-input" className="block text-[11px] font-mono uppercase tracking-wider text-slate-300 mb-2">
+                  Registered Email Address
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                    <Mail className="w-4 h-4 text-[#C89630]" />
+                  </div>
+                  <input
+                    id="speaker-email-input"
+                    ref={emailInputRef}
+                    type="email"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (errorMsg) setErrorMsg(null);
+                    }}
+                    placeholder="e.g. kassimmusa322@gmail.com"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-900 border border-slate-800 focus:border-[#C89630] focus:ring-1 focus:ring-[#C89630] outline-hidden text-sm text-white placeholder-slate-500 transition-all font-sans"
+                    disabled={loading}
+                    required
+                  />
+                </div>
+              </div>
 
-        {/* Quick Demo Credentials */}
-        <div className="mt-6 pt-5 border-t border-slate-850">
-          <div className="text-[10px] font-mono uppercase tracking-widest text-slate-500 mb-2">
-            Quick Select
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              <button
+                type="submit"
+                disabled={loading || !email.trim()}
+                className="w-full py-3 px-4 rounded-xl bg-[#C89630] hover:bg-[#B37D22] disabled:opacity-50 text-slate-950 font-serif font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-[#C89630]/20 transition-all cursor-pointer disabled:cursor-not-allowed mt-2"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
+                    <span>Dispatching Passcode...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Send Login Passcode</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </form>
+
+            {/* Verified Speaker Shortcut */}
+            <div className="mt-6 pt-5 border-t border-slate-850">
+              <div className="text-[10px] font-mono uppercase tracking-widest text-slate-500 mb-2">
+                Quick Select
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail('kassimmusa322@gmail.com');
+                  setErrorMsg(null);
+                }}
+                className="w-full p-2.5 rounded-lg border border-slate-800 bg-slate-900/60 hover:border-slate-700 text-left transition-colors cursor-pointer group"
+              >
+                <div className="font-semibold text-slate-200 group-hover:text-white">Kassim Musa</div>
+                <div className="text-[10px] text-slate-400 font-mono truncate">kassimmusa322@gmail.com</div>
+              </button>
+            </div>
+          </>
+        ) : (
+          /* Step 2: 6-Digit Passcode Form */
+          <form onSubmit={handleVerifyCode} className="space-y-4">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label htmlFor="speaker-otp-input" className="block text-[11px] font-mono uppercase tracking-wider text-slate-300">
+                  6-Digit Passcode
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setStep('email')}
+                  className="text-[11px] text-[#C89630] hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <ArrowLeft className="w-3 h-3" />
+                  <span>Change email</span>
+                </button>
+              </div>
+
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                  <KeyRound className="w-4 h-4 text-[#C89630]" />
+                </div>
+                <input
+                  id="speaker-otp-input"
+                  ref={otpInputRef}
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  value={otpCode}
+                  onChange={(e) => {
+                    setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6));
+                    if (errorMsg) setErrorMsg(null);
+                  }}
+                  placeholder="123456"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-900 border border-slate-800 focus:border-[#C89630] focus:ring-1 focus:ring-[#C89630] outline-hidden text-lg tracking-[0.3em] font-mono text-center text-white placeholder-slate-600 transition-all font-bold"
+                  disabled={loading}
+                  required
+                />
+              </div>
+            </div>
+
             <button
-              type="button"
-              onClick={() => {
-                setIdentifier('kassimmusa322@gmail.com');
-                setErrorMsg(null);
-              }}
-              className="p-2.5 rounded-lg border border-slate-800 bg-slate-900/60 hover:border-slate-700 text-left transition-colors cursor-pointer group"
+              type="submit"
+              disabled={loading || otpCode.length < 6}
+              className="w-full py-3 px-4 rounded-xl bg-[#C89630] hover:bg-[#B37D22] disabled:opacity-50 text-slate-950 font-serif font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-[#C89630]/20 transition-all cursor-pointer disabled:cursor-not-allowed mt-2"
             >
-              <div className="font-semibold text-slate-200 group-hover:text-white">Kassim Musa</div>
-              <div className="text-[10px] text-slate-400 font-mono truncate">kassimmusa322@gmail.com</div>
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
+                  <span>Authenticating Session...</span>
+                </>
+              ) : (
+                <>
+                  <span>Enter Speaker Portal</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </button>
-            <button
-              type="button"
-              onClick={() => {
-                setIdentifier('+254746957502');
-                setErrorMsg(null);
-              }}
-              className="p-2.5 rounded-lg border border-slate-800 bg-slate-900/60 hover:border-slate-700 text-left transition-colors cursor-pointer group"
-            >
-              <div className="font-semibold text-slate-200 group-hover:text-white">Direct Phone Lookup</div>
-              <div className="text-[10px] text-slate-400 font-mono truncate">+254 746 957 502</div>
-            </button>
-          </div>
-        </div>
+
+            <div className="pt-3 flex items-center justify-between text-xs text-slate-400">
+              <span>Didn't receive passcode?</span>
+              <button
+                type="button"
+                onClick={handleResendCode}
+                disabled={resending}
+                className="text-[#C89630] hover:underline flex items-center gap-1 cursor-pointer font-medium disabled:opacity-50"
+              >
+                <RefreshCw className={`w-3 h-3 ${resending ? 'animate-spin' : ''}`} />
+                <span>{resending ? 'Resending...' : 'Resend code'}</span>
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );

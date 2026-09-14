@@ -61,6 +61,13 @@ class Settings(BaseSettings):
     )
     GOOGLE_CLIENT_SECRET: str = os.getenv("GOOGLE_CLIENT_SECRET", "")
     
+    # SMTP Email Configuration (Passwordless Speaker OTP Verification)
+    SMTP_SERVER: str = os.getenv("SMTP_SERVER", "smtp.gmail.com")
+    SMTP_PORT: int = int(os.getenv("SMTP_PORT", "465"))
+    SMTP_USERNAME: str = os.getenv("SMTP_USERNAME", "")
+    SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "")
+    FROM_EMAIL: str = os.getenv("FROM_EMAIL", "galvanytech@gmail.com")
+
     # CORS: Explicit allowed origins (no wildcard with credentials)
     CORS_ORIGINS: List[str] = [
         "https://globaloratorsproject.com",

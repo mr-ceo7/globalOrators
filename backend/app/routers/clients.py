@@ -98,12 +98,11 @@ async def list_clients(
 async def lookup_client(
     search: str = Query(..., description="Exact email or phone number of the speaker to lookup"),
     db: AsyncSession = Depends(get_db),
-    user: Optional[User] = Depends(get_optional_user)
+    current_user: User = Depends(get_current_user)
 ):
     """
     Lookup a speaker profile by exact email or phone digits.
-    Name-based enumeration is strictly prohibited to prevent profile scraping.
-    Sensitive internal coach notes and compliance metrics are redacted for non-coach callers.
+    Requires authenticated session. Speakers may only lookup their own profile.
     """
     search_term = search.strip()
     if not search_term or len(search_term) < 4:
@@ -134,8 +133,15 @@ async def lookup_client(
     if not client:
         raise HTTPException(status_code=404, detail="Speaker profile not found")
     
+    # Speaker isolation: non-coaches can only access their own profile
+    if current_user.role != "coach" and client.email.lower() != current_user.email.lower():
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied: Cannot access profile belonging to another speaker"
+        )
+
     resp = ClientResponse.model_validate(client)
-    if not user or user.role != "coach":
+    if current_user.role != "coach":
         resp.custom_coach_notes = []
         
     return resp

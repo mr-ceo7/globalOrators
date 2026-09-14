@@ -276,24 +276,28 @@ async def test_api_endpoints():
         assert created_client["onboardingSurvey"]["primaryDiscipline"] == "Decolonial Parliamentary Forensics"
         client_db_id = created_client["id"]
 
-        # Lookup by exact email
-        res_lookup_email = await client.get(f"/api/clients/lookup?search={test_email}")
+        # Lookup by exact email without auth returns 401 Unauthorized (C1 Audit Fix)
+        res_lookup_unauth = await client.get(f"/api/clients/lookup?search={test_email}")
+        assert res_lookup_unauth.status_code == 401
+
+        # Lookup by exact email with auth
+        res_lookup_email = await client.get(f"/api/clients/lookup?search={test_email}", headers=headers)
         assert res_lookup_email.status_code == 200
         assert res_lookup_email.json()["id"] == client_db_id
         assert res_lookup_email.json()["phone"] == test_phone
 
         # Lookup by phone number
-        res_lookup_phone = await client.get(f"/api/clients/lookup?search=%2B2547{test_phone_suffix}")
+        res_lookup_phone = await client.get(f"/api/clients/lookup?search=%2B2547{test_phone_suffix}", headers=headers)
         assert res_lookup_phone.status_code == 200
         assert res_lookup_phone.json()["id"] == client_db_id
 
         # Lookup by phone without plus or spaces
-        res_lookup_phone_plain = await client.get(f"/api/clients/lookup?search={test_phone_plain}")
+        res_lookup_phone_plain = await client.get(f"/api/clients/lookup?search={test_phone_plain}", headers=headers)
         assert res_lookup_phone_plain.status_code == 200
         assert res_lookup_phone_plain.json()["id"] == client_db_id
 
         # Lookup non-existent speaker returns 404
-        res_lookup_missing = await client.get("/api/clients/lookup?search=nonexistent_speaker_xyz@gmail.com")
+        res_lookup_missing = await client.get("/api/clients/lookup?search=nonexistent_speaker_xyz@gmail.com", headers=headers)
         assert res_lookup_missing.status_code == 404
 
         # Re-submitting with same email updates existing record without duplicate
@@ -774,14 +778,11 @@ async def test_public_client_hardening_and_lookup_protection():
         import time
         ts = int(time.time() * 1000)
 
-        # 1. Loose name search on /lookup is strictly rejected (404)
-        res_name_lookup = await client.get("/api/clients/lookup?search=Marcus")
-        assert res_name_lookup.status_code == 404
+        # 1. Unauthenticated requests to /lookup are blocked with 401 Unauthorized (C1 Audit Fix)
+        res_unauth = await client.get("/api/clients/lookup?search=Marcus")
+        assert res_unauth.status_code == 401
 
-        res_partial_phone = await client.get("/api/clients/lookup?search=123")
-        assert res_partial_phone.status_code == 400 or res_partial_phone.status_code == 404
-
-        # 2. Onboard a speaker with coach notes and assignments via coach
+        # 2. Login coach
         coach_res = await client.post(
             "/api/auth/login",
             json={"email": settings.DEFAULT_COACH_EMAIL, "password": settings.DEFAULT_COACH_PASSWORD}
@@ -789,6 +790,14 @@ async def test_public_client_hardening_and_lookup_protection():
         coach_token = coach_res.json()["access_token"]
         coach_headers = {"Authorization": f"Bearer {coach_token}"}
 
+        # Loose name search on /lookup is strictly rejected (404)
+        res_name_lookup = await client.get("/api/clients/lookup?search=Marcus", headers=coach_headers)
+        assert res_name_lookup.status_code == 404
+
+        res_partial_phone = await client.get("/api/clients/lookup?search=123", headers=coach_headers)
+        assert res_partial_phone.status_code == 400 or res_partial_phone.status_code == 404
+
+        # 3. Onboard a speaker with coach notes and assignments via coach
         test_email = f"protected.speaker.{ts}@example.com"
         test_phone = f"+25470{ts % 10000000:07d}"
 
@@ -808,10 +817,14 @@ async def test_public_client_hardening_and_lookup_protection():
         created_client = res_create.json()
         assert created_client["customCoachNotes"] == ["Top Secret Faculty Evaluation: Gold Tier Cadence"]
 
-        # 3. Unauthenticated lookup by exact email returns profile with coach notes REDACTED
+        # 4. Unauthenticated lookup is rejected with 401 (C1 Audit Fix)
         res_pub_lookup = await client.get(f"/api/clients/lookup?search={test_email}")
-        assert res_pub_lookup.status_code == 200
-        assert res_pub_lookup.json()["customCoachNotes"] == []
+        assert res_pub_lookup.status_code == 401
+
+        # Authenticated lookup by coach returns profile with coach notes intact
+        res_coach_lookup = await client.get(f"/api/clients/lookup?search={test_email}", headers=coach_headers)
+        assert res_coach_lookup.status_code == 200
+        assert res_coach_lookup.json()["customCoachNotes"] == ["Top Secret Faculty Evaluation: Gold Tier Cadence"]
 
         # 4. Unauthenticated attempt to overwrite coach notes or compliance rate is ignored
         malicious_payload = {
@@ -1149,5 +1162,88 @@ async def test_coach_referrals_reassignment_and_adjudication():
         print("Coach referral, triage pool, reassignment, adjudication, and program access tests all passed!")
 
 
+@pytest.mark.asyncio
+async def test_email_otp_authentication_flow():
+    """Verify passwordless email OTP generation, verification, and speaker session issuance."""
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        import time
+        ts = int(time.time() * 1000)
+        otp_speaker_email = f"otp.speaker.{ts}@example.com"
+        otp_speaker_phone = f"+25472{ts % 10000000:07d}"
 
+        # 1. Onboard a speaker so their email is registered in client records
+        res_onboard = await client.post(
+            "/api/clients",
+            json={
+                "name": "OTP Authenticated Speaker",
+                "email": otp_speaker_email,
+                "phone": otp_speaker_phone,
+                "branch": "Academy",
+                "goal": "Executive Presence"
+            }
+        )
+        assert res_onboard.status_code == 201
 
+        # 2. Attempt OTP dispatch with invalid email format fails (422)
+        res_bad_email = await client.post(
+            "/api/auth/otp/send",
+            json={"email": "not-an-email"}
+        )
+        assert res_bad_email.status_code == 422
+
+        # 3. Attempt OTP dispatch with unregistered email fails (404)
+        res_unregistered = await client.post(
+            "/api/auth/otp/send",
+            json={"email": "unregistered.random@example.com"}
+        )
+        assert res_unregistered.status_code == 404
+
+        # 4. Dispatch OTP for registered speaker succeeds (200)
+        res_send = await client.post(
+            "/api/auth/otp/send",
+            json={"email": otp_speaker_email}
+        )
+        assert res_send.status_code == 200
+        send_data = res_send.json()
+        assert send_data["status"] == "sent"
+        assert send_data["email"] == otp_speaker_email
+
+        # 5. Verify OTP with invalid passcode fails (401 Unauthorized)
+        res_bad_code = await client.post(
+            "/api/auth/otp/verify",
+            json={"email": otp_speaker_email, "code": "000000"}
+        )
+        assert res_bad_code.status_code == 401
+
+        # 6. Verify OTP with test bypass code (123456) in testing environment succeeds (200)
+        res_verify = await client.post(
+            "/api/auth/otp/verify",
+            json={"email": otp_speaker_email, "code": "123456"}
+        )
+        assert res_verify.status_code == 200
+        verify_data = res_verify.json()
+        assert "access_token" in verify_data
+        assert verify_data["token_type"] == "bearer"
+        assert verify_data["user"]["email"] == otp_speaker_email
+        assert verify_data["user"]["role"] == "speaker"
+
+        speaker_token = verify_data["access_token"]
+        speaker_headers = {"Authorization": f"Bearer {speaker_token}"}
+
+        # 7. Authenticated speaker can lookup their own profile
+        res_own_lookup = await client.get(
+            f"/api/clients/lookup?search={otp_speaker_email}",
+            headers=speaker_headers
+        )
+        assert res_own_lookup.status_code == 200
+        assert res_own_lookup.json()["email"] == otp_speaker_email
+
+        # 8. Authenticated speaker CANNOT lookup another speaker's profile (403 Forbidden)
+        res_other_lookup = await client.get(
+            "/api/clients/lookup?search=executive.speaker@globalorators.org",
+            headers=speaker_headers
+        )
+        assert res_other_lookup.status_code == 403 or res_other_lookup.status_code == 404
+
+        print("Email OTP passwordless authentication flow verified successfully!")

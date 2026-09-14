@@ -112,7 +112,9 @@ interface AppContextType {
   activeSpeakerProfile: SpeakerOnboardingData | null;
   setActiveSpeakerProfile: (profile: SpeakerOnboardingData | null) => void;
   completeOnboarding: (data: SpeakerOnboardingData) => Promise<{ success: boolean; error?: string }>;
-  loginSpeaker: (emailOrPhone: string) => Promise<{ success: boolean; error?: string }>;
+  loginSpeaker: (email: string, code?: string) => Promise<{ success: boolean; error?: string }>;
+  sendSpeakerOtp: (email: string) => Promise<{ success: boolean; error?: string }>;
+  verifySpeakerOtp: (email: string, code: string) => Promise<{ success: boolean; error?: string }>;
   loginWithGoogle: (credential: string, role?: 'coach' | 'speaker') => Promise<{ success: boolean; error?: string; user?: any }>;
   resetOnboarding: () => void;
 
@@ -1164,67 +1166,77 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [setCurrentPortal, showToast]);
 
-  const loginSpeaker = useCallback(async (emailOrPhone: string): Promise<{ success: boolean; error?: string }> => {
-    const clean = emailOrPhone.trim();
-    if (!clean) {
-      return { success: false, error: 'Please enter your email or phone number.' };
+  const sendSpeakerOtp = useCallback(async (email: string): Promise<{ success: boolean; error?: string }> => {
+    const clean = email.trim().toLowerCase();
+    if (!clean || !clean.includes('@')) {
+      return { success: false, error: 'Please enter a valid email address.' };
     }
+    try {
+      await authApi.sendOtp(clean);
+      return { success: true };
+    } catch (err: any) {
+      const msg = err?.response?.data?.detail || err?.message || 'Unable to dispatch verification passcode.';
+      return { success: false, error: msg };
+    }
+  }, []);
 
-    const cleanLower = clean.toLowerCase();
-    const cleanDigits = clean.replace(/\D/g, '');
-
-    // Check in-memory clients first
-    const localMatch = clients.find(c => {
-      const emailMatches = Boolean(c.email && c.email.toLowerCase() === cleanLower);
-      const nameMatches = Boolean(c.name && c.name.toLowerCase() === cleanLower);
-      const phoneMatches = Boolean(cleanDigits.length >= 6 && c.phone && c.phone.replace(/\D/g, '').includes(cleanDigits));
-      return emailMatches || nameMatches || phoneMatches;
-    });
+  const verifySpeakerOtp = useCallback(async (email: string, code: string): Promise<{ success: boolean; error?: string }> => {
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanCode = code.trim();
+    if (!cleanEmail || !cleanCode) {
+      return { success: false, error: 'Email and verification passcode are required.' };
+    }
 
     try {
-      const backendClient = await clientsApi.lookup(clean);
-      if (backendClient) {
-        const profile = clientToSpeakerProfile(backendClient);
-        setActiveSpeakerProfile(profile);
-        localStorage.setItem('globalorators_speaker_profile', JSON.stringify(profile));
-        const targetEmail = (backendClient.email || '').toLowerCase();
-        const targetId = backendClient.id;
+      const res = await authApi.verifyOtp(cleanEmail, cleanCode);
+      if (!res || !res.access_token) {
+        throw new Error('Authentication failed: No token returned from server.');
+      }
+
+      await refreshFromBackend();
+
+      let matchedClient: Client | null = null;
+      try {
+        matchedClient = await clientsApi.lookup(cleanEmail);
+      } catch {
+        // No client profile found in lookup
+      }
+      if (!matchedClient) {
+        matchedClient = clients.find(c => Boolean(c.email && c.email.toLowerCase() === cleanEmail)) || null;
+      }
+
+      if (matchedClient) {
         setClients(prev => {
-          const exists = prev.some(c => c.id === targetId || (targetEmail && (c.email || '').toLowerCase() === targetEmail));
-          return exists
-            ? prev.map(c => (c.id === targetId || (targetEmail && (c.email || '').toLowerCase() === targetEmail)) ? backendClient : c)
-            : [backendClient, ...prev];
+          const exists = prev.some(c => c.id === matchedClient!.id);
+          return exists ? prev.map(c => c.id === matchedClient!.id ? matchedClient! : c) : [matchedClient!, ...prev];
         });
-        setCurrentPortal('speaker_app');
-        showToast(`Welcome back, ${profile.fullName}. Profile loaded.`);
-        return { success: true };
-      }
-    } catch {
-      // Backend lookup returned 404 or connection offline
-      if (localMatch) {
-        const profile = clientToSpeakerProfile(localMatch);
+        const profile = clientToSpeakerProfile(matchedClient);
         setActiveSpeakerProfile(profile);
         localStorage.setItem('globalorators_speaker_profile', JSON.stringify(profile));
         setCurrentPortal('speaker_app');
-        showToast(`Welcome back, ${profile.fullName}. Profile loaded.`);
+        showToast(`Welcome back, ${profile.fullName}. Session authenticated.`);
+        return { success: true };
+      } else {
+        // Fail-closed against synthetic client creation (C4/H8 audit fix).
+        // Authenticated user has no domain client profile; route to Onboarding.
+        setActiveSpeakerProfile(null);
+        localStorage.removeItem('globalorators_speaker_profile');
+        setCurrentPortal('speaker_onboarding');
+        showToast('Account verified. Please complete your orator onboarding intake to initialize your syllabus.');
         return { success: true };
       }
+    } catch (err: any) {
+      const msg = err?.response?.data?.detail || err?.message || 'Invalid or expired verification passcode.';
+      return { success: false, error: msg };
     }
+  }, [clients, refreshFromBackend, setCurrentPortal, showToast]);
 
-    if (localMatch) {
-      const profile = clientToSpeakerProfile(localMatch);
-      setActiveSpeakerProfile(profile);
-      localStorage.setItem('globalorators_speaker_profile', JSON.stringify(profile));
-      setCurrentPortal('speaker_app');
-      showToast(`Welcome back, ${profile.fullName}. Profile loaded.`);
-      return { success: true };
+  const loginSpeaker = useCallback(async (email: string, code?: string): Promise<{ success: boolean; error?: string }> => {
+    if (code) {
+      return verifySpeakerOtp(email, code);
     }
-
-    return {
-      success: false,
-      error: 'No speaker profile found with that email or phone number. Check your entry or create a new profile.'
-    };
-  }, [clients, setCurrentPortal, showToast]);
+    return sendSpeakerOtp(email);
+  }, [sendSpeakerOtp, verifySpeakerOtp]);
 
   const loginWithGoogle = useCallback(async (credential: string, role: 'coach' | 'speaker' = 'speaker'): Promise<{ success: boolean; error?: string; user?: any }> => {
     try {
@@ -1329,6 +1341,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setActiveSpeakerProfile,
         completeOnboarding,
         loginSpeaker,
+        sendSpeakerOtp,
+        verifySpeakerOtp,
         loginWithGoogle,
         resetOnboarding,
         coaches,

@@ -6,10 +6,81 @@ import { SpeakerLoginModal } from '../components/landing/SpeakerLoginModal';
 import { ClientPortal } from '../components/clientApp/ClientPortal';
 
 vi.mock('../services/apiClient', () => ({
-  authApi: { me: vi.fn().mockResolvedValue({ email: 'coach@globalorators.com' }) },
+  authApi: {
+    me: vi.fn().mockResolvedValue({ email: 'coach@globalorators.com' }),
+    sendOtp: vi.fn().mockImplementation((email: string) => {
+      if (email.includes('unknown@example.com')) {
+        return Promise.reject(new Error('No speaker profile found with that email.'));
+      }
+      return Promise.resolve({ status: 'sent', message: 'Verification code sent.' });
+    }),
+    verifyOtp: vi.fn().mockImplementation((email: string, code: string) => {
+      if (code === '123456') {
+        return Promise.resolve({
+          access_token: 'mock-jwt-token',
+          token_type: 'bearer',
+          user: {
+            id: 'u-1',
+            email: email,
+            full_name: 'KASSIM MUSA',
+            role: 'speaker'
+          }
+        });
+      }
+      return Promise.reject(new Error('Invalid or expired verification passcode.'));
+    })
+  },
   clientsApi: {
-    list: vi.fn().mockResolvedValue([]),
-    getAll: vi.fn().mockResolvedValue([]),
+    list: vi.fn().mockResolvedValue([
+      {
+        id: 'client-mock-kassim',
+        name: 'KASSIM MUSA',
+        email: 'kassimmusa322@gmail.com',
+        phone: '+254746957502',
+        goal: 'Pan-African Leadership',
+        experienceLevel: 'Novice Speaker',
+        currentWeightKg: 140,
+        onboardingSurvey: {
+          branch: 'Academy',
+          fullName: 'KASSIM MUSA',
+          email: 'kassimmusa322@gmail.com',
+          phone: '+254746957502',
+          institution: 'Maseno University',
+          primaryDiscipline: 'Decolonial Parliamentary Forensics',
+          coreFocus: 'Ideological Rigor & Rebuttal Depth',
+          missionFocus: 'Pan-African Leadership',
+          selectedHabits: [
+            'Vocal Hydration (2.5L + Warm Lemon Water)',
+            'Decolonial Parliamentary Case Prep (15 Min)'
+          ]
+        }
+      }
+    ]),
+    getAll: vi.fn().mockImplementation(() => Promise.resolve([
+      {
+        id: 'client-mock-kassim',
+        name: 'KASSIM MUSA',
+        email: 'kassimmusa322@gmail.com',
+        phone: '+254746957502',
+        goal: 'Pan-African Leadership',
+        experienceLevel: 'Novice Speaker',
+        currentWeightKg: 140,
+        onboardingSurvey: {
+          branch: 'Academy',
+          fullName: 'KASSIM MUSA',
+          email: 'kassimmusa322@gmail.com',
+          phone: '+254746957502',
+          institution: 'Maseno University',
+          primaryDiscipline: 'Decolonial Parliamentary Forensics',
+          coreFocus: 'Ideological Rigor & Rebuttal Depth',
+          missionFocus: 'Pan-African Leadership',
+          selectedHabits: [
+            'Vocal Hydration (2.5L + Warm Lemon Water)',
+            'Decolonial Parliamentary Case Prep (15 Min)'
+          ]
+        }
+      }
+    ])),
     create: vi.fn().mockImplementation((c) => Promise.resolve({ ...c, id: c.id || 'client-1' })),
     lookup: vi.fn().mockImplementation((search: string) => {
       if (search.includes('kassim') || search.includes('254746957502')) {
@@ -57,7 +128,7 @@ describe('Speaker Login & Portal Integration Tests', () => {
     localStorage.clear();
   });
 
-  test('should render SpeakerLoginModal and log in with email', async () => {
+  test('should render SpeakerLoginModal and log in with email and OTP passcode', async () => {
     const handleClose = vi.fn();
     render(
       <AppProvider>
@@ -73,9 +144,24 @@ describe('Speaker Login & Portal Integration Tests', () => {
       fireEvent.change(input, { target: { value: 'kassimmusa322@gmail.com' } });
     });
 
-    const submitBtn = screen.getByRole('button', { name: /Enter Speaker Portal/i });
+    const sendCodeBtn = screen.getByRole('button', { name: /Send Login Passcode/i });
     await act(async () => {
-      fireEvent.click(submitBtn);
+      fireEvent.click(sendCodeBtn);
+    });
+
+    // Step 2 should now be visible
+    expect(await screen.findByText('Verify Identity')).toBeInTheDocument();
+    expect(screen.getByText(/Valid for 10 minutes/i)).toBeInTheDocument();
+
+    // Enter 6-digit passcode
+    const otpInput = screen.getByPlaceholderText('123456');
+    await act(async () => {
+      fireEvent.change(otpInput, { target: { value: '123456' } });
+    });
+
+    const verifyBtn = screen.getByRole('button', { name: /Enter Speaker Portal/i });
+    await act(async () => {
+      fireEvent.click(verifyBtn);
     });
 
     expect(handleClose).toHaveBeenCalled();
@@ -98,12 +184,44 @@ describe('Speaker Login & Portal Integration Tests', () => {
       fireEvent.change(input, { target: { value: 'unknown@example.com' } });
     });
 
-    const submitBtn = screen.getByRole('button', { name: /Enter Speaker Portal/i });
+    const sendCodeBtn = screen.getByRole('button', { name: /Send Login Passcode/i });
     await act(async () => {
-      fireEvent.click(submitBtn);
+      fireEvent.click(sendCodeBtn);
     });
 
     expect(await screen.findByText(/No speaker profile found with that email/i)).toBeInTheDocument();
+  });
+
+  test('should show error when invalid OTP code is entered', async () => {
+    render(
+      <AppProvider>
+        <SpeakerLoginModal isOpen={true} onClose={vi.fn()} />
+      </AppProvider>
+    );
+
+    const input = screen.getByPlaceholderText(/kassimmusa322@gmail\.com/i);
+    await act(async () => {
+      fireEvent.change(input, { target: { value: 'kassimmusa322@gmail.com' } });
+    });
+
+    const sendCodeBtn = screen.getByRole('button', { name: /Send Login Passcode/i });
+    await act(async () => {
+      fireEvent.click(sendCodeBtn);
+    });
+
+    expect(await screen.findByText('Verify Identity')).toBeInTheDocument();
+
+    const otpInput = screen.getByPlaceholderText('123456');
+    await act(async () => {
+      fireEvent.change(otpInput, { target: { value: '000000' } });
+    });
+
+    const verifyBtn = screen.getByRole('button', { name: /Enter Speaker Portal/i });
+    await act(async () => {
+      fireEvent.click(verifyBtn);
+    });
+
+    expect(await screen.findByText(/Invalid or expired verification passcode/i)).toBeInTheDocument();
   });
 
   test('should render ClientPortal with dynamic habits and Sign Out button', async () => {
