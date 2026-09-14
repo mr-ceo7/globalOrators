@@ -33,7 +33,10 @@ import {
   Target,
   FileText,
   Layers,
-  Briefcase
+  Briefcase,
+  Sun,
+  Moon,
+  LayoutDashboard
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { BranchType, SpeakerOnboardingData, ScheduledWorkout } from '../../types';
@@ -41,6 +44,8 @@ import { resolveSpeakerCurriculum } from '../../utils/curriculumResolver';
 import { LiveRehearsalRoom } from '../live/LiveRehearsalRoom';
 import { SEOHead } from '../common/SEOHead';
 import { SpeakerMobileBottomNav } from './SpeakerMobileBottomNav';
+import { SpeakerSidebar } from './SpeakerSidebar';
+import { GlobalOratorsLogo } from '../common/GlobalOratorsLogo';
 
 export type SpeakerTabType = 'today' | 'practice' | 'catharsis' | 'schedule' | 'habits' | 'progress' | 'coach';
 
@@ -58,9 +63,12 @@ export const ClientPortal: React.FC = () => {
     sendMessage,
     habitLogs,
     toggleHabitCompletion,
-    metrics
+    metrics,
+    theme,
+    toggleTheme
   } = useApp();
 
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isLiveRehearsalOpen, setIsLiveRehearsalOpen] = useState(false);
   const [activeChamberTitle, setActiveChamberTitle] = useState('Executive Public Speaking Chamber');
   const [expandedSessionId, setExpandedSessionId] = useState<string | null>(null);
@@ -444,26 +452,86 @@ export const ClientPortal: React.FC = () => {
     setClientMessageInput('');
   };
 
+  const habitsRemainingCount = useMemo(() => {
+    const total = Object.keys(habitsStatus).length;
+    const completed = Object.values(habitsStatus).filter(Boolean).length;
+    return Math.max(0, total - completed);
+  }, [habitsStatus]);
+
+  const handleOpenLiveChamber = () => {
+    setActiveChamberTitle(
+      isExecutive
+        ? 'Executive Boardroom Simulation & Pitch Chamber'
+        : isAcademy
+          ? 'Championship Parliamentary Chamber'
+          : 'Expression & Catharsis Vocal Chamber'
+    );
+    setIsLiveRehearsalOpen(true);
+  };
+
+  const handleSignOut = () => {
+    setIsProfileMenuOpen(false);
+    setActiveSpeakerProfile(null);
+    localStorage.removeItem('globalorators_speaker_profile');
+    setCurrentPortal('landing');
+    showToast('Signed out of speaker profile.');
+  };
+
+  const getBreadcrumbTitle = () => {
+    switch (speakerTab) {
+      case 'today': return "Rehearsal Protocol";
+      case 'practice': return 'Drill Chamber';
+      case 'catharsis': return isExecutive ? 'Executive Speech Vault' : 'Expression & Catharsis';
+      case 'schedule': return isExecutive ? 'Executive Syllabus & Roadmap' : 'Syllabus & Roadmap';
+      case 'habits': return 'Orator Rituals';
+      case 'progress': return 'Speech Analytics';
+      case 'coach': return 'Coach Consultation';
+      default: return 'Speaker Studio';
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-emerald-500 selection:text-slate-950">
+    <div className="flex-1 bg-slate-950 text-slate-100 flex font-sans antialiased selection:bg-emerald-500 selection:text-slate-950 min-h-screen h-screen overflow-hidden">
       <SEOHead
         title="Speaker Practice Studio"
         description="Private rehearsal vault, catharsis voice recorder, and drill studio for Global Orators speakers."
         canonicalPath="/speaker"
         noIndex={true}
       />
-      {/* 1. Speaker App Top Header */}
-      <header className="sticky top-0 z-30 bg-slate-950/85 backdrop-blur-md border-b border-slate-800/80 px-4 sm:px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className={`w-9 h-9 shrink-0 rounded-xl flex items-center justify-center font-black text-sm text-slate-950 shadow-md ${
-            isExecutive ? 'bg-[#C89630]' : isAcademy ? 'bg-[#C89630]' : 'bg-teal-400'
-          }`}>
-            {profile.fullName.charAt(0)}
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs sm:text-sm font-serif font-bold text-white leading-tight truncate">
-                {profile.fullName}
+
+      {/* Collapsible Speaker Navigation Sidebar (Desktop md+) */}
+      <SpeakerSidebar
+        speakerTab={speakerTab}
+        setSpeakerTab={setSpeakerTab}
+        profile={profile}
+        isExecutive={isExecutive}
+        isAcademy={isAcademy}
+        roadmapSessionsCount={roadmapSessions.length}
+        habitsRemainingCount={habitsRemainingCount}
+        unreadMessagesCount={0}
+        onResetOnboarding={resetOnboarding}
+        onSignOut={handleSignOut}
+        onOpenLiveChamber={handleOpenLiveChamber}
+        onReturnToPublicSite={() => setCurrentPortal('landing')}
+        isCollapsed={isSidebarCollapsed}
+        setIsCollapsed={setIsSidebarCollapsed}
+      />
+
+      {/* Main Content Area Column */}
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+        {/* Floating Top Header matching Coach OS Header */}
+        <header className="relative z-20 flex h-14 sm:h-16 items-center justify-between border border-slate-800/80 bg-slate-950/90 px-3.5 md:px-5 backdrop-blur-md rounded-xl mt-1.5 mx-1.5 shadow-lg shadow-slate-950/20 shrink-0">
+          {/* Left: Mobile Brand or Desktop Breadcrumb */}
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="md:hidden flex items-center gap-2">
+              <GlobalOratorsLogo className="w-7 h-7 shrink-0" colorMode="gold" />
+              <span className="font-serif font-bold text-sm text-white">Global<span className="text-[#C89630]">Orators</span></span>
+            </div>
+
+            <div className="hidden md:flex items-center gap-2.5 min-w-0">
+              <span className="text-xs font-mono text-slate-400 uppercase tracking-wider">Speaker Studio /</span>
+              <span className="text-sm font-serif font-bold text-white tracking-tight truncate">
+                {getBreadcrumbTitle()}
               </span>
               <span className={`text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded border ${
                 isExecutive
@@ -475,148 +543,120 @@ export const ClientPortal: React.FC = () => {
                 {isExecutive ? 'Executive Track' : `${profile.branch} Track`}
               </span>
             </div>
-            <p className="text-[10px] font-mono text-slate-400 truncate max-w-[200px] xs:max-w-xs sm:max-w-md">
-              {profile.institution ? `${profile.institution} • ` : ''}{profile.primaryDiscipline || profile.missionFocus}
-            </p>
           </div>
-        </div>
 
-        {/* Action Controls in Header: Messages & Profile Menu */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          <button
-            onClick={() => setSpeakerTab('coach')}
-            aria-label="Direct message thread with Coach Qassim"
-            className="min-h-[44px] flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:text-white hover:border-slate-700 text-xs font-mono transition-colors"
-            title="Direct message thread with Coach Qassim"
-          >
-            <MessageSquare className="w-3.5 h-3.5 text-[#C89630]" />
-            <span className="hidden sm:inline">Coach Thread</span>
-          </button>
-
-          {/* Profile & Workspace Menu Dropdown */}
-          <div className="relative" ref={profileMenuRef}>
+          {/* Right Action Controls: Live Chamber, Messages, Theme, Profile Menu */}
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
             <button
-              onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-              aria-expanded={isProfileMenuOpen}
-              aria-haspopup="menu"
-              aria-label="Speaker workspace profile and settings menu"
-              className="min-h-[44px] flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-mono transition-colors"
+              onClick={handleOpenLiveChamber}
+              className="min-h-[38px] hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-200 hover:text-white hover:border-slate-700 text-xs font-mono transition-colors cursor-pointer"
+              title="Enter Live Rehearsal Chamber"
             >
-              <div className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-xs text-slate-950 ${
-                isExecutive ? 'bg-[#C89630]' : isAcademy ? 'bg-[#C89630]' : 'bg-teal-400'
-              }`}>
-                {profile.fullName.charAt(0)}
-              </div>
-              <span className="hidden sm:inline font-sans font-medium text-white">{profile.fullName.split(' ')[0]}</span>
-              <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
+              <Video className="w-3.5 h-3.5 text-[#C89630]" />
+              <span>Live Chamber</span>
             </button>
 
-            {isProfileMenuOpen && (
-              <div 
-                role="menu"
-                aria-label="Profile and Workspace Settings"
-                className="absolute right-0 mt-2 w-72 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-2 z-50 text-xs animate-fadeIn"
-              >
-                {/* Speaker Identity */}
-                <div className="px-3 py-2.5 border-b border-slate-800/80 mb-1">
-                  <div className="font-bold text-white text-sm truncate">{profile.fullName}</div>
-                  <div className="text-[11px] font-mono text-slate-400 truncate">{profile.email}</div>
-                  <div className="text-[10px] font-mono text-[#C89630] uppercase tracking-wider mt-1">
-                    {isExecutive ? 'Executive Public Speaking Track' : `${profile.branch} Track`}
-                  </div>
-                </div>
+            <button
+              onClick={() => setSpeakerTab('coach')}
+              aria-label="Direct message thread with Coach Qassim"
+              className="min-h-[38px] flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:text-white hover:border-slate-700 text-xs font-mono transition-colors cursor-pointer"
+              title="Direct message thread with Coach Qassim"
+            >
+              <MessageSquare className="w-3.5 h-3.5 text-[#C89630]" />
+              <span className="hidden sm:inline">Coach Thread</span>
+            </button>
 
+            {/* Visual Theme Toggle Button */}
+            <button
+              id="speaker-theme-toggle"
+              onClick={toggleTheme}
+              aria-label="Toggle visual theme"
+              className="h-9 w-9 flex items-center justify-center rounded-xl border border-slate-800 bg-slate-900 text-slate-400 hover:text-white hover:border-slate-700 transition-colors cursor-pointer"
+              title={theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
+            >
+              {theme === 'dark' ? <Sun className="w-4 h-4 text-[#C89630]" /> : <Moon className="w-4 h-4 text-slate-300" />}
+            </button>
 
-                {/* Workspace Navigation Links */}
-                <div className="px-3 py-1 text-[10px] font-mono uppercase tracking-widest text-slate-400 font-semibold">
-                  Workspaces & Actions
-                </div>
-                <button
-                  onClick={() => { setCurrentPortal('coach_os'); setIsProfileMenuOpen(false); }}
-                  className="w-full min-h-[40px] px-3 py-2 rounded-xl text-left flex items-center gap-2 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
-                >
-                  <ShieldCheck className="w-4 h-4 text-teal-400" />
-                  <span>Open Coach OS</span>
-                </button>
-                <button
-                  onClick={() => { setCurrentPortal('landing'); setIsProfileMenuOpen(false); }}
-                  className="w-full min-h-[40px] px-3 py-2 rounded-xl text-left flex items-center gap-2 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
-                >
-                  <Globe className="w-4 h-4 text-emerald-400" />
-                  <span>Return to Public Site</span>
-                </button>
-                <button
-                  onClick={() => { resetOnboarding(); setIsProfileMenuOpen(false); }}
-                  className="w-full min-h-[40px] px-3 py-2 rounded-xl text-left flex items-center gap-2 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
-                >
-                  <RefreshCw className="w-4 h-4 text-slate-400" />
-                  <span>Recalibrate Track Preferences</span>
-                </button>
-
-                <div className="my-1.5 border-t border-slate-800" />
-
-                {/* Destructive Sign Out */}
-                <button
-                  onClick={() => {
-                    setIsProfileMenuOpen(false);
-                    setActiveSpeakerProfile(null);
-                    localStorage.removeItem('globalorators_speaker_profile');
-                    setCurrentPortal('landing');
-                    showToast('Signed out of speaker profile.');
-                  }}
-                  className="w-full min-h-[40px] px-3 py-2 rounded-xl text-left flex items-center gap-2 text-rose-300 hover:bg-rose-950/40 hover:text-rose-100 transition-colors"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span>Sign Out</span>
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
-
-      {/* 2. Speaker Segmented Navigation Bar (Desktop md+) */}
-      <div className="hidden md:block bg-slate-900/70 border-b border-slate-800/80 px-4 sm:px-6 py-2 overflow-x-auto no-scrollbar">
-        <div role="tablist" aria-label="Speaker Navigation" className="max-w-5xl mx-auto flex items-center gap-1.5 sm:gap-2">
-          {[
-            { id: 'today', label: "Today's Floor", icon: Compass },
-            { id: 'practice', label: 'Daily Drill Studio', icon: Mic },
-            { id: 'catharsis', label: isExecutive ? 'Executive Speech Vault' : 'Catharsis & Voice Vault', icon: isExecutive ? Briefcase : Heart },
-            { id: 'schedule', label: isExecutive ? 'Executive Syllabus & Roadmap' : 'My Sessions & Rounds', icon: Calendar },
-            { id: 'habits', label: 'Daily Orator Rituals', icon: CheckCircle2 },
-            { id: 'progress', label: 'Speech Analytics', icon: TrendingUp },
-            { id: 'coach', label: 'Coach Qassim (2-Way)', icon: MessageSquare }
-          ].map(tab => {
-            const Icon = tab.icon;
-            const isActive = speakerTab === tab.id;
-            return (
+            {/* Profile & Workspace Menu Dropdown */}
+            <div className="relative" ref={profileMenuRef}>
               <button
-                key={tab.id}
-                role="tab"
-                id={`tab-${tab.id}`}
-                aria-selected={isActive}
-                aria-controls={`panel-${tab.id}`}
-                onClick={() => setSpeakerTab(tab.id as any)}
-                className={`min-h-[44px] flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                  isActive
-                    ? isExecutive
-                      ? 'bg-[#C89630] text-slate-950 shadow-md shadow-[#C89630]/20'
-                      : isAcademy
-                        ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
-                        : 'bg-teal-500 text-slate-950 shadow-md shadow-teal-500/20'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-850'
-                }`}
+                onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                aria-expanded={isProfileMenuOpen}
+                aria-haspopup="menu"
+                aria-label="Speaker workspace profile and settings menu"
+                className="min-h-[38px] flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-mono transition-colors cursor-pointer"
               >
-                <Icon className="w-3.5 h-3.5" />
-                <span>{tab.label}</span>
+                <div className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-xs text-slate-950 ${
+                  isExecutive ? 'bg-[#C89630]' : isAcademy ? 'bg-[#C89630]' : 'bg-teal-400'
+                }`}>
+                  {profile.fullName ? profile.fullName.charAt(0) : 'S'}
+                </div>
+                <span className="hidden sm:inline font-sans font-medium text-white">
+                  {profile.fullName ? profile.fullName.split(' ')[0] : 'Speaker'}
+                </span>
+                <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
               </button>
-            );
-          })}
-        </div>
-      </div>
 
-      {/* 3. Main Portal Body */}
-      <main className="flex-1 max-w-5xl mx-auto w-full p-4 sm:p-6 lg:p-8 pb-24 md:pb-8">
+              {isProfileMenuOpen && (
+                <div
+                  role="menu"
+                  aria-label="Profile and Workspace Settings"
+                  className="absolute right-0 mt-2 w-72 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-2 z-50 text-xs animate-fadeIn"
+                >
+                  {/* Speaker Identity */}
+                  <div className="px-3 py-2.5 border-b border-slate-800/80 mb-1">
+                    <div className="font-bold text-white text-sm truncate">{profile.fullName || 'Guest Speaker'}</div>
+                    <div className="text-[11px] font-mono text-slate-400 truncate">{profile.email}</div>
+                    <div className="text-[10px] font-mono text-[#C89630] uppercase tracking-wider mt-1">
+                      {isExecutive ? 'Executive Public Speaking Track' : `${profile.branch} Track`}
+                    </div>
+                  </div>
+
+                  {/* Workspace Navigation Links */}
+                  <div className="px-3 py-1 text-[10px] font-mono uppercase tracking-widest text-slate-400 font-semibold">
+                    Workspaces & Actions
+                  </div>
+                  <button
+                    onClick={() => { setCurrentPortal('coach_os'); setIsProfileMenuOpen(false); }}
+                    className="w-full min-h-[40px] px-3 py-2 rounded-xl text-left flex items-center gap-2 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer"
+                  >
+                    <ShieldCheck className="w-4 h-4 text-teal-400" />
+                    <span>Open Coach OS</span>
+                  </button>
+                  <button
+                    onClick={() => { setCurrentPortal('landing'); setIsProfileMenuOpen(false); }}
+                    className="w-full min-h-[40px] px-3 py-2 rounded-xl text-left flex items-center gap-2 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer"
+                  >
+                    <Globe className="w-4 h-4 text-emerald-400" />
+                    <span>Return to Public Site</span>
+                  </button>
+                  <button
+                    onClick={() => { resetOnboarding(); setIsProfileMenuOpen(false); }}
+                    className="w-full min-h-[40px] px-3 py-2 rounded-xl text-left flex items-center gap-2 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer"
+                  >
+                    <RefreshCw className="w-4 h-4 text-slate-400" />
+                    <span>Recalibrate Track Preferences</span>
+                  </button>
+
+                  <div className="my-1.5 border-t border-slate-800" />
+
+                  {/* Destructive Sign Out */}
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full min-h-[40px] px-3 py-2 rounded-xl text-left flex items-center gap-2 text-rose-300 hover:bg-rose-950/40 hover:text-rose-100 transition-colors cursor-pointer"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
+
+        {/* Scrollable View Area with bottom padding for mobile bar */}
+        <main className="flex-1 overflow-y-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-28 md:pb-6 touch-pan-y">
+          <div className="max-w-6xl mx-auto space-y-6">
         {/* TAB 0: TODAY'S COMMAND CENTER */}
         {speakerTab === 'today' && (
           <div className="space-y-6 animate-fadeIn">
@@ -1753,7 +1793,9 @@ export const ClientPortal: React.FC = () => {
             </div>
           </div>
         )}
-      </main>
+          </div>
+        </main>
+      </div>
 
       {/* Mobile Bottom Navigation (Visible on mobile screens < md) */}
       <SpeakerMobileBottomNav
