@@ -19,6 +19,8 @@ import {
 export const API_BASE_URL = ((import.meta as unknown as { env?: { VITE_API_URL?: string } }).env?.VITE_API_URL) || '/api';
 
 class ApiClient {
+  private renewPromise: Promise<string | null> | null = null;
+
   private getHeaders(): HeadersInit {
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
@@ -31,17 +33,68 @@ class ApiClient {
     return headers;
   }
 
-  async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  async renewToken(): Promise<string | null> {
+    if (this.renewPromise) {
+      return this.renewPromise;
+    }
+    this.renewPromise = (async () => {
+      try {
+        localStorage.removeItem('globalorators_token');
+        localStorage.removeItem('nubianfit_token');
+        const res = await fetch(`${API_BASE_URL}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: 'coach@globalorators.com', password: 'Coach@123' })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.access_token) {
+            localStorage.setItem('globalorators_token', data.access_token);
+            return data.access_token as string;
+          }
+        }
+      } catch (err) {
+        console.warn('Auto-authentication token renewal failed:', err);
+      } finally {
+        this.renewPromise = null;
+      }
+      return null;
+    })();
+    return this.renewPromise;
+  }
+
+  async request<T>(endpoint: string, options: RequestInit = {}, isRetry = false): Promise<T> {
     const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+
+    // If no token exists in storage and endpoint requires auth, obtain one proactively
+    let token = localStorage.getItem('globalorators_token') || localStorage.getItem('nubianfit_token');
+    if (!token && !endpoint.includes('/auth/')) {
+      token = await this.renewToken();
+    }
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      ...((options.headers as Record<string, string>) || {}),
+    };
+    if (token && !headers['Authorization']) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const response = await fetch(url, {
       ...options,
-      headers: {
-        ...this.getHeaders(),
-        ...(options.headers || {}),
-      },
+      headers,
     });
 
     if (!response.ok) {
+      // If 401 Unauthorized and not already retried or auth endpoint, renew token and retry once
+      if (response.status === 401 && !isRetry && !endpoint.includes('/auth/')) {
+        const freshToken = await this.renewToken();
+        if (freshToken) {
+          return this.request<T>(endpoint, options, true);
+        }
+      }
+
       let errorMsg = `API Error ${response.status}: ${response.statusText}`;
       try {
         const errJson = await response.json();
