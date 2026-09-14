@@ -120,6 +120,15 @@ async def get_my_client_profile(
     return resp
 
 
+@router.get("/lookup", include_in_schema=False)
+async def extinguished_speaker_lookup():
+    """Explicitly extinguished legacy lookup route to prevent public enumeration."""
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="The speaker lookup endpoint has been removed. Authenticated speakers must resolve their profile via /api/clients/me."
+    )
+
+
 @router.get("/{client_id}", response_model=ClientResponse)
 async def get_client(
     client_id: str, 

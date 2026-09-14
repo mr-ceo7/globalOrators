@@ -1394,4 +1394,53 @@ async def test_authenticated_vault_persistence_and_recordings():
         res_stream_rec_idor = await client.get(f"/api/recordings/{rec_id}/stream", headers=headers_b)
         assert res_stream_rec_idor.status_code == 403
 
+        # 4. Audio Content Validation: Reject invalid audio binary magic bytes (returns 400)
+        invalid_files = {
+            "file": ("malicious.sh", b"#!/bin/bash\necho 'hacked'", "audio/webm")
+        }
+        res_invalid_magic = await client.post(
+            "/api/recordings/upload",
+            data=upload_data,
+            files=invalid_files,
+            headers=headers_a
+        )
+        assert res_invalid_magic.status_code == 400
+        assert "Invalid audio binary header" in res_invalid_magic.json()["detail"]
+
+        # 5. Audio Content Validation: File size limit (>25MB returns 413)
+        oversized_files = {
+            "file": ("large.wav", b"RIFF" + (b"\x00" * (26 * 1024 * 1024)), "audio/wav")
+        }
+        res_oversized = await client.post(
+            "/api/recordings/upload",
+            data=upload_data,
+            files=oversized_files,
+            headers=headers_a
+        )
+        assert res_oversized.status_code == 413
+        assert "exceeds maximum permitted size" in res_oversized.json()["detail"]
+
+        # 6. Recording Deletion and IDOR Protection
+        # Speaker B cannot delete Speaker A's recording (403)
+        res_del_idor = await client.delete(f"/api/recordings/{rec_id}", headers=headers_b)
+        assert res_del_idor.status_code == 403
+
+        # Speaker A can delete their recording (200)
+        res_del = await client.delete(f"/api/recordings/{rec_id}", headers=headers_a)
+        assert res_del.status_code == 200
+
+        # After deletion, stream returns 404
+        res_stream_deleted = await client.get(f"/api/recordings/{rec_id}/stream", headers=headers_a)
+        assert res_stream_deleted.status_code == 404
+
+        # 7. Explicitly Extinguished Legacy Speaker Lookup Route
+        # Both unauthenticated and authenticated calls to /api/clients/lookup return 404
+        res_lookup_unauth = await client.get("/api/clients/lookup")
+        assert res_lookup_unauth.status_code == 404
+        assert "speaker lookup endpoint has been removed" in res_lookup_unauth.json()["detail"]
+
+        res_lookup_auth = await client.get("/api/clients/lookup", headers=headers_a)
+        assert res_lookup_auth.status_code == 404
+        assert "speaker lookup endpoint has been removed" in res_lookup_auth.json()["detail"]
+
         print("Authenticated vault persistence and recordings tests passed flawlessly!")

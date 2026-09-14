@@ -13,34 +13,31 @@ vi.mock('../services/apiClient', () => ({
     list: vi.fn().mockResolvedValue([]), 
     getAll: vi.fn().mockResolvedValue([]),
     create: vi.fn().mockImplementation((c) => Promise.resolve({ ...c, id: c.id || 'client-mock-123' })),
-    lookup: vi.fn().mockImplementation((search) => {
-      if (search.includes('kassim') || search.includes('254746957502')) {
-        return Promise.resolve({
-          id: 'client-mock-kassim',
-          name: 'KASSIM MUSA',
+    getMe: vi.fn().mockImplementation(() => {
+      return Promise.resolve({
+        id: 'client-mock-kassim',
+        name: 'KASSIM MUSA',
+        email: 'kassimmusa322@gmail.com',
+        phone: '+254746957502',
+        goal: 'Pan-African Leadership',
+        experienceLevel: 'Novice Speaker',
+        currentWeightKg: 140,
+        onboardingSurvey: {
+          branch: 'Academy',
+          fullName: 'KASSIM MUSA',
           email: 'kassimmusa322@gmail.com',
           phone: '+254746957502',
-          goal: 'Pan-African Leadership',
-          experienceLevel: 'Novice Speaker',
-          currentWeightKg: 140,
-          onboardingSurvey: {
-            branch: 'Academy',
-            fullName: 'KASSIM MUSA',
-            email: 'kassimmusa322@gmail.com',
-            phone: '+254746957502',
-            institution: 'Maseno University',
-            primaryDiscipline: 'Decolonial Parliamentary Forensics',
-            coreFocus: 'Ideological Rigor & Rebuttal Depth',
-            missionFocus: 'Pan-African Leadership',
-            selectedHabits: [
-              'Vocal Hydration (2.5L + Warm Lemon Water)',
-              'Decolonial Parliamentary Case Prep (15 Min)'
-            ]
-          }
-        });
-      }
-      return Promise.reject(new Error('Speaker profile not found'));
-    })
+          institution: 'Maseno University',
+          primaryDiscipline: 'Decolonial Parliamentary Forensics',
+          coreFocus: 'Ideological Rigor & Rebuttal Depth',
+          missionFocus: 'Pan-African Leadership',
+          selectedHabits: [
+            'Vocal Hydration (2.5L + Warm Lemon Water)',
+            'Decolonial Parliamentary Case Prep (15 Min)'
+          ]
+        }
+      });
+    }),
   },
   exercisesApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },
   programsApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },

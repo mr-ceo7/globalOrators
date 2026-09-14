@@ -9,7 +9,7 @@ vi.mock('../services/apiClient', () => ({
     me: vi.fn().mockResolvedValue({ email: 'test@example.com', role: 'coach' }),
     login: vi.fn().mockResolvedValue({ access_token: 'test-token', user: { email: 'test@example.com', role: 'coach' } }),
   },
-  clientsApi: { getAll: vi.fn().mockResolvedValue([]), create: vi.fn(), lookup: vi.fn() },
+  clientsApi: { getAll: vi.fn().mockResolvedValue([]), create: vi.fn(), getMe: vi.fn().mockRejectedValue(new Error('Not found')) },
   exercisesApi: { getAll: vi.fn().mockResolvedValue([]) },
   programsApi: { getAll: vi.fn().mockResolvedValue([]), save: vi.fn(), assign: vi.fn() },
   workoutsApi: { getAll: vi.fn().mockResolvedValue([]) },

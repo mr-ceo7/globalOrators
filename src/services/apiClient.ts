@@ -108,6 +108,70 @@ class ApiClient {
   delete<T>(endpoint: string): Promise<T> {
     return this.request<T>(endpoint, { method: 'DELETE' });
   }
+
+  async postFormData<T>(endpoint: string, formData: FormData): Promise<T> {
+    const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+    const token = localStorage.getItem('globalorators_token') || localStorage.getItem('nubianfit_token');
+
+    const headers: Record<string, string> = {
+      Accept: 'application/json',
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        localStorage.removeItem('globalorators_token');
+        localStorage.removeItem('nubianfit_token');
+        localStorage.removeItem('globalorators_user');
+        localStorage.removeItem('nubianfit_user');
+        localStorage.removeItem('globalorators_speaker_profile');
+        throw new Error('AuthenticationError');
+      }
+
+      let errorMsg = `API Error ${response.status}: ${response.statusText}`;
+      try {
+        const errJson = await response.json();
+        if (errJson.detail) {
+          errorMsg = typeof errJson.detail === 'string' ? errJson.detail : JSON.stringify(errJson.detail);
+        }
+      } catch {}
+      throw new Error(errorMsg);
+    }
+
+    return response.json();
+  }
+
+  async getBlob(endpoint: string): Promise<Blob> {
+    const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+    const token = localStorage.getItem('globalorators_token') || localStorage.getItem('nubianfit_token');
+
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(url, { method: 'GET', headers });
+    if (!response.ok) {
+      if (response.status === 401) {
+        localStorage.removeItem('globalorators_token');
+        localStorage.removeItem('nubianfit_token');
+        localStorage.removeItem('globalorators_user');
+        localStorage.removeItem('nubianfit_user');
+        localStorage.removeItem('globalorators_speaker_profile');
+        throw new Error('AuthenticationError');
+      }
+      throw new Error(`Failed to fetch audio stream: ${response.statusText}`);
+    }
+    return response.blob();
+  }
 }
 
 export const api = new ApiClient();
@@ -351,27 +415,14 @@ export interface RecordingResponse {
 
 export const recordingsApi = {
   getAll: (params?: { clientId?: string }) => api.get<RecordingResponse[]>('/recordings', params),
-  upload: async (clientId: string, file: Blob, title = 'Rehearsal Recording', durationSeconds = 0) => {
+  upload: (clientId: string, file: Blob, title = 'Rehearsal Recording', durationSeconds = 0) => {
     const formData = new FormData();
     formData.append('file', file, 'rehearsal.webm');
     formData.append('clientId', clientId);
     formData.append('title', title);
     formData.append('duration_seconds', String(durationSeconds));
-
-    const token = localStorage.getItem('globalorators_token') || localStorage.getItem('nubianfit_token');
-    const headers: Record<string, string> = {};
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    const res = await fetch('/api/recordings/upload', {
-      method: 'POST',
-      headers,
-      body: formData,
-    });
-    if (!res.ok) {
-      throw new Error(`Upload failed with status ${res.status}`);
-    }
-    return res.json() as Promise<RecordingResponse>;
+    return api.postFormData<RecordingResponse>('/recordings/upload', formData);
   },
+  getStreamBlob: (recordingId: string) => api.getBlob(`/recordings/${recordingId}/stream`),
+  delete: (recordingId: string) => api.delete<{ message: string; id: string }>(`/recordings/${recordingId}`),
 };

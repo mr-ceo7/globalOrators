@@ -36,7 +36,11 @@ import {
   Briefcase,
   Sun,
   Moon,
-  LayoutDashboard
+  LayoutDashboard,
+  Trash2,
+  AlertTriangle,
+  Loader2,
+  CheckCircle
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { BranchType, SpeakerOnboardingData, ScheduledWorkout } from '../../types';
@@ -49,6 +53,48 @@ import { GlobalOratorsLogo } from '../common/GlobalOratorsLogo';
 import { journalsApi, simulationsApi, recordingsApi, RecordingResponse } from '../../services/apiClient';
 
 export type SpeakerTabType = 'today' | 'practice' | 'catharsis' | 'schedule' | 'habits' | 'progress' | 'coach';
+
+const AuthenticatedVaultPlayer: React.FC<{ recordingId: string }> = ({ recordingId }) => {
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handlePlay = async () => {
+    if (blobUrl) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const blob = await recordingsApi.getStreamBlob(recordingId);
+      const url = URL.createObjectURL(blob);
+      setBlobUrl(url);
+    } catch {
+      setError('Playback failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+    };
+  }, [blobUrl]);
+
+  if (blobUrl) {
+    return <audio controls autoPlay src={blobUrl} className="h-9 w-full sm:w-64" />;
+  }
+
+  return (
+    <button
+      onClick={handlePlay}
+      disabled={isLoading}
+      className="px-3 py-1.5 rounded-lg border border-slate-800 hover:border-[#C89630]/60 bg-slate-900 text-[11px] font-mono text-slate-300 hover:text-white transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+    >
+      {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin text-[#C89630]" /> : <Play className="w-3.5 h-3.5 text-[#C89630]" />}
+      <span>{isLoading ? 'Decrypting Stream...' : error || 'Play Rehearsal'}</span>
+    </button>
+  );
+};
 
 export const ClientPortal: React.FC = () => {
   const {
@@ -207,13 +253,14 @@ export const ClientPortal: React.FC = () => {
   const [recordingCompleted, setRecordingCompleted] = useState(false);
   const [recordedAudioUrl, setRecordedAudioUrl] = useState<string | null>(null);
   const [recordingError, setRecordingError] = useState<string | null>(null);
+  const [recordingUploadStatus, setRecordingUploadStatus] = useState<'idle' | 'uploading' | 'persisted' | 'failed'>('idle');
+  const recordedAudioBlobRef = useRef<Blob | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
   // Real Audio Recordings Vault (Encrypted Backend Persistence)
   const [persistedRecordings, setPersistedRecordings] = useState<RecordingResponse[]>([]);
-  const [isUploadingRecording, setIsUploadingRecording] = useState(false);
 
   // Hydrate recordings from backend
   useEffect(() => {
@@ -225,6 +272,233 @@ export const ClientPortal: React.FC = () => {
         .catch(() => {});
     }
   }, [pairedClient?.id]);
+
+  // Clean up Object URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (recordedAudioUrl) {
+        URL.revokeObjectURL(recordedAudioUrl);
+      }
+    };
+  }, [recordedAudioUrl]);
+
+  // Recording Handlers (Real MediaRecorder API)
+  const handleStartRecording = async () => {
+    setRecordingError(null);
+    if (recordedAudioUrl) {
+      URL.revokeObjectURL(recordedAudioUrl);
+      setRecordedAudioUrl(null);
+    }
+    recordedAudioBlobRef.current = null;
+    setRecordingCompleted(false);
+    setRecordingUploadStatus('idle');
+
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setRecordingError('Microphone recording is not supported in this browser environment.');
+        return;
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
+      audioChunksRef.current = [];
+
+      const recorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = recorder;
+
+      recorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      recorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        recordedAudioBlobRef.current = audioBlob;
+        const url = URL.createObjectURL(audioBlob);
+        setRecordedAudioUrl(url);
+        setRecordingCompleted(true);
+
+        if (pairedClient?.id) {
+          setRecordingUploadStatus('uploading');
+          try {
+            const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            const title = `${profile.goal || 'Oratory'} Rehearsal (${dateStr})`;
+            const uploaded = await recordingsApi.upload(
+              pairedClient.id,
+              audioBlob,
+              title,
+              recordingSeconds
+            );
+            if (uploaded && uploaded.id) {
+              setPersistedRecordings(prev => [uploaded, ...prev]);
+              setRecordingUploadStatus('persisted');
+              showToast('Rehearsal uploaded and secured to Orator Vault.');
+            } else {
+              setRecordingUploadStatus('failed');
+            }
+          } catch (uploadErr) {
+            console.warn('Failed to upload rehearsal to server:', uploadErr);
+            setRecordingUploadStatus('failed');
+            showToast('Rehearsal upload failed: Audio saved as local preview only.');
+          }
+        } else {
+          setRecordingUploadStatus('failed');
+          showToast('Orator profile not linked to server. Audio saved as local preview only.');
+        }
+      };
+
+      recorder.start(250);
+      setIsRecording(true);
+      setRecordingSeconds(0);
+    } catch (err) {
+      console.warn('Microphone access denied or unavailable:', err);
+      setRecordingError('Microphone permission required for rehearsal recording. Please allow access in browser settings.');
+    }
+  };
+
+  const handleStopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current = null;
+    }
+    setIsRecording(false);
+  };
+
+  const handleRetryUploadRecording = async () => {
+    if (!recordedAudioBlobRef.current) return;
+    if (!pairedClient?.id) {
+      showToast('Cannot upload: Orator profile not linked to server. Please complete speaker onboarding.');
+      return;
+    }
+    setRecordingUploadStatus('uploading');
+    try {
+      const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const title = `${profile.goal || 'Oratory'} Rehearsal (${dateStr})`;
+      const uploaded = await recordingsApi.upload(
+        pairedClient.id,
+        recordedAudioBlobRef.current,
+        title,
+        recordingSeconds
+      );
+      if (uploaded && uploaded.id) {
+        setPersistedRecordings(prev => [uploaded, ...prev]);
+        setRecordingUploadStatus('persisted');
+        showToast('Rehearsal uploaded and secured to Orator Vault.');
+      } else {
+        setRecordingUploadStatus('failed');
+        showToast('Upload retry failed. Check server connection.');
+      }
+    } catch (err) {
+      console.warn('Retry upload failed:', err);
+      setRecordingUploadStatus('failed');
+      showToast('Upload retry failed: Server unreachable.');
+    }
+  };
+
+  const handleDiscardRecording = () => {
+    if (recordedAudioUrl) {
+      URL.revokeObjectURL(recordedAudioUrl);
+    }
+    recordedAudioBlobRef.current = null;
+    setRecordedAudioUrl(null);
+    setRecordingUploadStatus('idle');
+    setRecordingCompleted(false);
+    showToast('Local rehearsal preview discarded.');
+  };
+
+  const handleDeleteRecording = async (recordingId: string) => {
+    try {
+      await recordingsApi.delete(recordingId);
+      setPersistedRecordings(prev => prev.filter(r => r.id !== recordingId));
+      showToast('Rehearsal purged from vault.');
+    } catch (err) {
+      console.warn('Failed to delete recording:', err);
+      showToast('Failed to delete rehearsal from server.');
+    }
+  };
+
+  // Add Journal Entry with authenticated server persistence (Fail Closed - C1 Audit Fix)
+  const handleSaveJournal = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!journalText.trim()) return;
+
+    if (!pairedClient?.id) {
+      showToast('Vault unavailable: Orator profile not linked to server. Please complete speaker onboarding.');
+      return;
+    }
+
+    const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const payload = {
+      client_id: pairedClient.id,
+      date: dateStr,
+      text: journalText.trim(),
+      feel_before: journalFeelBefore,
+      feel_after: journalFeelAfter
+    };
+
+    setIsSavingJournal(true);
+    try {
+      const res = await journalsApi.create(payload);
+      setJournalEntries(prev => [{
+        id: res.id,
+        date: res.date,
+        text: res.text,
+        feelBefore: res.feel_before,
+        feelAfter: res.feel_after
+      }, ...prev]);
+      setJournalText('');
+      showToast('Reflection secured to Orator Vault.');
+    } catch (err) {
+      console.warn('Failed to persist reflection to server:', err);
+      showToast('Failed to save reflection to server vault.');
+    } finally {
+      setIsSavingJournal(false);
+    }
+  };
+
+  // Add Executive Simulation Entry with authenticated server persistence (Fail Closed - C1 Audit Fix)
+  const handleSaveExecSimulation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!execSimulationText.trim()) return;
+
+    if (!pairedClient?.id) {
+      showToast('Vault unavailable: Orator profile not linked to server. Please complete speaker onboarding.');
+      return;
+    }
+
+    const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const payload = {
+      client_id: pairedClient.id,
+      date: dateStr,
+      arena: execArena,
+      summary: execSimulationText.trim(),
+      wpm: profile.vocalBaselinePace || 135,
+      coach_status: 'Vault Persisted'
+    };
+
+    setIsSavingExec(true);
+    try {
+      const res = await simulationsApi.create(payload);
+      setExecEntries(prev => [{
+        id: res.id,
+        date: res.date,
+        arena: res.arena,
+        summary: res.summary,
+        wpm: res.wpm,
+        coachStatus: res.coach_status
+      }, ...prev]);
+      setExecSimulationText('');
+      showToast('Simulation dispatch secured to Orator Vault.');
+    } catch (err) {
+      console.warn('Failed to persist simulation to server:', err);
+      showToast('Failed to save simulation dispatch to server vault.');
+    } finally {
+      setIsSavingExec(false);
+    }
+  };
 
   // Journal entries for Catharsis Vault (Foundation Track) - Server Persisted
   const [journalText, setJournalText] = useState('');
@@ -350,185 +624,6 @@ export const ClientPortal: React.FC = () => {
       if (interval) clearInterval(interval);
     };
   }, [isRecording]);
-
-  useEffect(() => {
-    return () => {
-      if (mediaStreamRef.current) {
-        mediaStreamRef.current.getTracks().forEach(track => track.stop());
-      }
-      if (recordedAudioUrl) {
-        URL.revokeObjectURL(recordedAudioUrl);
-      }
-    };
-  }, [recordedAudioUrl]);
-
-  // Recording Handlers (Real MediaRecorder API)
-  const handleStartRecording = async () => {
-    setRecordingError(null);
-    if (recordedAudioUrl) {
-      URL.revokeObjectURL(recordedAudioUrl);
-      setRecordedAudioUrl(null);
-    }
-    setRecordingCompleted(false);
-
-    try {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        setRecordingError('Microphone recording is not supported in this browser environment.');
-        return;
-      }
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaStreamRef.current = stream;
-      audioChunksRef.current = [];
-
-      const recorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = recorder;
-
-      recorder.ondataavailable = (event) => {
-        if (event.data && event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
-
-      recorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        const url = URL.createObjectURL(audioBlob);
-        setRecordedAudioUrl(url);
-        setRecordingCompleted(true);
-
-        if (pairedClient?.id) {
-          setIsUploadingRecording(true);
-          try {
-            const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-            const title = `${profile.goal || 'Oratory'} Rehearsal (${dateStr})`;
-            const uploaded = await recordingsApi.upload(
-              pairedClient.id,
-              audioBlob,
-              title,
-              recordingSeconds
-            );
-            if (uploaded && uploaded.id) {
-              setPersistedRecordings(prev => [uploaded, ...prev]);
-              showToast('Rehearsal uploaded and secured to Orator Vault.');
-            }
-          } catch (uploadErr) {
-            console.warn('Failed to upload rehearsal to server:', uploadErr);
-            showToast('Rehearsal playback ready locally. Server sync pending.');
-          } finally {
-            setIsUploadingRecording(false);
-          }
-        }
-      };
-
-      recorder.start(250);
-      setIsRecording(true);
-      setRecordingSeconds(0);
-    } catch (err) {
-      console.warn('Microphone access denied or unavailable:', err);
-      setRecordingError('Microphone permission required for rehearsal recording. Please allow access in browser settings.');
-    }
-  };
-
-  const handleStopRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
-    }
-    if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach(track => track.stop());
-      mediaStreamRef.current = null;
-    }
-    setIsRecording(false);
-  };
-
-  // Add Journal Entry with authenticated server persistence
-  const handleSaveJournal = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!journalText.trim()) return;
-
-    const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    const payload = {
-      client_id: pairedClient?.id || '',
-      date: dateStr,
-      text: journalText.trim(),
-      feel_before: journalFeelBefore,
-      feel_after: journalFeelAfter
-    };
-
-    setIsSavingJournal(true);
-    try {
-      if (pairedClient?.id) {
-        const res = await journalsApi.create(payload);
-        setJournalEntries(prev => [{
-          id: res.id,
-          date: res.date,
-          text: res.text,
-          feelBefore: res.feel_before,
-          feelAfter: res.feel_after
-        }, ...prev]);
-      } else {
-        setJournalEntries(prev => [{
-          id: `j-${Date.now()}`,
-          date: dateStr,
-          text: payload.text,
-          feelBefore: payload.feel_before,
-          feelAfter: payload.feel_after
-        }, ...prev]);
-      }
-      setJournalText('');
-      showToast('Reflection secured to Orator Vault.');
-    } catch (err) {
-      console.warn('Failed to persist reflection to server:', err);
-      showToast('Failed to save reflection to server.');
-    } finally {
-      setIsSavingJournal(false);
-    }
-  };
-
-  // Add Executive Simulation Entry with authenticated server persistence
-  const handleSaveExecSimulation = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!execSimulationText.trim()) return;
-
-    const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    const payload = {
-      client_id: pairedClient?.id || '',
-      date: dateStr,
-      arena: execArena,
-      summary: execSimulationText.trim(),
-      wpm: profile.vocalBaselinePace || 135,
-      coach_status: 'Vault Persisted'
-    };
-
-    setIsSavingExec(true);
-    try {
-      if (pairedClient?.id) {
-        const res = await simulationsApi.create(payload);
-        setExecEntries(prev => [{
-          id: res.id,
-          date: res.date,
-          arena: res.arena,
-          summary: res.summary,
-          wpm: res.wpm,
-          coachStatus: res.coach_status
-        }, ...prev]);
-      } else {
-        setExecEntries(prev => [{
-          id: `exec-${Date.now()}`,
-          date: dateStr,
-          arena: payload.arena,
-          summary: payload.summary,
-          wpm: payload.wpm,
-          coachStatus: 'Vault Persisted'
-        }, ...prev]);
-      }
-      setExecSimulationText('');
-      showToast('Simulation dispatch secured to Orator Vault.');
-    } catch (err) {
-      console.warn('Failed to persist simulation to server:', err);
-      showToast('Failed to save simulation dispatch to server.');
-    } finally {
-      setIsSavingExec(false);
-    }
-  };
 
   // Send message to coach
   const handleSendMessage = (e: React.FormEvent) => {
@@ -1170,14 +1265,50 @@ export const ClientPortal: React.FC = () => {
                 {/* Instant Audio Replay & Self-Evaluation */}
                 {recordedAudioUrl && (
                   <div className="mt-6 pt-5 border-t border-slate-850 animate-fadeIn text-center">
-                    <div className="text-[10px] uppercase font-mono font-bold text-slate-400 mb-2 flex items-center justify-center gap-1.5">
-                      <Activity className="w-3.5 h-3.5 text-[#C89630]" />
-                      <span>{isUploadingRecording ? 'Uploading to Server Vault...' : 'Rehearsal Playback (Server Vault Sync Active)'}</span>
-                    </div>
+                    {recordingUploadStatus === 'uploading' && (
+                      <div className="text-[10px] uppercase font-mono font-bold text-amber-400 mb-2 flex items-center justify-center gap-1.5">
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
+                        <span>Uploading to Server Vault...</span>
+                      </div>
+                    )}
+                    {recordingUploadStatus === 'persisted' && (
+                      <div className="text-[10px] uppercase font-mono font-bold text-emerald-400 mb-2 flex items-center justify-center gap-1.5">
+                        <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Rehearsal Secured to Server Vault</span>
+                      </div>
+                    )}
+                    {recordingUploadStatus === 'failed' && (
+                      <div className="bg-rose-500/10 border border-rose-500/30 rounded-xl p-3 mb-3 max-w-md mx-auto text-left">
+                        <div className="text-[11px] font-mono font-bold text-rose-400 flex items-center gap-2 mb-1">
+                          <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+                          <span>Local Audio Preview Only ({pairedClient?.id ? 'Upload Failed' : 'No Server Profile'} — Not in Server Vault)</span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 leading-normal">
+                          This audio is stored in temporary browser memory and is not saved to your persistent vault. It will be lost on page reload.
+                        </p>
+                      </div>
+                    )}
+
                     <audio controls src={recordedAudioUrl} className="w-full max-w-md mx-auto my-3 rounded-xl" />
-                    <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
-                      {isUploadingRecording ? 'Persisting audio file to secure server vault...' : 'Audio captured and persisted to your private Orator Vault for longitudinal evaluation.'}
-                    </p>
+
+                    <div className="flex items-center justify-center gap-3 mt-3">
+                      {recordingUploadStatus === 'failed' && pairedClient?.id && (
+                        <button
+                          onClick={handleRetryUploadRecording}
+                          disabled={recordingUploadStatus === 'uploading'}
+                          className="px-4 py-1.5 rounded-lg font-mono text-xs font-bold bg-[#C89630] hover:bg-[#b08328] text-slate-950 flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition"
+                        >
+                          <RefreshCw className="w-3.5 h-3.5" />
+                          <span>Retry Upload to Vault</span>
+                        </button>
+                      )}
+                      <button
+                        onClick={handleDiscardRecording}
+                        className="px-3 py-1.5 rounded-lg font-mono text-xs text-slate-400 hover:text-rose-400 border border-slate-800 hover:border-rose-500/30 transition cursor-pointer"
+                      >
+                        {recordingUploadStatus === 'persisted' ? 'Dismiss Preview' : 'Discard Preview'}
+                      </button>
+                    </div>
                   </div>
                 )}
 
@@ -1206,7 +1337,16 @@ export const ClientPortal: React.FC = () => {
                               <span>{(rec.file_size_bytes / 1024).toFixed(1)} KB</span>
                             </div>
                           </div>
-                          <audio controls src={`/api/recordings/${rec.id}/stream`} className="h-9 w-full sm:w-64" />
+                          <div className="flex items-center gap-2">
+                            <AuthenticatedVaultPlayer recordingId={rec.id} />
+                            <button
+                              onClick={() => handleDeleteRecording(rec.id)}
+                              title="Purge rehearsal from vault"
+                              className="p-2 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition cursor-pointer"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -1233,6 +1373,18 @@ export const ClientPortal: React.FC = () => {
                     Log and review simulated investor presentations, boardroom defenses, shareholder addresses, and keynote drafts. Calibrate your Bottom Line Upfront (BLUF) delivery and tactical pause execution with Coach Qassim.
                   </p>
                 </div>
+
+                {!pairedClient?.id && (
+                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 mb-6 text-left flex items-start gap-3">
+                    <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="text-xs font-bold text-amber-300 uppercase tracking-wider font-mono">Incomplete Profile Link</h4>
+                      <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+                        Your session is not currently paired with a verified server profile. Please complete speaker onboarding to unlock durable vault persistence for your simulations.
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {/* New Executive Simulation Form */}
                 <form onSubmit={handleSaveExecSimulation} className="bg-slate-950 border border-slate-800 rounded-2xl p-5 mb-8 space-y-4">
@@ -1329,6 +1481,18 @@ export const ClientPortal: React.FC = () => {
                   Decades of patriarchal and colonial conditioning told us that emotional vulnerability is dangerous. Here, your voice is your catharsis. Log your reflections, vocalize what you carry, and feel the lightness that follows.
                 </p>
               </div>
+
+              {!pairedClient?.id && (
+                <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 mb-6 text-left flex items-start gap-3">
+                  <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="text-xs font-bold text-amber-300 uppercase tracking-wider font-mono">Incomplete Profile Link</h4>
+                    <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+                      Your session is not currently paired with a verified server profile. Please complete speaker onboarding to unlock durable vault persistence for your reflections.
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* New Reflection Form */}
               <form onSubmit={handleSaveJournal} className="bg-slate-950 border border-slate-800 rounded-2xl p-5 mb-8 space-y-4">

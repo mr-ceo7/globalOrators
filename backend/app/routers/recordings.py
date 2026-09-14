@@ -72,6 +72,43 @@ async def list_recordings(
     return result.scalars().all()
 
 
+MAX_RECORDING_SIZE = 25 * 1024 * 1024  # 25 Megabytes
+ALLOWED_MIME_PREFIXES = ("audio/", "video/webm")
+VALID_AUDIO_MAGIC = (
+    b"\x1a\x45\xdf\xa3",  # WebM / Matroska
+    b"RIFF",              # WAV
+    b"ID3",               # MP3 (ID3v2)
+    b"\xff\xfb",          # MP3 frame
+    b"\xff\xf3",          # MP3 frame
+    b"\xff\xf2",          # MP3 frame
+    b"OggS",              # OGG
+)
+
+
+def validate_audio_content(content: bytes, mime_type: str):
+    """Validate that uploaded bytes correspond to legitimate audio data."""
+    if len(content) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Recording file is empty (0 bytes)"
+        )
+    if len(content) > MAX_RECORDING_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_413_CONTENT_TOO_LARGE,
+            detail="Recording file exceeds maximum permitted size of 25MB"
+        )
+
+    # Verify magic byte signatures or container headers
+    is_valid_magic = any(content.startswith(magic) for magic in VALID_AUDIO_MAGIC)
+    is_mp4_m4a = len(content) >= 12 and b"ftyp" in content[4:12]
+
+    if not (is_valid_magic or is_mp4_m4a):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid audio binary header. File does not match supported audio container specifications (WebM, WAV, MP3, OGG, M4A)."
+        )
+
+
 @router.post("/upload", response_model=RecordingResponse, status_code=status.HTTP_201_CREATED)
 async def upload_recording(
     file: UploadFile = File(...),
@@ -81,7 +118,7 @@ async def upload_recording(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Upload and durably persist an orator rehearsal recording with access control."""
+    """Upload and durably persist an orator rehearsal recording with access control and binary verification."""
     c_res = await db.execute(select(Client).where(Client.id == client_id))
     client = c_res.scalar_one_or_none()
     if not client:
@@ -104,71 +141,50 @@ async def upload_recording(
                 detail="Access denied to upload recordings for other speakers"
             )
 
+    content = await file.read()
+    mime_type = file.content_type or "audio/webm"
+    validate_audio_content(content, mime_type)
+
     recording_id = f"rec-{uuid.uuid4().hex[:12]}"
     ext = os.path.splitext(file.filename or "")[1] or ".webm"
     stored_filename = f"{recording_id}{ext}"
     file_path = os.path.join(RECORDINGS_DIR, stored_filename)
 
-    content = await file.read()
-    file_size = len(content)
+    try:
+        with open(file_path, "wb") as f:
+            f.write(content)
 
-    with open(file_path, "wb") as f:
-        f.write(content)
-
-    file_url = f"/api/recordings/{recording_id}/stream"
-    mime_type = file.content_type or "audio/webm"
-
-    recording = AudioRecording(
-        id=recording_id,
-        client_id=client_id,
-        title=title or "Rehearsal Recording",
-        file_path=file_path,
-        file_url=file_url,
-        duration_seconds=duration_seconds or 0,
-        file_size_bytes=file_size,
-        mime_type=mime_type
-    )
-    db.add(recording)
-    await db.commit()
-    await db.refresh(recording)
-    return recording
-
-
-bearer_scheme = HTTPBearer(auto_error=False)
+        file_url = f"/api/recordings/{recording_id}/stream"
+        recording = AudioRecording(
+            id=recording_id,
+            client_id=client_id,
+            title=title or "Rehearsal Recording",
+            file_path=file_path,
+            file_url=file_url,
+            duration_seconds=duration_seconds or 0,
+            file_size_bytes=len(content),
+            mime_type=mime_type
+        )
+        db.add(recording)
+        await db.commit()
+        await db.refresh(recording)
+        return recording
+    except Exception as exc:
+        if os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+            except OSError:
+                pass
+        raise exc
 
 
 @router.get("/{recording_id}/stream")
 async def stream_recording(
     recording_id: str,
-    token: Optional[str] = Query(None, description="Optional token for browser audio streaming"),
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
-    """Stream audio playback with authentication and IDOR access control."""
-    auth_token = credentials.credentials if credentials else token
-    if not auth_token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication required to stream recordings",
-            headers={"WWW-Authenticate": "Bearer"}
-        )
-
-    user_id = decode_access_token(auth_token)
-    if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"}
-        )
-
-    user_res = await db.execute(select(User).where((User.id == user_id) | (User.email == user_id)))
-    current_user = user_res.scalar_one_or_none()
-    if not current_user or not current_user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found or inactive"
-        )
-
+    """Stream audio playback with Bearer token authentication and IDOR access control."""
     res = await db.execute(select(AudioRecording).where(AudioRecording.id == recording_id))
     recording = res.scalar_one_or_none()
     if not recording:
@@ -205,3 +221,42 @@ async def stream_recording(
         media_type=recording.mime_type or "audio/webm",
         filename=os.path.basename(recording.file_path)
     )
+
+
+@router.delete("/{recording_id}")
+async def delete_recording(
+    recording_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Permanently delete a recording entry and purge its audio file from durable disk."""
+    res = await db.execute(select(AudioRecording).where(AudioRecording.id == recording_id))
+    recording = res.scalar_one_or_none()
+    if not recording:
+        raise HTTPException(status_code=404, detail="Recording not found")
+
+    client_res = await db.execute(select(Client).where(Client.id == recording.client_id))
+    client = client_res.scalar_one_or_none()
+    if not client:
+        raise HTTPException(status_code=404, detail="Associated orator profile not found")
+
+    if current_user.role == "coach":
+        is_default_coach = (
+            current_user.email.lower() == settings.DEFAULT_COACH_EMAIL.lower()
+            or current_user.id == "coach-1"
+        )
+        if not is_default_coach and client.coach_id != current_user.id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
+    else:
+        if not client.email or client.email.lower() != current_user.email.lower():
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
+
+    if os.path.exists(recording.file_path):
+        try:
+            os.remove(recording.file_path)
+        except OSError:
+            pass
+
+    await db.delete(recording)
+    await db.commit()
+    return {"message": "Recording deleted successfully", "id": recording_id}

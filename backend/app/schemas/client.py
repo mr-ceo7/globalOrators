@@ -8,13 +8,21 @@ from app.schemas.common import CamelModel
 
 
 class OnboardingSurveySchema(CamelModel):
-    gym_access: str = ""
-    weekly_availability_days: int = 4
-    dietary_restrictions: str = ""
-    sleep_avg_hours: float = 7.0
-    stress_level: str = "Moderate"
-    favorite_exercises: str = ""
-    least_favorite_exercises: str = ""
+    branch: Optional[str] = None
+    full_name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    age: Optional[int] = None
+    institution: Optional[str] = None
+    primary_discipline: Optional[str] = None
+    core_focus: Optional[str] = None
+    mission_focus: Optional[str] = None
+    speaking_goal: Optional[str] = None
+    experience_level: Optional[str] = None
+    vocal_baseline_pace: Optional[int] = None
+    emotional_openness_rating: Optional[int] = None
+    selected_habits: List[str] = Field(default_factory=list)
+    bio_notes: Optional[str] = None
 
 
 class ClientBase(CamelModel):

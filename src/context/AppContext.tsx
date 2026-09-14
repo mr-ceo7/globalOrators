@@ -557,6 +557,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         console.error('Failed to sync activity from API:', activityRes.reason);
       }
 
+      // Bind speaker profile hydration strictly to authenticated server identity (H1/M3)
+      const savedUserStr = localStorage.getItem('globalorators_user') || localStorage.getItem('nubianfit_user');
+      const currentUserRole = savedUserStr ? JSON.parse(savedUserStr)?.role : null;
+      if (currentUserRole !== 'coach') {
+        try {
+          const me = await clientsApi.getMe();
+          if (me) {
+            const profile = clientToSpeakerProfile(me);
+            setActiveSpeakerProfile(profile);
+            localStorage.setItem('globalorators_speaker_profile', JSON.stringify(profile));
+          }
+        } catch {
+          setActiveSpeakerProfile(null);
+          localStorage.removeItem('globalorators_speaker_profile');
+        }
+      }
+
       if (failedEndpoints.length > 0) {
         setIsBackendConnected(false);
         showToast(`Unable to load ${failedEndpoints.join(', ')}. Check your connection.`);
@@ -1083,7 +1100,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       phone: data.phone || '',
       age: data.age || undefined,
       gender: undefined,
-      status: 'Active',
+      status: 'Onboarding',
       branch: data.branch,
       institution: data.institution || '',
       primaryDiscipline: data.primaryDiscipline || '',
@@ -1201,9 +1218,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } catch {
         // No client profile found for this authenticated account
       }
-      if (!matchedClient) {
-        matchedClient = clients.find(c => Boolean(c.email && c.email.toLowerCase() === cleanEmail)) || null;
-      }
 
       if (matchedClient) {
         setClients(prev => {
@@ -1217,7 +1231,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         showToast(`Welcome back, ${profile.fullName}. Session authenticated.`);
         return { success: true };
       } else {
-        // Fail-closed against synthetic client creation (C4/H8 audit fix).
+        // Fail-closed against synthetic client creation (C4/H8/M3 audit fix).
         // Authenticated user has no domain client profile; route to Onboarding.
         setActiveSpeakerProfile(null);
         localStorage.removeItem('globalorators_speaker_profile');
@@ -1229,7 +1243,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const msg = err?.response?.data?.detail || err?.message || 'Invalid or expired verification passcode.';
       return { success: false, error: msg };
     }
-  }, [clients, refreshFromBackend, setCurrentPortal, showToast]);
+  }, [refreshFromBackend, setCurrentPortal, showToast]);
 
   const loginSpeaker = useCallback(async (email: string, code?: string): Promise<{ success: boolean; error?: string }> => {
     if (code) {
@@ -1247,15 +1261,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           showToast(`Welcome back, Coach ${res.user.full_name}.`);
           return { success: true, user: res.user };
         } else {
-          // Look up real client record created in backend via authenticated /me endpoint
+          // Look up real client record created in backend strictly via authenticated /me endpoint
           let matchedClient: Client | null = null;
           try {
             matchedClient = await clientsApi.getMe();
           } catch {
             // No client profile found for account
-          }
-          if (!matchedClient) {
-            matchedClient = clients.find(c => c.email && c.email.toLowerCase() === res.user.email.toLowerCase()) || null;
           }
 
           if (matchedClient) {
@@ -1270,11 +1281,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             showToast(`Welcome back, ${res.user.full_name}. Speaker Portal loaded.`);
             return { success: true, user: res.user };
           } else {
-            // Fail-closed against synthetic client creation (C4/H8 audit fix).
+            // Fail-closed against synthetic client creation (C4/H8/M3 audit fix).
             // Authenticated user has no domain client profile; route to Onboarding.
             setActiveSpeakerProfile(null);
             localStorage.removeItem('globalorators_speaker_profile');
-            setCurrentPortal('onboarding');
+            setCurrentPortal('speaker_onboarding');
             showToast(`Google identity verified. Please complete your speaker profile onboarding.`);
             return { success: true, user: res.user };
           }
@@ -1286,7 +1297,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // Production fail-closed: reject failed authentication (C3 audit fix)
       return { success: false, error: err?.message || 'Google authentication failed. Please try again.' };
     }
-  }, [clients, setCurrentPortal, showToast]);
+  }, [setCurrentPortal, showToast]);
 
   return (
     <AppContext.Provider
