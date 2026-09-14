@@ -91,59 +91,32 @@ async def list_clients(
 
 
 @router.get(
-    "/lookup", 
+    "/me",
     response_model=ClientResponse,
-    dependencies=[Depends(rate_limit(limit=15, window_seconds=60, key_prefix="clients_lookup"))]
+    dependencies=[Depends(rate_limit(limit=30, window_seconds=60, key_prefix="clients_me"))]
 )
-async def lookup_client(
-    search: str = Query(..., description="Exact email or phone number of the speaker to lookup"),
+async def get_my_client_profile(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
-    Lookup a speaker profile by exact email or phone digits.
-    Requires authenticated session. Speakers may only lookup their own profile.
+    Retrieve authenticated speaker's own client profile.
+    Resolves strictly by the authenticated session email, eliminating unauthenticated enumeration.
     """
-    search_term = search.strip()
-    if not search_term or len(search_term) < 4:
-        raise HTTPException(status_code=400, detail="Search query must be at least 4 characters")
-
-    search_lower = search_term.lower()
-    phone_digits = "".join(c for c in search_term if c.isdigit())
-
-    conditions = []
-    # Match by exact email
-    if "@" in search_lower:
-        conditions.append(Client.email.ilike(search_lower))
-
-    # Match by phone digits (require at least 7 digits for phone match)
-    if len(phone_digits) >= 7:
-        conditions.append(Client.phone.ilike(f"%{phone_digits}%"))
-
-    if not conditions:
-        raise HTTPException(
-            status_code=404, 
-            detail="Speaker profile not found. Please lookup using exact email or phone number."
-        )
-
     result = await db.execute(
-        select(Client).where(or_(*conditions)).order_by(Client.id.desc())
+        select(Client).where(Client.email.ilike(current_user.email)).order_by(Client.id.desc())
     )
     client = result.scalars().first()
     if not client:
-        raise HTTPException(status_code=404, detail="Speaker profile not found")
-    
-    # Speaker isolation: non-coaches can only access their own profile
-    if current_user.role != "coach" and client.email.lower() != current_user.email.lower():
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied: Cannot access profile belonging to another speaker"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No orator profile found associated with this authenticated account"
         )
 
     resp = ClientResponse.model_validate(client)
     if current_user.role != "coach":
         resp.custom_coach_notes = []
-        
+
     return resp
 
 

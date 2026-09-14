@@ -30,6 +30,9 @@ from app.routers import (
     inquiries_router,
     webrtc_router,
     coaches_router,
+    journals_router,
+    simulations_router,
+    recordings_router,
 )
 
 logging.basicConfig(
@@ -61,6 +64,10 @@ async def lifespan(app: FastAPI):
     logger.info("Checking / running initial database seed...")
     import os
     enable_dev_seed = os.getenv("ENABLE_DEV_SEED", "false").lower() in ("true", "1")
+
+    if settings.ENVIRONMENT == 'production' and enable_dev_seed:
+        logger.error("CRITICAL: ENABLE_DEV_SEED is strictly prohibited in production environment.")
+        raise RuntimeError("CRITICAL: ENABLE_DEV_SEED is strictly prohibited in production environment.")
 
     if settings.ENVIRONMENT != 'production':
         if enable_dev_seed or settings.TESTING:
@@ -173,6 +180,9 @@ app.include_router(messages_router, prefix=settings.API_PREFIX)
 app.include_router(activity_router, prefix=settings.API_PREFIX)
 app.include_router(inquiries_router, prefix=settings.API_PREFIX)
 app.include_router(coaches_router, prefix=settings.API_PREFIX)
+app.include_router(journals_router, prefix=settings.API_PREFIX)
+app.include_router(simulations_router, prefix=settings.API_PREFIX)
+app.include_router(recordings_router, prefix=settings.API_PREFIX)
 app.include_router(webrtc_router)
 
 

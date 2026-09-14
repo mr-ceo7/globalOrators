@@ -169,7 +169,7 @@ export const authApi = {
 export const clientsApi = {
   getAll: (params?: { status?: string; search?: string; intake?: string }) => api.get<Client[]>('/clients', params),
   getById: (id: string) => api.get<Client>(`/clients/${id}`),
-  lookup: (search: string) => api.get<Client>('/clients/lookup', { search }),
+  getMe: () => api.get<Client>('/clients/me'),
   create: (client: Partial<Client> & { coachRef?: string }) => api.post<Client>('/clients', client),
   update: (id: string, updates: Partial<Client>) => api.patch<Client>(`/clients/${id}`, updates),
   reassignCoach: (id: string, coachId: string, reason?: string) =>
@@ -283,4 +283,95 @@ export interface InquiryResponse {
 export const inquiriesApi = {
   submit: (data: InquiryPayload) => api.post<InquiryResponse>('/inquiries', data),
   getAll: () => api.get<InquiryResponse[]>('/inquiries'),
+};
+
+// Journals Endpoints (Catharsis Vault Reflections)
+export interface JournalEntryPayload {
+  client_id: string;
+  date: string;
+  text: string;
+  feel_before: string;
+  feel_after: string;
+}
+
+export interface JournalEntryResponse {
+  id: string;
+  client_id: string;
+  date: string;
+  text: string;
+  feel_before: string;
+  feel_after: string;
+  created_at?: string;
+}
+
+export const journalsApi = {
+  getAll: (params?: { clientId?: string }) => api.get<JournalEntryResponse[]>('/journals', params),
+  create: (data: JournalEntryPayload) => api.post<JournalEntryResponse>('/journals', data),
+  delete: (id: string) => api.delete<{ message: string; id: string }>(`/journals/${id}`),
+};
+
+// Executive Simulations Endpoints (Speech Vault Simulations)
+export interface SimulationPayload {
+  client_id: string;
+  date: string;
+  arena: string;
+  summary: string;
+  wpm?: number;
+  coach_status?: string;
+}
+
+export interface SimulationResponse {
+  id: string;
+  client_id: string;
+  date: string;
+  arena: string;
+  summary: string;
+  wpm: number;
+  coach_status: string;
+  created_at?: string;
+}
+
+export const simulationsApi = {
+  getAll: (params?: { clientId?: string }) => api.get<SimulationResponse[]>('/simulations', params),
+  create: (data: SimulationPayload) => api.post<SimulationResponse>('/simulations', data),
+  delete: (id: string) => api.delete<{ message: string; id: string }>(`/simulations/${id}`),
+};
+
+// Audio Recordings Endpoints (Durable Rehearsal Storage)
+export interface RecordingResponse {
+  id: string;
+  client_id: string;
+  title: string;
+  file_url: string;
+  duration_seconds: number;
+  file_size_bytes: number;
+  mime_type: string;
+  created_at?: string;
+}
+
+export const recordingsApi = {
+  getAll: (params?: { clientId?: string }) => api.get<RecordingResponse[]>('/recordings', params),
+  upload: async (clientId: string, file: Blob, title = 'Rehearsal Recording', durationSeconds = 0) => {
+    const formData = new FormData();
+    formData.append('file', file, 'rehearsal.webm');
+    formData.append('clientId', clientId);
+    formData.append('title', title);
+    formData.append('duration_seconds', String(durationSeconds));
+
+    const token = localStorage.getItem('globalorators_token') || localStorage.getItem('nubianfit_token');
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const res = await fetch('/api/recordings/upload', {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+    if (!res.ok) {
+      throw new Error(`Upload failed with status ${res.status}`);
+    }
+    return res.json() as Promise<RecordingResponse>;
+  },
 };

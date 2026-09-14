@@ -112,6 +112,11 @@ class Settings(BaseSettings):
                     "CRITICAL SECURITY CONFIGURATION ERROR: In production, COACH_INVITE_CODE must be "
                     "configured with a strong unique invite code (at least 16 characters) and must not use insecure default fallbacks."
                 )
+            if not self.SMTP_USERNAME or not self.SMTP_PASSWORD:
+                raise ValueError(
+                    "CRITICAL SECURITY CONFIGURATION ERROR: In production, SMTP_USERNAME and SMTP_PASSWORD "
+                    "must be configured for secure email OTP delivery."
+                )
         return self
 
 

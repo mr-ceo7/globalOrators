@@ -15,6 +15,9 @@ from app.models.message import ChatMessage
 from app.models.activity import ActivityFeedItem
 from app.models.inquiry import Inquiry
 from app.models.otp import EmailOTP
+from app.models.journal import JournalEntry
+from app.models.simulation import SimulationEntry
+from app.models.recording import AudioRecording
 
 __all__ = [
     "User",
@@ -30,4 +33,7 @@ __all__ = [
     "ActivityFeedItem",
     "Inquiry",
     "EmailOTP",
+    "JournalEntry",
+    "SimulationEntry",
+    "AudioRecording",
 ]

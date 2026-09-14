@@ -4,6 +4,7 @@ Authentication Router
 
 import uuid
 import secrets
+import logging
 from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -27,6 +28,8 @@ from app.security import verify_password, get_password_hash, create_access_token
 from app.config import settings
 from app.rate_limiter import rate_limit
 from app.services.email import send_otp_email
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -230,9 +233,12 @@ async def send_otp(req: SendOtpRequest, db: AsyncSession = Depends(get_db)):
     client_match = await db.execute(select(Client).where(Client.email.ilike(email_clean)))
     user_match = await db.execute(select(User).where(User.email.ilike(email_clean)))
     if not client_match.scalars().first() and not user_match.scalars().first():
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No speaker profile found with that email address. Please enroll first."
+        # Anti-enumeration (M2): Uniform response for unrecognized addresses while preserving audit log
+        logger.info(f"OTP dispatch requested for unregistered orator email: {email_clean}")
+        return OtpResponse(
+            status="sent",
+            email=email_clean,
+            message="If an orator profile exists for this email address, a 6-digit verification passcode has been dispatched."
         )
 
     # Invalidate any existing unused OTPs for this email address to prevent replay
@@ -262,12 +268,19 @@ async def send_otp(req: SendOtpRequest, db: AsyncSession = Depends(get_db)):
     # Dispatch email via threadpool without blocking asyncio loop
     delivered = await send_otp_email(email_clean, code)
     if not delivered and not settings.TESTING:
-        logger.warning(f"SMTP delivery failed for {email_clean}")
+        # Fail-closed (H1): Do not report success or leave usable OTP if delivery fails
+        logger.error(f"SMTP delivery failed for {email_clean}. Canceling OTP record.")
+        await db.delete(otp_record)
+        await db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Unable to dispatch verification email. Please verify mail server configuration or contact support."
+        )
 
     return OtpResponse(
         status="sent",
         email=email_clean,
-        message="A 6-digit verification passcode has been dispatched to your email address."
+        message="If an orator profile exists for this email address, a 6-digit verification passcode has been dispatched."
     )
 
 

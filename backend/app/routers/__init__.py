@@ -16,6 +16,9 @@ from app.routers.activity import router as activity_router
 from app.routers.inquiries import router as inquiries_router
 from app.routers.webrtc import router as webrtc_router
 from app.routers.coaches import router as coaches_router
+from app.routers.journals import router as journals_router
+from app.routers.simulations import router as simulations_router
+from app.routers.recordings import router as recordings_router
 
 __all__ = [
     "auth_router",
@@ -32,5 +35,8 @@ __all__ = [
     "inquiries_router",
     "webrtc_router",
     "coaches_router",
+    "journals_router",
+    "simulations_router",
+    "recordings_router",
 ]
 

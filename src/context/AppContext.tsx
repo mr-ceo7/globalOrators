@@ -1089,10 +1089,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       primaryDiscipline: data.primaryDiscipline || '',
       coreFocus: data.coreFocus || '',
       missionFocus: data.missionFocus,
-      catharsisScore: data.emotionalOpennessRating ? data.emotionalOpennessRating * 10 : undefined,
+      catharsisScore: undefined,
       goal: data.speakingGoal,
       experienceLevel: data.experienceLevel,
-      startDate: new Date().toISOString().split('T')[0],
+      startDate: undefined,
       currentProgramId: undefined,
       currentProgramName: undefined,
       complianceRate: 0,
@@ -1100,8 +1100,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       totalWorkoutsAssigned: 0,
       lastActive: 'Just now',
       targetWeightKg: undefined,
-      currentWeightKg: data.vocalBaselinePace || undefined,
-      startingWeightKg: data.vocalBaselinePace || undefined,
+      currentWeightKg: undefined,
+      startingWeightKg: undefined,
       heightCm: undefined,
       bodyFatPercentage: undefined,
       targetBodyFat: undefined,
@@ -1197,9 +1197,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       let matchedClient: Client | null = null;
       try {
-        matchedClient = await clientsApi.lookup(cleanEmail);
+        matchedClient = await clientsApi.getMe();
       } catch {
-        // No client profile found in lookup
+        // No client profile found for this authenticated account
       }
       if (!matchedClient) {
         matchedClient = clients.find(c => Boolean(c.email && c.email.toLowerCase() === cleanEmail)) || null;
@@ -1247,12 +1247,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           showToast(`Welcome back, Coach ${res.user.full_name}.`);
           return { success: true, user: res.user };
         } else {
-          // Look up real client record created in backend
+          // Look up real client record created in backend via authenticated /me endpoint
           let matchedClient: Client | null = null;
           try {
-            matchedClient = await clientsApi.lookup(res.user.email);
+            matchedClient = await clientsApi.getMe();
           } catch {
-            // lookup network issue
+            // No client profile found for account
           }
           if (!matchedClient) {
             matchedClient = clients.find(c => c.email && c.email.toLowerCase() === res.user.email.toLowerCase()) || null;

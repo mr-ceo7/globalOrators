@@ -276,29 +276,38 @@ async def test_api_endpoints():
         assert created_client["onboardingSurvey"]["primaryDiscipline"] == "Decolonial Parliamentary Forensics"
         client_db_id = created_client["id"]
 
-        # Lookup by exact email without auth returns 401 Unauthorized (C1 Audit Fix)
+        # Lookup endpoint is removed per C1; returns 404 (endpoint removed)
+        # Lookup endpoint is removed per C1; unauthenticated access returns 401
         res_lookup_unauth = await client.get(f"/api/clients/lookup?search={test_email}")
-        assert res_lookup_unauth.status_code == 401
+        assert res_lookup_unauth.status_code in (401, 404)
 
-        # Lookup by exact email with auth
-        res_lookup_email = await client.get(f"/api/clients/lookup?search={test_email}", headers=headers)
-        assert res_lookup_email.status_code == 200
-        assert res_lookup_email.json()["id"] == client_db_id
-        assert res_lookup_email.json()["phone"] == test_phone
+        # Authenticated lookup by non-existent ID returns 404
+        res_lookup_auth = await client.get("/api/clients/lookup?search=Marcus", headers=headers)
+        assert res_lookup_auth.status_code == 404
 
-        # Lookup by phone number
-        res_lookup_phone = await client.get(f"/api/clients/lookup?search=%2B2547{test_phone_suffix}", headers=headers)
-        assert res_lookup_phone.status_code == 200
-        assert res_lookup_phone.json()["id"] == client_db_id
+        # Coach can access client profile by ID
+        res_client_by_id = await client.get(f"/api/clients/{client_db_id}", headers=headers)
+        assert res_client_by_id.status_code == 200
+        assert res_client_by_id.json()["id"] == client_db_id
+        assert res_client_by_id.json()["phone"] == test_phone
 
-        # Lookup by phone without plus or spaces
-        res_lookup_phone_plain = await client.get(f"/api/clients/lookup?search={test_phone_plain}", headers=headers)
-        assert res_lookup_phone_plain.status_code == 200
-        assert res_lookup_phone_plain.json()["id"] == client_db_id
+        # Authenticated speaker resolves their own profile via /api/clients/me
+        res_speaker_auth = await client.post("/api/auth/otp/verify", json={"email": test_email, "code": "123456"})
+        assert res_speaker_auth.status_code == 200
+        speaker_token = res_speaker_auth.json()["access_token"]
+        speaker_headers = {"Authorization": f"Bearer {speaker_token}"}
 
-        # Lookup non-existent speaker returns 404
-        res_lookup_missing = await client.get("/api/clients/lookup?search=nonexistent_speaker_xyz@gmail.com", headers=headers)
-        assert res_lookup_missing.status_code == 404
+        res_me = await client.get("/api/clients/me", headers=speaker_headers)
+        assert res_me.status_code == 200
+        assert res_me.json()["id"] == client_db_id
+        assert res_me.json()["email"] == test_email
+        assert res_me.json()["phone"] == test_phone
+        # Redacted coach notes for speaker
+        assert res_me.json()["customCoachNotes"] == []
+
+        # Unauthenticated call to /api/clients/me returns 401
+        res_me_unauth = await client.get("/api/clients/me")
+        assert res_me_unauth.status_code == 401
 
         # Re-submitting with same email updates existing record without duplicate
         updated_payload = dict(speaker_payload)
@@ -778,9 +787,9 @@ async def test_public_client_hardening_and_lookup_protection():
         import time
         ts = int(time.time() * 1000)
 
-        # 1. Unauthenticated requests to /lookup are blocked with 401 Unauthorized (C1 Audit Fix)
+        # 1. Unauthenticated /lookup is rejected with 401 Unauthorized (C1 Audit Fix)
         res_unauth = await client.get("/api/clients/lookup?search=Marcus")
-        assert res_unauth.status_code == 401
+        assert res_unauth.status_code in (401, 404)
 
         # 2. Login coach
         coach_res = await client.post(
@@ -790,12 +799,9 @@ async def test_public_client_hardening_and_lookup_protection():
         coach_token = coach_res.json()["access_token"]
         coach_headers = {"Authorization": f"Bearer {coach_token}"}
 
-        # Loose name search on /lookup is strictly rejected (404)
+        # Authenticated lookup for non-existent client ID returns 404
         res_name_lookup = await client.get("/api/clients/lookup?search=Marcus", headers=coach_headers)
         assert res_name_lookup.status_code == 404
-
-        res_partial_phone = await client.get("/api/clients/lookup?search=123", headers=coach_headers)
-        assert res_partial_phone.status_code == 400 or res_partial_phone.status_code == 404
 
         # 3. Onboard a speaker with coach notes and assignments via coach
         test_email = f"protected.speaker.{ts}@example.com"
@@ -817,14 +823,24 @@ async def test_public_client_hardening_and_lookup_protection():
         created_client = res_create.json()
         assert created_client["customCoachNotes"] == ["Top Secret Faculty Evaluation: Gold Tier Cadence"]
 
-        # 4. Unauthenticated lookup is rejected with 401 (C1 Audit Fix)
+        # 4. Unauthenticated /lookup is rejected with 401 (C1 Audit Fix)
         res_pub_lookup = await client.get(f"/api/clients/lookup?search={test_email}")
-        assert res_pub_lookup.status_code == 401
+        assert res_pub_lookup.status_code in (401, 404)
 
-        # Authenticated lookup by coach returns profile with coach notes intact
-        res_coach_lookup = await client.get(f"/api/clients/lookup?search={test_email}", headers=coach_headers)
-        assert res_coach_lookup.status_code == 200
-        assert res_coach_lookup.json()["customCoachNotes"] == ["Top Secret Faculty Evaluation: Gold Tier Cadence"]
+        # Authenticated access by coach returns profile with coach notes intact
+        res_coach_get = await client.get(f"/api/clients/{created_client['id']}", headers=coach_headers)
+        assert res_coach_get.status_code == 200
+        assert res_coach_get.json()["customCoachNotes"] == ["Top Secret Faculty Evaluation: Gold Tier Cadence"]
+
+        # Authenticated access by speaker via /api/clients/me redacts coach notes
+        res_speaker_auth = await client.post("/api/auth/otp/verify", json={"email": test_email, "code": "123456"})
+        assert res_speaker_auth.status_code == 200
+        speaker_token = res_speaker_auth.json()["access_token"]
+        speaker_headers = {"Authorization": f"Bearer {speaker_token}"}
+
+        res_speaker_me = await client.get("/api/clients/me", headers=speaker_headers)
+        assert res_speaker_me.status_code == 200
+        assert res_speaker_me.json()["customCoachNotes"] == []
 
         # 4. Unauthenticated attempt to overwrite coach notes or compliance rate is ignored
         malicious_payload = {
@@ -1192,12 +1208,13 @@ async def test_email_otp_authentication_flow():
         )
         assert res_bad_email.status_code == 422
 
-        # 3. Attempt OTP dispatch with unregistered email fails (404)
+        # 3. Attempt OTP dispatch with unregistered email returns uniform 200 anti-enumeration response (M2 Audit Fix)
         res_unregistered = await client.post(
             "/api/auth/otp/send",
             json={"email": "unregistered.random@example.com"}
         )
-        assert res_unregistered.status_code == 404
+        assert res_unregistered.status_code == 200
+        assert res_unregistered.json()["status"] == "sent"
 
         # 4. Dispatch OTP for registered speaker succeeds (200)
         res_send = await client.post(
@@ -1231,19 +1248,150 @@ async def test_email_otp_authentication_flow():
         speaker_token = verify_data["access_token"]
         speaker_headers = {"Authorization": f"Bearer {speaker_token}"}
 
-        # 7. Authenticated speaker can lookup their own profile
-        res_own_lookup = await client.get(
-            f"/api/clients/lookup?search={otp_speaker_email}",
+        # 7. Authenticated speaker resolves their own profile via /api/clients/me (C1 Audit Fix)
+        res_own_me = await client.get(
+            "/api/clients/me",
             headers=speaker_headers
         )
-        assert res_own_lookup.status_code == 200
-        assert res_own_lookup.json()["email"] == otp_speaker_email
+        assert res_own_me.status_code == 200
+        assert res_own_me.json()["email"] == otp_speaker_email
 
-        # 8. Authenticated speaker CANNOT lookup another speaker's profile (403 Forbidden)
+        # 8. Unauthenticated /api/clients/lookup is completely blocked (401 or 404)
         res_other_lookup = await client.get(
-            "/api/clients/lookup?search=executive.speaker@globalorators.org",
-            headers=speaker_headers
+            f"/api/clients/lookup?search={otp_speaker_email}"
         )
-        assert res_other_lookup.status_code == 403 or res_other_lookup.status_code == 404
+        assert res_other_lookup.status_code in (401, 404)
 
         print("Email OTP passwordless authentication flow verified successfully!")
+
+
+@pytest.mark.asyncio
+async def test_authenticated_vault_persistence_and_recordings():
+    """Verify authenticated database persistence for journals, executive simulations, and audio recordings."""
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        import time
+        ts = int(time.time() * 1000)
+        speaker_a_email = f"vault.speaker.a.{ts}@example.com"
+        speaker_b_email = f"vault.speaker.b.{ts}@example.com"
+
+        # Onboard Speaker A and Speaker B
+        res_a = await client.post("/api/clients", json={
+            "name": "Speaker Alpha",
+            "email": speaker_a_email,
+            "phone": f"+25471{ts % 10000000:07d}",
+            "branch": "Foundation",
+            "goal": "Vocal Catharsis"
+        })
+        assert res_a.status_code == 201
+        client_a = res_a.json()
+
+        res_b = await client.post("/api/clients", json={
+            "name": "Speaker Beta",
+            "email": speaker_b_email,
+            "phone": f"+25473{ts % 10000000:07d}",
+            "branch": "Executive",
+            "goal": "Boardroom Presence"
+        })
+        assert res_b.status_code == 201
+        client_b = res_b.json()
+
+        # Authenticate Speaker A and B via OTP verification to obtain authentic sessions
+        res_auth_a = await client.post("/api/auth/otp/verify", json={"email": speaker_a_email, "code": "123456"})
+        assert res_auth_a.status_code == 200
+        headers_a = {"Authorization": f"Bearer {res_auth_a.json()['access_token']}"}
+
+        res_auth_b = await client.post("/api/auth/otp/verify", json={"email": speaker_b_email, "code": "123456"})
+        assert res_auth_b.status_code == 200
+        headers_b = {"Authorization": f"Bearer {res_auth_b.json()['access_token']}"}
+
+        # 1. Journals Persistence (Catharsis Vault)
+        # Speaker A writes reflection
+        res_j = await client.post("/api/journals", json={
+            "client_id": client_a["id"],
+            "date": "Sep 14, 2026",
+            "text": "Released deep anxiety around imposter syndrome on stage.",
+            "feel_before": "Anxious & Suppressed",
+            "feel_after": "Relieved, Grounded & Sovereign"
+        }, headers=headers_a)
+        assert res_j.status_code == 201
+        journal_entry = res_j.json()
+        assert journal_entry["text"] == "Released deep anxiety around imposter syndrome on stage."
+
+        # Speaker A can fetch their journals
+        res_list_j = await client.get(f"/api/journals?clientId={client_a['id']}", headers=headers_a)
+        assert res_list_j.status_code == 200
+        assert len(res_list_j.json()) >= 1
+        assert res_list_j.json()[0]["id"] == journal_entry["id"]
+
+        # IDOR Isolation: Speaker B cannot access Speaker A's journals (403)
+        res_list_j_idor = await client.get(f"/api/journals?clientId={client_a['id']}", headers=headers_b)
+        assert res_list_j_idor.status_code == 403
+
+        # IDOR Isolation: Speaker B cannot delete Speaker A's journal
+        res_del_j_idor = await client.delete(f"/api/journals/{journal_entry['id']}", headers=headers_b)
+        assert res_del_j_idor.status_code == 403
+
+        # 2. Executive Simulations Persistence
+        res_s = await client.post("/api/simulations", json={
+            "client_id": client_b["id"],
+            "date": "Sep 14, 2026",
+            "arena": "Series A / Growth Capital Venture Pitch",
+            "summary": "Pitching $10M Series A round with bottom-line upfront thesis.",
+            "wpm": 138,
+            "coach_status": "Vault Persisted"
+        }, headers=headers_b)
+        assert res_s.status_code == 201
+        sim_entry = res_s.json()
+        assert sim_entry["wpm"] == 138
+
+        # Speaker B can fetch their simulations
+        res_list_s = await client.get(f"/api/simulations?clientId={client_b['id']}", headers=headers_b)
+        assert res_list_s.status_code == 200
+        assert len(res_list_s.json()) >= 1
+
+        # IDOR Isolation: Speaker A cannot access Speaker B's simulations
+        res_list_s_idor = await client.get(f"/api/simulations?clientId={client_b['id']}", headers=headers_a)
+        assert res_list_s_idor.status_code == 403
+
+        # 3. Audio Recordings Persistence
+        fake_audio_bytes = b"RIFF\x24\x00\x00\x00WAVEfmt \x10\x00\x00\x00\x01\x00\x01\x00\x44\xac\x00\x00data\x00\x00\x00\x00"
+        upload_files = {
+            "file": ("rehearsal.webm", fake_audio_bytes, "audio/webm")
+        }
+        upload_data = {
+            "clientId": client_a["id"],
+            "title": "Chamber Rehearsal 1",
+            "duration_seconds": "45"
+        }
+        res_rec = await client.post(
+            "/api/recordings/upload",
+            data=upload_data,
+            files=upload_files,
+            headers=headers_a
+        )
+        assert res_rec.status_code == 201
+        rec_entry = res_rec.json()
+        assert rec_entry["title"] == "Chamber Rehearsal 1"
+        assert rec_entry["duration_seconds"] == 45
+        rec_id = rec_entry["id"]
+
+        # Speaker A can list recordings
+        res_list_rec = await client.get(f"/api/recordings?clientId={client_a['id']}", headers=headers_a)
+        assert res_list_rec.status_code == 200
+        assert len(res_list_rec.json()) >= 1
+        assert res_list_rec.json()[0]["id"] == rec_id
+
+        # Speaker A can stream recording audio
+        res_stream = await client.get(f"/api/recordings/{rec_id}/stream", headers=headers_a)
+        assert res_stream.status_code == 200
+        assert res_stream.content == fake_audio_bytes
+
+        # IDOR Isolation: Speaker B cannot access Speaker A's recordings
+        res_list_rec_idor = await client.get(f"/api/recordings?clientId={client_a['id']}", headers=headers_b)
+        assert res_list_rec_idor.status_code == 403
+
+        res_stream_rec_idor = await client.get(f"/api/recordings/{rec_id}/stream", headers=headers_b)
+        assert res_stream_rec_idor.status_code == 403
+
+        print("Authenticated vault persistence and recordings tests passed flawlessly!")
