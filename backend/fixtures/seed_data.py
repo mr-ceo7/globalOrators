@@ -10,7 +10,9 @@ import sys
 from datetime import datetime, timezone
 
 # Add backend directory to sys.path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
 
 from sqlalchemy import select
 from app.database import engine, AsyncSessionLocal, Base
@@ -32,7 +34,10 @@ from app.models import (
 
 
 async def seed_database(force: bool = False):
-    """Seed the database from seed_data.json."""
+    """Seed development database fixtures from seed_data.json."""
+    if settings.ENVIRONMENT == "production":
+        raise RuntimeError("CRITICAL SECURITY VIOLATION: Database fixture seeding is strictly prohibited in production environment.")
+
     # 1. Create or reset tables
     async with engine.begin() as conn:
         if force:

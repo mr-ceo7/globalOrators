@@ -30,6 +30,7 @@ import {
   messagesApi,
   activityApi,
   coachesApi,
+  clearAuthSession,
 } from '../services/apiClient';
 
 export type NavigationTab =
@@ -124,6 +125,7 @@ interface AppContextType {
   referredCoach: string | null;
   reassignClientCoach: (clientId: string, coachId: string, reason?: string) => Promise<boolean>;
   addAdjudicationNote: (clientId: string, note: string, rubricCategory?: string, rating?: number) => Promise<boolean>;
+  logout: () => void;
 }
 
 
@@ -591,6 +593,43 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     refreshFromBackend();
   }, [refreshFromBackend]);
+
+  const logout = useCallback(() => {
+    clearAuthSession();
+    setActiveSpeakerProfile(null);
+    setClients([]);
+    setPrograms([]);
+    setScheduledWorkouts([]);
+    setMetrics([]);
+    setPersonalRecords([]);
+    setHabitLogs([]);
+    setPhotos([]);
+    setMessages([]);
+    setActivityFeed([]);
+    setSelectedClientId(null);
+    setCurrentPortal('landing');
+  }, [setCurrentPortal]);
+
+  useEffect(() => {
+    const handleSessionCleared = () => {
+      setActiveSpeakerProfile(null);
+      setClients([]);
+      setPrograms([]);
+      setScheduledWorkouts([]);
+      setMetrics([]);
+      setPersonalRecords([]);
+      setHabitLogs([]);
+      setPhotos([]);
+      setMessages([]);
+      setActivityFeed([]);
+      setSelectedClientId(null);
+      setCurrentPortal('landing');
+    };
+    window.addEventListener('auth:session_cleared', handleSessionCleared);
+    return () => {
+      window.removeEventListener('auth:session_cleared', handleSessionCleared);
+    };
+  }, [setCurrentPortal]);
 
   const selectedClient = clients.find(c => c.id === selectedClientId);
 
@@ -1360,7 +1399,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         fetchCoaches,
         referredCoach,
         reassignClientCoach,
-        addAdjudicationNote
+        addAdjudicationNote,
+        logout
       }}
     >
       {children}

@@ -48,12 +48,23 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
     
-    # Default Coach Account (auto-seeded)
+    # Administrator Bootstrapping (Audit & Controlled Provisioning)
+    BOOTSTRAP_INITIAL_ADMIN: bool = os.getenv("BOOTSTRAP_INITIAL_ADMIN", "false").lower() in ("true", "1")
     DEFAULT_COACH_NAME: str = os.getenv("DEFAULT_COACH_NAME", "Head Coach Qassim")
     DEFAULT_COACH_EMAIL: str = os.getenv("DEFAULT_COACH_EMAIL", "coach@globalorators.com")
     DEFAULT_COACH_PASSWORD: str = os.getenv("DEFAULT_COACH_PASSWORD", "Coach@123")
     COACH_INVITE_CODE: str = os.getenv("COACH_INVITE_CODE", "globalorators-coach-invite-2026")
-    
+
+    # Durable Storage Configuration (Local Disk or Private S3/Object Storage)
+    STORAGE_BACKEND: str = os.getenv("STORAGE_BACKEND", "local")  # "local" or "s3"
+    STORAGE_LOCAL_ROOT: str = os.getenv("STORAGE_LOCAL_ROOT", os.path.join(_backend_dir, "uploads"))
+    S3_BUCKET: str = os.getenv("S3_BUCKET", "")
+    S3_REGION: str = os.getenv("S3_REGION", "us-east-1")
+    S3_ACCESS_KEY_ID: str = os.getenv("S3_ACCESS_KEY_ID", "")
+    S3_SECRET_ACCESS_KEY: str = os.getenv("S3_SECRET_ACCESS_KEY", "")
+    S3_ENDPOINT_URL: str = os.getenv("S3_ENDPOINT_URL", "")
+    STORAGE_MAX_TOTAL_BYTES: int = int(os.getenv("STORAGE_MAX_TOTAL_BYTES", str(10 * 1024 * 1024 * 1024)))  # 10 GB quota
+
     # Google OAuth / One Tap
     GOOGLE_CLIENT_ID: str = os.getenv(
         "GOOGLE_CLIENT_ID", 

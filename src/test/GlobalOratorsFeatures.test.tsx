@@ -8,6 +8,7 @@ import { SubdomainSwitcher } from '../components/common/SubdomainSwitcher';
 import { OnboardingFlow } from '../components/onboarding/OnboardingFlow';
 
 vi.mock('../services/apiClient', () => ({
+  clearAuthSession: vi.fn(),
   authApi: { me: vi.fn().mockResolvedValue({ email: 'coach@globalorators.com' }) },
   clientsApi: { 
     list: vi.fn().mockResolvedValue([]), 

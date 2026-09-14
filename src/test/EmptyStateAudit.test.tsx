@@ -5,6 +5,7 @@ import { AppProvider, useApp } from '../context/AppContext';
 
 // Mock API to return empty arrays — simulates a new user with no data
 vi.mock('../services/apiClient', () => ({
+  clearAuthSession: vi.fn(),
   authApi: {
     me: vi.fn().mockResolvedValue({ email: 'test@example.com', role: 'coach' }),
     login: vi.fn().mockResolvedValue({ access_token: 'test-token', user: { email: 'test@example.com', role: 'coach' } }),

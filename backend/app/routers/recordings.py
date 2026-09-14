@@ -6,7 +6,7 @@ import os
 import uuid
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Query
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -18,10 +18,11 @@ from app.models.recording import AudioRecording
 from app.models.client import Client
 from app.models.user import User
 from app.schemas.recording import RecordingResponse
+from app.storage import storage_service
 
 router = APIRouter(prefix="/recordings", tags=["Recordings"])
 
-# Storage directory for audio recordings
+# Storage directory fallback for audio recordings
 RECORDINGS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "uploads", "recordings"))
 os.makedirs(RECORDINGS_DIR, exist_ok=True)
 
@@ -72,6 +73,19 @@ async def list_recordings(
     return result.scalars().all()
 
 
+@router.get("/stats/storage")
+async def get_storage_stats(
+    current_user: User = Depends(get_current_user)
+):
+    """Expose durable storage usage and quota statistics (Coaches only)."""
+    if current_user.role != "coach":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Storage quota statistics are restricted to faculty coaches"
+        )
+    return storage_service.get_storage_stats()
+
+
 MAX_RECORDING_SIZE = 25 * 1024 * 1024  # 25 Megabytes
 ALLOWED_MIME_PREFIXES = ("audio/", "video/webm")
 VALID_AUDIO_MAGIC = (
@@ -94,7 +108,7 @@ def validate_audio_content(content: bytes, mime_type: str):
         )
     if len(content) > MAX_RECORDING_SIZE:
         raise HTTPException(
-            status_code=status.HTTP_413_CONTENT_TOO_LARGE,
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
             detail="Recording file exceeds maximum permitted size of 25MB"
         )
 
@@ -147,19 +161,19 @@ async def upload_recording(
 
     recording_id = f"rec-{uuid.uuid4().hex[:12]}"
     ext = os.path.splitext(file.filename or "")[1] or ".webm"
-    stored_filename = f"{recording_id}{ext}"
-    file_path = os.path.join(RECORDINGS_DIR, stored_filename)
+    storage_key = f"recordings/{recording_id}{ext}"
 
     try:
-        with open(file_path, "wb") as f:
-            f.write(content)
+        await storage_service.save_file(storage_key, content, mime_type)
+        local_path = storage_service.get_local_path(storage_key) or os.path.join(RECORDINGS_DIR, f"{recording_id}{ext}")
 
         file_url = f"/api/recordings/{recording_id}/stream"
         recording = AudioRecording(
             id=recording_id,
             client_id=client_id,
             title=title or "Rehearsal Recording",
-            file_path=file_path,
+            file_path=local_path,
+            storage_key=storage_key,
             file_url=file_url,
             duration_seconds=duration_seconds or 0,
             file_size_bytes=len(content),
@@ -170,11 +184,7 @@ async def upload_recording(
         await db.refresh(recording)
         return recording
     except Exception as exc:
-        if os.path.exists(file_path):
-            try:
-                os.remove(file_path)
-            except OSError:
-                pass
+        await storage_service.delete_file(storage_key)
         raise exc
 
 
@@ -213,14 +223,22 @@ async def stream_recording(
                 detail="Access denied to stream another speaker's rehearsal recording"
             )
 
-    if not os.path.exists(recording.file_path):
-        raise HTTPException(status_code=404, detail="Recording audio file missing from storage")
+    storage_key = getattr(recording, "storage_key", None) or f"recordings/{os.path.basename(recording.file_path)}"
+    local_path = storage_service.get_local_path(storage_key) or (recording.file_path if os.path.exists(recording.file_path) else None)
 
-    return FileResponse(
-        path=recording.file_path,
-        media_type=recording.mime_type or "audio/webm",
-        filename=os.path.basename(recording.file_path)
-    )
+    if local_path and os.path.exists(local_path):
+        return FileResponse(
+            path=local_path,
+            media_type=recording.mime_type or "audio/webm",
+            filename=os.path.basename(local_path)
+        )
+
+    # Fallback to reading from object storage
+    try:
+        data = await storage_service.read_file(storage_key)
+        return Response(content=data, media_type=recording.mime_type or "audio/webm")
+    except Exception:
+        raise HTTPException(status_code=404, detail="Recording audio file missing from storage")
 
 
 @router.delete("/{recording_id}")
@@ -229,7 +247,7 @@ async def delete_recording(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Permanently delete a recording entry and purge its audio file from durable disk."""
+    """Permanently delete a recording entry and purge its audio file from durable storage."""
     res = await db.execute(select(AudioRecording).where(AudioRecording.id == recording_id))
     recording = res.scalar_one_or_none()
     if not recording:
@@ -250,6 +268,9 @@ async def delete_recording(
     else:
         if not client.email or client.email.lower() != current_user.email.lower():
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
+
+    storage_key = getattr(recording, "storage_key", None) or f"recordings/{os.path.basename(recording.file_path)}"
+    await storage_service.delete_file(storage_key)
 
     if os.path.exists(recording.file_path):
         try:

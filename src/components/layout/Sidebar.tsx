@@ -18,16 +18,11 @@ import { GlobalOratorsLogo } from '../common/GlobalOratorsLogo';
 
 
 export const Sidebar: React.FC = () => {
-  const { activeTab, setActiveTab, clients, messages, scheduledWorkouts, setSelectedClientId, setCurrentPortal, showToast } = useApp();
+  const { activeTab, setActiveTab, clients, messages, scheduledWorkouts, setSelectedClientId, logout, showToast, setCurrentPortal } = useApp();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const handleCoachSignOut = () => {
-    localStorage.removeItem('globalorators_token');
-    localStorage.removeItem('globalorators_user');
-    localStorage.removeItem('globalorators_speaker_profile');
-    localStorage.removeItem('nubianfit_token');
-    localStorage.removeItem('nubianfit_user');
-    setCurrentPortal('landing');
+    logout();
     showToast('Signed out of Coach OS.');
   };
 

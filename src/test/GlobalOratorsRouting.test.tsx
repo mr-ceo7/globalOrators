@@ -6,6 +6,7 @@ import { LandingPage } from '../components/landing/LandingPage';
 import { SEOHead } from '../components/common/SEOHead';
 
 vi.mock('../services/apiClient', () => ({
+  clearAuthSession: vi.fn(),
   authApi: { me: vi.fn().mockResolvedValue({ email: 'coach@globalorators.com' }) },
   clientsApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },
   exercisesApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },

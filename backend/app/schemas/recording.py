@@ -12,6 +12,7 @@ class RecordingResponse(BaseModel):
     client_id: str
     title: str
     file_url: str
+    storage_key: Optional[str] = None
     duration_seconds: int
     file_size_bytes: int
     mime_type: str

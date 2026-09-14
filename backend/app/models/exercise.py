@@ -22,6 +22,7 @@ class Exercise(Base):
     description: Mapped[str] = mapped_column(Text, default="")
     instructions: Mapped[List[str]] = mapped_column(JSON, default=list)
     form_cues: Mapped[List[str]] = mapped_column(JSON, default=list)
+    instructional_video_url: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
     demo_video_placeholder_url: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
     thumbnail_url: Mapped[str] = mapped_column(String(512), default="")
     is_custom: Mapped[bool] = mapped_column(Boolean, default=False)

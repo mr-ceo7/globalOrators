@@ -13,6 +13,8 @@ export interface ResolvedCurriculum {
   sessionDescription: string;
   workshopTitle: string;
   workshopDescription: string;
+  isAssignedByCoach: boolean;
+  statusLabel: string;
 }
 
 const cleanString = (val?: string): string => {
@@ -49,7 +51,9 @@ export const resolveSpeakerCurriculum = (
       sessionTitle: firstDay ? `Session: ${firstDay.name}` : `Curriculum Review: ${program.title}`,
       sessionDescription: firstDay?.focus || `${program.durationWeeks || 8}-week structured regimen`,
       workshopTitle: `${program.title} Cohort Workshop`,
-      workshopDescription: `Interactive rehearsal and masterclass based on ${program.title}.`
+      workshopDescription: `Interactive rehearsal and masterclass based on ${program.title}.`,
+      isAssignedByCoach: true,
+      statusLabel: 'Active Assigned Syllabus'
     };
   }
 
@@ -78,7 +82,9 @@ export const resolveSpeakerCurriculum = (
       sessionTitle: '1-on-1 Personalized Coaching Consultation with Coach Qassim',
       sessionDescription: 'Custom Objective Delivery & Diagnostic Feedback',
       workshopTitle: isAcademy ? 'Advanced Parliamentary & Leadership Workshop' : 'Fellowship Voice & Expression Workshop',
-      workshopDescription: 'Tailored Cohort Rehearsal Session'
+      workshopDescription: 'Tailored Cohort Rehearsal Session',
+      isAssignedByCoach: false,
+      statusLabel: 'Recommended Syllabus Preview'
     };
   }
 
@@ -104,7 +110,9 @@ export const resolveSpeakerCurriculum = (
       sessionTitle: '1-on-1 Venture Narrative & Delivery Review with Coach Qassim',
       sessionDescription: 'Pitch Deck Vocal Pacing & Executive Hook Review',
       workshopTitle: 'High-Stakes Executive Mock Pitch & Q&A Grilling',
-      workshopDescription: 'Simulated Investor Boardroom Presentation'
+      workshopDescription: 'Simulated Investor Boardroom Presentation',
+      isAssignedByCoach: false,
+      statusLabel: 'Recommended Syllabus Preview'
     };
   }
 
@@ -129,7 +137,9 @@ export const resolveSpeakerCurriculum = (
       sessionTitle: '1-on-1 Legislative Rhetoric Consultation with Coach Qassim',
       sessionDescription: 'Policy Floor Delivery & Audience Engagement Review',
       workshopTitle: 'Model African Union & Youth Parliament Floor Debate',
-      workshopDescription: 'Live Parliamentary Caucus & Rebuttal Session'
+      workshopDescription: 'Live Parliamentary Caucus & Rebuttal Session',
+      isAssignedByCoach: false,
+      statusLabel: 'Recommended Syllabus Preview'
     };
   }
 
@@ -155,7 +165,9 @@ export const resolveSpeakerCurriculum = (
       sessionTitle: '1-on-1 Fluency Desensitization & Breathwork with Coach Qassim',
       sessionDescription: 'Pacing Audio Diagnostics & Somatic Grounding',
       workshopTitle: 'Foundation Pacing & Vocal Liberation Circle',
-      workshopDescription: 'Supportive Peer Speaking & Resonance Circle'
+      workshopDescription: 'Supportive Peer Speaking & Resonance Circle',
+      isAssignedByCoach: false,
+      statusLabel: 'Recommended Syllabus Preview'
     };
   }
 
@@ -180,7 +192,9 @@ export const resolveSpeakerCurriculum = (
       sessionTitle: '1-on-1 Narrative Architecture Review with Coach Qassim',
       sessionDescription: 'Sensory Imagery & Modulation Coaching',
       workshopTitle: 'Living Archive & Oral History Circle',
-      workshopDescription: 'Facilitated Group Story Sharing'
+      workshopDescription: 'Facilitated Group Story Sharing',
+      isAssignedByCoach: false,
+      statusLabel: 'Recommended Syllabus Preview'
     };
   }
 
@@ -204,7 +218,9 @@ export const resolveSpeakerCurriculum = (
       sessionTitle: '1-on-1 Forensics & Rebuttal Strategy with Coach Qassim',
       sessionDescription: 'Video Consultation & POI Extension Feedback',
       workshopTitle: 'PAUDC Championship Mock Round (British Parliamentary)',
-      workshopDescription: 'Facilitated Tournament Simulation Round'
+      workshopDescription: 'Facilitated Tournament Simulation Round',
+      isAssignedByCoach: false,
+      statusLabel: 'Recommended Syllabus Preview'
     };
   }
 
@@ -223,6 +239,8 @@ export const resolveSpeakerCurriculum = (
     sessionTitle: '1-on-1 Therapeutic Voice & Breathwork Session with Coach Qassim',
     sessionDescription: 'Video Consultation & Emotional Resonance Feedback',
     workshopTitle: 'Foundation Community Voice & Healing Circle',
-    workshopDescription: 'Facilitated Group Catharsis Session'
+    workshopDescription: 'Facilitated Group Catharsis Session',
+    isAssignedByCoach: false,
+    statusLabel: 'Recommended Syllabus Preview'
   };
 };

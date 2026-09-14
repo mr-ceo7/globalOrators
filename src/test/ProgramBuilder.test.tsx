@@ -5,6 +5,7 @@ import { AppProvider } from '../context/AppContext';
 import { ProgramBuilder } from '../components/programs/ProgramBuilder';
 
 vi.mock('../services/apiClient', () => ({
+  clearAuthSession: vi.fn(),
   authApi: { me: vi.fn().mockResolvedValue({ email: 'coach@globalorators.com' }) },
   clientsApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },
   exercisesApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },

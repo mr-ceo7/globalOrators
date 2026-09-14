@@ -4,6 +4,7 @@ import React from 'react';
 import { AppProvider, useApp } from '../context/AppContext';
 
 vi.mock('../services/apiClient', () => ({
+  clearAuthSession: vi.fn(),
   authApi: { me: vi.fn().mockResolvedValue({ email: 'coach@globalorators.com' }) },
   clientsApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },
   exercisesApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },

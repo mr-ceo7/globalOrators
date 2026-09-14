@@ -15,6 +15,7 @@ class AudioRecording(Base):
     title = Column(String(200), nullable=False)
     file_path = Column(String(500), nullable=False)
     file_url = Column(String(500), nullable=False)
+    storage_key = Column(String(500), nullable=True)
     duration_seconds = Column(Integer, default=0)
     file_size_bytes = Column(Integer, default=0)
     mime_type = Column(String(50), default="audio/webm")

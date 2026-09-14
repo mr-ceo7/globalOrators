@@ -6,6 +6,11 @@ import { SpeakerLoginModal } from '../components/landing/SpeakerLoginModal';
 import { ClientPortal } from '../components/clientApp/ClientPortal';
 
 vi.mock('../services/apiClient', () => ({
+  clearAuthSession: vi.fn().mockImplementation(() => {
+    localStorage.removeItem('globalorators_speaker_profile');
+    localStorage.removeItem('globalorators_token');
+    localStorage.removeItem('globalorators_user');
+  }),
   authApi: {
     me: vi.fn().mockResolvedValue({ email: 'coach@globalorators.com' }),
     sendOtp: vi.fn().mockImplementation((email: string) => {

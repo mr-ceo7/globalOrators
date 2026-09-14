@@ -153,7 +153,7 @@ async def toggle_habit(
     if not log:
         # Create new log entry using speaker's server-assigned habits only
         survey = client.onboarding_survey or {}
-        selected_habits = survey.get("selectedHabits") or []
+        selected_habits = survey.get("selectedHabits") or survey.get("selected_habits") or []
         if not selected_habits:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,

@@ -158,6 +158,7 @@ export interface Exercise {
   description: string;
   instructions: string[];
   formCues: string[];
+  instructionalVideoUrl?: string;
   demoVideoPlaceholderUrl?: string;
   thumbnailUrl: string;
   category: DrillCategory;

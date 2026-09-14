@@ -20,6 +20,19 @@ import {
 
 export const API_BASE_URL = ((import.meta as unknown as { env?: { VITE_API_URL?: string } }).env?.VITE_API_URL) || '/api';
 
+export const clearAuthSession = () => {
+  localStorage.removeItem('globalorators_token');
+  localStorage.removeItem('globalorators_user');
+  localStorage.removeItem('globalorators_speaker_profile');
+  localStorage.removeItem('globalorators_portal');
+  localStorage.removeItem('globalorators_selected_branch');
+  localStorage.removeItem('nubianfit_token');
+  localStorage.removeItem('nubianfit_user');
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('auth:session_cleared'));
+  }
+};
+
 class ApiClient {
 
   async request<T>(endpoint: string, options: RequestInit = {}, isRetry = false): Promise<T> {
@@ -42,13 +55,9 @@ class ApiClient {
     });
 
     if (!response.ok) {
-      // If 401 Unauthorized, clear token and throw AuthenticationError
+      // If 401 Unauthorized, purge all cached credentials and throw AuthenticationError
       if (response.status === 401) {
-        localStorage.removeItem('globalorators_token');
-        localStorage.removeItem('nubianfit_token');
-        localStorage.removeItem('globalorators_user');
-        localStorage.removeItem('nubianfit_user');
-        localStorage.removeItem('globalorators_speaker_profile');
+        clearAuthSession();
         throw new Error('AuthenticationError');
       }
 
@@ -128,11 +137,7 @@ class ApiClient {
 
     if (!response.ok) {
       if (response.status === 401) {
-        localStorage.removeItem('globalorators_token');
-        localStorage.removeItem('nubianfit_token');
-        localStorage.removeItem('globalorators_user');
-        localStorage.removeItem('nubianfit_user');
-        localStorage.removeItem('globalorators_speaker_profile');
+        clearAuthSession();
         throw new Error('AuthenticationError');
       }
 
@@ -161,11 +166,7 @@ class ApiClient {
     const response = await fetch(url, { method: 'GET', headers });
     if (!response.ok) {
       if (response.status === 401) {
-        localStorage.removeItem('globalorators_token');
-        localStorage.removeItem('nubianfit_token');
-        localStorage.removeItem('globalorators_user');
-        localStorage.removeItem('nubianfit_user');
-        localStorage.removeItem('globalorators_speaker_profile');
+        clearAuthSession();
         throw new Error('AuthenticationError');
       }
       throw new Error(`Failed to fetch audio stream: ${response.statusText}`);
@@ -222,10 +223,7 @@ export const authApi = {
   },
   me: () => api.get<any>('/auth/me'),
   logout: () => {
-    localStorage.removeItem('nubianfit_token');
-    localStorage.removeItem('globalorators_token');
-    localStorage.removeItem('nubianfit_user');
-    localStorage.removeItem('globalorators_user');
+    clearAuthSession();
   },
 };
 

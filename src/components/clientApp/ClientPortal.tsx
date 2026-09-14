@@ -112,7 +112,8 @@ export const ClientPortal: React.FC = () => {
     toggleHabitCompletion,
     metrics,
     theme,
-    toggleTheme
+    toggleTheme,
+    logout
   } = useApp();
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -660,13 +661,7 @@ export const ClientPortal: React.FC = () => {
 
   const handleSignOut = () => {
     setIsProfileMenuOpen(false);
-    setActiveSpeakerProfile(null);
-    localStorage.removeItem('globalorators_speaker_profile');
-    localStorage.removeItem('globalorators_token');
-    localStorage.removeItem('globalorators_user');
-    localStorage.removeItem('nubianfit_token');
-    localStorage.removeItem('nubianfit_user');
-    setCurrentPortal('landing');
+    logout();
     showToast('Signed out of speaker profile.');
   };
 
@@ -861,6 +856,14 @@ export const ClientPortal: React.FC = () => {
                     {profile.institution ? `${profile.institution} · ` : ''}{curriculum.syllabusKicker}
                   </span>
                   <span className="hidden xs:inline-block w-px h-3 bg-slate-800" />
+                  <span className={`text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded border ${
+                    curriculum.isAssignedByCoach
+                      ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+                      : 'text-amber-400 bg-amber-500/10 border-amber-500/20'
+                  }`}>
+                    {curriculum.isAssignedByCoach ? 'Assigned Syllabus' : 'Recommendation Preview'}
+                  </span>
+                  <span className="hidden xs:inline-block w-px h-3 bg-slate-800" />
                   <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
                     {roadmapSessions.length > 0 ? `Week 1 · Session 1 · ${roadmapSessions[0].durationMin || 42} min` : '—'}
                   </span>
@@ -871,6 +874,16 @@ export const ClientPortal: React.FC = () => {
                 <p className="text-xs sm:text-sm text-slate-300 mt-2 max-w-2xl leading-relaxed">
                   {curriculum.description}
                 </p>
+
+                {!curriculum.isAssignedByCoach && (
+                  <div className="mt-3 mb-2 bg-slate-950/80 border border-amber-500/20 rounded-2xl p-3 flex items-start gap-2.5 text-left max-w-2xl">
+                    <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                    <p className="text-[11px] text-slate-300 leading-relaxed font-sans">
+                      <strong className="text-amber-300 font-semibold font-mono uppercase tracking-wider text-[10px] block mb-0.5">Track Recommendation Preview</strong>
+                      This syllabus represents an authored training recommendation derived from your intake goals. An official active syllabus and assigned calendar will be confirmed by your faculty coach upon intake review.
+                    </p>
+                  </div>
+                )}
 
                 {/* Dynamic Curriculum Focus Tags */}
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-3 pt-3 border-t border-slate-800/80 text-[10px] font-mono text-slate-400 uppercase tracking-wider">
@@ -898,7 +911,7 @@ export const ClientPortal: React.FC = () => {
                 <div className="max-w-2xl">
                   <div className="flex items-center gap-3 mb-2.5">
                     <span className="text-[10px] font-mono uppercase tracking-widest text-[#C89630] font-bold px-2.5 py-0.5 rounded bg-[#C89630]/10 border border-[#C89630]/30">
-                      Today's Rehearsal
+                      {curriculum.isAssignedByCoach ? "Today's Rehearsal" : "Recommended Rehearsal Preview"}
                     </span>
                     <span className="text-xs font-mono text-slate-400 flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5 text-slate-500" />

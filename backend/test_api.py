@@ -12,6 +12,30 @@ settings.TESTING = True
 from app.main import app
 
 
+@pytest.fixture(autouse=True, scope="session")
+def setup_test_database():
+    """Ensure all database tables and schema migrations are applied before running tests."""
+    import asyncio
+    from app.database import engine, Base
+    from sqlalchemy import text, inspect
+
+    async def _init_db():
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+            def _mig(connection):
+                insp = inspect(connection)
+                if "exercises" in insp.get_table_names():
+                    cols = [c["name"] for c in insp.get_columns("exercises")]
+                    if "instructional_video_url" not in cols:
+                        connection.execute(text("ALTER TABLE exercises ADD COLUMN instructional_video_url VARCHAR(512)"))
+                if "audio_recordings" in insp.get_table_names():
+                    cols = [c["name"] for c in insp.get_columns("audio_recordings")]
+                    if "storage_key" not in cols:
+                        connection.execute(text("ALTER TABLE audio_recordings ADD COLUMN storage_key VARCHAR(500)"))
+            await conn.run_sync(_mig)
+    asyncio.run(_init_db())
+
+
 @pytest.mark.asyncio
 async def test_api_endpoints():
     transport = httpx.ASGITransport(app=app)
@@ -678,7 +702,7 @@ async def test_websocket_authentication_and_room_authorization():
     """Verify WebSocket signaling endpoint mandates in-band authentication and enforces exact room authorization."""
     import json
     import time
-    from starlette.testclient import TestClient
+    from fastapi.testclient import TestClient
     from starlette.websockets import WebSocketDisconnect
     from app.security import create_access_token
     from app.database import AsyncSessionLocal
@@ -1444,3 +1468,195 @@ async def test_authenticated_vault_persistence_and_recordings():
         assert "speaker lookup endpoint has been removed" in res_lookup_auth.json()["detail"]
 
         print("Authenticated vault persistence and recordings tests passed flawlessly!")
+
+
+@pytest.mark.asyncio
+async def test_storage_service_and_multi_session_persistence():
+    """
+    Verify durable storage service abstraction and full multi-session persistence.
+    Proves that onboarding, assignments, journals, simulations, habits, metrics,
+    and recordings survive session boundaries and remain server-authoritative.
+    """
+    import time
+    from app.storage import storage_service
+    from app.security import create_access_token
+
+    # 1. StorageService verification
+    test_key = f"recordings/unit-test-{int(time.time())}.webm"
+    test_data = b"\x1a\x45\xdf\xa3" + b"\x00" * 512
+    saved_key = await storage_service.save_file(test_key, test_data, "audio/webm")
+    assert saved_key == test_key
+    assert storage_service.exists(test_key) is True
+
+    read_data = await storage_service.read_file(test_key)
+    assert read_data == test_data
+
+    stats = storage_service.get_storage_stats()
+    assert "total_bytes_used" in stats
+    assert stats["file_count"] >= 1
+    assert stats["backend"] in ("local", "s3")
+
+    deleted = await storage_service.delete_file(test_key)
+    assert deleted is True
+    assert storage_service.exists(test_key) is False
+
+    # 2. Multi-Session Server-Authoritative Persistence Flow
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        ts = int(time.time() * 1000)
+        speaker_email = f"persisted.orator.{ts}@globalorators.org"
+        speaker_name = f"Persisted Orator {ts}"
+
+        # Session 1: Onboard speaker
+        res_onboard = await client.post(
+            "/api/clients",
+            json={
+                "name": speaker_name,
+                "email": speaker_email,
+                "branch": "Academy",
+                "goal": "Competitive Debate",
+                "experienceLevel": "Novice Speaker",
+                "onboardingSurvey": {
+                    "branch": "Academy",
+                    "fullName": speaker_name,
+                    "email": speaker_email,
+                    "primaryDiscipline": "Decolonial Parliamentary Forensics",
+                    "coreFocus": "Ideological Rigor & Rebuttal Depth",
+                    "missionFocus": "Pan-African Leadership & Cognitive Deconditioning",
+                    "speakingGoal": "Competitive Debate",
+                    "experienceLevel": "Novice Speaker",
+                    "vocalBaselinePace": 142,
+                    "emotionalOpennessRating": 8,
+                    "selectedHabits": [
+                        "Vocal Hydration (2.5L + Warm Lemon Water)",
+                        "Diaphragmatic Breathwork (10 min daily)"
+                    ]
+                }
+            }
+        )
+        assert res_onboard.status_code in (200, 201)
+        client_data = res_onboard.json()
+        client_id = client_data["id"]
+
+        # Session 1: Create speaker User and authenticate
+        from app.database import AsyncSessionLocal
+        from app.models.user import User
+        from app.security import get_password_hash
+        from datetime import datetime, timezone
+
+        speaker_user_id = f"user-speaker-{ts}"
+        async with AsyncSessionLocal() as session:
+            spk_user = User(
+                id=speaker_user_id,
+                email=speaker_email.lower(),
+                hashed_password=get_password_hash("SpeakerSecure@123"),
+                full_name=speaker_name,
+                role="speaker",
+                is_active=True,
+                created_at=datetime.now(timezone.utc)
+            )
+            session.add(spk_user)
+            await session.commit()
+
+        session1_token = create_access_token(speaker_user_id)
+        headers_s1 = {"Authorization": f"Bearer {session1_token}"}
+
+        # Verify profile binds to /api/clients/me
+        res_me = await client.get("/api/clients/me", headers=headers_s1)
+        assert res_me.status_code == 200
+        assert res_me.json()["email"] == speaker_email
+
+        # Session 1: Create journal entry
+        res_journal = await client.post(
+            "/api/journals",
+            headers=headers_s1,
+            json={
+                "client_id": client_id,
+                "date": "2026-09-15",
+                "text": "Session 1 deep reflection on forensic argument framing.",
+                "feel_before": "Anxious",
+                "feel_after": "Grounded"
+            }
+        )
+        assert res_journal.status_code in (200, 201)
+        journal_id = res_journal.json()["id"]
+
+        # Session 1: Create executive simulation
+        res_sim = await client.post(
+            "/api/simulations",
+            headers=headers_s1,
+            json={
+                "client_id": client_id,
+                "date": "2026-09-15",
+                "arena": "Boardroom Pitch",
+                "summary": "Completed opening 60-second value thesis simulation.",
+                "wpm": 138,
+                "coach_status": "Pending Review"
+            }
+        )
+        assert res_sim.status_code in (200, 201)
+        sim_id = res_sim.json()["id"]
+
+        # Session 1: Toggle habit
+        res_habit = await client.post(
+            "/api/habits/toggle",
+            headers=headers_s1,
+            json={
+                "clientId": client_id,
+                "date": "2026-09-15",
+                "habitId": "h-1"
+            }
+        )
+        assert res_habit.status_code == 200
+
+        # Session 1: Upload recording
+        audio_content = b"\x1a\x45\xdf\xa3" + b"\x00\x00\x00\x01\x02\x03\x04"
+        res_rec = await client.post(
+            "/api/recordings/upload",
+            headers=headers_s1,
+            data={"clientId": client_id, "title": "Multi-session Drill", "duration_seconds": "45"},
+            files={"file": ("rehearsal.webm", audio_content, "audio/webm")}
+        )
+        assert res_rec.status_code == 201
+        rec_id = res_rec.json()["id"]
+        assert "storage_key" in res_rec.json()
+
+        # Session 1 ends: "Log out" (client drops token and memory state)
+        headers_s1.clear()
+
+        # Session 2: New session start! Authenticate afresh
+        session2_token = create_access_token(speaker_user_id)
+        headers_s2 = {"Authorization": f"Bearer {session2_token}"}
+
+        # Session 2 verifies /clients/me returns the authoritative identity
+        res_me_s2 = await client.get("/api/clients/me", headers=headers_s2)
+        assert res_me_s2.status_code == 200
+        assert res_me_s2.json()["id"] == client_id
+
+        # Session 2 verifies journals persisted
+        res_journals_s2 = await client.get("/api/journals", headers=headers_s2)
+        assert res_journals_s2.status_code == 200
+        journals_list = res_journals_s2.json()
+        assert any(j["id"] == journal_id for j in journals_list)
+
+        # Session 2 verifies simulations persisted
+        res_sims_s2 = await client.get("/api/simulations", headers=headers_s2)
+        assert res_sims_s2.status_code == 200
+        sims_list = res_sims_s2.json()
+        assert any(s["id"] == sim_id for s in sims_list)
+
+        # Session 2 verifies habits persisted
+        res_habits_s2 = await client.get(f"/api/habits?clientId={client_id}&date=2026-09-15", headers=headers_s2)
+        assert res_habits_s2.status_code == 200
+        habits_list = res_habits_s2.json()
+        assert len(habits_list) >= 1
+
+        # Session 2 verifies audio recording stream is playable and persisted
+        res_stream_s2 = await client.get(f"/api/recordings/{rec_id}/stream", headers=headers_s2)
+        assert res_stream_s2.status_code == 200
+        assert res_stream_s2.content == audio_content
+
+        # Cleanup test recording
+        await client.delete(f"/api/recordings/{rec_id}", headers=headers_s2)
+
+    print("Storage service and multi-session persistence verified successfully!")

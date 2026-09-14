@@ -58,7 +58,7 @@ fi
 # Database initialization (seeding is explicit only)
 if [ "$1" = "--seed" ]; then
   echo "Explicit seed requested: populating development fixtures..."
-  ./backend/venv/bin/python backend/seed_data.py
+  ./backend/venv/bin/python backend/fixtures/seed_data.py
 fi
 
 # Start Backend Server

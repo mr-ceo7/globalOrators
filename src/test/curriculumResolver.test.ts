@@ -27,6 +27,8 @@ describe('Speaker Curriculum Dynamic Resolver Tests', () => {
     expect(result.drillTitle).toContain('Adversarial Rebuttal Sprint');
     expect(result.drillCategory).toContain('Motion Rebuttal');
     expect(result.drillPrompt).toContain('African youth must migrate');
+    expect(result.isAssignedByCoach).toBe(false);
+    expect(result.statusLabel).toBe('Recommended Syllabus Preview');
   });
 
   test('should resolve Executive Pitching curriculum for business leaders', () => {
@@ -156,5 +158,7 @@ describe('Speaker Curriculum Dynamic Resolver Tests', () => {
     expect(result.drillPrompt).toBe('Hold silence for 3 full seconds before countering.');
     expect(result.sessionTitle).toBe('Session: Day 1: Boardroom Gravitas');
     expect(result.sessionDescription).toBe('Executive Cadence & Vocal Dominance');
+    expect(result.isAssignedByCoach).toBe(true);
+    expect(result.statusLabel).toBe('Active Assigned Syllabus');
   });
 });

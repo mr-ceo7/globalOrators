@@ -17,6 +17,7 @@ class ExerciseBase(CamelModel):
     description: str = ""
     instructions: List[str] = Field(default_factory=list)
     form_cues: List[str] = Field(default_factory=list)
+    instructional_video_url: Optional[str] = None
     demo_video_placeholder_url: Optional[str] = None
     thumbnail_url: str = ""
     is_custom: bool = False
@@ -36,6 +37,7 @@ class ExerciseUpdate(CamelModel):
     description: Optional[str] = None
     instructions: Optional[List[str]] = None
     form_cues: Optional[List[str]] = None
+    instructional_video_url: Optional[str] = None
     demo_video_placeholder_url: Optional[str] = None
     thumbnail_url: Optional[str] = None
     is_custom: Optional[bool] = None

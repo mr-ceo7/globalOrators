@@ -59,6 +59,14 @@ async def lifespan(app: FastAPI):
                     connection.execute(text("ALTER TABLE clients ADD COLUMN referral_code VARCHAR(64)"))
                 if "adjudicator_notes" not in cols:
                     connection.execute(text("ALTER TABLE clients ADD COLUMN adjudicator_notes JSON DEFAULT '[]'"))
+            if "audio_recordings" in inspector.get_table_names():
+                rec_cols = [c["name"] for c in inspector.get_columns("audio_recordings")]
+                if "storage_key" not in rec_cols:
+                    connection.execute(text("ALTER TABLE audio_recordings ADD COLUMN storage_key VARCHAR(500)"))
+            if "exercises" in inspector.get_table_names():
+                ex_cols = [c["name"] for c in inspector.get_columns("exercises")]
+                if "instructional_video_url" not in ex_cols:
+                    connection.execute(text("ALTER TABLE exercises ADD COLUMN instructional_video_url VARCHAR(512)"))
         await conn.run_sync(_migrate_columns)
 
     logger.info("Checking / running initial database seed...")
@@ -73,7 +81,7 @@ async def lifespan(app: FastAPI):
         if enable_dev_seed or settings.TESTING:
             logger.info("Database seed active (TESTING=%s, ENABLE_DEV_SEED=%s)...", settings.TESTING, enable_dev_seed)
             try:
-                from seed_data import seed_database
+                from fixtures.seed_data import seed_database
                 await seed_database(force=False)
             except Exception as e:
                 logger.error(f"Failed during database seed: {e}")
@@ -88,22 +96,35 @@ async def lifespan(app: FastAPI):
 
         async with AsyncSessionLocal() as session:
             try:
-                user_res = await session.execute(select(User).where(User.id == "coach-1"))
-                if not user_res.scalar_one_or_none():
-                    coach_user = User(
-                        id="coach-1",
-                        email=settings.DEFAULT_COACH_EMAIL.lower(),
-                        hashed_password=get_password_hash(settings.DEFAULT_COACH_PASSWORD),
-                        full_name=settings.DEFAULT_COACH_NAME,
-                        role="coach",
-                        avatar="",
-                        is_active=True,
-                        created_at=datetime.now(timezone.utc),
-                    )
-                    session.add(coach_user)
-                    await session.commit()
+                user_res = await session.execute(select(User).where(User.role == "coach"))
+                existing_coach = user_res.scalars().first()
+                if not existing_coach:
+                    if settings.BOOTSTRAP_INITIAL_ADMIN:
+                        coach_user = User(
+                            id="coach-1",
+                            email=settings.DEFAULT_COACH_EMAIL.lower(),
+                            hashed_password=get_password_hash(settings.DEFAULT_COACH_PASSWORD),
+                            full_name=settings.DEFAULT_COACH_NAME,
+                            role="coach",
+                            avatar="",
+                            is_active=True,
+                            created_at=datetime.now(timezone.utc),
+                        )
+                        session.add(coach_user)
+                        await session.commit()
+                        logger.warning(
+                            "AUDIT SECURITY EVENT: Initial administrator account provisioned (id=coach-1, email=%s, role=coach). "
+                            "Immediate credential rotation is required in accordance with security policy.",
+                            settings.DEFAULT_COACH_EMAIL
+                        )
+                    else:
+                        logger.warning(
+                            "PRODUCTION BOOTSTRAP NOTICE: No coach administrator accounts exist in the database. "
+                            "Automatic credential bootstrapping is disabled in production unless BOOTSTRAP_INITIAL_ADMIN=true. "
+                            "Run 'python backend/bootstrap_admin.py' or provide BOOTSTRAP_INITIAL_ADMIN=true."
+                        )
             except Exception as e:
-                logger.critical(f"Critical failure bootstrapping coach account in production: {e}")
+                logger.critical(f"Critical failure checking coach account in production: {e}")
                 raise
 
     logger.info("global Orators FastAPI Backend ready.")
