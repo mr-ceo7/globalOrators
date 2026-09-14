@@ -106,7 +106,7 @@ export const SpeakerSidebar: React.FC<SpeakerSidebarProps> = ({
   return (
     <aside
       id="speaker-sidebar-navigation"
-      aria-label="Speaker Portal Navigation"
+      aria-label="Orators App Navigation"
       className={`relative hidden md:flex flex-col border-r border-slate-800 bg-slate-950 text-slate-200 transition-all duration-300 z-30 shrink-0 ${
         isCollapsed ? 'w-20' : 'w-64'
       }`}
@@ -233,7 +233,7 @@ export const SpeakerSidebar: React.FC<SpeakerSidebarProps> = ({
           {!isCollapsed && (
             <div className="flex flex-col min-w-0 flex-1">
               <span className="text-xs font-bold text-white truncate">
-                {profile.fullName || 'Guest Speaker'}
+                {profile.fullName || 'Speaker'}
               </span>
               <span className="text-[10px] text-slate-400 font-mono truncate">
                 {isExecutive ? 'Executive Orator' : isAcademy ? 'Academy Debater' : 'Foundation Orator'}

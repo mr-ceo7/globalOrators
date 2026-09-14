@@ -73,3 +73,22 @@ class OtpResponse(BaseModel):
     status: str
     email: str
     message: str
+
+
+class CheckEmailRequest(BaseModel):
+    email: str
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, v: str) -> str:
+        clean = v.strip().lower()
+        if "@" not in clean or "." not in clean.split("@")[-1]:
+            raise ValueError("Invalid email address format")
+        return clean
+
+
+class CheckEmailResponse(BaseModel):
+    email: str
+    exists: bool
+    auth_method: str  # "password", "google", "both", "none"
+    role: Optional[str] = None

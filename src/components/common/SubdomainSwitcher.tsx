@@ -17,14 +17,14 @@ export const SubdomainSwitcher: React.FC = () => {
     },
     {
       id: 'speaker_app',
-      label: 'Speaker Portal',
+      label: 'Orators App',
       subdomain: 'app.globaloratorsproject.com',
       icon: Mic,
       badge: 'Client App'
     },
     {
       id: 'coach_os',
-      label: 'Coach OS',
+      label: 'Coach App',
       subdomain: 'coach.globaloratorsproject.com',
       icon: Shield,
       badge: 'Coach'

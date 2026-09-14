@@ -12,6 +12,7 @@ vi.mock('../services/apiClient', () => ({
     googleAuth: vi.fn(),
     sendOtp: vi.fn(),
     verifyOtp: vi.fn(),
+    checkEmail: vi.fn(),
     me: vi.fn().mockResolvedValue({ email: 'coach@globalorators.com', role: 'coach' })
   },
   clientsApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },
@@ -35,21 +36,32 @@ describe('CoachLoginPortal Tests', () => {
     vi.clearAllMocks();
   });
 
-  test('renders Coach Operating System sign-in portal with commanding typography and form controls', () => {
+  test('renders Coach App email-first portal without Sign In / Create Account tabs', () => {
     render(
       <AppProvider>
         <CoachLoginPortal />
       </AppProvider>
     );
 
-    expect(screen.getByText(/Accredited Coach Access/i)).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /Coach Operating System/i })).toBeInTheDocument();
-    expect(screen.getByLabelText(/Faculty Email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Account Password/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Enter Coach Operating System/i })).toBeInTheDocument();
+    expect(screen.getByText(/Welcome, Coach/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Coach App/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/Coach Email/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Continue/i })).toBeInTheDocument();
+
+    // Verify tabs are NOT present
+    expect(screen.queryByRole('tab')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Sign In$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Create Account$/i })).not.toBeInTheDocument();
   });
 
-  test('submits valid credentials and successfully authenticates coach', async () => {
+  test('checks existing email and transitions to password sign-in', async () => {
+    (authApi.checkEmail as any).mockResolvedValueOnce({
+      email: 'coach@globalorators.com',
+      exists: true,
+      auth_method: 'password',
+      role: 'coach'
+    });
+
     (authApi.login as any).mockResolvedValueOnce({
       access_token: 'valid-coach-token',
       token_type: 'bearer',
@@ -69,67 +81,43 @@ describe('CoachLoginPortal Tests', () => {
       </AppProvider>
     );
 
-    fireEvent.change(screen.getByLabelText(/Faculty Email/i), {
+    fireEvent.change(screen.getByLabelText(/Coach Email/i), {
       target: { value: 'coach@globalorators.com' }
     });
-    fireEvent.change(screen.getByLabelText(/Account Password/i), {
+
+    fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
+
+    await waitFor(() => {
+      expect(authApi.checkEmail).toHaveBeenCalledWith('coach@globalorators.com');
+      expect(screen.getByLabelText(/^Password/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Sign In to Coach App/i })).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText(/^Password/i), {
       target: { value: 'CoachSecurePassword123' }
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Enter Coach Operating System/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Sign In to Coach App/i }));
 
     await waitFor(() => {
       expect(authApi.login).toHaveBeenCalledWith('coach@globalorators.com', 'CoachSecurePassword123');
     });
   });
 
-  test('displays error alert when coach authentication fails', async () => {
-    (authApi.login as any).mockRejectedValueOnce({
-      response: { data: { detail: 'Invalid email or password' } }
+  test('checks new email and transitions directly to create account form', async () => {
+    (authApi.checkEmail as any).mockResolvedValueOnce({
+      email: 'newcoach@globalorators.com',
+      exists: false,
+      auth_method: 'none',
+      role: null
     });
 
-    render(
-      <AppProvider>
-        <CoachLoginPortal />
-      </AppProvider>
-    );
-
-    fireEvent.change(screen.getByLabelText(/Faculty Email/i), {
-      target: { value: 'wrong@globalorators.com' }
-    });
-    fireEvent.change(screen.getByLabelText(/Account Password/i), {
-      target: { value: 'wrongpassword' }
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Enter Coach Operating System/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText(/Invalid email or password/i)).toBeInTheDocument();
-    });
-  });
-
-  test('switches to Accreditation registration mode and renders invite code field', async () => {
-    render(
-      <AppProvider>
-        <CoachLoginPortal />
-      </AppProvider>
-    );
-
-    const accreditationTab = screen.getByRole('button', { name: /Accreditation/i });
-    fireEvent.click(accreditationTab);
-
-    expect(screen.getByLabelText(/Full Name & Credentials/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Faculty Invite Code/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Provision Coach Account/i })).toBeInTheDocument();
-  });
-
-  test('submits coach registration with invite code', async () => {
     (authApi.register as any).mockResolvedValueOnce({
       access_token: 'new-coach-token',
       token_type: 'bearer',
       user: {
         id: 'coach-2',
-        email: 'faculty@globalorators.com',
+        email: 'newcoach@globalorators.com',
         full_name: 'Dr. Evelyn Reed',
         role: 'coach',
         avatar: '',
@@ -143,31 +131,103 @@ describe('CoachLoginPortal Tests', () => {
       </AppProvider>
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /Accreditation/i }));
+    fireEvent.change(screen.getByLabelText(/Coach Email/i), {
+      target: { value: 'newcoach@globalorators.com' }
+    });
 
-    fireEvent.change(screen.getByLabelText(/Full Name & Credentials/i), {
+    fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
+
+    await waitFor(() => {
+      expect(authApi.checkEmail).toHaveBeenCalledWith('newcoach@globalorators.com');
+      expect(screen.getByRole('heading', { name: /Create Coach Account/i })).toBeInTheDocument();
+      expect(screen.getByLabelText(/Full Name & Title/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/^Password/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Create Coach Account/i })).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText(/Full Name & Title/i), {
       target: { value: 'Dr. Evelyn Reed' }
     });
-    fireEvent.change(screen.getByLabelText(/Faculty Email/i), {
-      target: { value: 'faculty@globalorators.com' }
-    });
-    fireEvent.change(screen.getByLabelText(/Master Password/i), {
+    fireEvent.change(screen.getByLabelText(/^Password/i), {
       target: { value: 'FacultyMasterKey123' }
     });
-    fireEvent.change(screen.getByLabelText(/Faculty Invite Code/i), {
-      target: { value: 'FACULTY-INVITE-2026' }
-    });
 
-    fireEvent.click(screen.getByRole('button', { name: /Provision Coach Account/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Create Coach Account/i }));
 
     await waitFor(() => {
       expect(authApi.register).toHaveBeenCalledWith({
-        email: 'faculty@globalorators.com',
+        email: 'newcoach@globalorators.com',
         password: 'FacultyMasterKey123',
         full_name: 'Dr. Evelyn Reed',
         role: 'coach',
         coach_invite_code: 'FACULTY-INVITE-2026'
       });
+    });
+  });
+
+  test('checks Google-registered email and prompts to sign in with Google to prevent duplicate accounts', async () => {
+    (authApi.checkEmail as any).mockResolvedValueOnce({
+      email: 'googlecoach@globalorators.com',
+      exists: true,
+      auth_method: 'google',
+      role: 'coach'
+    });
+
+    render(
+      <AppProvider>
+        <CoachLoginPortal />
+      </AppProvider>
+    );
+
+    fireEvent.change(screen.getByLabelText(/Coach Email/i), {
+      target: { value: 'googlecoach@globalorators.com' }
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
+
+    await waitFor(() => {
+      expect(authApi.checkEmail).toHaveBeenCalledWith('googlecoach@globalorators.com');
+      expect(screen.getByText(/Google Sign-In Account Found/i)).toBeInTheDocument();
+      expect(screen.getByText(/You previously accessed Global Orators using Google with this email/i)).toBeInTheDocument();
+    });
+  });
+
+  test('displays error alert when coach authentication fails', async () => {
+    (authApi.checkEmail as any).mockResolvedValueOnce({
+      email: 'coach@globalorators.com',
+      exists: true,
+      auth_method: 'password',
+      role: 'coach'
+    });
+
+    (authApi.login as any).mockRejectedValueOnce({
+      response: { data: { detail: 'Invalid email or password' } }
+    });
+
+    render(
+      <AppProvider>
+        <CoachLoginPortal />
+      </AppProvider>
+    );
+
+    fireEvent.change(screen.getByLabelText(/Coach Email/i), {
+      target: { value: 'coach@globalorators.com' }
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/^Password/i)).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText(/^Password/i), {
+      target: { value: 'wrongpassword' }
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Sign In to Coach App/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Invalid email or password/i)).toBeInTheDocument();
     });
   });
 });

@@ -144,3 +144,10 @@ class CoachDirectoryItem(CamelModel):
     avatar: str
     role: str = "coach"
 
+
+class CreateCoachRequest(CamelModel):
+    email: str
+    password: str
+    full_name: str
+    avatar: Optional[str] = ""
+

@@ -110,6 +110,12 @@ describe('Global Orators Landing Page & Features Tests', () => {
   });
 
   test('should render Client-Side Speaker App with drill studio, catharsis vault, and habit tracking', () => {
+    localStorage.setItem('globalorators_speaker_profile', JSON.stringify({
+      fullName: 'Amara Diallo',
+      branch: 'Foundation',
+      email: 'amara@example.com'
+    }));
+
     render(
       <AppProvider>
         <ClientPortal />

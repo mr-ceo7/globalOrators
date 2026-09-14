@@ -48,6 +48,7 @@ import { resolveSpeakerCurriculum } from '../../utils/curriculumResolver';
 import { LiveRehearsalRoom } from '../live/LiveRehearsalRoom';
 import { SEOHead } from '../common/SEOHead';
 import { SpeakerMobileBottomNav } from './SpeakerMobileBottomNav';
+import { SpeakerLoginPortal } from '../auth/SpeakerLoginPortal';
 import { SpeakerSidebar } from './SpeakerSidebar';
 import { GlobalOratorsLogo } from '../common/GlobalOratorsLogo';
 import { journalsApi, simulationsApi, recordingsApi, RecordingResponse } from '../../services/apiClient';
@@ -123,7 +124,7 @@ export const ClientPortal: React.FC = () => {
 
   const profile = useMemo(() => activeSpeakerProfile || {
     branch: 'Foundation' as BranchType,
-    fullName: 'Guest Speaker',
+    fullName: '',
     email: '',
     missionFocus: '',
     primaryDiscipline: '',
@@ -678,6 +679,10 @@ export const ClientPortal: React.FC = () => {
     }
   };
 
+  if (!activeSpeakerProfile) {
+    return <SpeakerLoginPortal />;
+  }
+
   return (
     <div className="flex-1 bg-slate-950 text-slate-100 flex font-sans antialiased selection:bg-emerald-500 selection:text-slate-950 min-h-screen h-screen overflow-hidden">
       <SEOHead
@@ -793,7 +798,7 @@ export const ClientPortal: React.FC = () => {
                 >
                   {/* Speaker Identity */}
                   <div className="px-3 py-2.5 border-b border-slate-800/80 mb-1">
-                    <div className="font-bold text-white text-sm truncate">{profile.fullName || 'Guest Speaker'}</div>
+                    <div className="font-bold text-white text-sm truncate">{profile.fullName || 'Speaker'}</div>
                     <div className="text-[11px] font-mono text-slate-400 truncate">{profile.email}</div>
                     <div className="text-[10px] font-mono text-[#C89630] uppercase tracking-wider mt-1">
                       {isExecutive ? 'Executive Public Speaking Track' : `${profile.branch} Track`}
@@ -809,7 +814,7 @@ export const ClientPortal: React.FC = () => {
                     className="w-full min-h-[40px] px-3 py-2 rounded-xl text-left flex items-center gap-2 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer"
                   >
                     <ShieldCheck className="w-4 h-4 text-teal-400" />
-                    <span>Open Coach OS</span>
+                    <span>Open Coach App</span>
                   </button>
                   <button
                     onClick={() => { setCurrentPortal('landing'); setIsProfileMenuOpen(false); }}

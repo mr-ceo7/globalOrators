@@ -2243,7 +2243,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                     </p>
                   )}
                   <p className="text-[10px] text-slate-400 font-mono">
-                    This ritual will be integrated directly into your daily habit tracker on your speaker portal.
+                    This ritual will be integrated directly into your daily habit tracker on Orators App.
                   </p>
                 </div>
               )}
@@ -2360,7 +2360,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
               </>
             ) : (
               <>
-                <span>Enter My Speaker Portal</span>
+                <span>Enter Orators App</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </>
             )}

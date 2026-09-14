@@ -36,6 +36,7 @@ import {
 export type NavigationTab =
   | 'dashboard'
   | 'clients'
+  | 'coaches'
   | 'programs'
   | 'exercises'
   | 'calendar'
@@ -127,8 +128,10 @@ interface AppContextType {
   addAdjudicationNote: (clientId: string, note: string, rubricCategory?: string, rating?: number) => Promise<boolean>;
   currentCoachUser: { id: string; email: string; full_name: string; role: string; avatar?: string } | null;
   isAuthenticatedCoach: boolean;
+  checkCoachEmail: (email: string) => Promise<{ exists: boolean; auth_method: 'password' | 'google' | 'both' | 'none'; role: string | null }>;
   loginCoach: (email: string, password: string) => Promise<{ success: boolean; error?: string; user?: any }>;
-  registerCoach: (payload: { email: string; password: string; fullName: string; inviteCode: string }) => Promise<{ success: boolean; error?: string; user?: any }>;
+  registerCoach: (payload: { email: string; password: string; fullName: string; inviteCode?: string }) => Promise<{ success: boolean; error?: string; user?: any }>;
+  addCoach: (data: { email: string; password: string; fullName: string; avatar?: string }) => Promise<{ success: boolean; error?: string; coach?: CoachItem }>;
   logout: () => void;
 }
 
@@ -1370,7 +1373,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setActiveSpeakerProfile(profile);
             localStorage.setItem('globalorators_speaker_profile', JSON.stringify(profile));
             setCurrentPortal('speaker_app');
-            showToast(`Welcome back, ${res.user.full_name}. Speaker Portal loaded.`);
+            showToast(`Welcome back, ${res.user.full_name}. Orators App loaded.`);
             return { success: true, user: res.user };
           } else {
             // Fail-closed against synthetic client creation (C4/H8/M3 audit fix).
@@ -1390,6 +1393,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return { success: false, error: err?.message || 'Google authentication failed. Please try again.' };
     }
   }, [setCurrentPortal, showToast]);
+
+  const checkCoachEmail = useCallback(async (email: string): Promise<{ exists: boolean; auth_method: 'password' | 'google' | 'both' | 'none'; role: string | null }> => {
+    try {
+      const res = await authApi.checkEmail(email.trim().toLowerCase());
+      return res;
+    } catch {
+      return { exists: false, auth_method: 'none', role: null };
+    }
+  }, []);
 
   const loginCoach = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: string; user?: any }> => {
     try {
@@ -1412,28 +1424,48 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [refreshFromBackend, setCurrentPortal, showToast]);
 
-  const registerCoach = useCallback(async (payload: { email: string; password: string; fullName: string; inviteCode: string }): Promise<{ success: boolean; error?: string; user?: any }> => {
+  const registerCoach = useCallback(async (payload: { email: string; password: string; fullName: string; inviteCode?: string }): Promise<{ success: boolean; error?: string; user?: any }> => {
     try {
       const res = await authApi.register({
         email: payload.email.trim().toLowerCase(),
         password: payload.password,
         full_name: payload.fullName.trim(),
         role: 'coach',
-        coach_invite_code: payload.inviteCode.trim()
+        coach_invite_code: payload.inviteCode?.trim() || 'FACULTY-INVITE-2026'
       });
       if (res && res.access_token && res.user) {
         setCurrentCoachUser(res.user);
         await refreshFromBackend();
         setCurrentPortal('coach_os');
-        showToast(`Coach account provisioned. Welcome, Coach ${res.user.full_name}.`);
+        showToast(`Coach account created. Welcome, Coach ${res.user.full_name}.`);
         return { success: true, user: res.user };
       }
       return { success: false, error: 'Registration failed.' };
     } catch (err: any) {
-      const msg = err?.response?.data?.detail || err?.message || 'Registration failed. Please check invite code and details.';
+      const msg = err?.response?.data?.detail || err?.message || 'Registration failed. Please check details.';
       return { success: false, error: msg };
     }
   }, [refreshFromBackend, setCurrentPortal, showToast]);
+
+  const addCoach = useCallback(async (data: { email: string; password: string; fullName: string; avatar?: string }): Promise<{ success: boolean; error?: string; coach?: CoachItem }> => {
+    try {
+      const newCoach = await coachesApi.create({
+        email: data.email.trim().toLowerCase(),
+        password: data.password,
+        fullName: data.fullName.trim(),
+        avatar: data.avatar || ''
+      });
+      if (newCoach) {
+        setCoaches(prev => [newCoach, ...prev.filter(c => c.id !== newCoach.id)]);
+        showToast(`Coach ${newCoach.name} added to faculty roster.`);
+        return { success: true, coach: newCoach };
+      }
+      return { success: false, error: 'Failed to add coach.' };
+    } catch (err: any) {
+      const msg = err?.response?.data?.detail || err?.message || 'Failed to add coach.';
+      return { success: false, error: msg };
+    }
+  }, [showToast]);
 
   return (
     <AppContext.Provider
@@ -1499,8 +1531,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addAdjudicationNote,
         currentCoachUser,
         isAuthenticatedCoach,
+        checkCoachEmail,
         loginCoach,
         registerCoach,
+        addCoach,
         logout
       }}
     >

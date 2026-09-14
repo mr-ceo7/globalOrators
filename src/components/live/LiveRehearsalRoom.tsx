@@ -859,7 +859,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
                       <p className="text-xs text-slate-400 mb-4 leading-relaxed">
                         {userRole === 'coach' 
                           ? 'When your speaker clicks "Join Room" in their portal, their video feed will connect directly here without ads or sign-ins.'
-                          : 'Your coach will connect here directly from Coach OS to conduct your live floor review.'}
+                          : 'Your coach will connect here directly from Coach App to conduct your live floor review.'}
                       </p>
                       <div className="flex items-center gap-2 text-[11px] font-mono text-slate-300 bg-slate-800/90 px-3 py-1.5 rounded-lg border border-slate-700">
                         <span className="text-[#C89630] font-bold">ROOM:</span>

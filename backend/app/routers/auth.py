@@ -22,7 +22,9 @@ from app.schemas.auth import (
     TokenResponse,
     SendOtpRequest,
     VerifyOtpRequest,
-    OtpResponse
+    OtpResponse,
+    CheckEmailRequest,
+    CheckEmailResponse
 )
 from app.security import verify_password, get_password_hash, create_access_token
 from app.config import settings
@@ -103,6 +105,40 @@ async def login(req: LoginRequest, db: AsyncSession = Depends(get_db)):
         access_token=token,
         token_type="bearer",
         user=UserResponse.model_validate(user)
+    )
+
+
+@router.post(
+    "/check-email",
+    response_model=CheckEmailResponse,
+    dependencies=[Depends(rate_limit(limit=30, window_seconds=60, key_prefix="auth_check_email"))]
+)
+async def check_email(req: CheckEmailRequest, db: AsyncSession = Depends(get_db)):
+    """Check if an email is registered and which auth method is configured."""
+    clean_email = req.email.strip().lower()
+    result = await db.execute(select(User).where(User.email == clean_email))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        return CheckEmailResponse(
+            email=clean_email,
+            exists=False,
+            auth_method="none",
+            role=None
+        )
+
+    if user.google_id and (not user.hashed_password or user.hashed_password == ""):
+        auth_method = "google"
+    elif user.google_id and user.hashed_password:
+        auth_method = "both"
+    else:
+        auth_method = "password"
+
+    return CheckEmailResponse(
+        email=clean_email,
+        exists=True,
+        auth_method=auth_method,
+        role=user.role
     )
 
 

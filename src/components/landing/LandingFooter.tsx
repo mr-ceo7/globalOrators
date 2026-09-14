@@ -154,7 +154,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
                     }} 
                     className="inline-flex items-center min-h-[24px] py-1 hover:text-slate-100 transition-colors cursor-pointer"
                   >
-                    Speaker Practice Studio
+                    Orators App
                   </a>
                 </li>
                 <li>
@@ -167,7 +167,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
                     }} 
                     className="inline-flex items-center min-h-[24px] py-1 hover:text-slate-100 transition-colors cursor-pointer"
                   >
-                    Coach OS Portal
+                    Coach App Portal
                   </a>
                 </li>
                 <li>

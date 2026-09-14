@@ -155,7 +155,7 @@ export const SpeakerLoginModal: React.FC<SpeakerLoginModalProps> = ({
         {/* Modal Header */}
         <div className="mb-6">
           <div className="text-[10px] font-mono tracking-widest text-[#C89630] uppercase mb-1">
-            Speaker Portal Re-Entry
+            Orators App Re-Entry
           </div>
           <h2
             id="speaker-login-title"
@@ -341,7 +341,7 @@ export const SpeakerLoginModal: React.FC<SpeakerLoginModalProps> = ({
                 </>
               ) : (
                 <>
-                  <span>Enter Speaker Portal</span>
+                  <span>Enter Orators App</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}

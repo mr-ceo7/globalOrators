@@ -1660,3 +1660,24 @@ async def test_storage_service_and_multi_session_persistence():
         await client.delete(f"/api/recordings/{rec_id}", headers=headers_s2)
 
     print("Storage service and multi-session persistence verified successfully!")
+
+
+@pytest.mark.asyncio
+async def test_auth_check_email():
+    """Verify /api/auth/check-email identifies existing accounts and auth methods correctly."""
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        # Non-existent email
+        res_nonexistent = await client.post("/api/auth/check-email", json={"email": "nonexistent@example.com"})
+        assert res_nonexistent.status_code == 200
+        data_none = res_nonexistent.json()
+        assert data_none["exists"] is False
+        assert data_none["auth_method"] == "none"
+
+        # Existing bootstrap coach
+        res_coach = await client.post("/api/auth/check-email", json={"email": "coach@globalorators.com"})
+        assert res_coach.status_code == 200
+        data_coach = res_coach.json()
+        assert data_coach["exists"] is True
+        assert data_coach["auth_method"] == "password"
+        assert data_coach["role"] == "coach"

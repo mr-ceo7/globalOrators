@@ -232,6 +232,14 @@ export const authApi = {
     return data;
   },
   me: () => api.get<any>('/auth/me'),
+  checkEmail: async (email: string) => {
+    return api.post<{
+      email: string;
+      exists: boolean;
+      auth_method: 'password' | 'google' | 'both' | 'none';
+      role: string | null;
+    }>('/auth/check-email', { email });
+  },
   logout: () => {
     clearAuthSession();
   },
@@ -255,6 +263,8 @@ export const clientsApi = {
 // Coaches Faculty Directory Endpoints
 export const coachesApi = {
   getAll: () => api.get<CoachItem[]>('/coaches'),
+  create: (data: { email: string; password: string; fullName: string; avatar?: string }) =>
+    api.post<CoachItem>('/coaches', data),
 };
 
 

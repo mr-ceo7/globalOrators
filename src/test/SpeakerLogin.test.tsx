@@ -139,7 +139,7 @@ describe('Speaker Login & Portal Integration Tests', () => {
     );
 
     expect(screen.getByText('Access Your Protocol')).toBeInTheDocument();
-    expect(screen.getByText('Speaker Portal Re-Entry')).toBeInTheDocument();
+    expect(screen.getByText('Orators App Re-Entry')).toBeInTheDocument();
 
     const input = screen.getByPlaceholderText(/kassimmusa322@gmail\.com/i);
     await act(async () => {
@@ -161,7 +161,7 @@ describe('Speaker Login & Portal Integration Tests', () => {
       fireEvent.change(otpInput, { target: { value: '123456' } });
     });
 
-    const verifyBtn = screen.getByRole('button', { name: /Enter Speaker Portal/i });
+    const verifyBtn = screen.getByRole('button', { name: /Enter Orators App/i });
     await act(async () => {
       fireEvent.click(verifyBtn);
     });
@@ -218,7 +218,7 @@ describe('Speaker Login & Portal Integration Tests', () => {
       fireEvent.change(otpInput, { target: { value: '000000' } });
     });
 
-    const verifyBtn = screen.getByRole('button', { name: /Enter Speaker Portal/i });
+    const verifyBtn = screen.getByRole('button', { name: /Enter Orators App/i });
     await act(async () => {
       fireEvent.click(verifyBtn);
     });
@@ -314,6 +314,24 @@ describe('Speaker Login & Portal Integration Tests', () => {
     expect(screen.getByText('Executive Investor Pitch: High-Stakes Persuasion & Presence')).toBeInTheDocument();
     expect(screen.getByText(/The 60-Second Venture Genesis/i)).toBeInTheDocument();
     expect(screen.getAllByText(/venture's founding conviction/i).length).toBeGreaterThanOrEqual(1);
+  });
+
+  test('requires authentication and renders SpeakerLoginPortal when unauthenticated (no guest access)', async () => {
+    // Ensure no active speaker profile exists
+    localStorage.clear();
+
+    render(
+      <AppProvider>
+        <ClientPortal />
+      </AppProvider>
+    );
+
+    // Verifies NO "Guest Speaker" is rendered, instead SpeakerLoginPortal is rendered
+    expect(screen.queryByText(/Guest Speaker/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/Welcome, Speaker/i)).toBeInTheDocument();
+    expect(screen.getByText('Access Your Protocol')).toBeInTheDocument();
+    expect(screen.getByLabelText(/Speaker Email/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Send Login Passcode/i })).toBeInTheDocument();
   });
 });
 

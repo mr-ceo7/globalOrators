@@ -11,19 +11,20 @@ import {
   ChevronRight,
   Mic,
   Globe,
-  LogOut
+  LogOut,
+  ShieldCheck
 } from 'lucide-react';
 import { useApp, NavigationTab } from '../../context/AppContext';
 import { GlobalOratorsLogo } from '../common/GlobalOratorsLogo';
 
 
 export const Sidebar: React.FC = () => {
-  const { activeTab, setActiveTab, clients, messages, scheduledWorkouts, setSelectedClientId, logout, showToast, setCurrentPortal } = useApp();
+  const { activeTab, setActiveTab, clients, coaches, messages, scheduledWorkouts, setSelectedClientId, logout, showToast, setCurrentPortal } = useApp();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const handleCoachSignOut = () => {
     logout();
-    showToast('Signed out of Coach OS.');
+    showToast('Signed out of Coach App.');
   };
 
   // Unread messages count
@@ -36,6 +37,7 @@ export const Sidebar: React.FC = () => {
   const navItems: { id: NavigationTab; label: string; icon: React.FC<{ className?: string }>; badge?: number; badgeColor?: string }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'clients', label: 'Speakers & Debaters', icon: Users, badge: clients.filter(c => c.status === 'Active').length },
+    { id: 'coaches', label: 'Faculty Coaches', icon: ShieldCheck, badge: coaches.length },
     { id: 'programs', label: 'Curriculum Builder', icon: ScrollText },
     { id: 'exercises', label: 'Drill & Speech Library', icon: BookOpen },
     { id: 'calendar', label: 'Session Schedule', icon: CalendarDays, badge: todayPendingCount > 0 ? todayPendingCount : undefined, badgeColor: 'bg-emerald-500' },
@@ -222,10 +224,10 @@ export const Sidebar: React.FC = () => {
             <button
               onClick={() => setCurrentPortal('speaker_app')}
               className="text-slate-400 hover:text-emerald-400 flex items-center gap-1 font-medium transition-colors cursor-pointer"
-              title="Open Speaker Portal (app.globaloratorsproject.com)"
+              title="Open Orators App (app.globaloratorsproject.com)"
             >
               <Mic className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Speaker</span>
+              <span>Orators</span>
             </button>
             <span className="text-slate-700">|</span>
             <button
@@ -240,7 +242,7 @@ export const Sidebar: React.FC = () => {
             <button
               onClick={handleCoachSignOut}
               className="text-slate-400 hover:text-red-400 flex items-center gap-1 font-medium transition-colors cursor-pointer"
-              title="Sign Out of Coach OS"
+              title="Sign Out of Coach App"
             >
               <LogOut className="w-3.5 h-3.5 text-slate-500 hover:text-red-400" />
               <span>Exit</span>
@@ -251,7 +253,7 @@ export const Sidebar: React.FC = () => {
             <button
               onClick={() => setCurrentPortal('speaker_app')}
               className="text-slate-400 hover:text-emerald-400 p-1 transition-colors cursor-pointer"
-              title="Open Speaker Portal (app.globaloratorsproject.com)"
+              title="Open Orators App (app.globaloratorsproject.com)"
             >
               <Mic className="w-4 h-4 text-emerald-400" />
             </button>
@@ -265,7 +267,7 @@ export const Sidebar: React.FC = () => {
             <button
               onClick={handleCoachSignOut}
               className="text-slate-400 hover:text-red-400 p-1 transition-colors cursor-pointer"
-              title="Sign Out of Coach OS"
+              title="Sign Out of Coach App"
             >
               <LogOut className="w-4 h-4 text-slate-500 hover:text-red-400" />
             </button>

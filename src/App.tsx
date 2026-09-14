@@ -26,6 +26,8 @@ import { LandingPage } from './components/landing/LandingPage';
 import { OnboardingFlow } from './components/onboarding/OnboardingFlow';
 import { ClientPortal } from './components/clientApp/ClientPortal';
 import { CoachLoginPortal } from './components/auth/CoachLoginPortal';
+import { SpeakerLoginPortal } from './components/auth/SpeakerLoginPortal';
+import { CoachManager } from './components/coaches/CoachManager';
 import { SEOHead } from './components/common/SEOHead';
 
 const MainLayout: React.FC = () => {
@@ -49,8 +51,8 @@ const MainLayout: React.FC = () => {
   return (
     <div className="flex-1 bg-slate-950 text-slate-100 flex font-sans antialiased selection:bg-emerald-500 selection:text-slate-950 min-h-[calc(100vh-42px)]">
       <SEOHead
-        title="Coach Operating System"
-        description="Private coaching dashboard and forensics workbench for Global Orators accredited debate coaches."
+        title="Coach App"
+        description="Private coaching dashboard and forensics workbench for Global Orators speech and debate coaches."
         canonicalPath="/coach"
         noIndex={true}
       />
@@ -117,6 +119,10 @@ const MainLayout: React.FC = () => {
             {activeTab === 'messenger' && (
               <CoachMessenger />
             )}
+
+            {activeTab === 'coaches' && (
+              <CoachManager />
+            )}
           </div>
         </main>
       </div>
@@ -140,7 +146,7 @@ const MainLayout: React.FC = () => {
 };
 
 const AppContent: React.FC = () => {
-  const { currentPortal, isAuthenticatedCoach } = useApp();
+  const { currentPortal, isAuthenticatedCoach, activeSpeakerProfile } = useApp();
 
   const isPreviewOrDev = typeof window !== 'undefined' && (
     window.location.hostname === 'localhost' ||
@@ -153,7 +159,7 @@ const AppContent: React.FC = () => {
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans antialiased">
       {isPreviewOrDev && currentPortal !== 'landing' && currentPortal !== 'onboarding' && isAuthenticatedCoach && <SubdomainSwitcher />}
       {currentPortal === 'landing' && <LandingPage />}
-      {currentPortal === 'speaker_app' && <ClientPortal />}
+      {currentPortal === 'speaker_app' && (activeSpeakerProfile ? <ClientPortal /> : <SpeakerLoginPortal />)}
       {currentPortal === 'onboarding' && <OnboardingFlow />}
       {currentPortal === 'coach_os' && (isAuthenticatedCoach ? <MainLayout /> : <CoachLoginPortal />)}
     </div>
