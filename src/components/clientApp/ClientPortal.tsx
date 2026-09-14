@@ -1,27 +1,27 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { 
-  Mic, 
-  Square, 
-  Play, 
-  Pause, 
-  RotateCcw, 
-  CheckCircle2, 
-  Calendar, 
-  TrendingUp, 
-  Flame, 
-  Heart, 
-  Award, 
-  BookOpen, 
-  Send, 
-  MessageSquare, 
-  GraduationCap, 
-  HeartHandshake, 
-  RefreshCw, 
-  Clock, 
-  Compass, 
-  Volume2, 
-  Activity, 
-  ArrowUpRight, 
+import {
+  Mic,
+  Square,
+  Play,
+  Pause,
+  RotateCcw,
+  CheckCircle2,
+  Calendar,
+  TrendingUp,
+  Flame,
+  Heart,
+  Award,
+  BookOpen,
+  Send,
+  MessageSquare,
+  GraduationCap,
+  HeartHandshake,
+  RefreshCw,
+  Clock,
+  Compass,
+  Volume2,
+  Activity,
+  ArrowUpRight,
   ChevronRight,
   ChevronDown,
   ChevronUp,
@@ -50,10 +50,10 @@ import { GlobalOratorsLogo } from '../common/GlobalOratorsLogo';
 export type SpeakerTabType = 'today' | 'practice' | 'catharsis' | 'schedule' | 'habits' | 'progress' | 'coach';
 
 export const ClientPortal: React.FC = () => {
-  const { 
-    activeSpeakerProfile, 
-    setActiveSpeakerProfile, 
-    setCurrentPortal, 
+  const {
+    activeSpeakerProfile,
+    setActiveSpeakerProfile,
+    setCurrentPortal,
     showToast,
     resetOnboarding,
     clients,
@@ -90,7 +90,7 @@ export const ClientPortal: React.FC = () => {
 
   // Match client and program
   const pairedClient = useMemo(() => {
-    return clients.find(c => 
+    return clients.find(c =>
       (c.email && profile.email && c.email.toLowerCase() === profile.email.toLowerCase()) ||
       (c.name && profile.fullName && c.name.toLowerCase() === profile.fullName.toLowerCase())
     );
@@ -109,11 +109,11 @@ export const ClientPortal: React.FC = () => {
   // True if speaker is on an Executive Public Speaking / Boardroom Pitching track
   const isExecutive = useMemo(() => {
     const profileText = `${profile.missionFocus || ''} ${profile.primaryDiscipline || ''} ${profile.speakingGoal || ''} ${profile.institution || ''} ${profile.coreFocus || ''}`.toLowerCase();
-    const isProfileExec = profileText.includes('executive') || 
-                          profileText.includes('pitch') || 
-                          profileText.includes('board') || 
-                          profileText.includes('keynote') || 
-                          profileText.includes('capital') || 
+    const isProfileExec = profileText.includes('executive') ||
+                          profileText.includes('pitch') ||
+                          profileText.includes('board') ||
+                          profileText.includes('keynote') ||
+                          profileText.includes('capital') ||
                           profileText.includes('presentation skills');
     if (isProfileExec) return true;
     if (pairedClient && (pairedClient.currentProgramId === 'prog-exec-speaking-1' || pairedClient.goal === 'Executive & Board Pitching')) return true;
@@ -473,6 +473,10 @@ export const ClientPortal: React.FC = () => {
     setIsProfileMenuOpen(false);
     setActiveSpeakerProfile(null);
     localStorage.removeItem('globalorators_speaker_profile');
+    localStorage.removeItem('globalorators_token');
+    localStorage.removeItem('globalorators_user');
+    localStorage.removeItem('nubianfit_token');
+    localStorage.removeItem('nubianfit_user');
     setCurrentPortal('landing');
     showToast('Signed out of speaker profile.');
   };
@@ -888,31 +892,37 @@ export const ClientPortal: React.FC = () => {
                   </div>
 
                   <div className="space-y-2">
-                    {Object.entries(habitsStatus).slice(0, 3).map(([title, completed]) => (
-                      <button
-                        key={title}
-                        onClick={() => toggleHabit(title)}
-                        className={`w-full min-h-[44px] p-3 rounded-2xl border text-left flex items-center justify-between transition-all ${
-                          completed 
-                            ? 'bg-slate-950/80 border-slate-800 text-slate-400' 
-                            : 'bg-slate-950 border-slate-800/80 text-slate-200 hover:border-slate-700'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0 pr-2">
-                          <div className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 ${
-                            completed ? 'bg-[#C89630] border-[#C89630] text-slate-950' : 'border-slate-600'
-                          }`}>
-                            {completed && <CheckCircle2 className="w-3.5 h-3.5" />}
+                    {Object.keys(habitsStatus).length === 0 ? (
+                      <div className="py-4 px-3 rounded-2xl bg-slate-950/60 border border-slate-850 text-center">
+                        <p className="text-xs text-slate-400">No daily rituals recorded yet today.</p>
+                      </div>
+                    ) : (
+                      Object.entries(habitsStatus).slice(0, 3).map(([title, completed]) => (
+                        <button
+                          key={title}
+                          onClick={() => toggleHabit(title)}
+                          className={`w-full min-h-[44px] p-3 rounded-2xl border text-left flex items-center justify-between transition-all ${
+                            completed
+                              ? 'bg-slate-950/80 border-slate-800 text-slate-400'
+                              : 'bg-slate-950 border-slate-800/80 text-slate-200 hover:border-slate-700'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                            <div className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 ${
+                              completed ? 'bg-[#C89630] border-[#C89630] text-slate-950' : 'border-slate-600'
+                            }`}>
+                              {completed && <CheckCircle2 className="w-3.5 h-3.5" />}
+                            </div>
+                            <span className={`text-xs truncate ${completed ? 'line-through text-slate-400' : 'text-slate-200'}`}>
+                              {title}
+                            </span>
                           </div>
-                          <span className={`text-xs truncate ${completed ? 'line-through text-slate-400' : 'text-slate-200'}`}>
-                            {title}
+                          <span className="text-[10px] font-mono text-slate-500 shrink-0">
+                            {completed ? 'Done' : 'Tap'}
                           </span>
-                        </div>
-                        <span className="text-[10px] font-mono text-slate-500 shrink-0">
-                          {completed ? 'Done' : 'Tap'}
-                        </span>
-                      </button>
-                    ))}
+                        </button>
+                      ))
+                    )}
                   </div>
                 </div>
 
@@ -1462,35 +1472,45 @@ export const ClientPortal: React.FC = () => {
               </div>
 
               <div className="space-y-2.5">
-                {Object.entries(habitsStatus).map(([title, completed]) => (
-                  <button
-                    key={title}
-                    type="button"
-                    onClick={() => toggleHabit(title)}
-                    className={`w-full p-4 rounded-2xl border text-left flex items-center justify-between transition-all ${
-                      completed
-                        ? 'bg-emerald-950/20 border-emerald-500/40 text-white'
-                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-5 h-5 rounded-lg flex items-center justify-center transition-all ${
-                          completed ? 'bg-emerald-500 text-slate-950' : 'border border-slate-700'
-                        }`}
-                      >
-                        {completed && <CheckCircle2 className="w-3.5 h-3.5" />}
+                {Object.keys(habitsStatus).length === 0 ? (
+                  <div className="py-10 px-6 rounded-2xl bg-slate-950/60 border border-slate-850 text-center space-y-2">
+                    <CheckCircle2 className="w-8 h-8 text-slate-600 mx-auto" />
+                    <p className="text-sm font-medium text-slate-300">No daily orator rituals active</p>
+                    <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                      Daily habits configured during onboarding or assigned by your coach will appear here for daily tracking.
+                    </p>
+                  </div>
+                ) : (
+                  Object.entries(habitsStatus).map(([title, completed]) => (
+                    <button
+                      key={title}
+                      type="button"
+                      onClick={() => toggleHabit(title)}
+                      className={`w-full p-4 rounded-2xl border text-left flex items-center justify-between transition-all ${
+                        completed
+                          ? 'bg-emerald-950/20 border-emerald-500/40 text-white'
+                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-5 h-5 rounded-lg flex items-center justify-center transition-all ${
+                            completed ? 'bg-emerald-500 text-slate-950' : 'border border-slate-700'
+                          }`}
+                        >
+                          {completed && <CheckCircle2 className="w-3.5 h-3.5" />}
+                        </div>
+                        <span className={`text-xs font-semibold ${completed ? 'text-white line-through opacity-80' : 'text-slate-200'}`}>
+                          {title}
+                        </span>
                       </div>
-                      <span className={`text-xs font-semibold ${completed ? 'text-white line-through opacity-80' : 'text-slate-200'}`}>
-                        {title}
-                      </span>
-                    </div>
 
-                    <span className="text-[10px] font-mono text-slate-500">
-                      {completed ? 'Completed Today' : 'Tap to Complete'}
-                    </span>
-                  </button>
-                ))}
+                      <span className="text-[10px] font-mono text-slate-500">
+                        {completed ? 'Completed Today' : 'Tap to Complete'}
+                      </span>
+                    </button>
+                  ))
+                )}
               </div>
             </div>
           </div>
@@ -1803,10 +1823,10 @@ export const ClientPortal: React.FC = () => {
         setSpeakerTab={setSpeakerTab}
         onOpenLiveRehearsal={() => {
           setActiveChamberTitle(
-            isExecutive 
-              ? 'The 60-Second Venture Genesis' 
-              : isAcademy 
-                ? 'Syllogistic Framing & Whip Extension' 
+            isExecutive
+              ? 'The 60-Second Venture Genesis'
+              : isAcademy
+                ? 'Syllogistic Framing & Whip Extension'
                 : 'Unfiltered Cathartic Voice Journaling'
           );
           setIsLiveRehearsalOpen(true);

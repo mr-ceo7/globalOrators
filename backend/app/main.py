@@ -80,7 +80,7 @@ async def lifespan(app: FastAPI):
                         hashed_password=get_password_hash(settings.DEFAULT_COACH_PASSWORD),
                         full_name=settings.DEFAULT_COACH_NAME,
                         role="coach",
-                        avatar="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+                        avatar="",
                         is_active=True,
                         created_at=datetime.now(timezone.utc),
                     )

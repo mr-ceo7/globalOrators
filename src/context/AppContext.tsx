@@ -372,7 +372,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, []);
 
-  const [selectedClientId, setSelectedClientId] = useState<string | null>('client-1');
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [isWorkoutLoggerOpen, setIsWorkoutLoggerOpen] = useState<boolean>(false);
   const [activeWorkoutToLog, setActiveWorkoutToLog] = useState<ScheduledWorkout | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -493,7 +493,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       // Always set state from API response, including empty arrays (C1 audit fix)
       if (clientsRes.status === 'fulfilled') {
-        setClients(clientsRes.value || []);
+        const loadedClients = clientsRes.value || [];
+        setClients(loadedClients);
+        setSelectedClientId(prev => {
+          if (prev && loadedClients.some(c => c.id === prev)) return prev;
+          return loadedClients.length > 0 ? loadedClients[0].id : null;
+        });
       } else {
         failedEndpoints.push('speakers');
         console.error('Failed to sync speakers from API:', clientsRes.reason);
@@ -626,17 +631,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     } catch (err) {
       console.warn('Backend sync failed for addClient:', err);
+      setClients(prev => prev.filter(c => c.id !== tempId));
+      showToast('Failed to save speaker to server. Reverting changes.');
     }
   };
 
   const updateClient = async (id: string, updates: Partial<Client>) => {
+    const originalClient = clients.find(c => c.id === id);
     setClients(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
-    showToast('Client details updated.');
 
     try {
       await clientsApi.update(id, updates);
+      showToast('Speaker details updated.');
     } catch (err) {
       console.warn('Backend sync failed for updateClient:', err);
+      if (originalClient) {
+        setClients(prev => prev.map(c => c.id === id ? originalClient : c));
+      }
+      showToast('Failed to update speaker on server. Reverting changes.');
     }
   };
 
@@ -650,12 +662,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return c;
     }));
-    showToast('Coach note added.');
 
     try {
       await clientsApi.addNote(clientId, note);
+      showToast('Coach note added.');
     } catch (err) {
       console.warn('Backend sync failed for addCoachNote:', err);
+      setClients(prev => prev.map(c => {
+        if (c.id === clientId) {
+          return {
+            ...c,
+            customCoachNotes: c.customCoachNotes.filter(n => n !== note)
+          };
+        }
+        return c;
+      }));
+      showToast('Failed to save note to server. Reverting note.');
     }
   };
 
@@ -707,10 +729,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     } catch (err) {
       console.warn('Backend sync failed for addExercise:', err);
+      setExercises(prev => prev.filter(e => e.id !== tempId));
+      showToast('Failed to save drill to server. Reverting changes.');
     }
   };
 
   const saveProgram = async (prog: TrainingProgram) => {
+    const previousPrograms = [...programs];
     setPrograms(prev => {
       const idx = prev.findIndex(p => p.id === prog.id);
       if (idx >= 0) {
@@ -721,23 +746,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return [{ ...prog, id: prog.id || `prog-${Date.now()}`, createdAt: new Date().toISOString().split('T')[0], updatedAt: new Date().toISOString().split('T')[0] }, ...prev];
       }
     });
-    showToast(`Program "${prog.title}" saved!`);
 
     try {
       await programsApi.save(prog);
+      showToast(`Curriculum "${prog.title}" saved!`);
     } catch (err) {
       console.warn('Backend sync failed for saveProgram:', err);
+      setPrograms(previousPrograms);
+      showToast('Failed to save curriculum to server. Reverting changes.');
     }
   };
 
   const deleteProgram = async (id: string) => {
+    const targetProgram = programs.find(p => p.id === id);
     setPrograms(prev => prev.filter(p => p.id !== id));
-    showToast('Program deleted.');
 
     try {
       await programsApi.delete(id);
+      showToast('Curriculum deleted.');
     } catch (err) {
       console.warn('Backend sync failed for deleteProgram:', err);
+      if (targetProgram) {
+        setPrograms(prev => [...prev, targetProgram]);
+      }
+      showToast('Failed to delete curriculum on server. Reverting.');
     }
   };
 
@@ -837,16 +869,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     } catch (err) {
       console.warn('Backend sync failed for scheduleWorkout:', err);
+      setScheduledWorkouts(prev => prev.filter(w => w.id !== tempId));
+      showToast('Failed to schedule session on server. Reverting changes.');
     }
   };
 
   const updateWorkoutLog = async (workoutId: string, updates: Partial<ScheduledWorkout>) => {
+    const originalWorkout = scheduledWorkouts.find(w => w.id === workoutId);
     setScheduledWorkouts(prev => prev.map(w => w.id === workoutId ? { ...w, ...updates } : w));
 
     try {
       await workoutsApi.update(workoutId, updates);
     } catch (err) {
       console.warn('Backend sync failed for updateWorkoutLog:', err);
+      if (originalWorkout) {
+        setScheduledWorkouts(prev => prev.map(w => w.id === workoutId ? originalWorkout : w));
+      }
+      showToast('Failed to update session on server. Reverting changes.');
     }
   };
 
@@ -894,8 +933,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ...prev
     ]);
 
-    showToast(`Rehearsal session "${target.workoutTitle}" marked completed! 🎙️`);
-
     try {
       await workoutsApi.complete(workoutId, {
         clientFeedback: updatedWorkout.clientFeedback,
@@ -904,8 +941,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         durationMin: updatedWorkout.durationMin,
         exercises: target.exercises,
       });
+      showToast(`Rehearsal session "${target.workoutTitle}" marked completed! 🎙️`);
     } catch (err) {
       console.warn('Backend sync failed for completeWorkout:', err);
+      setScheduledWorkouts(prev => prev.map(w => w.id === workoutId ? target : w));
+      showToast('Failed to complete session on server. Reverting status.');
     }
   };
 
@@ -948,15 +988,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ]);
     }
 
-    showToast(`Delivery metric recorded: ${entryData.weightKg} WPM.`);
-
     try {
       const created = await metricsApi.create(entryData);
       if (created?.id) {
         setMetrics(prev => prev.map(m => m.id === tempId ? created : m));
       }
+      showToast(`Delivery metric recorded: ${entryData.weightKg} WPM.`);
     } catch (err) {
       console.warn('Backend sync failed for addMetricEntry:', err);
+      setMetrics(prev => prev.filter(m => m.id !== tempId));
+      showToast('Failed to record delivery metric on server. Reverting.');
     }
   };
 
@@ -987,15 +1028,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ]);
     }
 
-    showToast(`Speech milestone logged for ${prData.exerciseName}! 🎯`);
-
     try {
       const created = await prsApi.create(prData);
       if (created?.id) {
         setPersonalRecords(prev => prev.map(p => p.id === tempId ? created : p));
       }
+      showToast(`Speech milestone logged for ${prData.exerciseName}! 🎯`);
     } catch (err) {
       console.warn('Backend sync failed for addPersonalRecord:', err);
+      setPersonalRecords(prev => prev.filter(p => p.id !== tempId));
+      showToast('Failed to save milestone on server. Reverting.');
     }
   };
 
@@ -1007,15 +1049,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setPhotos(prev => [newPhoto, ...prev]);
-    showToast('Stage check-in photo uploaded successfully.');
 
     try {
       const created = await photosApi.create(photoData);
       if (created?.id) {
         setPhotos(prev => prev.map(p => p.id === tempId ? created : p));
       }
+      showToast('Stage check-in photo uploaded successfully.');
     } catch (err) {
       console.warn('Backend sync failed for addProgressPhoto:', err);
+      setPhotos(prev => prev.filter(p => p.id !== tempId));
+      showToast('Failed to save photo on server. Reverting.');
     }
   };
 
@@ -1065,14 +1109,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     try {
       await messagesApi.send(clientId, text, attachment);
+      if (sender === 'coach') {
+        showToast('Message sent to speaker.');
+      } else {
+        showToast('Message sent.');
+      }
     } catch (err) {
       console.warn('Backend sync failed for sendMessage:', err);
-    }
-
-    if (sender === 'coach') {
-      showToast('Message sent to speaker.');
-    } else {
-      showToast('Message sent.');
+      setMessages(prev => prev.filter(m => m.id !== tempId));
+      showToast('Failed to deliver message. Server could not be reached.');
     }
     // No simulated replies — all responses must come from real messages via the API (H4 audit fix)
   };
@@ -1119,47 +1164,47 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       name: data.fullName,
       avatar: '',
       email: data.email,
-      phone: data.phone || '+254 700 000 000',
-      age: data.age || 21,
-      gender: 'Non-binary',
+      phone: data.phone || '',
+      age: data.age || 0,
+      gender: 'Unspecified',
       status: 'Active',
       branch: data.branch,
-      institution: data.institution || 'Independent Orator',
-      primaryDiscipline: data.primaryDiscipline || 'British Parliamentary (BP)',
-      coreFocus: data.coreFocus || 'Argumentation & Rebuttal Depth',
+      institution: data.institution || '',
+      primaryDiscipline: data.primaryDiscipline || '',
+      coreFocus: data.coreFocus || '',
       missionFocus: data.missionFocus,
-      catharsisScore: data.emotionalOpennessRating * 10,
+      catharsisScore: data.emotionalOpennessRating ? data.emotionalOpennessRating * 10 : 0,
       goal: data.speakingGoal,
       experienceLevel: data.experienceLevel,
       startDate: new Date().toISOString().split('T')[0],
       currentProgramId: programId,
       currentProgramName: programName,
-      complianceRate: 100,
+      complianceRate: 0,
       workoutsCompleted: 0,
-      totalWorkoutsAssigned: 12,
+      totalWorkoutsAssigned: 0,
       lastActive: 'Just now',
-      targetWeightKg: 145,
-      currentWeightKg: data.vocalBaselinePace,
-      startingWeightKg: data.vocalBaselinePace,
-      heightCm: 175,
-      bodyFatPercentage: 88,
-      targetBodyFat: 95,
-      injuriesAndHealth: ['Navigating emotional vulnerability hurdles', 'Overcoming conversational hesitation'],
-      medicalAlerts: 'Prioritize diaphragmatic calming breathwork and vocal hydration before speaking.',
-      customCoachNotes: [data.bioNotes || `Onboarded through Global Orators ${data.branch} flow. Focus: ${data.missionFocus}`],
+      targetWeightKg: data.vocalBaselinePace || 140,
+      currentWeightKg: data.vocalBaselinePace || 140,
+      startingWeightKg: data.vocalBaselinePace || 140,
+      heightCm: 0,
+      bodyFatPercentage: 0,
+      targetBodyFat: 0,
+      injuriesAndHealth: [],
+      medicalAlerts: '',
+      customCoachNotes: data.bioNotes ? [data.bioNotes] : [],
       onboardingSurvey: {
-        gymAccess: data.branch === 'Academy' ? 'University Debate Hall & Parliamentary Forum' : 'Children\'s Home & Community Empowerment Center',
-        weeklyAvailabilityDays: 4,
-        dietaryRestrictions: 'Public Speaking Trainee',
-        sleepAvgHours: 7.5,
-        stressLevel: 'Moderate',
-        favoriteExercises: data.branch === 'Academy' ? 'Aristotelian Triad Framing' : 'Cathartic Voice Journaling & Vulnerability Release',
-        leastFavoriteExercises: 'None recorded',
+        gymAccess: data.institution || '',
+        weeklyAvailabilityDays: 0,
+        dietaryRestrictions: '',
+        sleepAvgHours: 0,
+        stressLevel: '',
+        favoriteExercises: data.primaryDiscipline || '',
+        leastFavoriteExercises: '',
         branch: data.branch,
         fullName: data.fullName,
         email: data.email,
         phone: data.phone || '',
-        age: data.age || 20,
+        age: data.age || 0,
         institution: data.institution || '',
         primaryDiscipline: data.primaryDiscipline || '',
         coreFocus: data.coreFocus || '',

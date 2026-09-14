@@ -48,7 +48,7 @@ async def register(req: RegisterRequest, db: AsyncSession = Depends(get_db)):
         hashed_password=get_password_hash(req.password),
         full_name=req.full_name,
         role=desired_role,
-        avatar=req.avatar or "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+        avatar=req.avatar or "",
         is_active=True,
         created_at=datetime.now(timezone.utc)
     )
@@ -93,9 +93,7 @@ async def login(req: LoginRequest, db: AsyncSession = Depends(get_db)):
 
 import base64
 import json
-from datetime import date
-from app.models.client import Client
-from app.schemas.auth import LoginRequest, RegisterRequest, UserResponse, TokenResponse, GoogleAuthRequest
+from app.schemas.auth import GoogleAuthRequest
 
 
 @router.post(

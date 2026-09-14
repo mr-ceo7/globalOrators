@@ -19,7 +19,7 @@ class User(Base):
     full_name: Mapped[str] = mapped_column(String(255), nullable=False)
     role: Mapped[str] = mapped_column(String(50), default="coach", nullable=False) # "coach" or "speaker"
     google_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, index=True)
-    avatar: Mapped[str] = mapped_column(String(512), default="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80")
+    avatar: Mapped[str] = mapped_column(String(512), default="")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 

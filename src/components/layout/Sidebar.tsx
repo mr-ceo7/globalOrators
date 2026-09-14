@@ -10,15 +10,26 @@ import {
   ChevronLeft, 
   ChevronRight,
   Mic,
-  Globe
+  Globe,
+  LogOut
 } from 'lucide-react';
 import { useApp, NavigationTab } from '../../context/AppContext';
 import { GlobalOratorsLogo } from '../common/GlobalOratorsLogo';
 
 
 export const Sidebar: React.FC = () => {
-  const { activeTab, setActiveTab, clients, messages, scheduledWorkouts, setSelectedClientId, setCurrentPortal } = useApp();
+  const { activeTab, setActiveTab, clients, messages, scheduledWorkouts, setSelectedClientId, setCurrentPortal, showToast } = useApp();
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const handleCoachSignOut = () => {
+    localStorage.removeItem('globalorators_token');
+    localStorage.removeItem('globalorators_user');
+    localStorage.removeItem('globalorators_speaker_profile');
+    localStorage.removeItem('nubianfit_token');
+    localStorage.removeItem('nubianfit_user');
+    setCurrentPortal('landing');
+    showToast('Signed out of Coach OS.');
+  };
 
   // Unread messages count
   const unreadCount = messages.filter(m => m.sender === 'client' && !m.isRead).length;
@@ -215,20 +226,29 @@ export const Sidebar: React.FC = () => {
           <div className="mt-2.5 pt-2 border-t border-slate-800/60 flex items-center justify-between text-[11px]">
             <button
               onClick={() => setCurrentPortal('speaker_app')}
-              className="text-slate-400 hover:text-emerald-400 flex items-center gap-1.5 font-medium transition-colors cursor-pointer"
+              className="text-slate-400 hover:text-emerald-400 flex items-center gap-1 font-medium transition-colors cursor-pointer"
               title="Open Speaker Portal (app.globaloratorsproject.com)"
             >
               <Mic className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Speaker App</span>
+              <span>Speaker</span>
             </button>
             <span className="text-slate-700">|</span>
             <button
               onClick={() => setCurrentPortal('landing')}
-              className="text-slate-400 hover:text-emerald-400 flex items-center gap-1.5 font-medium transition-colors cursor-pointer"
+              className="text-slate-400 hover:text-emerald-400 flex items-center gap-1 font-medium transition-colors cursor-pointer"
               title="Return to Public Site (globaloratorsproject.com)"
             >
               <Globe className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Public Site</span>
+              <span>Site</span>
+            </button>
+            <span className="text-slate-700">|</span>
+            <button
+              onClick={handleCoachSignOut}
+              className="text-slate-400 hover:text-red-400 flex items-center gap-1 font-medium transition-colors cursor-pointer"
+              title="Sign Out of Coach OS"
+            >
+              <LogOut className="w-3.5 h-3.5 text-slate-500 hover:text-red-400" />
+              <span>Exit</span>
             </button>
           </div>
         ) : (
@@ -246,6 +266,13 @@ export const Sidebar: React.FC = () => {
               title="Return to Public Site (globaloratorsproject.com)"
             >
               <Globe className="w-4 h-4 text-emerald-400" />
+            </button>
+            <button
+              onClick={handleCoachSignOut}
+              className="text-slate-400 hover:text-red-400 p-1 transition-colors cursor-pointer"
+              title="Sign Out of Coach OS"
+            >
+              <LogOut className="w-4 h-4 text-slate-500 hover:text-red-400" />
             </button>
           </div>
         )}
