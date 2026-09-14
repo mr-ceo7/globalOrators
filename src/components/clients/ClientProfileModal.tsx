@@ -36,13 +36,39 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({ client, 
     personalRecords,
     setActiveTab,
     setSelectedClientId,
-    openWorkoutLogger
+    openWorkoutLogger,
+    coaches,
+    fetchCoaches,
+    reassignClientCoach,
+    addAdjudicationNote
   } = useApp();
 
-  const [activeTab, setActiveModalTab] = useState<'overview' | 'health' | 'notes' | 'program' | 'metrics'>('overview');
+  const [activeTab, setActiveModalTab] = useState<'overview' | 'health' | 'notes' | 'adjudication' | 'program' | 'metrics'>('overview');
   const [newNoteText, setNewNoteText] = useState('');
   const [selectedProgramToAssign, setSelectedProgramToAssign] = useState<string>(client.currentProgramId || '');
   const [editStatus, setEditStatus] = useState(client.status);
+
+  // Coach Reassignment State
+  const [isReassignOpen, setIsReassignOpen] = useState(false);
+  const [selectedCoachId, setSelectedCoachId] = useState<string>(client.coachId || '');
+  const [reassignReason, setReassignReason] = useState<string>('');
+  const [isSubmittingReassign, setIsSubmittingReassign] = useState<boolean>(false);
+
+  // Panel Adjudication State
+  const [adjCategory, setAdjCategory] = useState<string>('Executive Presence & Poise');
+  const [adjRating, setAdjRating] = useState<number>(8.5);
+  const [adjNote, setAdjNote] = useState<string>('');
+  const [isSubmittingAdj, setIsSubmittingAdj] = useState<boolean>(false);
+
+  React.useEffect(() => {
+    if (coaches.length === 0) {
+      fetchCoaches();
+    }
+  }, [coaches.length, fetchCoaches]);
+
+  const assignedCoach = React.useMemo(() => {
+    return coaches.find(c => c.id === client.coachId);
+  }, [coaches, client.coachId]);
 
   if (!isOpen) return null;
 
@@ -69,6 +95,7 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({ client, 
 
   const weightDelta = (client.currentWeightKg - client.startingWeightKg).toFixed(1);
   const isWeightDown = Number(weightDelta) < 0;
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/80 backdrop-blur-xs animate-in fade-in duration-200">
@@ -117,7 +144,67 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({ client, 
                   <span className="flex items-center gap-1"><Mail className="h-3.5 w-3.5 text-slate-400" /> {client.email}</span>
                   <span className="flex items-center gap-1"><Phone className="h-3.5 w-3.5 text-slate-400" /> {client.phone}</span>
                   <span>Age {client.age} • {client.gender}</span>
+                  <span className="text-slate-600">•</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400">Faculty Coach:</span>
+                    <span className={`font-mono text-xs font-semibold ${assignedCoach ? 'text-emerald-400' : 'text-amber-400'}`}>
+                      {assignedCoach ? assignedCoach.name : 'Unassigned Triage'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setIsReassignOpen(prev => !prev)}
+                      className="ml-1 text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors cursor-pointer"
+                    >
+                      {isReassignOpen ? 'Cancel' : 'Reassign'}
+                    </button>
+                  </div>
                 </div>
+
+                {isReassignOpen && (
+                  <div className="mt-3 p-3 rounded-xl bg-slate-950 border border-slate-700 space-y-2 max-w-xl animate-in fade-in duration-150">
+                    <div className="text-[10px] font-mono uppercase tracking-widest text-slate-400">
+                      Reassign / Delegate Speaker
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <select
+                        value={selectedCoachId}
+                        onChange={(e) => setSelectedCoachId(e.target.value)}
+                        className="h-8 px-2 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white focus:outline-hidden"
+                      >
+                        <option value="">Select Target Coach...</option>
+                        {coaches.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name} ({c.id})
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        placeholder="Reassignment rationale (optional)..."
+                        value={reassignReason}
+                        onChange={(e) => setReassignReason(e.target.value)}
+                        className="h-8 px-2 flex-1 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-hidden"
+                      />
+                      <button
+                        type="button"
+                        disabled={isSubmittingReassign || !selectedCoachId}
+                        onClick={async () => {
+                          if (!selectedCoachId) return;
+                          setIsSubmittingReassign(true);
+                          const ok = await reassignClientCoach(client.id, selectedCoachId, reassignReason || undefined);
+                          setIsSubmittingReassign(false);
+                          if (ok) {
+                            setIsReassignOpen(false);
+                            setReassignReason('');
+                          }
+                        }}
+                        className="h-8 px-3 rounded-lg bg-emerald-500 text-slate-950 font-mono text-xs font-bold hover:bg-emerald-400 disabled:opacity-50 transition-colors cursor-pointer"
+                      >
+                        {isSubmittingReassign ? 'Saving...' : 'Confirm'}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -208,6 +295,15 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({ client, 
             Coach Notes ({client.customCoachNotes.length})
           </button>
           <button
+            onClick={() => setActiveModalTab('adjudication')}
+            className={`py-3 px-3 border-b-2 transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+              activeTab === 'adjudication' ? 'border-amber-500 text-amber-300' : 'border-transparent text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Award className="h-3.5 w-3.5 text-amber-400" />
+            Panel Adjudication ({client.adjudicatorNotes?.length || 0})
+          </button>
+          <button
             onClick={() => setActiveModalTab('metrics')}
             className={`py-3 px-3 border-b-2 transition-colors whitespace-nowrap ${
               activeTab === 'metrics' ? 'border-emerald-500 text-emerald-400' : 'border-transparent text-slate-400 hover:text-slate-200'
@@ -215,6 +311,7 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({ client, 
           >
             Milestones & Records
           </button>
+
         </div>
 
         {/* Tab Content Body */}
@@ -396,6 +493,134 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({ client, 
                     <p className="leading-relaxed">{note}</p>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Tab: Panel Adjudication */}
+          {activeTab === 'adjudication' && (
+            <div className="space-y-4">
+              <form 
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!adjNote.trim()) return;
+                  setIsSubmittingAdj(true);
+                  const ok = await addAdjudicationNote(client.id, adjNote.trim(), adjCategory, adjRating);
+                  setIsSubmittingAdj(false);
+                  if (ok) {
+                    setAdjNote('');
+                  }
+                }}
+                className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-3"
+              >
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-mono uppercase tracking-widest text-slate-200">Submit Panel Adjudication Feedback</h4>
+                  <span className="text-[10px] font-mono uppercase text-slate-400">Faculty Reviewer</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block mb-1">
+                      Rubric Category
+                    </label>
+                    <select
+                      value={adjCategory}
+                      onChange={(e) => setAdjCategory(e.target.value)}
+                      className="w-full h-9 px-3 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-hidden cursor-pointer"
+                    >
+                      <option value="Executive Presence & Poise">Executive Presence & Poise</option>
+                      <option value="Argumentation & Logic">Argumentation & Logic</option>
+                      <option value="Vocal Cadence & Modulation">Vocal Cadence & Modulation</option>
+                      <option value="Audience Engagement & Hook">Audience Engagement & Hook</option>
+                      <option value="Emotional Vulnerability">Emotional Vulnerability</option>
+                      <option value="Refutation & Rebuttal Depth">Refutation & Rebuttal Depth</option>
+                      <option value="General Adjudication">General Adjudication</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block mb-1">
+                      Rubric Score (1 - 10)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.5"
+                      min="1"
+                      max="10"
+                      value={adjRating}
+                      onChange={(e) => setAdjRating(Number(e.target.value))}
+                      className="w-full h-9 px-3 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-hidden"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block mb-1">
+                    Evaluator Feedback & Diagnostic Assessment
+                  </label>
+                  <textarea
+                    rows={3}
+                    placeholder="Document actionable diagnostic feedback, delivery strengths, and specific areas for rhetorical refinement..."
+                    value={adjNote}
+                    onChange={(e) => setAdjNote(e.target.value)}
+                    className="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-hidden"
+                  />
+                </div>
+
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={isSubmittingAdj || !adjNote.trim()}
+                    className="px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 font-mono text-xs font-bold hover:bg-emerald-400 disabled:opacity-50 transition-colors cursor-pointer"
+                  >
+                    {isSubmittingAdj ? 'Submitting Evaluation...' : 'Record Evaluation'}
+                  </button>
+                </div>
+              </form>
+
+              {/* Adjudication Notes History */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-mono uppercase tracking-widest text-slate-300">
+                  Panel Evaluations History ({client.adjudicatorNotes?.length || 0})
+                </h4>
+                {(!client.adjudicatorNotes || client.adjudicatorNotes.length === 0) ? (
+                  <div className="p-6 rounded-2xl bg-slate-950/40 border border-slate-800 text-center text-xs text-slate-400">
+                    No panel evaluations recorded for this speaker yet.
+                  </div>
+                ) : (
+                  client.adjudicatorNotes.map((entry) => (
+                    <div key={entry.id} className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-2">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex items-center gap-2">
+                          {entry.coachAvatar ? (
+                            <img src={entry.coachAvatar} alt={entry.coachName} className="h-6 w-6 rounded-full object-cover" />
+                          ) : (
+                            <div className="h-6 w-6 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px] font-mono font-bold text-slate-300">
+                              {entry.coachName?.slice(0, 2).toUpperCase() || 'AD'}
+                            </div>
+                          )}
+                          <span className="font-bold text-white text-xs">{entry.coachName}</span>
+                          <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                            {entry.rubricCategory}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {entry.rating !== undefined && entry.rating !== null && (
+                            <span className="font-mono text-xs font-extrabold text-amber-300">
+                              {entry.rating} / 10
+                            </span>
+                          )}
+                          <span className="text-[10px] font-mono text-slate-500">
+                            {new Date(entry.timestamp).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-xs text-slate-300 leading-relaxed pl-8">
+                        {entry.note}
+                      </p>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           )}

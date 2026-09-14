@@ -39,10 +39,32 @@ export interface SpeakerOnboardingData {
   emotionalOpennessRating: number;
   selectedHabits: string[];
   bioNotes?: string;
+  coachRef?: string;
+}
+
+export interface AdjudicationNote {
+  id: string;
+  coachId: string;
+  coachName: string;
+  coachAvatar?: string;
+  timestamp: string;
+  note: string;
+  rubricCategory: string;
+  rating?: number;
+}
+
+export interface CoachItem {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string;
+  role: string;
 }
 
 export interface Client {
   id: string;
+  coachId?: string;
+  referralCode?: string;
   name: string;
   avatar: string;
   email: string;
@@ -74,6 +96,7 @@ export interface Client {
   injuriesAndHealth: string[]; // speech challenges & focus areas
   medicalAlerts?: string; // coach vocal health / speech delivery alert
   customCoachNotes: string[];
+  adjudicatorNotes?: AdjudicationNote[];
   onboardingSurvey: {
     gymAccess: string; // primary debate / speaking format & venue
     weeklyAvailabilityDays: number;

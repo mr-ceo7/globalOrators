@@ -45,10 +45,13 @@ class ClientBase(CamelModel):
     medical_alerts: Optional[str] = None
     custom_coach_notes: List[str] = Field(default_factory=list)
     onboarding_survey: Dict[str, Any] = Field(default_factory=dict)
+    referral_code: Optional[str] = None
+    adjudicator_notes: List[Dict[str, Any]] = Field(default_factory=list)
 
 
 class ClientCreate(CamelModel):
     coach_id: Optional[str] = None
+    coach_ref: Optional[str] = None
     name: str
     avatar: str = ""
     email: str = ""
@@ -71,9 +74,12 @@ class ClientCreate(CamelModel):
     medical_alerts: Optional[str] = None
     custom_coach_notes: List[str] = Field(default_factory=list)
     onboarding_survey: Dict[str, Any] = Field(default_factory=dict)
+    referral_code: Optional[str] = None
+    adjudicator_notes: List[Dict[str, Any]] = Field(default_factory=list)
 
 
 class ClientUpdate(CamelModel):
+    coach_id: Optional[str] = None
     name: Optional[str] = None
     avatar: Optional[str] = None
     email: Optional[str] = None
@@ -100,6 +106,8 @@ class ClientUpdate(CamelModel):
     medical_alerts: Optional[str] = None
     custom_coach_notes: Optional[List[str]] = None
     onboarding_survey: Optional[Dict[str, Any]] = None
+    referral_code: Optional[str] = None
+    adjudicator_notes: Optional[List[Dict[str, Any]]] = None
 
 
 class ClientResponse(ClientBase):
@@ -108,3 +116,23 @@ class ClientResponse(ClientBase):
 
 class AddCoachNoteRequest(CamelModel):
     note: str
+
+
+class ReassignCoachRequest(CamelModel):
+    coach_id: str
+    reason: Optional[str] = None
+
+
+class AddAdjudicationNoteRequest(CamelModel):
+    note: str
+    rubric_category: Optional[str] = "General Adjudication"
+    rating: Optional[float] = None
+
+
+class CoachDirectoryItem(CamelModel):
+    id: str
+    name: str
+    email: str
+    avatar: str
+    role: str = "coach"
+

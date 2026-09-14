@@ -27,6 +27,7 @@ from app.routers import (
     activity_router,
     inquiries_router,
     webrtc_router,
+    coaches_router,
 )
 
 logging.basicConfig(
@@ -42,6 +43,19 @@ async def lifespan(app: FastAPI):
     logger.info("Initializing database tables...")
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        
+        # Ensure schema migrations for newly introduced columns
+        def _migrate_columns(connection):
+            from sqlalchemy import inspect, text
+            inspector = inspect(connection)
+            if "clients" in inspector.get_table_names():
+                cols = [c["name"] for c in inspector.get_columns("clients")]
+                if "referral_code" not in cols:
+                    connection.execute(text("ALTER TABLE clients ADD COLUMN referral_code VARCHAR(64)"))
+                if "adjudicator_notes" not in cols:
+                    connection.execute(text("ALTER TABLE clients ADD COLUMN adjudicator_notes JSON DEFAULT '[]'"))
+        await conn.run_sync(_migrate_columns)
+
     
     logger.info("Checking / running initial database seed...")
     try:
@@ -119,6 +133,7 @@ app.include_router(photos_router, prefix=settings.API_PREFIX)
 app.include_router(messages_router, prefix=settings.API_PREFIX)
 app.include_router(activity_router, prefix=settings.API_PREFIX)
 app.include_router(inquiries_router, prefix=settings.API_PREFIX)
+app.include_router(coaches_router, prefix=settings.API_PREFIX)
 app.include_router(webrtc_router)
 
 

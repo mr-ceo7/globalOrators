@@ -33,13 +33,32 @@ async def list_programs(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """List training programs (coaches see global templates and their own curriculums)."""
-    query = select(TrainingProgram).where(
-        or_(
-            TrainingProgram.coach_id == current_user.id,
-            TrainingProgram.coach_id.is_(None)
+    """List training programs (coaches see global templates & own curriculums; speakers see global & enrolled)."""
+    if current_user.role == "coach":
+        is_default_coach = (
+            current_user.email.lower() == settings.DEFAULT_COACH_EMAIL.lower() 
+            or current_user.id == "coach-1"
         )
-    )
+        if is_default_coach:
+            query = select(TrainingProgram)
+        else:
+            query = select(TrainingProgram).where(
+                or_(
+                    TrainingProgram.coach_id == current_user.id,
+                    TrainingProgram.coach_id.is_(None)
+                )
+            )
+    else:
+        # Speaker: see global templates and enrolled/coach programs
+        client_res = await db.execute(select(Client).where(Client.email.ilike(current_user.email)))
+        client = client_res.scalars().first()
+        conditions = [TrainingProgram.coach_id.is_(None)]
+        if client and client.current_program_id:
+            conditions.append(TrainingProgram.id == client.current_program_id)
+        if client and client.coach_id:
+            conditions.append(TrainingProgram.coach_id == client.coach_id)
+        query = select(TrainingProgram).where(or_(*conditions))
+
     if goal:
         query = query.where(TrainingProgram.goal == goal)
     if difficulty:
@@ -55,20 +74,28 @@ async def get_program(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Get single program details."""
+    """Get single program details with coach isolation and enrolled speaker access."""
     result = await db.execute(select(TrainingProgram).where(TrainingProgram.id == program_id))
     prog = result.scalar_one_or_none()
     if not prog:
         raise HTTPException(status_code=404, detail="Program not found")
         
-    # Verify access: can only view if global template or owned by this coach/speaker
-    if prog.coach_id and prog.coach_id != current_user.id:
-        is_default_coach = (
-            current_user.email.lower() == settings.DEFAULT_COACH_EMAIL.lower() 
-            or current_user.id == "coach-1"
-        )
-        if not is_default_coach and current_user.role == "coach":
-            raise HTTPException(status_code=403, detail="Access denied: this curriculum belongs to another coach")
+    # Verify access
+    if prog.coach_id:
+        if current_user.role == "coach":
+            is_default_coach = (
+                current_user.email.lower() == settings.DEFAULT_COACH_EMAIL.lower() 
+                or current_user.id == "coach-1"
+            )
+            if not is_default_coach and prog.coach_id != current_user.id:
+                raise HTTPException(status_code=403, detail="Access denied: this curriculum belongs to another coach")
+        else:
+            # Speaker
+            client_res = await db.execute(select(Client).where(Client.email.ilike(current_user.email)))
+            client = client_res.scalars().first()
+            is_enrolled = client and (client.current_program_id == prog.id or client.coach_id == prog.coach_id)
+            if not is_enrolled:
+                raise HTTPException(status_code=403, detail="Access denied: speaker is not enrolled in this curriculum")
             
     return prog
 

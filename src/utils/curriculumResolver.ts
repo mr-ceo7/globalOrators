@@ -1,4 +1,4 @@
-import { SpeakerOnboardingData } from '../types';
+import { SpeakerOnboardingData, TrainingProgram } from '../types';
 
 export interface ResolvedCurriculum {
   syllabusKicker: string;
@@ -23,7 +23,36 @@ const cleanString = (val?: string): string => {
   return val.trim();
 };
 
-export const resolveSpeakerCurriculum = (profile: SpeakerOnboardingData): ResolvedCurriculum => {
+export const resolveSpeakerCurriculum = (
+  profile: SpeakerOnboardingData, 
+  program?: TrainingProgram | null
+): ResolvedCurriculum => {
+  // 0. Single Source of Truth: If database program exists with configured curriculum data, use it directly
+  if (program && program.title) {
+    const firstDay = program.days?.[0];
+    const firstExercise = firstDay?.exercises?.[0];
+    const disciplineLabel = program.goal || (profile.branch === 'Academy' ? 'Championship Oratory' : 'Cathartic Voice');
+    const focusLabel = firstDay?.focus || firstDay?.name || program.difficulty || 'Core Training Module';
+    const drillTitle = firstExercise?.exerciseName || (firstDay ? `${firstDay.name} Drill` : `${program.title} Drill`);
+    const drillCategory = firstExercise?.primaryMuscle || `${program.goal || 'Executive Oratory'} • Protocol`;
+    const drillPrompt = firstExercise?.coachNotes || (firstDay?.assignmentNotes ? `"${firstDay.assignmentNotes}"` : (firstDay?.focus ? `"${firstDay.focus}"` : `"Execute today's assigned drills from ${program.title}."`));
+
+    return {
+      syllabusKicker: program.subtitle || (profile.branch === 'Academy' ? 'Academy Curriculum' : 'Foundation Curriculum'),
+      title: program.title,
+      description: program.description || `Training curriculum assigned to ${profile.fullName}.`,
+      disciplineLabel,
+      focusLabel,
+      drillTitle,
+      drillCategory,
+      drillPrompt,
+      sessionTitle: firstDay ? `Session: ${firstDay.name}` : `Curriculum Review: ${program.title}`,
+      sessionDescription: firstDay?.focus || `${program.durationWeeks || 8}-week structured regimen`,
+      workshopTitle: `${program.title} Cohort Workshop`,
+      workshopDescription: `Interactive rehearsal and masterclass based on ${program.title}.`
+    };
+  }
+
   const isAcademy = profile.branch === 'Academy';
   const mission = (profile.missionFocus || '').toLowerCase();
   const rawMission = cleanString(profile.missionFocus);

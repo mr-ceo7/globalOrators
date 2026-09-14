@@ -13,8 +13,10 @@ import {
   ProgressPhoto,
   ChatMessage,
   ActivityFeedItem,
-  ClientDailyHabitLog
+  ClientDailyHabitLog,
+  CoachItem
 } from '../types';
+
 
 export const API_BASE_URL = ((import.meta as unknown as { env?: { VITE_API_URL?: string } }).env?.VITE_API_URL) || '/api';
 
@@ -146,14 +148,24 @@ export const authApi = {
 
 // Clients Endpoints
 export const clientsApi = {
-  getAll: (params?: { status?: string; search?: string }) => api.get<Client[]>('/clients', params),
+  getAll: (params?: { status?: string; search?: string; intake?: string }) => api.get<Client[]>('/clients', params),
   getById: (id: string) => api.get<Client>(`/clients/${id}`),
   lookup: (search: string) => api.get<Client>('/clients/lookup', { search }),
-  create: (client: Partial<Client>) => api.post<Client>('/clients', client),
+  create: (client: Partial<Client> & { coachRef?: string }) => api.post<Client>('/clients', client),
   update: (id: string, updates: Partial<Client>) => api.patch<Client>(`/clients/${id}`, updates),
+  reassignCoach: (id: string, coachId: string, reason?: string) =>
+    api.patch<Client>(`/clients/${id}/reassign-coach`, { coachId, reason }),
+  addAdjudicationNote: (id: string, note: string, rubricCategory?: string, rating?: number) =>
+    api.post<Client>(`/clients/${id}/adjudication-notes`, { note, rubricCategory, rating }),
   addNote: (id: string, note: string) => api.post<Client>(`/clients/${id}/notes`, { note }),
   delete: (id: string) => api.delete<{ message: string; id: string }>(`/clients/${id}`),
 };
+
+// Coaches Faculty Directory Endpoints
+export const coachesApi = {
+  getAll: () => api.get<CoachItem[]>('/coaches'),
+};
+
 
 // Exercises / Speech Drills Endpoints
 export const exercisesApi = {

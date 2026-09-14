@@ -20,6 +20,7 @@ vi.mock('../services/apiClient', () => ({
   messagesApi: { getAll: vi.fn().mockResolvedValue([]), send: vi.fn() },
   activityApi: { getAll: vi.fn().mockResolvedValue([]) },
   inquiriesApi: { submit: vi.fn().mockResolvedValue({ status: 'success' }) },
+  coachesApi: { getAll: vi.fn().mockResolvedValue([]) },
 }));
 
 // Helper component to expose context values for assertions

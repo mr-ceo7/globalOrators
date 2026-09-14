@@ -44,3 +44,6 @@ class Client(Base):
     medical_alerts: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     custom_coach_notes: Mapped[List[str]] = mapped_column(JSON, default=list)
     onboarding_survey: Mapped[Dict[str, Any]] = mapped_column(JSON, default=dict)
+    referral_code: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    adjudicator_notes: Mapped[List[Dict[str, Any]]] = mapped_column(JSON, default=list)
+

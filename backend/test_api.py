@@ -978,4 +978,176 @@ async def test_rate_limiter_engine():
     print("Rate limiter engine and trusted proxy unit tests passed successfully!")
 
 
+@pytest.mark.asyncio
+async def test_coach_referrals_reassignment_and_adjudication():
+    """Verify coach referral attribution, intake triage pool, coach reassignment, and shared panel adjudication."""
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        import time
+        ts = int(time.time() * 1000)
+
+        # 1. Check GET /api/coaches returns coaches directory
+        res_coaches = await client.get("/api/coaches")
+        assert res_coaches.status_code == 200
+        coaches_list = res_coaches.json()
+        assert len(coaches_list) >= 1
+        assert any(c["id"] == "coach-1" for c in coaches_list)
+
+        # 2. Register Coach Gamma
+        res_gamma = await client.post(
+            "/api/auth/register",
+            json={
+                "email": f"coach.gamma.{ts}@globalorators.org",
+                "password": "Password123!",
+                "full_name": "Coach Gamma",
+                "role": "coach",
+                "coach_invite_code": settings.COACH_INVITE_CODE
+            }
+        )
+        assert res_gamma.status_code == 200
+        token_gamma = res_gamma.json()["access_token"]
+        headers_gamma = {"Authorization": f"Bearer {token_gamma}"}
+        coach_gamma_id = res_gamma.json()["user"]["id"]
+
+        # 3. Public speaker registers WITH Coach Gamma's referral code
+        speaker_email_referred = f"referred.speaker.{ts}@example.com"
+        res_ref = await client.post(
+            "/api/clients",
+            json={
+                "name": "Referred Orator",
+                "email": speaker_email_referred,
+                "phone": f"+25470{ts % 10000000:07d}",
+                "coachRef": coach_gamma_id,
+                "goal": "Keynote & Conference"
+            }
+        )
+        assert res_ref.status_code == 201
+        referred_client = res_ref.json()
+        assert referred_client["coachId"] == coach_gamma_id
+        assert referred_client["referralCode"] == coach_gamma_id
+
+        # 4. Public speaker registers WITHOUT coach referral -> Lands in unassigned intake triage pool
+        speaker_email_unassigned = f"unassigned.speaker.{ts}@example.com"
+        res_unassigned = await client.post(
+            "/api/clients",
+            json={
+                "name": "Unassigned Orator",
+                "email": speaker_email_unassigned,
+                "phone": f"+25471{ts % 10000000:07d}",
+                "goal": "Competitive Debate"
+            }
+        )
+        assert res_unassigned.status_code == 201
+        unassigned_client = res_unassigned.json()
+        assert unassigned_client["coachId"] is None
+        unassigned_id = unassigned_client["id"]
+
+        # 5. Intake filtering:
+        # Coach Gamma queries ?intake=unassigned and sees unassigned applicant
+        res_pool = await client.get("/api/clients?intake=unassigned", headers=headers_gamma)
+        assert res_pool.status_code == 200
+        pool_clients = res_pool.json()
+        assert any(c["id"] == unassigned_id for c in pool_clients)
+
+        # 6. Reassignment / Claiming:
+        # Coach Gamma claims/reassigns the unassigned applicant to themselves
+        res_claim = await client.patch(
+            f"/api/clients/{unassigned_id}/reassign-coach",
+            json={
+                "coachId": coach_gamma_id,
+                "reason": "Claimed from intake pool for debate coaching"
+            },
+            headers=headers_gamma
+        )
+        assert res_claim.status_code == 200
+        claimed_client = res_claim.json()
+        assert claimed_client["coachId"] == coach_gamma_id
+        assert any("Reassigned from Unassigned Intake to Coach Coach Gamma" in note for note in claimed_client["customCoachNotes"])
+
+        # 7. Head Coach reassigns from Coach Gamma to Coach-1
+        res_head = await client.post(
+            "/api/auth/login",
+            json={"email": settings.DEFAULT_COACH_EMAIL, "password": settings.DEFAULT_COACH_PASSWORD}
+        )
+        head_token = res_head.json()["access_token"]
+        headers_head = {"Authorization": f"Bearer {head_token}"}
+
+        res_reassign_head = await client.patch(
+            f"/api/clients/{unassigned_id}/reassign-coach",
+            json={
+                "coachId": "coach-1",
+                "reason": "Executive transfer by Head Coach"
+            },
+            headers=headers_head
+        )
+        assert res_reassign_head.status_code == 200
+        assert res_reassign_head.json()["coachId"] == "coach-1"
+
+        # 8. Shared Panel Adjudication:
+        # Coach Gamma leaves an adjudication note on the speaker now owned by Coach-1
+        res_adj = await client.post(
+            f"/api/clients/{unassigned_id}/adjudication-notes",
+            json={
+                "note": "Remarkable rhetorical framing during opening proposition.",
+                "rubricCategory": "Argumentation & Logic",
+                "rating": 9.5
+            },
+            headers=headers_gamma
+        )
+        assert res_adj.status_code == 200
+        adj_client = res_adj.json()
+        assert len(adj_client["adjudicatorNotes"]) >= 1
+        note_entry = adj_client["adjudicatorNotes"][0]
+        assert note_entry["coachId"] == coach_gamma_id
+        assert note_entry["coachName"] == "Coach Gamma"
+        assert note_entry["rubricCategory"] == "Argumentation & Logic"
+        assert note_entry["rating"] == 9.5
+
+        # 9. Enrolled speaker curriculum access
+        # Create speaker user and login
+        spk_res = await client.post(
+            "/api/auth/register",
+            json={
+                "email": speaker_email_unassigned,
+                "password": "Password123!",
+                "full_name": "Unassigned Orator",
+                "role": "speaker"
+            }
+        )
+        assert spk_res.status_code == 200
+        spk_token = spk_res.json()["access_token"]
+        headers_spk = {"Authorization": f"Bearer {spk_token}"}
+
+        # Head Coach creates private program and assigns to this speaker
+        prog_res = await client.post(
+            "/api/programs",
+            json={
+                "title": "Head Coach Private Masterclass",
+                "subtitle": "Restricted Masterclass",
+                "goal": "Competitive Debate",
+                "durationWeeks": 8,
+                "daysPerWeek": 3,
+                "days": []
+            },
+            headers=headers_head
+        )
+        assert prog_res.status_code == 201
+        prog_id = prog_res.json()["id"]
+
+        # Assign program to speaker
+        await client.post(
+            f"/api/programs/{prog_id}/assign",
+            json={"clientId": unassigned_id},
+            headers=headers_head
+        )
+
+        # Enrolled speaker can access this coach-owned program
+        spk_prog_view = await client.get(f"/api/programs/{prog_id}", headers=headers_spk)
+        assert spk_prog_view.status_code == 200
+        assert spk_prog_view.json()["title"] == "Head Coach Private Masterclass"
+
+        print("Coach referral, triage pool, reassignment, adjudication, and program access tests all passed!")
+
+
+
 

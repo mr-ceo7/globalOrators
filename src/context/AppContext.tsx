@@ -12,7 +12,8 @@ import {
   ClientDailyHabitLog,
   PortalView,
   SpeakerOnboardingData,
-  BranchType
+  BranchType,
+  CoachItem
 } from '../types';
 // mockData.ts removed from production bundle (C1 audit fix).
 // All business collections initialize as empty arrays and are populated exclusively from the API.
@@ -28,6 +29,7 @@ import {
   photosApi,
   messagesApi,
   activityApi,
+  coachesApi,
 } from '../services/apiClient';
 
 export type NavigationTab = 
@@ -113,7 +115,15 @@ interface AppContextType {
   loginSpeaker: (emailOrPhone: string) => Promise<{ success: boolean; error?: string }>;
   loginWithGoogle: (credential: string, role?: 'coach' | 'speaker') => Promise<{ success: boolean; error?: string; user?: any }>;
   resetOnboarding: () => void;
+
+  // Faculty Directory, Referrals & Adjudication
+  coaches: CoachItem[];
+  fetchCoaches: () => Promise<CoachItem[]>;
+  referredCoach: string | null;
+  reassignClientCoach: (clientId: string, coachId: string, reason?: string) => Promise<boolean>;
+  addAdjudicationNote: (clientId: string, note: string, rubricCategory?: string, rating?: number) => Promise<boolean>;
 }
+
 
 
 // No default speaker profile — user must authenticate or complete onboarding (H1 audit fix).
@@ -338,6 +348,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [activityFeed, setActivityFeed] = useState<ActivityFeedItem[]>([]);
   const [habitLogs, setHabitLogs] = useState<ClientDailyHabitLog[]>([]);
 
+  // Faculty Coaches & Referrals
+  const [coaches, setCoaches] = useState<CoachItem[]>([]);
+  const [referredCoach, setReferredCoach] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('coach') || params.get('ref') || params.get('coach_ref') || null;
+    }
+    return null;
+  });
+
+  const fetchCoaches = useCallback(async (): Promise<CoachItem[]> => {
+    try {
+      const res = await coachesApi.getAll();
+      if (Array.isArray(res)) {
+        setCoaches(res);
+        return res;
+      }
+      return [];
+    } catch (err) {
+      console.warn('Could not load faculty directory:', err);
+      return [];
+    }
+  }, []);
+
   const [selectedClientId, setSelectedClientId] = useState<string | null>('client-1');
   const [isWorkoutLoggerOpen, setIsWorkoutLoggerOpen] = useState<boolean>(false);
   const [activeWorkoutToLog, setActiveWorkoutToLog] = useState<ScheduledWorkout | null>(null);
@@ -379,36 +413,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setTheme(getSystemTheme());
   };
 
-  // Dynamically listen for system color scheme changes (only applies if user has not set explicit manual preference)
+  // Sync with system theme changes
   useEffect(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
-
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleSystemThemeChange = (e: MediaQueryListEvent | MediaQueryList) => {
+    const handleChange = () => {
       const saved = getSavedTheme();
       if (!saved) {
-        setTheme(e.matches ? 'dark' : 'light');
+        setTheme(getSystemTheme());
       }
     };
-
-    if (typeof mediaQuery.addEventListener === 'function') {
-      mediaQuery.addEventListener('change', handleSystemThemeChange);
-      return () => mediaQuery.removeEventListener('change', handleSystemThemeChange);
-    } else if (typeof mediaQuery.addListener === 'function') {
-      mediaQuery.addListener(handleSystemThemeChange);
-      return () => mediaQuery.removeListener(handleSystemThemeChange);
-    }
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
-  // Sync active theme to HTML documentElement class without writing to localStorage
+  // Set html class on theme change
   useEffect(() => {
     const root = document.documentElement;
     if (theme === 'dark') {
       root.classList.add('dark');
+      root.classList.remove('light');
     } else {
+      root.classList.add('light');
       root.classList.remove('dark');
     }
   }, [theme]);
+
 
 
   // localStorage sync removed for business data (H7 audit fix).
@@ -439,6 +468,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         photosApi.getAll(),
         messagesApi.getAll(),
         activityApi.getAll(),
+        coachesApi.getAll(),
       ]);
 
       const [
@@ -451,10 +481,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         habitsRes,
         photosRes,
         messagesRes,
-        activityRes
+        activityRes,
+        coachesRes
       ] = results;
 
       const failedEndpoints: string[] = [];
+
+      if (coachesRes.status === 'fulfilled') {
+        setCoaches(coachesRes.value || []);
+      }
 
       // Always set state from API response, including empty arrays (C1 audit fix)
       if (clientsRes.status === 'fulfilled') {
@@ -623,6 +658,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       console.warn('Backend sync failed for addCoachNote:', err);
     }
   };
+
+  const reassignClientCoach = useCallback(async (clientId: string, coachId: string, reason?: string): Promise<boolean> => {
+    try {
+      const updated = await clientsApi.reassignCoach(clientId, coachId, reason);
+      if (updated && updated.id) {
+        setClients(prev => prev.map(c => c.id === clientId ? updated : c));
+        showToast(`Speaker reassigned successfully.`);
+        return true;
+      }
+      return false;
+    } catch (err: any) {
+      showToast(err?.message || 'Failed to reassign speaker.');
+      return false;
+    }
+  }, [showToast]);
+
+  const addAdjudicationNote = useCallback(async (clientId: string, note: string, rubricCategory?: string, rating?: number): Promise<boolean> => {
+    try {
+      const updated = await clientsApi.addAdjudicationNote(clientId, note, rubricCategory, rating);
+      if (updated && updated.id) {
+        setClients(prev => prev.map(c => c.id === clientId ? updated : c));
+        showToast(`Panel adjudication feedback recorded.`);
+        return true;
+      }
+      return false;
+    } catch (err: any) {
+      showToast(err?.message || 'Failed to record adjudication note.');
+      return false;
+    }
+  }, [showToast]);
+
 
   const addExercise = async (exerciseData: Omit<Exercise, 'id'>) => {
     const tempId = `ex-${Date.now()}`;
@@ -1049,6 +1115,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const completeOnboarding = useCallback(async (data: SpeakerOnboardingData): Promise<{ success: boolean; error?: string }> => {
+    const coachRefToUse = data.coachRef || referredCoach || undefined;
+
     // Determine program assignment based on goal & branch
     let programId = 'prog-1';
     let programName = '8-Week Championship Debate Masterclass';
@@ -1065,8 +1133,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     // Register or sync client in Coach OS
-    const newClientEntry: Client = {
+    const newClientEntry: Client & { coachRef?: string } = {
       id: `client-${Date.now()}`,
+      coachRef: coachRefToUse,
       name: data.fullName,
       avatar: '',
       email: data.email,
@@ -1133,8 +1202,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       const resolvedClient: Client = {
         ...newClientEntry,
-        id: persisted.id
+        id: persisted.id,
+        coachId: persisted.coachId,
+        referralCode: persisted.referralCode,
+        adjudicatorNotes: persisted.adjudicatorNotes || []
       };
+
 
       // 1. Update in-memory roster with verified server record
       setClients(prev => [resolvedClient, ...prev.filter(c => c.email !== data.email && c.id !== resolvedClient.id)]);
@@ -1353,7 +1426,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         completeOnboarding,
         loginSpeaker,
         loginWithGoogle,
-        resetOnboarding
+        resetOnboarding,
+        coaches,
+        fetchCoaches,
+        referredCoach,
+        reassignClientCoach,
+        addAdjudicationNote
       }}
     >
       {children}

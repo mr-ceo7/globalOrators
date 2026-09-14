@@ -15,6 +15,7 @@ from app.routers.messages import router as messages_router
 from app.routers.activity import router as activity_router
 from app.routers.inquiries import router as inquiries_router
 from app.routers.webrtc import router as webrtc_router
+from app.routers.coaches import router as coaches_router
 
 __all__ = [
     "auth_router",
@@ -30,4 +31,6 @@ __all__ = [
     "activity_router",
     "inquiries_router",
     "webrtc_router",
+    "coaches_router",
 ]
+

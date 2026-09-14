@@ -103,4 +103,57 @@ describe('Speaker Curriculum Dynamic Resolver Tests', () => {
     expect(result.description).toContain('UN Environmental Assembly');
     expect(result.drillPrompt).toContain('Pan-African Climate Justice Advocacy');
   });
+
+  test('should prioritize database TrainingProgram as single source of truth when supplied', () => {
+    const profile: SpeakerOnboardingData = {
+      branch: 'Academy',
+      fullName: 'Kassim Musa',
+      email: 'kassim@example.com',
+      speakingGoal: 'Competitive Debate',
+      experienceLevel: 'Novice Speaker',
+      vocalBaselinePace: 140,
+      emotionalOpennessRating: 8,
+      selectedHabits: []
+    };
+
+    const mockProgram: any = {
+      id: 'prog-101',
+      title: 'Global Orators Executive Masterclass',
+      subtitle: 'Coach Custom Syllabus',
+      description: 'Handcrafted by Coach Arthur Vance for board leadership.',
+      difficulty: 'Advanced',
+      goal: 'Executive & Board Pitching',
+      durationWeeks: 12,
+      daysPerWeek: 3,
+      days: [
+        {
+          id: 'day-1',
+          dayNumber: 1,
+          name: 'Day 1: Boardroom Gravitas',
+          focus: 'Executive Cadence & Vocal Dominance',
+          estimatedDurationMin: 60,
+          assignmentNotes: 'Record a 90-second CEO opening address.',
+          exercises: [
+            {
+              id: 'ex-1',
+              exerciseId: 'drill-1',
+              exerciseName: 'Rapid Rebuttal Crucible',
+              primaryMuscle: 'Executive Pitching',
+              coachNotes: 'Hold silence for 3 full seconds before countering.',
+              sets: []
+            }
+          ]
+        }
+      ]
+    };
+
+    const result = resolveSpeakerCurriculum(profile, mockProgram);
+    expect(result.syllabusKicker).toBe('Coach Custom Syllabus');
+    expect(result.title).toBe('Global Orators Executive Masterclass');
+    expect(result.description).toBe('Handcrafted by Coach Arthur Vance for board leadership.');
+    expect(result.drillTitle).toBe('Rapid Rebuttal Crucible');
+    expect(result.drillPrompt).toBe('Hold silence for 3 full seconds before countering.');
+    expect(result.sessionTitle).toBe('Session: Day 1: Boardroom Gravitas');
+    expect(result.sessionDescription).toBe('Executive Cadence & Vocal Dominance');
+  });
 });

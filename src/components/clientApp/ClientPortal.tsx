@@ -79,9 +79,6 @@ export const ClientPortal: React.FC = () => {
     selectedHabits: []
   }, [activeSpeakerProfile]);
 
-  const isAcademy = profile.branch === 'Academy';
-  const curriculum = useMemo(() => resolveSpeakerCurriculum(profile), [profile]);
-
   // Match client and program
   const pairedClient = useMemo(() => {
     return clients.find(c => 
@@ -95,6 +92,10 @@ export const ClientPortal: React.FC = () => {
            programs.find(p => p.id === 'prog-exec-speaking-1') ||
            programs[0];
   }, [programs, pairedClient]);
+
+  const isAcademy = profile.branch === 'Academy';
+  const curriculum = useMemo(() => resolveSpeakerCurriculum(profile, execProgram), [profile, execProgram]);
+
 
   // True if speaker is on an Executive Public Speaking / Boardroom Pitching track
   const isExecutive = useMemo(() => {

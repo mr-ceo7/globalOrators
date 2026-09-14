@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   Users, 
   Search, 
@@ -30,15 +30,28 @@ export const ClientRoster: React.FC<{
     addClient, 
     selectedClientId, 
     setSelectedClientId, 
-    setActiveTab 
+    setActiveTab,
+    reassignClientCoach 
   } = useApp();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>('All');
   const [selectedGoalFilter, setSelectedGoalFilter] = useState<string>('All');
   const [selectedBranchFilter, setSelectedBranchFilter] = useState<'All' | 'Academy' | 'Foundation'>('All');
+  const [selectedIntakeFilter, setSelectedIntakeFilter] = useState<'all' | 'assigned' | 'unassigned'>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [viewingClientProfile, setViewingClientProfile] = useState<Client | null>(null);
+
+  const currentUser = useMemo(() => {
+    try {
+      const u = localStorage.getItem('globalorators_user') || localStorage.getItem('nubianfit_user');
+      return u ? JSON.parse(u) : null;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const unassignedCount = useMemo(() => clients.filter(c => !c.coachId).length, [clients]);
 
   // New Client Form State
   const [formName, setFormName] = useState('');
@@ -72,8 +85,13 @@ export const ClientRoster: React.FC<{
     const matchesStatus = selectedStatusFilter === 'All' || c.status === selectedStatusFilter;
     const matchesGoal = selectedGoalFilter === 'All' || c.goal === selectedGoalFilter;
     const matchesBranch = selectedBranchFilter === 'All' || (c.branch || 'Academy') === selectedBranchFilter;
-    return matchesSearch && matchesStatus && matchesGoal && matchesBranch;
+    const matchesIntake = 
+      selectedIntakeFilter === 'all' ? true :
+      selectedIntakeFilter === 'unassigned' ? !c.coachId :
+      Boolean(c.coachId);
+    return matchesSearch && matchesStatus && matchesGoal && matchesBranch && matchesIntake;
   });
+
 
   const handleCreateClient = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -177,15 +195,15 @@ export const ClientRoster: React.FC<{
         <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
           {[
             { id: 'All', label: 'All Tracks' },
-            { id: 'Academy', label: 'Academy 🎓' },
-            { id: 'Foundation', label: 'Foundation 💖' }
+            { id: 'Academy', label: 'Academy' },
+            { id: 'Foundation', label: 'Foundation' }
           ].map((b) => (
             <button
               key={b.id}
               onClick={() => setSelectedBranchFilter(b.id as any)}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+              className={`px-2.5 py-1 rounded-lg text-xs font-mono uppercase tracking-wider transition-all ${
                 selectedBranchFilter === b.id
-                  ? 'bg-emerald-500 text-slate-950 shadow-sm'
+                  ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -193,6 +211,28 @@ export const ClientRoster: React.FC<{
             </button>
           ))}
         </div>
+
+        {/* Intake Triage Filter Tabs */}
+        <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+          {[
+            { id: 'all', label: 'All' },
+            { id: 'assigned', label: 'Roster' },
+            { id: 'unassigned', label: `Triage (${unassignedCount})` }
+          ].map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setSelectedIntakeFilter(item.id as any)}
+              className={`px-2.5 py-1 rounded-lg text-xs font-mono uppercase tracking-wider transition-all ${
+                selectedIntakeFilter === item.id
+                  ? 'bg-slate-800 text-amber-300 border border-amber-500/40 font-bold'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+
 
         {/* Status Filter Tabs */}
         <div className="flex flex-wrap items-center gap-1.5">
@@ -278,11 +318,32 @@ export const ClientRoster: React.FC<{
                               </div>
                             )}
                             <div>
-                              <div className="font-bold text-white group-hover:text-emerald-400 transition-colors">
-                                {client.name}
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-white group-hover:text-emerald-400 transition-colors">
+                                  {client.name}
+                                </span>
+                                {!client.coachId && (
+                                  <span className="text-[9px] font-mono tracking-widest uppercase px-1.5 py-0.5 rounded border border-amber-500/40 text-amber-300 bg-amber-950/40">
+                                    Triage
+                                  </span>
+                                )}
                               </div>
-                              <div className="text-[11px] text-slate-400">{client.email}</div>
+                              <div className="text-[11px] text-slate-400 flex items-center gap-2">
+                                <span>{client.email}</span>
+                                {!client.coachId && currentUser?.id && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      reassignClientCoach(client.id, currentUser.id, 'Claimed by coach from intake pool');
+                                    }}
+                                    className="text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/40 transition-colors cursor-pointer"
+                                  >
+                                    Claim
+                                  </button>
+                                )}
+                              </div>
                             </div>
+
                           </div>
                         </td>
 
@@ -403,11 +464,18 @@ export const ClientRoster: React.FC<{
                       </div>
                     )}
                     <div>
-                      <h3 className="font-bold text-white text-sm group-hover:text-emerald-400 transition-colors">
-                        {client.name}
-                      </h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-white text-sm group-hover:text-emerald-400 transition-colors">
+                          {client.name}
+                        </h3>
+                        {!client.coachId && (
+                          <span className="text-[9px] font-mono tracking-widest uppercase px-1.5 py-0.5 rounded border border-amber-500/40 text-amber-300 bg-amber-950/40">
+                            Triage
+                          </span>
+                        )}
+                      </div>
                       <div className="text-[11px] text-slate-400">{client.email}</div>
-                      <div className="mt-1">
+                      <div className="mt-1 flex items-center gap-1.5 flex-wrap">
                         <span className={`text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded ${
                           client.branch === 'Foundation'
                             ? 'bg-teal-500/15 text-teal-300 border border-teal-500/30'
@@ -415,8 +483,20 @@ export const ClientRoster: React.FC<{
                         }`}>
                           {client.branch || 'Academy'} Track
                         </span>
+                        {!client.coachId && currentUser?.id && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              reassignClientCoach(client.id, currentUser.id, 'Claimed by coach from intake pool');
+                            }}
+                            className="text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/40 transition-colors cursor-pointer"
+                          >
+                            Claim
+                          </button>
+                        )}
                       </div>
                     </div>
+
                   </div>
                   {getStatusBadge(client.status)}
                 </div>

@@ -14,7 +14,14 @@ from app.dependencies import get_db, get_current_user, get_optional_user, requir
 from app.models.client import Client
 from app.models.activity import ActivityFeedItem
 from app.models.user import User
-from app.schemas.client import ClientCreate, ClientUpdate, ClientResponse, AddCoachNoteRequest
+from app.schemas.client import (
+    ClientCreate, 
+    ClientUpdate, 
+    ClientResponse, 
+    AddCoachNoteRequest,
+    ReassignCoachRequest,
+    AddAdjudicationNoteRequest
+)
 from app.rate_limiter import rate_limit
 
 router = APIRouter(prefix="/clients", tags=["Clients"])
@@ -24,25 +31,36 @@ router = APIRouter(prefix="/clients", tags=["Clients"])
 async def list_clients(
     status_filter: Optional[str] = Query(None, alias="status"),
     search: Optional[str] = None,
+    intake: Optional[str] = Query(None, description="'unassigned' for triage pool, 'assigned' for active coach rosters"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """List clients with Strict Coach Isolation. Coaches only see their own roster (head coach also sees unassigned seed demo data)."""
+    """List clients with Strict Coach Isolation, unassigned intake pool, and speaker privacy."""
     query = select(Client)
     
-    # Strict Coach Isolation
+    # Strict Coach Isolation & Intake Triage Pool
     if current_user.role == "coach":
         is_default_coach = (
             current_user.email.lower() == settings.DEFAULT_COACH_EMAIL.lower() 
             or current_user.id == "coach-1"
         )
-        if is_default_coach:
-            query = query.where(or_(Client.coach_id == current_user.id, Client.coach_id.is_(None)))
+        if intake == "unassigned":
+            # Any coach can view the unassigned triage pool to claim or review applicants
+            query = query.where(Client.coach_id.is_(None))
+        elif intake == "assigned":
+            if is_default_coach:
+                query = query.where(Client.coach_id.is_not(None))
+            else:
+                query = query.where(Client.coach_id == current_user.id)
         else:
-            query = query.where(Client.coach_id == current_user.id)
+            if is_default_coach:
+                query = query.where(or_(Client.coach_id == current_user.id, Client.coach_id.is_(None)))
+            else:
+                query = query.where(Client.coach_id == current_user.id)
     else:
         # Speaker isolation
         query = query.where(Client.email.ilike(current_user.email))
+
     
     if status_filter:
         query = query.where(Client.status == status_filter)
@@ -225,14 +243,40 @@ async def create_client(
 
     client_id = f"client-{int(time.time() * 1000)}"
     client_dict = client_in.model_dump()
+    coach_ref = client_dict.pop("coach_ref", None)
     
     # Tag client with the creating coach's ID for strict coach isolation
     if user and user.role == "coach":
         client_dict["coach_id"] = user.id
     else:
-        client_dict["coach_id"] = "coach-1"  # Public registrations routed to default head coach
-        client_dict["custom_coach_notes"] = []
+        assigned_coach_id = None
+        referral_audit_note = None
+        if coach_ref and coach_ref.strip():
+            clean_ref = coach_ref.strip()
+            coach_match = await db.execute(
+                select(User).where(
+                    User.role == "coach",
+                    or_(
+                        User.id == clean_ref,
+                        User.email.ilike(clean_ref),
+                        User.full_name.ilike(f"%{clean_ref}%")
+                    )
+                )
+            )
+            matched_coach = coach_match.scalars().first()
+            if matched_coach:
+                assigned_coach_id = matched_coach.id
+                client_dict["referral_code"] = matched_coach.id
+                referral_audit_note = f"Onboarded via coach referral ({matched_coach.full_name}). Assigned to coach {matched_coach.id}."
+            else:
+                client_dict["referral_code"] = clean_ref
+                referral_audit_note = f"Applicant entered referral code '{clean_ref}' (unmatched coach). Assigned to intake triage pool."
+        
+        client_dict["coach_id"] = assigned_coach_id
         client_dict["status"] = "Active"
+        if not referral_audit_note:
+            referral_audit_note = "Public intake applicant. Assigned to unassigned faculty triage pool."
+        client_dict["custom_coach_notes"] = [referral_audit_note]
 
     new_client = Client(
         id=client_id,
@@ -350,6 +394,127 @@ async def add_coach_note(
     notes.insert(0, note_req.note)
     client.custom_coach_notes = notes
     
+    await db.commit()
+    await db.refresh(client)
+    return client
+
+
+@router.patch("/{client_id}/reassign-coach", response_model=ClientResponse)
+async def reassign_client_coach(
+    client_id: str,
+    req: ReassignCoachRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_coach)
+):
+    """Reassign a speaker to another coach (Head Coach or currently assigned coach)."""
+    result = await db.execute(select(Client).where(Client.id == client_id))
+    client = result.scalar_one_or_none()
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+
+    is_default_coach = (
+        current_user.email.lower() == settings.DEFAULT_COACH_EMAIL.lower() 
+        or current_user.id == "coach-1"
+    )
+    # Only head coach, unassigned intake claim, or currently assigned coach can reassign
+    if not is_default_coach and client.coach_id and client.coach_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied: only the assigned coach or Head Coach can reassign this speaker"
+        )
+
+    # Validate target coach exists
+    target_coach_res = await db.execute(
+        select(User).where(User.id == req.coach_id, User.role == "coach", User.is_active == True)
+    )
+    target_coach = target_coach_res.scalar_one_or_none()
+    if not target_coach:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Target coach '{req.coach_id}' not found or inactive"
+        )
+
+    prev_coach_id = client.coach_id or "Unassigned Intake"
+    client.coach_id = target_coach.id
+
+    # Append audit trail note
+    import datetime
+    now_str = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    audit_note = (
+        f"[{now_str}] Reassigned from {prev_coach_id} to Coach {target_coach.full_name} ({target_coach.id}) "
+        f"by Coach {current_user.full_name}. Reason: {req.reason or 'Direct administrative delegation'}"
+    )
+    notes = list(client.custom_coach_notes or [])
+    notes.insert(0, audit_note)
+    client.custom_coach_notes = notes
+
+    # Activity feed entry
+    activity = ActivityFeedItem(
+        id=f"act-{int(time.time() * 1000)}",
+        coach_id=target_coach.id,
+        type="check_in_submitted",
+        client_id=client.id,
+        client_name=client.name,
+        client_avatar=client.avatar,
+        title="Speaker Reassigned",
+        description=f"Speaker {client.name} reassigned to Coach {target_coach.full_name}",
+        timestamp="Just now",
+        metadata_json={"previous_coach": prev_coach_id, "new_coach": target_coach.id, "reason": req.reason}
+    )
+    db.add(activity)
+
+    await db.commit()
+    await db.refresh(client)
+    return client
+
+
+@router.post("/{client_id}/adjudication-notes", response_model=ClientResponse)
+async def add_adjudication_note(
+    client_id: str,
+    req: AddAdjudicationNoteRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_coach)
+):
+    """Add a panel adjudication / evaluator note (Open to any accredited coach / panel judge)."""
+    result = await db.execute(select(Client).where(Client.id == client_id))
+    client = result.scalar_one_or_none()
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+
+    import datetime
+    now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    note_id = f"adj-{int(time.time() * 1000)}"
+
+    note_entry = {
+        "id": note_id,
+        "coachId": current_user.id,
+        "coachName": current_user.full_name,
+        "coachAvatar": current_user.avatar or "",
+        "timestamp": now_iso,
+        "note": req.note.strip(),
+        "rubricCategory": req.rubric_category or "General Adjudication",
+        "rating": req.rating,
+    }
+
+    current_notes = list(client.adjudicator_notes or [])
+    current_notes.insert(0, note_entry)
+    client.adjudicator_notes = current_notes
+
+    # Also log activity
+    activity = ActivityFeedItem(
+        id=f"act-{int(time.time() * 1000)}",
+        coach_id=current_user.id,
+        type="check_in_submitted",
+        client_id=client.id,
+        client_name=client.name,
+        client_avatar=client.avatar,
+        title="Panel Adjudication Feedback",
+        description=f"Coach {current_user.full_name} left evaluation on {req.rubric_category or 'Performance'}",
+        timestamp="Just now",
+        metadata_json={"category": req.rubric_category, "rating": req.rating}
+    )
+    db.add(activity)
+
     await db.commit()
     await db.refresh(client)
     return client
