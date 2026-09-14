@@ -147,7 +147,7 @@ async def google_auth(req: GoogleAuthRequest, db: AsyncSession = Depends(get_db)
 
     email_clean = email.strip().lower()
     full_name = name or email_clean.split("@")[0].title()
-    avatar_url = picture or "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80"
+    avatar_url = picture or ""
 
     result = await db.execute(select(User).where(User.email == email_clean))
     user = result.scalar_one_or_none()
@@ -185,27 +185,6 @@ async def google_auth(req: GoogleAuthRequest, db: AsyncSession = Depends(get_db)
         if updated:
             await db.commit()
             await db.refresh(user)
-
-    # If speaker, ensure client record exists in roster
-    if user.role == "speaker":
-        client_res = await db.execute(select(Client).where(Client.email == email_clean))
-        client = client_res.scalar_one_or_none()
-        if not client:
-            new_client = Client(
-                id=f"client-{uuid.uuid4().hex[:8]}",
-                name=user.full_name,
-                email=user.email,
-                avatar=user.avatar,
-                status="Active",
-                compliance_rate=100,
-                workouts_completed=0,
-                current_program_name="Executive Public Speaking & Presentation Skills",
-                goal="Executive & Board Pitching",
-                start_date=date.today().isoformat(),
-                custom_coach_notes=["Executive orator onboarded via Google Authentication."]
-            )
-            db.add(new_client)
-            await db.commit()
 
     token = create_access_token(user.id)
     return TokenResponse(

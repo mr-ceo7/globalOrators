@@ -1078,39 +1078,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const toggleHabitCompletion = async (clientId: string, date: string, habitId: string) => {
-    setHabitLogs(prev => {
-      const existingLog = prev.find(l => l.clientId === clientId && l.date === date);
-      if (existingLog) {
-        return prev.map(log => {
-          if (log.id === existingLog.id) {
-            return {
-              ...log,
-              habits: log.habits.map(h => h.habitId === habitId ? { ...h, completed: !h.completed } : h)
-            };
-          }
-          return log;
-        });
-      } else {
-        const newLog: ClientDailyHabitLog = {
-          id: `hl-${Date.now()}`,
-          clientId,
-          date,
-          habits: [
-            { habitId: 'h-1', title: 'Vocal Hydration (Warm Lemon Water)', completed: habitId === 'h-1', currentValue: '2.5', targetValue: '2.5', unit: 'Liters' },
-            { habitId: 'h-2', title: 'Diaphragmatic Breathwork', completed: habitId === 'h-2', currentValue: '15', targetValue: '15', unit: 'Minutes' },
-            { habitId: 'h-3', title: 'Editorial & Current Affairs Reading', completed: habitId === 'h-3', currentValue: '30', targetValue: '20', unit: 'Minutes' },
-            { habitId: 'h-4', title: 'Vocal Cord Rest & Sleep', completed: habitId === 'h-4', currentValue: '8.0', targetValue: '7.5+', unit: 'Hours' },
-            { habitId: 'h-5', title: 'Tongue Twisters & Articulation', completed: habitId === 'h-5', currentValue: '10', targetValue: '10', unit: 'Minutes' }
-          ]
-        };
-        return [newLog, ...prev];
-      }
-    });
-
     try {
-      await habitsApi.toggle(clientId, date, habitId);
+      const updatedLog = await habitsApi.toggle(clientId, date, habitId);
+      if (updatedLog) {
+        setHabitLogs(prev => {
+          const exists = prev.some(l => l.id === updatedLog.id || (l.clientId === updatedLog.clientId && l.date === updatedLog.date));
+          return exists
+            ? prev.map(l => (l.id === updatedLog.id || (l.clientId === updatedLog.clientId && l.date === updatedLog.date)) ? updatedLog : l)
+            : [updatedLog, ...prev];
+        });
+      }
     } catch (err) {
-      console.warn('Backend sync failed for toggleHabitCompletion:', err);
+      console.error('Failed to sync habit toggle to server:', err);
+      showToast('Unable to update habit. Server could not be reached.');
     }
   };
 
@@ -1303,65 +1283,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           showToast(`Welcome back, Coach ${res.user.full_name}.`);
           return { success: true, user: res.user };
         } else {
-          // Look up real client record created by backend auth router
+          // Look up real client record created in backend
           let matchedClient: Client | null = null;
           try {
             matchedClient = await clientsApi.lookup(res.user.email);
           } catch {
-            // fallback to in-memory if lookup fails
+            // lookup network issue
           }
           if (!matchedClient) {
             matchedClient = clients.find(c => c.email && c.email.toLowerCase() === res.user.email.toLowerCase()) || null;
           }
-          if (!matchedClient) {
-            matchedClient = {
-              id: res.user.id || `client-${Date.now()}`,
-              name: res.user.full_name,
-              email: res.user.email,
-              avatar: res.user.avatar || '',
-              status: 'Active',
-              branch: 'Academy',
-              goal: 'Executive & Board Pitching',
-              experienceLevel: 'Novice Speaker',
-              startDate: new Date().toISOString().split('T')[0],
-              complianceRate: 100,
-              workoutsCompleted: 0,
-              totalWorkoutsAssigned: 0,
-              lastActive: 'Just now',
-              startingWeightKg: 0,
-              currentWeightKg: 0,
-              targetWeightKg: 0,
-              heightCm: 0,
-              bodyFatPercentage: 0,
-              targetBodyFat: 0,
-              injuriesAndHealth: [],
-              customCoachNotes: [],
-              phone: '',
-              age: 20,
-              gender: 'Non-binary',
-              onboardingSurvey: {
-                gymAccess: 'General',
-                weeklyAvailabilityDays: 3,
-                dietaryRestrictions: 'None',
-                sleepAvgHours: 8,
-                stressLevel: 'Moderate',
-                favoriteExercises: '',
-                leastFavoriteExercises: ''
-              }
-            };
-            setClients(prev => [matchedClient!, ...prev]);
-          } else {
+
+          if (matchedClient) {
             setClients(prev => {
               const exists = prev.some(c => c.id === matchedClient!.id);
               return exists ? prev.map(c => c.id === matchedClient!.id ? matchedClient! : c) : [matchedClient!, ...prev];
             });
+            const profile = clientToSpeakerProfile(matchedClient);
+            setActiveSpeakerProfile(profile);
+            localStorage.setItem('globalorators_speaker_profile', JSON.stringify(profile));
+            setCurrentPortal('speaker_app');
+            showToast(`Welcome back, ${res.user.full_name}. Speaker Portal loaded.`);
+            return { success: true, user: res.user };
+          } else {
+            // Fail-closed against synthetic client creation (C4/H8 audit fix).
+            // Authenticated user has no domain client profile; route to Onboarding.
+            setActiveSpeakerProfile(null);
+            localStorage.removeItem('globalorators_speaker_profile');
+            setCurrentPortal('onboarding');
+            showToast(`Google identity verified. Please complete your speaker profile onboarding.`);
+            return { success: true, user: res.user };
           }
-          const profile = clientToSpeakerProfile(matchedClient);
-          setActiveSpeakerProfile(profile);
-          localStorage.setItem('globalorators_speaker_profile', JSON.stringify(profile));
-          setCurrentPortal('speaker_app');
-          showToast(`Welcome back, ${res.user.full_name}. Speaker Portal loaded.`);
-          return { success: true, user: res.user };
         }
       }
       return { success: false, error: 'Authentication failed. Please try again.' };

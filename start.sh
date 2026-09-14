@@ -55,9 +55,9 @@ if [ ! -d "backend/venv" ]; then
   ./backend/venv/bin/pip install -r backend/requirements.txt
 fi
 
-# Ensure database is seeded
-if [ ! -f "backend/nubianfit.db" ]; then
-  echo "Initializing and seeding database..."
+# Database initialization (seeding is explicit only)
+if [ "$1" = "--seed" ]; then
+  echo "Explicit seed requested: populating development fixtures..."
   ./backend/venv/bin/python backend/seed_data.py
 fi
 

@@ -160,10 +160,15 @@ const AppContent: React.FC = () => {
 };
 
 export default function App() {
+  const isVercelHost = typeof window !== 'undefined' && (
+    window.location.hostname.endsWith('.vercel.app') ||
+    Boolean(import.meta.env.VITE_VERCEL_ENV)
+  );
+
   return (
     <AppProvider>
       <AppContent />
-      <Analytics />
+      {isVercelHost && <Analytics />}
     </AppProvider>
   );
 }

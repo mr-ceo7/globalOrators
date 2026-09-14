@@ -109,6 +109,7 @@ describe('Speaker Curriculum Dynamic Resolver Tests', () => {
       branch: 'Academy',
       fullName: 'Kassim Musa',
       email: 'kassim@example.com',
+      missionFocus: '',
       speakingGoal: 'Competitive Debate',
       experienceLevel: 'Novice Speaker',
       vocalBaselinePace: 140,

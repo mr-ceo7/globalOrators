@@ -128,7 +128,7 @@ describe('Global Orators Landing Page & Features Tests', () => {
     const catharsisTab = screen.getByText('Catharsis & Voice Vault');
     fireEvent.click(catharsisTab);
 
-    expect(screen.getByText(/Private & Encrypted Expression Vault/i)).toBeInTheDocument();
+    expect(screen.getByText(/Private Expression Vault/i)).toBeInTheDocument();
   });
 
   test('should allow toggling theme on LandingPage between light and dark modes', async () => {

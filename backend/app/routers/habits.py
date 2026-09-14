@@ -151,20 +151,30 @@ async def toggle_habit(
     log = result.scalar_one_or_none()
     
     if not log:
-        # Create new log entry
+        # Create new log entry using speaker's selected habits or orator defaults
         log_id = f"habit-{int(time.time() * 1000)}"
-        new_habits = [
-            {"habitId": "h-1", "title": "Hit 180g+ Protein", "completed": False, "targetValue": "180", "unit": "g"},
-            {"habitId": "h-2", "title": "Drink 3.5L Water", "completed": False, "targetValue": "3.5", "unit": "L"},
-            {"habitId": "h-3", "title": "10,000 Steps", "completed": False, "targetValue": "10000", "unit": "steps"},
-            {"habitId": "h-4", "title": "8 Hours Sleep", "completed": False, "targetValue": "8", "unit": "hrs"},
-            {"habitId": "h-5", "title": "Post-Workout Mobility", "completed": False, "targetValue": "15", "unit": "min"}
-        ]
-        # Update target habit
-        for h in new_habits:
-            if h["habitId"] == req.habit_id:
-                h["completed"] = True
-                
+        survey = client.onboarding_survey or {}
+        selected_habits = survey.get("selectedHabits") or []
+        if selected_habits:
+            new_habits = [
+                {
+                    "habitId": f"h-{i+1}",
+                    "title": h_title,
+                    "completed": (req.habit_id == f"h-{i+1}" or req.habit_id == h_title),
+                    "targetValue": "1",
+                    "unit": "daily"
+                }
+                for i, h_title in enumerate(selected_habits)
+            ]
+        else:
+            new_habits = [
+                {"habitId": "h-1", "title": "Vocal Hydration (Warm Lemon Water)", "completed": (req.habit_id == "h-1" or req.habit_id == "Vocal Hydration (Warm Lemon Water)"), "targetValue": "2.5", "unit": "Liters"},
+                {"habitId": "h-2", "title": "Diaphragmatic Breathwork", "completed": (req.habit_id == "h-2" or req.habit_id == "Diaphragmatic Breathwork"), "targetValue": "15", "unit": "Minutes"},
+                {"habitId": "h-3", "title": "Editorial & Script Forensics", "completed": (req.habit_id == "h-3" or req.habit_id == "Editorial & Script Forensics"), "targetValue": "20", "unit": "Minutes"},
+                {"habitId": "h-4", "title": "Vocal Cadence & Articulation", "completed": (req.habit_id == "h-4" or req.habit_id == "Vocal Cadence & Articulation"), "targetValue": "10", "unit": "Minutes"},
+                {"habitId": "h-5", "title": "Vocal Cord Rest & Sleep", "completed": (req.habit_id == "h-5" or req.habit_id == "Vocal Cord Rest & Sleep"), "targetValue": "8", "unit": "Hours"}
+            ]
+
         log = ClientDailyHabitLog(
             id=log_id,
             client_id=req.client_id,
@@ -172,25 +182,28 @@ async def toggle_habit(
             habits=new_habits
         )
         db.add(log)
+        await db.commit()
+        await db.refresh(log)
     else:
         # Update existing habit
         habits = list(log.habits or [])
         found = False
         for h in habits:
-            if h.get("habitId") == req.habit_id:
+            if h.get("habitId") == req.habit_id or h.get("title") == req.habit_id:
                 h["completed"] = not h.get("completed", False)
                 found = True
                 break
         if not found:
             habits.append({
                 "habitId": req.habit_id,
-                "title": "Daily Habit",
+                "title": req.habit_id,
                 "completed": True,
                 "targetValue": "1",
-                "unit": "check"
+                "unit": "daily"
             })
         log.habits = habits
-        
-    await db.commit()
-    await db.refresh(log)
+        from sqlalchemy.orm.attributes import flag_modified
+        flag_modified(log, "habits")
+        await db.commit()
+        await db.refresh(log)
     return log

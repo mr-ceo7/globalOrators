@@ -22,9 +22,7 @@ export const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
   const [loading, setLoading] = useState(false);
   const [scriptLoaded, setScriptLoaded] = useState(false);
 
-  const googleClientId =
-    (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID ||
-    '664033502342-9sijfg71v3c0i0riah1hhhgdufalfvk5.apps.googleusercontent.com';
+  const googleClientId = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID || '';
 
   const handleCredentialResponse = async (response: { credential: string }) => {
     if (!response?.credential) return;
@@ -44,6 +42,7 @@ export const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
   };
 
   useEffect(() => {
+    if (!googleClientId) return;
     let checkInterval: any;
 
     const initGoogle = () => {
@@ -93,6 +92,14 @@ export const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
       if (checkInterval) clearInterval(checkInterval);
     };
   }, [googleClientId, role, text, enableOneTap]);
+
+  if (!googleClientId) {
+    return (
+      <div className="w-full py-2.5 px-4 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 font-sans text-xs text-center">
+        Google Sign-In is not configured.
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">

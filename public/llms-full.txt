@@ -1,0 +1,26 @@
+# Global Orators Project (GOP) — Full Documentation & Index
+
+## Overview
+Global Orators is an African-rooted speech, debate, and executive communication platform. It bridges high-stakes intellectual rigor with profound emotional sovereignty.
+
+## Branch Architectures
+
+### 1. Academy Track (Competitive Debate & Forensics)
+- Formats: British Parliamentary (BP), World Universities Debating Championship (WUDC), World Schools Debating Championship (WSDC).
+- Core Disciplines: Extension construction, burden-of-proof allocation, normative weighing, whip rebuttal mastery, dynamic POI (Points of Information) handling.
+- Target Metric: 135-145 WPM vocal cadence with razor-sharp argumentative structure.
+
+### 2. Foundation Track (Catharsis & Vocal Escapism)
+- Philosophy: Speaking as healing, reclaiming voice from patriarchal and colonial silence, authentic personal expression.
+- Core Disciplines: Breath support, diaphragmatic resonance, trauma-informed storytelling, emotional openness calibration.
+- Rehearsals: Private Catharsis Vault for expressive audio reflections.
+
+### 3. Executive Track (High-Stakes Boardroom & Keynote Oratory)
+- Philosophy: Sovereign executive presence, high-conviction decision-making, investor narrative structuring.
+- Core Disciplines: Bottom Line Up Front (BLUF) discipline, risk-adjusted defense, stakeholder alignment.
+- Rehearsals: Boardroom pitch simulation, executive pacing, concise delivery.
+
+## Technical Architecture
+- Frontend: Single Page Application with React 19, TypeScript, Tailwind CSS, Vite.
+- Backend: High-performance Python FastAPI service with SQLAlchemy async, SQLite/PostgreSQL, and WebSockets.
+- Security: Role-based authorization, PBKDF2 password hashing, strict multi-coach isolation, server-authoritative habit tracking, sanitized inputs.

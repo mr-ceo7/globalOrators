@@ -46,7 +46,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
                       navigate('/');
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }} 
-                    className="hover:text-slate-100 transition-colors"
+                    className="inline-flex items-center min-h-[24px] py-1 hover:text-slate-100 transition-colors"
                   >
                     Home
                   </a>
@@ -58,7 +58,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
                       e.preventDefault();
                       navigate('/about');
                     }} 
-                    className="hover:text-slate-100 transition-colors"
+                    className="inline-flex items-center min-h-[24px] py-1 hover:text-slate-100 transition-colors"
                   >
                     About
                   </a>
@@ -70,7 +70,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
                       e.preventDefault();
                       navigate('/academy');
                     }} 
-                    className="hover:text-slate-100 transition-colors"
+                    className="inline-flex items-center min-h-[24px] py-1 hover:text-slate-100 transition-colors"
                   >
                     Academy
                   </a>
@@ -82,7 +82,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
                       e.preventDefault();
                       navigate('/foundation');
                     }} 
-                    className="hover:text-slate-100 transition-colors"
+                    className="inline-flex items-center min-h-[24px] py-1 hover:text-slate-100 transition-colors"
                   >
                     Foundation
                   </a>
@@ -94,7 +94,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
                       e.preventDefault();
                       navigate('/escapism');
                     }} 
-                    className="hover:text-slate-100 transition-colors"
+                    className="inline-flex items-center min-h-[24px] py-1 hover:text-slate-100 transition-colors"
                   >
                     Escapism
                   </a>
@@ -106,7 +106,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
                       e.preventDefault();
                       navigate('/tournaments');
                     }} 
-                    className="hover:text-slate-100 transition-colors"
+                    className="inline-flex items-center min-h-[24px] py-1 hover:text-slate-100 transition-colors"
                   >
                     Tournaments
                   </a>
@@ -118,7 +118,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
                       e.preventDefault();
                       navigate('/testimonials');
                     }} 
-                    className="hover:text-slate-100 transition-colors"
+                    className="inline-flex items-center min-h-[24px] py-1 hover:text-slate-100 transition-colors"
                   >
                     Testimonials
                   </a>
@@ -139,7 +139,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
                       navigate('/');
                       setCurrentPortal('landing');
                     }} 
-                    className="hover:text-slate-100 transition-colors cursor-pointer"
+                    className="inline-flex items-center min-h-[24px] py-1 hover:text-slate-100 transition-colors cursor-pointer"
                   >
                     Main Forum Home
                   </a>
@@ -152,7 +152,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
                       navigate('/speaker');
                       setCurrentPortal('speaker_app');
                     }} 
-                    className="hover:text-slate-100 transition-colors cursor-pointer"
+                    className="inline-flex items-center min-h-[24px] py-1 hover:text-slate-100 transition-colors cursor-pointer"
                   >
                     Speaker Practice Studio
                   </a>
@@ -165,7 +165,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
                       navigate('/coach');
                       setCurrentPortal('coach_os');
                     }} 
-                    className="hover:text-slate-100 transition-colors cursor-pointer"
+                    className="inline-flex items-center min-h-[24px] py-1 hover:text-slate-100 transition-colors cursor-pointer"
                   >
                     Coach OS Portal
                   </a>
@@ -177,7 +177,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
                       e.preventDefault();
                       onStartOnboarding();
                     }} 
-                    className="hover:text-slate-100 transition-colors cursor-pointer"
+                    className="inline-flex items-center min-h-[24px] py-1 hover:text-slate-100 transition-colors cursor-pointer"
                   >
                     Speaker Onboarding
                   </a>
@@ -191,17 +191,17 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
               </div>
               <ul className="space-y-2 text-[11px] text-slate-400">
                 <li>
-                  <button onClick={() => onOpenPartner('Foundation')} className="hover:text-slate-100 transition-colors cursor-pointer">
+                  <button onClick={() => onOpenPartner('Foundation')} className="inline-flex items-center min-h-[24px] py-1 hover:text-slate-100 transition-colors cursor-pointer">
                     Grant Inquiries
                   </button>
                 </li>
                 <li>
-                  <button onClick={() => onOpenPartner('Academy')} className="hover:text-slate-100 transition-colors cursor-pointer">
+                  <button onClick={() => onOpenPartner('Academy')} className="inline-flex items-center min-h-[24px] py-1 hover:text-slate-100 transition-colors cursor-pointer">
                     School Partnerships
                   </button>
                 </li>
                 <li>
-                  <a href="mailto:director@globalorators.org" className="hover:text-slate-100 transition-colors">
+                  <a href="mailto:director@globalorators.org" className="inline-flex items-center min-h-[24px] py-1 hover:text-slate-100 transition-colors">
                     Contact Governance
                   </a>
                 </li>

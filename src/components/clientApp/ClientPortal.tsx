@@ -57,7 +57,8 @@ export const ClientPortal: React.FC = () => {
     messages,
     sendMessage,
     habitLogs,
-    toggleHabitCompletion
+    toggleHabitCompletion,
+    metrics
   } = useApp();
 
   const [isLiveRehearsalOpen, setIsLiveRehearsalOpen] = useState(false);
@@ -111,43 +112,33 @@ export const ClientPortal: React.FC = () => {
     return false;
   }, [profile, pairedClient]);
 
-  // Derived Dynamic Roadmap Sessions (Tuesdays and Thursdays, 90 mins)
+  // Real Persisted Roadmap Sessions from Database
   const roadmapSessions = useMemo(() => {
     if (pairedClient) {
-      const matchedWorkouts = scheduledWorkouts.filter(w => w.clientId === pairedClient.id);
-      if (matchedWorkouts.length > 0) {
-        return matchedWorkouts;
-      }
+      return scheduledWorkouts.filter(w => w.clientId === pairedClient.id);
     }
+    return [];
+  }, [pairedClient, scheduledWorkouts]);
 
-    if (!execProgram?.days) return [];
+  // Real Persisted Rehearsal Metrics from Database
+  const speakerMetrics = useMemo(() => {
+    if (!pairedClient) return [];
+    return metrics
+      .filter(m => m.clientId === pairedClient.id)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [pairedClient, metrics]);
 
-    return execProgram.days.map((day, idx) => {
-      const weekNumber = Math.floor(idx / 2) + 1;
-      const isTue = idx % 2 === 0;
-      const dayLabel = isTue ? 'Tuesday' : 'Thursday';
+  // Real Scored Panel Adjudications & Debriefs from Database
+  const speakerEvaluations = useMemo(() => {
+    return pairedClient?.adjudicatorNotes || [];
+  }, [pairedClient?.adjudicatorNotes]);
 
-      return {
-        id: `sched-roadmap-${idx + 1}`,
-        clientId: pairedClient?.id || 'client-active',
-        clientName: profile.fullName,
-        clientAvatar: pairedClient?.avatar || '',
-        programId: execProgram.id,
-        programName: execProgram.title,
-        workoutDayId: day.id,
-        workoutTitle: day.name,
-        date: `${dayLabel} · Week ${weekNumber}`,
-        time: '10:00 AM - 11:30 AM (90 Mins)',
-        status: (idx === 0 ? 'Confirmed' : 'Scheduled') as 'Scheduled' | 'Confirmed',
-        durationMin: day.durationMinutes || 90,
-        objectives: day.objectives || [],
-        phases: day.phases || [],
-        assignmentNotes: day.assignmentNotes || '',
-        chamberRoomName: `chamber-${(profile.fullName || 'executive').toLowerCase().replace(/[^a-z0-9]/g, '-')}-round-${idx + 1}`,
-        exercises: day.exercises || []
-      } as ScheduledWorkout;
-    });
-  }, [pairedClient, scheduledWorkouts, execProgram, profile.fullName]);
+  // Derived Average Pacing from Persisted Metrics
+  const avgWpm = useMemo(() => {
+    if (speakerMetrics.length === 0) return null;
+    const sum = speakerMetrics.reduce((acc, m) => acc + (m.weight || 0), 0);
+    return Math.round(sum / speakerMetrics.length);
+  }, [speakerMetrics]);
 
   const downloadSessionIcs = (session: ScheduledWorkout) => {
     const title = session.workoutTitle;
@@ -202,28 +193,37 @@ export const ClientPortal: React.FC = () => {
     };
   }, [isProfileMenuOpen]);
 
-  // Simulated Voice Recorder State
+  // Voice Recorder State (Real MediaRecorder)
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [recordingCompleted, setRecordingCompleted] = useState(false);
-  const [recordedFeedback, setRecordedFeedback] = useState<{
-    wpm: number;
-    clarity: number;
-    fillers: number;
-    catharsisScore: number;
-  } | null>(null);
+  const [recordedAudioUrl, setRecordedAudioUrl] = useState<string | null>(null);
+  const [recordingError, setRecordingError] = useState<string | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   // Journal entries for Catharsis Vault (Foundation Track)
+  const storageKeyJournal = useMemo(() => `go_journal_${profile.email || pairedClient?.id || 'speaker'}`, [profile.email, pairedClient?.id]);
+  const storageKeyExec = useMemo(() => `go_exec_${profile.email || pairedClient?.id || 'speaker'}`, [profile.email, pairedClient?.id]);
+
   const [journalText, setJournalText] = useState('');
   const [journalFeelBefore, setJournalFeelBefore] = useState('Anxious & Suppressed');
+  const [journalFeelAfter, setJournalFeelAfter] = useState('Relieved, Grounded & Sovereign');
   const [journalEntries, setJournalEntries] = useState<{
     id: string;
     date: string;
     text: string;
     feelBefore: string;
     feelAfter: string;
-    audioLength: string;
-  }[]>([]);
+  }[]>(() => {
+    try {
+      const saved = localStorage.getItem(`go_journal_${profile.email || pairedClient?.id || 'speaker'}`);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   // Executive Speech Vault State (Executive Track)
   const [execArena, setExecArena] = useState('Series A / Growth Capital Venture Pitch');
@@ -234,14 +234,21 @@ export const ClientPortal: React.FC = () => {
     arena: string;
     summary: string;
     wpm: number;
-    blufScore: number;
     coachStatus: string;
-  }[]>([]);
+  }[]>(() => {
+    try {
+      const saved = localStorage.getItem(`go_exec_${profile.email || pairedClient?.id || 'speaker'}`);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   // Daily Habits State in Client Portal using backend via context
   const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
   const currentClientHabitLog = useMemo(() => {
-    return habitLogs.find(l => l.clientId === (pairedClient?.id || 'client-1') && l.date === todayStr);
+    if (!pairedClient?.id) return null;
+    return habitLogs.find(l => l.clientId === pairedClient.id && l.date === todayStr);
   }, [habitLogs, pairedClient?.id, todayStr]);
 
   const habitsStatus = useMemo(() => {
@@ -278,68 +285,138 @@ export const ClientPortal: React.FC = () => {
     return chatMessages;
   }, [messages, pairedClient, chatMessages]);
 
-  // Toggle habit check via Backend
+  // Toggle habit check via Backend (server-authoritative)
   const toggleHabit = (title: string) => {
-    const clientIdToUse = pairedClient?.id || 'client-1';
+    if (!pairedClient?.id) {
+      showToast('No active speaker profile found to record habits.');
+      return;
+    }
     const todayStr = new Date().toISOString().split('T')[0];
-    
-    // Attempt to map title back to habitId if available, else use a hash or just title as ID 
-    // In AppContext, habit ID is needed but it accepts anything. Let's pass title.
-    toggleHabitCompletion(clientIdToUse, todayStr, title);
-    showToast(`Toggled habit status for: ${title}`);
+    toggleHabitCompletion(pairedClient.id, todayStr, title);
   };
 
-  // Recording Simulation Handlers
-  const handleStartRecording = () => {
-    setIsRecording(true);
+  // Timer and cleanup effects for MediaRecorder
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval> | undefined;
+    if (isRecording) {
+      interval = setInterval(() => {
+        setRecordingSeconds(s => s + 1);
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isRecording]);
+
+  useEffect(() => {
+    return () => {
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      }
+      if (recordedAudioUrl) {
+        URL.revokeObjectURL(recordedAudioUrl);
+      }
+    };
+  }, [recordedAudioUrl]);
+
+  // Recording Handlers (Real MediaRecorder API)
+  const handleStartRecording = async () => {
+    setRecordingError(null);
+    if (recordedAudioUrl) {
+      URL.revokeObjectURL(recordedAudioUrl);
+      setRecordedAudioUrl(null);
+    }
     setRecordingCompleted(false);
-    setRecordedFeedback(null);
+
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setRecordingError('Microphone recording is not supported in this browser environment.');
+        return;
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
+      audioChunksRef.current = [];
+
+      const recorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = recorder;
+
+      recorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      recorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const url = URL.createObjectURL(audioBlob);
+        setRecordedAudioUrl(url);
+        setRecordingCompleted(true);
+      };
+
+      recorder.start(250);
+      setIsRecording(true);
+      setRecordingSeconds(0);
+    } catch (err) {
+      console.warn('Microphone access denied or unavailable:', err);
+      setRecordingError('Microphone permission required for rehearsal recording. Please allow access in browser settings.');
+    }
   };
 
   const handleStopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current = null;
+    }
     setIsRecording(false);
-    setRecordingCompleted(true);
-    setRecordedFeedback(null);
-    showToast('Rehearsal processed! Analysis coming soon.');
+    showToast('Rehearsal captured. Audio playback ready for self-evaluation.');
   };
 
-  // Add Journal Entry
+  // Add Journal Entry with persistent storage
   const handleSaveJournal = (e: React.FormEvent) => {
     e.preventDefault();
     if (!journalText.trim()) return;
 
     const newEntry = {
       id: `j-${Date.now()}`,
-      date: 'Just now',
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
       text: journalText.trim(),
       feelBefore: journalFeelBefore,
-      feelAfter: 'Relieved, Grounded & Sovereign',
-      audioLength: '2 min 45 sec'
+      feelAfter: journalFeelAfter
     };
 
-    setJournalEntries([newEntry, ...journalEntries]);
+    const updated = [newEntry, ...journalEntries];
+    setJournalEntries(updated);
+    try {
+      localStorage.setItem(storageKeyJournal, JSON.stringify(updated));
+    } catch {}
     setJournalText('');
-    showToast('Reflection logged in your private Catharsis Vault.');
+    showToast('Reflection saved to your private workspace.');
   };
 
-  // Add Executive Simulation Entry
+  // Add Executive Simulation Entry with persistent storage
   const handleSaveExecSimulation = (e: React.FormEvent) => {
     e.preventDefault();
     if (!execSimulationText.trim()) return;
 
     const newEntry = {
       id: `exec-${Date.now()}`,
-      date: 'Just now',
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
       arena: execArena,
       summary: execSimulationText.trim(),
-      wpm: profile.vocalBaselinePace || 138,
-      blufScore: 95,
-      coachStatus: 'Queued for Coach Qassim Review'
+      wpm: profile.vocalBaselinePace || 135,
+      coachStatus: 'Drafted'
     };
 
-    setExecEntries([newEntry, ...execEntries]);
+    const updated = [newEntry, ...execEntries];
+    setExecEntries(updated);
+    try {
+      localStorage.setItem(storageKeyExec, JSON.stringify(updated));
+    } catch {}
     setExecSimulationText('');
-    showToast('Simulation logged in your Executive Speech Vault.');
+    showToast('Rehearsal note saved in your workspace.');
   };
 
   // Send message to coach
@@ -592,7 +669,7 @@ export const ClientPortal: React.FC = () => {
                     </span>
                     <span className="text-xs font-mono text-slate-400 flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5 text-slate-500" />
-                      <span>42 min estimated duration</span>
+                      <span>{isExecutive ? '60 min executive protocol' : '45 min chamber drill'}</span>
                     </span>
                   </div>
 
@@ -616,41 +693,35 @@ export const ClientPortal: React.FC = () => {
                       </div>
                       <div className="flex items-start gap-2 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/80">
                         <CheckCircle2 className="w-4 h-4 text-[#C89630] shrink-0 mt-0.5" />
-                        <span>{isExecutive ? 'Hold deliberate 2-second pauses before strategic claims' : 'Engage deepest opposing mechanism with 2-point refutation'}</span>
+                        <span>{isExecutive ? 'Structure 3 quantified proof-points with explicit risk mitigations' : 'Anticipate and neutralize deepest opposition comparative'}</span>
                       </div>
                       <div className="flex items-start gap-2 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/80">
                         <CheckCircle2 className="w-4 h-4 text-[#C89630] shrink-0 mt-0.5" />
-                        <span>{isExecutive ? 'Bridge adversarial Q&A back to core unit economics' : 'Maintain target vocal pace at 138–148 WPM'}</span>
+                        <span>{isExecutive ? 'Deliver conclusive ask within calibrated 135–145 WPM cadence' : 'Synthesize debate round into decisive sovereign impact ballot'}</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* CTA Block */}
-                <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0 lg:w-56">
+                {/* Primary Action Buttons */}
+                <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0">
                   <button
                     onClick={() => {
-                      setActiveChamberTitle(
-                        isExecutive 
-                          ? 'The 60-Second Venture Genesis' 
-                          : isAcademy 
-                            ? 'Syllogistic Framing & Whip Extension' 
-                            : 'Unfiltered Cathartic Voice Journaling'
-                      );
+                      setActiveChamberTitle(isExecutive ? 'Executive Public Speaking Chamber' : 'Live Rehearsal Chamber');
                       setIsLiveRehearsalOpen(true);
                     }}
-                    className="min-h-[48px] px-6 py-3.5 rounded-xl bg-[#C89630] hover:bg-[#d6a543] text-slate-950 font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-[#C89630]/20 transition-all active:scale-95 cursor-pointer"
+                    className="min-h-[44px] px-6 py-3.5 rounded-2xl bg-[#C89630] hover:bg-[#d6a543] text-slate-950 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[#C89630]/25 transition-all cursor-pointer"
                   >
-                    <Play className="w-4 h-4 fill-current" />
-                    <span>Begin Rehearsal</span>
+                    <Video className="w-4 h-4" />
+                    <span>Enter Live Chamber</span>
                   </button>
 
                   <button
-                    onClick={() => setSpeakerTab('coach')}
-                    className="min-h-[44px] px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-200 hover:text-white border border-slate-700 text-xs font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                    onClick={() => setSpeakerTab('practice')}
+                    className="min-h-[44px] px-5 py-3 rounded-2xl bg-slate-950 hover:bg-slate-850 text-slate-200 border border-slate-800 text-xs font-mono uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer"
                   >
-                    <MessageSquare className="w-3.5 h-3.5 text-[#C89630]" />
-                    <span>Message Coach</span>
+                    <Mic className="w-4 h-4 text-[#C89630]" />
+                    <span>Solo Rehearsal</span>
                   </button>
 
                   <button
@@ -672,7 +743,7 @@ export const ClientPortal: React.FC = () => {
                   {profile.vocalBaselinePace}
                   <span className="font-mono text-[10px] sm:text-xs font-normal text-slate-400 uppercase tracking-wider ml-1">WPM</span>
                 </div>
-                <div className="text-[10px] font-mono text-emerald-400 mt-1">Optimal Cadence</div>
+                <div className="text-[10px] font-mono text-emerald-400 mt-1">{profile.vocalBaselinePace ? 'Calibrated Cadence' : 'Baseline'}</div>
               </div>
 
               <div className="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-3.5 sm:p-4.5 transition-colors hover:border-slate-700/80">
@@ -680,7 +751,7 @@ export const ClientPortal: React.FC = () => {
                 <div className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-white mt-1 tracking-tight">
                   —
                 </div>
-                <div className="text-[10px] font-mono text-slate-400 mt-1">Top 5% Tier</div>
+                <div className="text-[10px] font-mono text-slate-400 mt-1">Evaluation Pending</div>
               </div>
 
               <div className="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-3.5 sm:p-4.5 transition-colors hover:border-slate-700/80">
@@ -695,7 +766,7 @@ export const ClientPortal: React.FC = () => {
                 <div className={`text-[10px] font-mono mt-1 ${
                   isExecutive ? 'text-[#C89630]' : isAcademy ? 'text-emerald-400' : 'text-teal-400'
                 }`}>
-                  {isExecutive ? 'High-Stakes Gravitas' : isAcademy ? 'WUDC Standard' : 'Vulnerability Level'}
+                  {isExecutive ? 'Target Standard' : isAcademy ? 'Target Discipline' : 'Focus Area'}
                 </div>
               </div>
 
@@ -723,7 +794,7 @@ export const ClientPortal: React.FC = () => {
                       </div>
                       <div>
                         <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">Coach Assignment & Note</h3>
-                        <span className="text-[10px] text-slate-400">Head Coach Qassim · Verified Dispatch</span>
+                        <span className="text-[10px] text-slate-400">Faculty Directive</span>
                       </div>
                     </div>
                     <button
@@ -738,22 +809,19 @@ export const ClientPortal: React.FC = () => {
                     {curriculum.drillPrompt || 'Awaiting personalized coach directive.'}
                   </p>
 
-                  {/* Audio Dispatch Snippet */}
-                  <div className="mt-4 bg-slate-950 p-3 rounded-2xl border border-slate-800 flex items-center gap-3">
-                    <button
-                      onClick={() => showToast('Playing Coach Qassim voice dispatch: "Calibration on BLUF timing and vocal resonance"')}
-                      aria-label="Play Coach Qassim voice dispatch"
-                      className="min-h-[44px] min-w-[44px] rounded-xl bg-[#C89630] text-slate-950 flex items-center justify-center font-bold hover:bg-[#d6a543] transition-colors shrink-0 cursor-pointer"
-                    >
-                      <Play className="w-4 h-4 fill-current" />
-                    </button>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[11px] font-mono text-slate-200 truncate">Voice Dispatch · Circle 07 Briefing</div>
-                      <div className="text-[10px] font-mono text-slate-400">0:45 min · High-Fidelity Voice Note</div>
-                      <div className="w-full bg-slate-800 rounded-full h-1 mt-1.5 overflow-hidden">
-                        <div className="bg-[#C89630] h-full w-2/5" />
-                      </div>
+                  {/* Direct Faculty Communication */}
+                  <div className="mt-4 bg-slate-950 p-3.5 rounded-2xl border border-slate-800 flex items-center justify-between">
+                    <div>
+                      <div className="text-[11px] font-mono text-slate-200 font-semibold">Faculty Direct Consultation</div>
+                      <div className="text-[10px] font-mono text-slate-400">Send an inquiry or consultation to Head Coach Qassim</div>
                     </div>
+                    <button
+                      onClick={() => setSpeakerTab('coach')}
+                      className="min-h-[36px] px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-mono text-[#C89630] flex items-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5" />
+                      <span>Consult Coach</span>
+                    </button>
                   </div>
                 </div>
 
@@ -774,8 +842,8 @@ export const ClientPortal: React.FC = () => {
                       <CheckCircle2 className="w-4 h-4 text-[#C89630]" />
                       <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">Today's Daily Rituals</h3>
                     </div>
-                    <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-800/40">
-                      6-Day Streak
+                    <span className="text-[10px] font-mono text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
+                      {Object.values(habitsStatus).filter(Boolean).length} of {Object.keys(habitsStatus).length} Completed
                     </span>
                   </div>
 
@@ -836,32 +904,40 @@ export const ClientPortal: React.FC = () => {
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {roadmapSessions.slice(0, 2).map((session, idx) => (
-                  <div key={session.id} className="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 mb-1.5">
-                        <span className="text-[#C89630] font-bold">Session 0{idx + 1}</span>
-                        <span>{session.date}</span>
+              {roadmapSessions.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {roadmapSessions.slice(0, 2).map((session, idx) => (
+                    <div key={session.id} className="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 mb-1.5">
+                          <span className="text-[#C89630] font-bold">Session 0{idx + 1}</span>
+                          <span>{session.date}</span>
+                        </div>
+                        <h4 className="text-xs font-bold text-white mb-1">{session.workoutTitle}</h4>
+                        <p className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed font-sans">
+                          {session.assignmentNotes || 'High-intensity floor delivery simulation.'}
+                        </p>
                       </div>
-                      <h4 className="text-xs font-bold text-white mb-1">{session.workoutTitle}</h4>
-                      <p className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed font-sans">
-                        {session.assignmentNotes || 'High-intensity floor delivery simulation.'}
-                      </p>
+                      <div className="mt-3 pt-2.5 border-t border-slate-850 flex items-center justify-between">
+                        <span className="text-[10px] font-mono text-slate-500">{session.time}</span>
+                        <button
+                          onClick={() => downloadSessionIcs(session)}
+                          className="text-[10px] font-mono text-slate-300 hover:text-white flex items-center gap-1"
+                        >
+                          <Download className="w-3 h-3" />
+                          <span>.ICS</span>
+                        </button>
+                      </div>
                     </div>
-                    <div className="mt-3 pt-2.5 border-t border-slate-850 flex items-center justify-between">
-                      <span className="text-[10px] font-mono text-slate-500">{session.time}</span>
-                      <button
-                        onClick={() => downloadSessionIcs(session)}
-                        className="text-[10px] font-mono text-slate-300 hover:text-white flex items-center gap-1"
-                      >
-                        <Download className="w-3 h-3" />
-                        <span>.ICS</span>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 text-center">
+                  <Calendar className="w-5 h-5 text-slate-600 mx-auto mb-1.5" />
+                  <p className="text-xs font-serif font-bold text-slate-300">No Rehearsal Sessions Scheduled</p>
+                  <p className="text-[11px] text-slate-500 font-sans mt-0.5">Your coach will assign upcoming chamber sessions to your calendar.</p>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -902,22 +978,22 @@ export const ClientPortal: React.FC = () => {
                 </p>
               </div>
 
-              {/* Interactive Audio Recording Simulation */}
+              {/* Voice Rehearsal Studio */}
               <div className="bg-slate-950 border border-slate-800 rounded-2xl p-5 text-center">
+                {recordingError && (
+                  <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-mono">
+                    {recordingError}
+                  </div>
+                )}
+
                 <div className="flex items-center justify-center gap-1.5 h-12 mb-3">
                   {isRecording ? (
-                    Array.from({ length: 28 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className={`w-1 rounded-full animate-pulse ${
-                          isAcademy ? 'bg-emerald-400' : 'bg-teal-400'
-                        }`}
-                        style={{
-                          height: `${Math.max(15, (Math.sin(i + Date.now()) * 0.5 + 0.5) * 45)}px`,
-                          animationDuration: `${0.3 + (i % 5) * 0.1}s`
-                        }}
-                      />
-                    ))
+                    <div className="flex items-center gap-3">
+                      <span className="w-3 h-3 rounded-full bg-rose-500 animate-ping" />
+                      <span className="text-sm font-mono text-white font-bold">
+                        Recording Rehearsal: {Math.floor(recordingSeconds / 60)}:{(recordingSeconds % 60).toString().padStart(2, '0')}
+                      </span>
+                    </div>
                   ) : (
                     <div className="text-xs text-slate-500 font-mono">
                       Microphone standby • Click Record to begin your rehearsal
@@ -929,8 +1005,8 @@ export const ClientPortal: React.FC = () => {
                   {!isRecording ? (
                     <button
                       onClick={handleStartRecording}
-                      className={`px-6 py-2.5 rounded-xl font-bold text-xs text-slate-950 flex items-center gap-2 shadow-lg transition-all ${
-                        isAcademy ? 'bg-emerald-400 hover:bg-emerald-300' : 'bg-teal-400 hover:bg-teal-300'
+                      className={`px-6 py-2.5 rounded-xl font-bold text-xs text-slate-950 flex items-center gap-2 shadow-lg transition-all cursor-pointer ${
+                        isAcademy ? 'bg-emerald-400 hover:bg-emerald-300' : 'bg-[#C89630] hover:bg-[#d6a543]'
                       }`}
                     >
                       <Mic className="w-4 h-4" />
@@ -939,23 +1015,24 @@ export const ClientPortal: React.FC = () => {
                   ) : (
                     <button
                       onClick={handleStopRecording}
-                      className="px-6 py-2.5 rounded-xl font-bold text-xs bg-rose-500 hover:bg-rose-400 text-white flex items-center gap-2 shadow-lg transition-all animate-pulse"
+                      className="px-6 py-2.5 rounded-xl font-bold text-xs bg-rose-500 hover:bg-rose-400 text-white flex items-center gap-2 shadow-lg transition-all cursor-pointer"
                     >
                       <Square className="w-4 h-4" />
-                      <span>Stop & Analyze Speech</span>
+                      <span>Stop Rehearsal Recording</span>
                     </button>
                   )}
                 </div>
 
-                {/* Instant Metric Feedback Display */}
-                {recordingCompleted && !recordedFeedback && (
+                {/* Instant Audio Replay & Self-Evaluation */}
+                {recordedAudioUrl && (
                   <div className="mt-6 pt-5 border-t border-slate-850 animate-fadeIn text-center">
                     <div className="text-[10px] uppercase font-bold text-slate-400 mb-2 flex items-center justify-center gap-1.5">
-                      <Activity className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>Analysis coming soon</span>
+                      <Activity className="w-3.5 h-3.5 text-[#C89630]" />
+                      <span>Rehearsal Audio Capture</span>
                     </div>
-                    <p className="text-xs text-slate-500">
-                      Your speech rehearsal has been logged. Advanced delivery metrics and coach review will be available shortly.
+                    <audio controls src={recordedAudioUrl} className="w-full max-w-md mx-auto my-3 rounded-xl" />
+                    <p className="text-xs text-slate-400 max-w-md mx-auto">
+                      Rehearsal audio captured. Play back above to review delivery pacing. Automated speech scoring pipeline will activate in the next release.
                     </p>
                   </div>
                 )}
@@ -1016,14 +1093,14 @@ export const ClientPortal: React.FC = () => {
                   <div className="flex items-center justify-between pt-2">
                     <div className="text-[10px] text-slate-500 flex items-center gap-1.5">
                       <ShieldCheck className="w-3.5 h-3.5 text-[#C89630]" />
-                      <span>Encrypted executive repository • Reviewed by Head Coach Qassim</span>
+                      <span>Confidential Session Notes • Scoped to Speaker Workspace</span>
                     </div>
 
                     <button
                       type="submit"
                       className="px-5 py-2 rounded-xl bg-[#C89630] hover:bg-[#d6a543] text-slate-950 font-bold text-xs shadow-md shadow-[#C89630]/20 cursor-pointer"
                     >
-                      Log into Executive Vault
+                      Save Rehearsal Note
                     </button>
                   </div>
                 </form>
@@ -1033,36 +1110,40 @@ export const ClientPortal: React.FC = () => {
                   Executive Rehearsal & Pitch History
                 </h3>
                 <div className="space-y-3">
-                  {execEntries.map(entry => (
-                    <div key={entry.id} className="bg-slate-950 border border-slate-850 rounded-2xl p-4">
-                      <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-mono text-slate-400">{entry.date}</span>
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30 font-medium">
-                            {entry.arena}
+                  {execEntries.length > 0 ? (
+                    execEntries.map(entry => (
+                      <div key={entry.id} className="bg-slate-950 border border-slate-850 rounded-2xl p-4">
+                        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-mono text-slate-400">{entry.date}</span>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30 font-medium">
+                              {entry.arena}
+                            </span>
+                          </div>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 font-mono">
+                            {entry.coachStatus}
                           </span>
                         </div>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-mono">
-                          {entry.coachStatus}
-                        </span>
+                        <p className="text-xs text-slate-200 leading-relaxed mb-3">
+                          "{entry.summary}"
+                        </p>
+                        <div className="flex items-center gap-4 text-[10px] pt-2 border-t border-slate-900 text-slate-400 font-mono">
+                          <span>Pacing: <strong className="text-white">{entry.wpm} WPM</strong></span>
+                        </div>
                       </div>
-                      <p className="text-xs text-slate-200 leading-relaxed mb-3">
-                        "{entry.summary}"
-                      </p>
-                      <div className="flex items-center gap-4 text-[10px] pt-2 border-t border-slate-900 text-slate-400 font-mono">
-                        <span>Pacing: <strong className="text-white">{entry.wpm} WPM</strong></span>
-                        <span>•</span>
-                        <span>BLUF Score: <strong className="text-[#C89630]">{entry.blufScore}%</strong></span>
-                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center p-8 bg-slate-950 border border-slate-800/80 rounded-2xl">
+                      <p className="text-xs text-slate-400">No executive rehearsal notes logged yet. Outline your thesis above.</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             ) : (
             <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 sm:p-8">
               <div className="max-w-2xl mb-6">
                 <span className="text-[10px] uppercase font-bold tracking-widest text-teal-400 px-2.5 py-0.5 rounded-full bg-teal-500/10 border border-teal-500/20">
-                  Private & Encrypted Expression Vault
+                  Private Expression Vault
                 </span>
                 <h2 className="text-xl sm:text-2xl font-black text-white mt-2">
                   Speaking as a Form of Escapism
@@ -1107,14 +1188,14 @@ export const ClientPortal: React.FC = () => {
                 <div className="flex items-center justify-between pt-2">
                   <div className="text-[10px] text-slate-500 flex items-center gap-1.5">
                     <ShieldCheck className="w-3.5 h-3.5 text-teal-400" />
-                    <span>Encrypted with personal privacy protection</span>
+                    <span>Confidential Expression Journal • Scoped to Speaker Workspace</span>
                   </div>
 
                   <button
                     type="submit"
-                    className="px-5 py-2 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs shadow-md shadow-teal-500/20"
+                    className="px-5 py-2 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs shadow-md shadow-teal-500/20 cursor-pointer"
                   >
-                    Record into Vault
+                    Save Reflection
                   </button>
                 </div>
               </form>
@@ -1124,24 +1205,30 @@ export const ClientPortal: React.FC = () => {
                 Previous Catharsis Releases
               </h3>
               <div className="space-y-3">
-                {journalEntries.map(entry => (
-                  <div key={entry.id} className="bg-slate-950 border border-slate-850 rounded-2xl p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-[10px] font-mono text-slate-400">{entry.date}</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-300 border border-teal-500/30">
-                        {entry.audioLength} Spoken
-                      </span>
+                {journalEntries.length > 0 ? (
+                  journalEntries.map(entry => (
+                    <div key={entry.id} className="bg-slate-950 border border-slate-850 rounded-2xl p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[10px] font-mono text-slate-400">{entry.date}</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-300 border border-teal-500/30">
+                          Vocalized
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-200 leading-relaxed mb-3">
+                        "{entry.text}"
+                      </p>
+                      <div className="flex items-center gap-2 text-[10px] pt-2 border-t border-slate-900 text-slate-400">
+                        <span>Before: <strong className="text-rose-300">{entry.feelBefore}</strong></span>
+                        <span>→</span>
+                        <span>After: <strong className="text-emerald-400">{entry.feelAfter}</strong></span>
+                      </div>
                     </div>
-                    <p className="text-xs text-slate-200 leading-relaxed mb-3">
-                      "{entry.text}"
-                    </p>
-                    <div className="flex items-center gap-2 text-[10px] pt-2 border-t border-slate-900 text-slate-400">
-                      <span>Before: <strong className="text-rose-300">{entry.feelBefore}</strong></span>
-                      <span>→</span>
-                      <span>After: <strong className="text-emerald-400">{entry.feelAfter}</strong></span>
-                    </div>
+                  ))
+                ) : (
+                  <div className="text-center p-8 bg-slate-950 border border-slate-800/80 rounded-2xl">
+                    <p className="text-xs text-slate-400">No reflections logged yet. Record your first private expression above.</p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
             )}
@@ -1177,136 +1264,139 @@ export const ClientPortal: React.FC = () => {
 
               {/* Sessions Roadmap List */}
               <div className="mt-6 space-y-4">
-                {roadmapSessions.map((session, idx) => {
-                  const weekNum = Math.floor(idx / 2) + 1;
-                  const isExpanded = expandedSessionId === session.id;
-                  const isConfirmed = session.status === 'Confirmed' || idx === 0;
+                {roadmapSessions.length > 0 ? (
+                  roadmapSessions.map((session, idx) => {
+                    const weekNum = Math.floor(idx / 2) + 1;
+                    const isExpanded = expandedSessionId === session.id;
+                    const isConfirmed = session.status === 'Confirmed' || idx === 0;
 
-                  return (
-                    <div
-                      key={session.id}
-                      className="bg-slate-950 border border-slate-800/90 hover:border-slate-700/80 rounded-2xl p-5 transition-all shadow-md"
-                    >
-                      <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
-                        <div className="flex items-start gap-3.5 flex-1">
-                          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                            <Calendar className="w-5 h-5" />
-                          </div>
-
-                          <div className="space-y-1.5 flex-1">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className="text-[10px] font-mono tracking-widest text-[#C89630] uppercase">
-                                Week {weekNum} · Session {idx + 1}
-                              </span>
-                              <span className={`text-[9px] px-2 py-0.5 rounded font-mono uppercase tracking-wider ${
-                                isConfirmed
-                                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                                  : 'bg-slate-800 text-slate-400 border border-slate-700'
-                              }`}>
-                                {isConfirmed ? 'Confirmed' : 'Scheduled'}
-                              </span>
-                              <span className="text-[10px] font-mono text-slate-500">
-                                {session.date} • {session.time || '10:00 AM (90 Mins)'}
-                              </span>
+                    return (
+                      <div
+                        key={session.id}
+                        className="bg-slate-950 border border-slate-800/90 hover:border-slate-700/80 rounded-2xl p-5 transition-all shadow-md"
+                      >
+                        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+                          <div className="flex items-start gap-3.5 flex-1">
+                            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                              <Calendar className="w-5 h-5" />
                             </div>
 
-                            <h3 className="text-base font-serif font-bold text-white tracking-tight">
-                              {session.workoutTitle}
-                            </h3>
-
-                            {/* Session Objectives */}
-                            {session.objectives && session.objectives.length > 0 && (
-                              <div className="pt-2">
-                                <div className="text-[10px] font-mono tracking-wider text-slate-400 uppercase flex items-center gap-1 mb-1">
-                                  <Target className="w-3 h-3 text-[#C89630]" />
-                                  <span>Core Objectives:</span>
-                                </div>
-                                <ul className="space-y-1 text-xs text-slate-300">
-                                  {session.objectives.map((obj, oIdx) => (
-                                    <li key={oIdx} className="flex items-start gap-2">
-                                      <span className="text-[#C89630] font-bold shrink-0">•</span>
-                                      <span className="leading-relaxed">{obj}</span>
-                                    </li>
-                                  ))}
-                                </ul>
+                            <div className="space-y-1.5 flex-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="text-[10px] font-mono tracking-widest text-[#C89630] uppercase">
+                                  Week {weekNum} · Session {idx + 1}
+                                </span>
+                                <span className={`text-[9px] px-2 py-0.5 rounded font-mono uppercase tracking-wider ${
+                                  isConfirmed
+                                    ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                                    : 'bg-slate-800 text-slate-400 border border-slate-700'
+                                }`}>
+                                  {isConfirmed ? 'Confirmed' : 'Scheduled'}
+                                </span>
+                                <span className="text-[10px] font-mono text-slate-500">
+                                  {session.date} • {session.time || '10:00 AM (90 Mins)'}
+                                </span>
                               </div>
-                            )}
 
-                            {/* Practical Assignment */}
-                            {session.assignmentNotes && (
-                              <div className="mt-2 p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-slate-300 flex items-start gap-2">
-                                <FileText className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-                                <div>
-                                  <span className="text-[10px] font-mono tracking-wider text-slate-400 uppercase block">Action Assignment:</span>
-                                  <span className="text-slate-200">{session.assignmentNotes}</span>
+                              <h3 className="text-base font-serif font-bold text-white tracking-tight">
+                                {session.workoutTitle}
+                              </h3>
+
+                              {/* Session Objectives */}
+                              {session.objectives && session.objectives.length > 0 && (
+                                <div className="pt-2">
+                                  <div className="text-[10px] font-mono tracking-wider text-slate-400 uppercase flex items-center gap-1 mb-1">
+                                    <Target className="w-3 h-3 text-[#C89630]" />
+                                    <span>Core Objectives:</span>
+                                  </div>
+                                  <ul className="space-y-1 text-xs text-slate-300">
+                                    {session.objectives.map((obj, oIdx) => (
+                                      <li key={oIdx} className="flex items-start gap-2">
+                                        <span className="text-[#C89630] font-bold shrink-0">•</span>
+                                        <span className="leading-relaxed">{obj}</span>
+                                      </li>
+                                    ))}
+                                  </ul>
                                 </div>
-                              </div>
-                            )}
+                              )}
+
+                              {/* Practical Assignment */}
+                              {session.assignmentNotes && (
+                                <div className="mt-2 p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-slate-300 flex items-start gap-2">
+                                  <FileText className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                                  <div>
+                                    <span className="text-[10px] font-mono tracking-wider text-slate-400 uppercase block">Action Assignment:</span>
+                                    <span className="text-slate-200">{session.assignmentNotes}</span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        </div>
 
-                        {/* Actions: Join Room + Add to Calendar */}
-                        <div className="flex sm:flex-row lg:flex-col items-stretch gap-2 shrink-0 self-stretch lg:self-start lg:w-44 pt-2 lg:pt-0">
-                          <button
-                            onClick={() => {
-                              setActiveChamberTitle(session.workoutTitle);
-                              setIsLiveRehearsalOpen(true);
-                            }}
-                            className="flex-1 px-3.5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-md flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-                          >
-                            <Video className="w-4 h-4" />
-                            <span>Join Chamber</span>
-                          </button>
-
-                          <button
-                            onClick={() => downloadSessionIcs(session)}
-                            className="flex-1 px-3 py-2 rounded-xl border border-slate-800 hover:border-slate-700 bg-slate-900 hover:bg-slate-850 text-slate-300 hover:text-white font-medium text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-                          >
-                            <Download className="w-3.5 h-3.5" />
-                            <span>Add to Calendar</span>
-                          </button>
-
-                          {session.phases && session.phases.length > 0 && (
+                          {/* Actions: Join Room + Add to Calendar */}
+                          <div className="flex sm:flex-row lg:flex-col items-stretch gap-2 shrink-0 self-stretch lg:self-start lg:w-44 pt-2 lg:pt-0">
                             <button
-                              onClick={() => setExpandedSessionId(isExpanded ? null : session.id)}
-                              className="px-2.5 py-1.5 rounded-lg border border-slate-800/80 text-[10px] font-mono text-slate-400 hover:text-slate-200 flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                              onClick={() => {
+                                setActiveChamberTitle(session.workoutTitle);
+                                setIsLiveRehearsalOpen(true);
+                              }}
+                              className="flex-1 px-3.5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-md flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                             >
-                              <Layers className="w-3 h-3" />
-                              <span>{isExpanded ? 'Hide Agenda' : '90m Breakdown'}</span>
-                              {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                              <Video className="w-4 h-4" />
+                              <span>Join Chamber</span>
                             </button>
-                          )}
-                        </div>
-                      </div>
 
-                      {/* Expandable 6-Phase 90-Minute Structure Breakdown */}
-                      {isExpanded && session.phases && session.phases.length > 0 && (
-                        <div className="mt-4 pt-4 border-t border-slate-800/80 animate-fadeIn">
-                          <div className="text-[10px] font-mono tracking-widest text-slate-400 uppercase mb-3">
-                            90-Minute Structured Session Blueprint
-                          </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                            {session.phases.map((phase, pIdx) => (
-                              <div
-                                key={pIdx}
-                                className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs space-y-1"
+                            <button
+                              onClick={() => downloadSessionIcs(session)}
+                              className="flex-1 px-3 py-2 rounded-xl border border-slate-800 hover:border-slate-700 bg-slate-900 hover:bg-slate-850 text-slate-300 hover:text-white font-medium text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                            >
+                              <Download className="w-3.5 h-3.5" />
+                              <span>Add to Calendar</span>
+                            </button>
+
+                            {session.phases && session.phases.length > 0 && (
+                              <button
+                                onClick={() => setExpandedSessionId(isExpanded ? null : session.id)}
+                                className="px-2.5 py-1.5 rounded-lg border border-slate-800/80 text-[10px] font-mono text-slate-400 hover:text-slate-200 flex items-center justify-center gap-1 transition-colors cursor-pointer"
                               >
-                                <div className="flex items-center justify-between text-[10px] font-mono">
-                                  <span className="text-[#C89630] font-bold">Phase {phase.phaseNumber}</span>
-                                  <span className="text-slate-400 flex items-center gap-1">
-                                    <Clock className="w-2.5 h-2.5" /> {phase.durationMinutes} min
-                                  </span>
-                                </div>
-                                <div className="font-bold text-slate-200 text-xs">{phase.title}</div>
-                                <p className="text-[11px] text-slate-400 leading-snug">{phase.description}</p>
-                              </div>
-                            ))}
+                                <span>{isExpanded ? 'Hide Protocol' : 'View Protocol Breakdown'}</span>
+                                <ChevronRight className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                              </button>
+                            )}
                           </div>
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
+
+                        {/* Expandable Protocol Breakdown */}
+                        {isExpanded && session.phases && (
+                          <div className="mt-4 pt-4 border-t border-slate-900 space-y-2">
+                            <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-2">
+                              90-Minute Rehearsal Protocol
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                              {session.phases.map((phase, pIdx) => (
+                                <div key={phase.id || pIdx} className="p-3 rounded-xl bg-slate-900/60 border border-slate-850 text-xs">
+                                  <div className="flex items-center justify-between text-[11px] font-bold text-white mb-1">
+                                    <span>{pIdx + 1}. {phase.phaseName}</span>
+                                    <span className="text-[#C89630] font-mono font-normal">{phase.durationMin}m</span>
+                                  </div>
+                                  <p className="text-[11px] text-slate-400 leading-relaxed font-sans">{phase.description}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="bg-slate-950 border border-slate-800/90 rounded-2xl p-8 text-center">
+                    <Calendar className="w-8 h-8 text-slate-600 mx-auto mb-3" />
+                    <h3 className="text-sm font-serif font-bold text-white">No Scheduled Rehearsal Sessions</h3>
+                    <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto font-sans">
+                      Your coach has not yet scheduled upcoming chamber sessions for your profile. When new consultation or rehearsal rounds are added to the roster, they will appear here with calendar sync.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -1322,12 +1412,12 @@ export const ClientPortal: React.FC = () => {
                     Daily Orator Rituals
                   </h2>
                   <p className="text-xs text-slate-400 mt-0.5">
-                    Check off your habits each day to maintain your 6-day speaker streak.
+                    Check off your habits each day to track your practice consistency.
                   </p>
                 </div>
                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 font-mono text-xs">
                   <Flame className="w-3.5 h-3.5 fill-amber-400" />
-                  <span>Streak: 6 Days</span>
+                  <span>{Object.values(habitsStatus).filter(Boolean).length} / {Object.keys(habitsStatus).length} Completed</span>
                 </div>
               </div>
 
@@ -1388,8 +1478,8 @@ export const ClientPortal: React.FC = () => {
                   <div className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px] font-mono text-slate-300">
                     Target: <span className="text-[#C89630] font-bold">135–145 WPM</span>
                   </div>
-                  <div className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px] font-mono text-emerald-400">
-                    10 Sessions Logged
+                  <div className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px] font-mono text-slate-300">
+                    {roadmapSessions.length} {roadmapSessions.length === 1 ? 'Session' : 'Sessions'} Logged
                   </div>
                 </div>
               </div>
@@ -1399,44 +1489,43 @@ export const ClientPortal: React.FC = () => {
                 <div className="p-4 rounded-2xl bg-slate-950 border border-slate-850">
                   <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400">Average Pace</div>
                   <div className="mt-2 flex items-baseline gap-1">
-                    <span className="text-xl sm:text-2xl font-serif font-bold text-white">136</span>
+                    <span className="text-xl sm:text-2xl font-serif font-bold text-white">
+                      {avgWpm ? avgWpm : (profile.vocalBaselinePace || '—')}
+                    </span>
                     <span className="text-xs font-mono text-slate-400">WPM</span>
                   </div>
                   <div className="mt-2 text-[10px] font-mono text-emerald-400 flex items-center gap-1">
-                    <span>Within target window</span>
+                    <span>{avgWpm ? 'Rehearsal average' : 'Self-reported baseline'}</span>
                   </div>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-slate-950 border border-slate-850">
                   <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400">Consonant Clarity</div>
                   <div className="mt-2 flex items-baseline gap-1">
-                    <span className="text-xl sm:text-2xl font-serif font-bold text-white">94</span>
-                    <span className="text-xs font-mono text-slate-400">%</span>
+                    <span className="text-xl sm:text-2xl font-serif font-bold text-white">—</span>
                   </div>
-                  <div className="mt-2 text-[10px] font-mono text-teal-400 flex items-center gap-1">
-                    <span>High articulation score</span>
+                  <div className="mt-2 text-[10px] font-mono text-slate-500 flex items-center gap-1">
+                    <span>Awaiting acoustic evaluation</span>
                   </div>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-slate-950 border border-slate-850">
                   <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400">BLUF Precision</div>
                   <div className="mt-2 flex items-baseline gap-1">
-                    <span className="text-xl sm:text-2xl font-serif font-bold text-white">95</span>
-                    <span className="text-xs font-mono text-slate-400">/ 100</span>
+                    <span className="text-xl sm:text-2xl font-serif font-bold text-white">—</span>
                   </div>
-                  <div className="mt-2 text-[10px] font-mono text-[#C89630] flex items-center gap-1">
-                    <span>Executive synthesis</span>
+                  <div className="mt-2 text-[10px] font-mono text-slate-500 flex items-center gap-1">
+                    <span>Awaiting speech adjudication</span>
                   </div>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-slate-950 border border-slate-850">
                   <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400">Filler Frequency</div>
                   <div className="mt-2 flex items-baseline gap-1">
-                    <span className="text-xl sm:text-2xl font-serif font-bold text-white">1.1</span>
-                    <span className="text-xs font-mono text-slate-400">/ min</span>
+                    <span className="text-xl sm:text-2xl font-serif font-bold text-white">—</span>
                   </div>
-                  <div className="mt-2 text-[10px] font-mono text-emerald-400 flex items-center gap-1">
-                    <span>-42% vs baseline</span>
+                  <div className="mt-2 text-[10px] font-mono text-slate-500 flex items-center gap-1">
+                    <span>Awaiting cadence analysis</span>
                   </div>
                 </div>
               </div>
@@ -1463,39 +1552,43 @@ export const ClientPortal: React.FC = () => {
                 </div>
 
                 {/* Trajectory Bar Chart */}
-                <div className="grid grid-cols-6 gap-2 sm:gap-4 pt-6 pb-2 items-end h-40 border-b border-slate-800/80">
-                  {[
-                    { session: 'R-01', wpm: 152, date: 'Aug 26' },
-                    { session: 'R-02', wpm: 146, date: 'Aug 29' },
-                    { session: 'R-03', wpm: 141, date: 'Sep 02' },
-                    { session: 'R-04', wpm: 139, date: 'Sep 05' },
-                    { session: 'R-05', wpm: 134, date: 'Sep 09' },
-                    { session: 'R-06', wpm: 138, date: 'Yesterday' }
-                  ].map((item, idx) => {
-                    const heightPercent = Math.min(100, Math.max(20, ((item.wpm - 100) / 60) * 100));
-                    const isOptimal = item.wpm >= 135 && item.wpm <= 145;
-                    return (
-                      <div key={idx} className="flex flex-col items-center gap-1.5 h-full justify-end group">
-                        <span className="text-[10px] font-mono text-slate-300 font-bold opacity-0 group-hover:opacity-100 transition-opacity">
-                          {item.wpm}
-                        </span>
-                        <div className="w-full max-w-[36px] bg-slate-900 rounded-t-lg overflow-hidden flex flex-col justify-end h-28 relative">
-                          <div className="absolute inset-x-0 bottom-[58%] border-t border-dashed border-[#C89630]/30 pointer-events-none" />
-                          <div
-                            style={{ height: `${heightPercent}%` }}
-                            className={`w-full rounded-t-md transition-all ${
-                              isOptimal ? 'bg-[#C89630]' : 'bg-slate-700'
-                            }`}
-                          />
+                {speakerMetrics.length > 0 ? (
+                  <div className="grid grid-cols-6 gap-2 sm:gap-4 pt-6 pb-2 items-end h-40 border-b border-slate-800/80">
+                    {speakerMetrics.slice(-6).map((item, idx) => {
+                      const wpm = item.weight || profile.vocalBaselinePace || 140;
+                      const heightPercent = Math.min(100, Math.max(20, ((wpm - 100) / 60) * 100));
+                      const isOptimal = wpm >= 135 && wpm <= 145;
+                      return (
+                        <div key={idx} className="flex flex-col items-center gap-1.5 h-full justify-end group">
+                          <span className="text-[10px] font-mono text-slate-300 font-bold opacity-0 group-hover:opacity-100 transition-opacity">
+                            {wpm}
+                          </span>
+                          <div className="w-full max-w-[36px] bg-slate-900 rounded-t-lg overflow-hidden flex flex-col justify-end h-28 relative">
+                            <div className="absolute inset-x-0 bottom-[58%] border-t border-dashed border-[#C89630]/30 pointer-events-none" />
+                            <div
+                              style={{ height: `${heightPercent}%` }}
+                              className={`w-full rounded-t-md transition-all ${
+                                isOptimal ? 'bg-[#C89630]' : 'bg-slate-700'
+                              }`}
+                            />
+                          </div>
+                          <span className="text-[10px] font-mono text-slate-400 mt-1">R-0{idx + 1}</span>
                         </div>
-                        <span className="text-[10px] font-mono text-slate-400 mt-1">{item.session}</span>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="h-32 flex flex-col items-center justify-center border-b border-slate-800/80 text-center p-4">
+                    <Activity className="w-5 h-5 text-slate-600 mb-1.5" />
+                    <p className="text-xs font-serif font-bold text-slate-300">Pacing Trajectory Awaiting Chamber Drills</p>
+                    <p className="text-[11px] text-slate-500 font-sans mt-0.5">
+                      Baseline: {profile.vocalBaselinePace ? `${profile.vocalBaselinePace} WPM` : '—'}. Trajectory bars will plot as chamber workouts are logged.
+                    </p>
+                  </div>
+                )}
                 <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 pt-2">
-                  <span>Initial Baseline: 152 WPM</span>
-                  <span>Latest Rehearsal: 138 WPM</span>
+                  <span>Initial Baseline: {profile.vocalBaselinePace ? `${profile.vocalBaselinePace} WPM` : '—'}</span>
+                  <span>Latest Rehearsal: {speakerMetrics.length > 0 ? `${speakerMetrics[speakerMetrics.length - 1].weight} WPM` : '—'}</span>
                 </div>
               </div>
             </div>
@@ -1525,81 +1618,42 @@ export const ClientPortal: React.FC = () => {
               </div>
 
               <div className="mt-5 space-y-3.5">
-                {[
-                  {
-                    id: 'eval-1',
-                    title: 'Series A / Growth Capital Venture Pitch',
-                    date: 'Yesterday, 4:15 PM',
-                    duration: '7 min practice',
-                    score: '9.4',
-                    wpm: 138,
-                    clarity: '96%',
-                    bluf: '96/100',
-                    coachNote: 'Delivered the 60-second genesis without hedging. Anchored value thesis around African logistics efficiency.',
-                    directive: 'Next: Defend against aggressive valuation compression in Q&A phase.'
-                  },
-                  {
-                    id: 'eval-2',
-                    title: 'Executive Boardroom Strategic Capex Review',
-                    date: '3 days ago',
-                    duration: '10 min practice',
-                    score: '9.2',
-                    wpm: 134,
-                    clarity: '94%',
-                    bluf: '94/100',
-                    coachNote: 'Simulated 5-minute capex allocation defense with deliberate 2-second pauses before financial answers.',
-                    directive: 'Maintain eye contact and steady tone during hostile inquiries.'
-                  },
-                  {
-                    id: 'eval-3',
-                    title: 'Keynote Value Genesis Simulation',
-                    date: 'Last week',
-                    duration: '8 min practice',
-                    score: '8.9',
-                    wpm: 142,
-                    clarity: '91%',
-                    bluf: '91/100',
-                    coachNote: 'Commanding stage presence. Vocal projection was resonant, with minimal filler words detected.',
-                    directive: 'Deepen diaphragmatic breath between transitions.'
-                  }
-                ].map(item => (
-                  <div
-                    key={item.id}
-                    className="p-5 rounded-2xl bg-slate-950 border border-slate-850 hover:border-slate-800 transition-colors"
-                  >
-                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 pb-3 border-b border-slate-900">
-                      <div>
-                        <div className="text-[10px] font-mono text-[#C89630] uppercase tracking-wider">{item.date} · {item.duration}</div>
-                        <h4 className="text-sm font-bold text-white mt-0.5">{item.title}</h4>
-                      </div>
-
-                      <div className="flex items-center gap-2 shrink-0">
-                        <div className="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-mono text-xs font-bold">
-                          Score {item.score}/10
+                {speakerEvaluations.length > 0 ? (
+                  speakerEvaluations.map((item, idx) => (
+                    <div
+                      key={item.id || idx}
+                      className="p-5 rounded-2xl bg-slate-950 border border-slate-850 hover:border-slate-800 transition-colors"
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 pb-3 border-b border-slate-900">
+                        <div>
+                          <div className="text-[10px] font-mono text-[#C89630] uppercase tracking-wider">
+                            {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Recent'} · {item.evaluatorName || 'Faculty Adjudicator'}
+                          </div>
+                          <h4 className="text-sm font-bold text-white mt-0.5">{item.category}</h4>
                         </div>
-                        <div className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 font-mono text-xs">
-                          {item.wpm} WPM
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <div className="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-mono text-xs font-bold">
+                            Score {item.rating}/10
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="mt-3 text-xs text-slate-300 leading-relaxed">
-                      <span className="font-semibold text-slate-200">Coach Debrief: </span>
-                      "{item.coachNote}"
-                    </div>
-
-                    <div className="mt-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2.5 border-t border-slate-900/80 text-[11px]">
-                      <div className="text-slate-400 font-mono flex items-center gap-1.5">
-                        <span className="text-[#C89630] font-bold">Immediate Directive:</span>
-                        <span>{item.directive}</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-slate-400 font-mono shrink-0">
-                        <span>Clarity: <strong className="text-slate-200">{item.clarity}</strong></span>
-                        <span>BLUF: <strong className="text-slate-200">{item.bluf}</strong></span>
+                      <div className="mt-3 text-xs text-slate-300 leading-relaxed font-sans">
+                        <span className="font-semibold text-slate-200">Evaluator Feedback: </span>
+                        "{item.note}"
                       </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="text-center p-8 bg-slate-950 border border-slate-800/80 rounded-2xl">
+                    <Award className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+                    <h4 className="text-sm font-serif font-bold text-white">No Formal Evaluations Logged</h4>
+                    <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto font-sans">
+                      Scored evaluations and panel adjudication debriefs from faculty coaches will be archived here after your chamber reviews.
+                    </p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>
@@ -1636,7 +1690,7 @@ export const ClientPortal: React.FC = () => {
                     <Video className="w-3.5 h-3.5" />
                     <span>Live Rehearsal</span>
                   </button>
-                  <span className="hidden sm:inline text-[10px] text-slate-400 font-mono">Encrypted Direct Thread</span>
+                  <span className="hidden sm:inline text-[10px] text-slate-400 font-mono">Direct Faculty Thread</span>
                 </div>
               </div>
 

@@ -1,0 +1,20 @@
+# Global Orators Project (GOP)
+> Pan-African debate training, sovereign leadership development, and healing-centered vocal expression programs for African youth and executive orators.
+
+## Core Programs
+- [Academy Track](/academy): Competitive British Parliamentary and World Universities Debating Championship (WUDC) training, argumentation rigor, and oratorical forensics.
+- [Foundation Track](/foundation): Healing-centered catharsis, emotional sovereign vocalization, community storytelling, and speech-as-escapism workshops.
+- [Executive Track](/speaker): Boardroom pitching, Bottom Line Up Front (BLUF) synthesis, capital raise narration, and high-conviction keynote delivery.
+- [Tournaments](/tournaments): Continental championships, regional varsity leagues, and adjudicator certification.
+- [Testimonials](/testimonials): Verified orator dispatches, impact metrics, and alumni narratives.
+
+## Faculties & Governance
+- Head Coach: Qassim Musa, Faculty Director & Forensic Adjudicator
+- Governance & Admissions: director@globalorators.org
+
+## Application & Onboarding
+- Self-Service Onboarding: [/apply](/apply)
+- Dynamic Calibration: 4-step diagnostic evaluating vocal baseline pace (WPM), arena goals, and daily rituals.
+
+## Documentation & Full Manifest
+- Full Manifest: [/llms-full.txt](/llms-full.txt)

@@ -46,6 +46,9 @@ class ApiClient {
       if (response.status === 401) {
         localStorage.removeItem('globalorators_token');
         localStorage.removeItem('nubianfit_token');
+        localStorage.removeItem('globalorators_user');
+        localStorage.removeItem('nubianfit_user');
+        localStorage.removeItem('globalorators_speaker_profile');
         throw new Error('AuthenticationError');
       }
 

@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Global Orators | Debate Training, Speaker Development & Voice Programs</title>
     <meta name="description" content="Pan-African debate training, sovereign leadership development, and healing-centered vocal expression programs for African youth." />
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
@@ -30,10 +30,12 @@
     <!-- Google Identity Services (One Tap & Sign In) -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     
-    <!-- Fonts -->
+    <!-- Fonts: Non-blocking asynchronous loading with fallback -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bruno+Ace&display=swap" rel="stylesheet">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Bruno+Ace&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=Bruno+Ace&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Bruno+Ace&display=swap" rel="stylesheet"></noscript>
     
     <!-- PWA & Mobile Web App Meta -->
     <link rel="manifest" href="/manifest.json" />

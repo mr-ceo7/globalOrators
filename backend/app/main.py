@@ -4,12 +4,15 @@ global Orators FastAPI Backend Main Application
 
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.database import engine, Base
+from app.dependencies import get_db
 from seed_data import seed_database
 
 # Routers
@@ -111,13 +114,39 @@ app.add_middleware(
 
 @app.get("/health", tags=["System"])
 @app.get("/api/health", tags=["System"])
-async def health_check():
-    """Health check endpoint."""
+async def health_check(db: AsyncSession = Depends(get_db)):
+    """Health check endpoint verifying application and database readiness."""
+    try:
+        await db.execute(text("SELECT 1"))
+        db_status = "connected"
+    except Exception as e:
+        logger.error(f"Health check database failure: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"status": "unhealthy", "database": "disconnected", "error": str(e)}
+        )
+
     return {
         "status": "healthy",
         "service": settings.PROJECT_NAME,
-        "version": settings.VERSION
+        "version": settings.VERSION,
+        "environment": settings.ENVIRONMENT,
+        "database": db_status
     }
+
+
+@app.get("/ready", tags=["System"])
+@app.get("/api/ready", tags=["System"])
+async def readiness_check(db: AsyncSession = Depends(get_db)):
+    """Kubernetes/Render readiness probe."""
+    try:
+        await db.execute(text("SELECT 1"))
+        return {"status": "ready", "database": "connected"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"status": "not_ready", "database": "disconnected"}
+        )
 
 
 # Mount all API routers
