@@ -25,6 +25,7 @@ import { SubdomainSwitcher } from './components/common/SubdomainSwitcher';
 import { LandingPage } from './components/landing/LandingPage';
 import { OnboardingFlow } from './components/onboarding/OnboardingFlow';
 import { ClientPortal } from './components/clientApp/ClientPortal';
+import { CoachLoginPortal } from './components/auth/CoachLoginPortal';
 import { SEOHead } from './components/common/SEOHead';
 
 const MainLayout: React.FC = () => {
@@ -139,7 +140,7 @@ const MainLayout: React.FC = () => {
 };
 
 const AppContent: React.FC = () => {
-  const { currentPortal } = useApp();
+  const { currentPortal, isAuthenticatedCoach } = useApp();
 
   const isPreviewOrDev = typeof window !== 'undefined' && (
     window.location.hostname === 'localhost' ||
@@ -150,11 +151,11 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans antialiased">
-      {isPreviewOrDev && currentPortal !== 'landing' && currentPortal !== 'onboarding' && <SubdomainSwitcher />}
+      {isPreviewOrDev && currentPortal !== 'landing' && currentPortal !== 'onboarding' && isAuthenticatedCoach && <SubdomainSwitcher />}
       {currentPortal === 'landing' && <LandingPage />}
       {currentPortal === 'speaker_app' && <ClientPortal />}
       {currentPortal === 'onboarding' && <OnboardingFlow />}
-      {currentPortal === 'coach_os' && <MainLayout />}
+      {currentPortal === 'coach_os' && (isAuthenticatedCoach ? <MainLayout /> : <CoachLoginPortal />)}
     </div>
   );
 };

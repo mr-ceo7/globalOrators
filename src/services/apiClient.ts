@@ -192,6 +192,16 @@ export const authApi = {
     }
     return data;
   },
+  register: async (payload: { email: string; password: string; full_name: string; role?: string; coach_invite_code?: string; avatar?: string }) => {
+    const data = await api.post<{ access_token: string; token_type: string; user: any }>('/auth/register', payload);
+    if (data?.access_token) {
+      localStorage.setItem('nubianfit_token', data.access_token);
+      localStorage.setItem('globalorators_token', data.access_token);
+      localStorage.setItem('nubianfit_user', JSON.stringify(data.user));
+      localStorage.setItem('globalorators_user', JSON.stringify(data.user));
+    }
+    return data;
+  },
   googleAuth: async (credential: string, role: 'coach' | 'speaker' = 'speaker') => {
     const data = await api.post<{ access_token: string; token_type: string; user: any }>('/auth/google', {
       credential,

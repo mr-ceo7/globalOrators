@@ -125,6 +125,10 @@ interface AppContextType {
   referredCoach: string | null;
   reassignClientCoach: (clientId: string, coachId: string, reason?: string) => Promise<boolean>;
   addAdjudicationNote: (clientId: string, note: string, rubricCategory?: string, rating?: number) => Promise<boolean>;
+  currentCoachUser: { id: string; email: string; full_name: string; role: string; avatar?: string } | null;
+  isAuthenticatedCoach: boolean;
+  loginCoach: (email: string, password: string) => Promise<{ success: boolean; error?: string; user?: any }>;
+  registerCoach: (payload: { email: string; password: string; fullName: string; inviteCode: string }) => Promise<{ success: boolean; error?: string; user?: any }>;
   logout: () => void;
 }
 
@@ -370,6 +374,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, []);
 
+  const [currentCoachUser, setCurrentCoachUser] = useState<{ id: string; email: string; full_name: string; role: string; avatar?: string } | null>(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const token = localStorage.getItem('globalorators_token') || localStorage.getItem('nubianfit_token');
+      if (!token) return null;
+      const savedUserStr = localStorage.getItem('globalorators_user') || localStorage.getItem('nubianfit_user');
+      if (savedUserStr) {
+        const u = JSON.parse(savedUserStr);
+        if (u && u.role === 'coach') return u;
+        if (u && u.role === 'speaker') return null;
+      }
+      return { id: 'coach-session', email: '', full_name: 'Faculty Coach', role: 'coach', avatar: '', is_active: true };
+    } catch {
+      return null;
+    }
+  });
+
+  const isAuthenticatedCoach = Boolean(
+    currentCoachUser ||
+    (typeof window !== 'undefined' &&
+      Boolean(localStorage.getItem('globalorators_token') || localStorage.getItem('nubianfit_token')) &&
+      (() => {
+        try {
+          const u = localStorage.getItem('globalorators_user') || localStorage.getItem('nubianfit_user');
+          return u ? JSON.parse(u)?.role === 'coach' : true;
+        } catch {
+          return true;
+        }
+      })()
+    )
+  );
+
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [isWorkoutLoggerOpen, setIsWorkoutLoggerOpen] = useState<boolean>(false);
   const [activeWorkoutToLog, setActiveWorkoutToLog] = useState<ScheduledWorkout | null>(null);
@@ -559,10 +595,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         console.error('Failed to sync activity from API:', activityRes.reason);
       }
 
-      // Bind speaker profile hydration strictly to authenticated server identity (H1/M3)
+      // Bind identity hydration strictly to authenticated server identity (H1/M3)
       const savedUserStr = localStorage.getItem('globalorators_user') || localStorage.getItem('nubianfit_user');
       const currentUserRole = savedUserStr ? JSON.parse(savedUserStr)?.role : null;
-      if (currentUserRole !== 'coach') {
+      if (currentUserRole === 'coach') {
+        try {
+          const me = await authApi.me();
+          if (me && me.role === 'coach') {
+            setCurrentCoachUser(me);
+            localStorage.setItem('globalorators_user', JSON.stringify(me));
+          }
+        } catch {
+          // Keep current in-memory state or fail-closed on next request
+        }
+      } else {
         try {
           const me = await clientsApi.getMe();
           if (me) {
@@ -597,6 +643,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const logout = useCallback(() => {
     clearAuthSession();
     setActiveSpeakerProfile(null);
+    setCurrentCoachUser(null);
     setClients([]);
     setPrograms([]);
     setScheduledWorkouts([]);
@@ -607,12 +654,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setMessages([]);
     setActivityFeed([]);
     setSelectedClientId(null);
-    setCurrentPortal('landing');
-  }, [setCurrentPortal]);
+    if (currentPortal !== 'coach_os') {
+      setCurrentPortal('landing');
+    }
+  }, [currentPortal, setCurrentPortal]);
 
   useEffect(() => {
     const handleSessionCleared = () => {
       setActiveSpeakerProfile(null);
+      setCurrentCoachUser(null);
       setClients([]);
       setPrograms([]);
       setScheduledWorkouts([]);
@@ -623,13 +673,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setMessages([]);
       setActivityFeed([]);
       setSelectedClientId(null);
-      setCurrentPortal('landing');
+      if (currentPortal !== 'coach_os') {
+        setCurrentPortal('landing');
+      }
     };
     window.addEventListener('auth:session_cleared', handleSessionCleared);
     return () => {
       window.removeEventListener('auth:session_cleared', handleSessionCleared);
     };
-  }, [setCurrentPortal]);
+  }, [currentPortal, setCurrentPortal]);
 
   const selectedClient = clients.find(c => c.id === selectedClientId);
 
@@ -1296,6 +1348,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const res = await authApi.googleAuth(credential, role);
       if (res && res.user) {
         if (res.user.role === 'coach') {
+          setCurrentCoachUser(res.user);
           setCurrentPortal('coach_os');
           showToast(`Welcome back, Coach ${res.user.full_name}.`);
           return { success: true, user: res.user };
@@ -1337,6 +1390,50 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return { success: false, error: err?.message || 'Google authentication failed. Please try again.' };
     }
   }, [setCurrentPortal, showToast]);
+
+  const loginCoach = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: string; user?: any }> => {
+    try {
+      const res = await authApi.login(email.trim().toLowerCase(), password);
+      if (res && res.access_token && res.user) {
+        if (res.user.role !== 'coach') {
+          clearAuthSession();
+          return { success: false, error: 'Access denied: this account does not have coaching privileges.' };
+        }
+        setCurrentCoachUser(res.user);
+        await refreshFromBackend();
+        setCurrentPortal('coach_os');
+        showToast(`Welcome back, Coach ${res.user.full_name}.`);
+        return { success: true, user: res.user };
+      }
+      return { success: false, error: 'Invalid email or password.' };
+    } catch (err: any) {
+      const msg = err?.response?.data?.detail || err?.message || 'Authentication failed. Please verify credentials.';
+      return { success: false, error: msg };
+    }
+  }, [refreshFromBackend, setCurrentPortal, showToast]);
+
+  const registerCoach = useCallback(async (payload: { email: string; password: string; fullName: string; inviteCode: string }): Promise<{ success: boolean; error?: string; user?: any }> => {
+    try {
+      const res = await authApi.register({
+        email: payload.email.trim().toLowerCase(),
+        password: payload.password,
+        full_name: payload.fullName.trim(),
+        role: 'coach',
+        coach_invite_code: payload.inviteCode.trim()
+      });
+      if (res && res.access_token && res.user) {
+        setCurrentCoachUser(res.user);
+        await refreshFromBackend();
+        setCurrentPortal('coach_os');
+        showToast(`Coach account provisioned. Welcome, Coach ${res.user.full_name}.`);
+        return { success: true, user: res.user };
+      }
+      return { success: false, error: 'Registration failed.' };
+    } catch (err: any) {
+      const msg = err?.response?.data?.detail || err?.message || 'Registration failed. Please check invite code and details.';
+      return { success: false, error: msg };
+    }
+  }, [refreshFromBackend, setCurrentPortal, showToast]);
 
   return (
     <AppContext.Provider
@@ -1400,6 +1497,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         referredCoach,
         reassignClientCoach,
         addAdjudicationNote,
+        currentCoachUser,
+        isAuthenticatedCoach,
+        loginCoach,
+        registerCoach,
         logout
       }}
     >
