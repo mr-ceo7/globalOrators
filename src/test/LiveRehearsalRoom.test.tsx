@@ -158,4 +158,52 @@ describe('LiveRehearsalRoom Dual Engine Tests', () => {
 
     expect(writeTextMock).toHaveBeenCalledWith(expect.stringContaining('GlobalOrators-KassimMusa-client1'));
   });
+
+  test('should switch between Rehearse, Evaluate, and Debrief modes with session semantics', () => {
+    render(
+      <LiveRehearsalRoom
+        isOpen={true}
+        onClose={vi.fn()}
+        roomTitle="Executive Boardroom Defense"
+        speakerName="Dr. Arthur Vance"
+        speakerId="exec-vance"
+        userRole="coach"
+        branch="Academy"
+      />
+    );
+
+    // Initial Rehearse mode displays Practice Clock and Target outcome
+    expect(screen.getByText('Practice Clock')).toBeInTheDocument();
+    expect(screen.getByText(/Target:/i)).toBeInTheDocument();
+    expect(screen.getByText('Session Directives')).toBeInTheDocument();
+
+    // Switch to Evaluate mode
+    const evaluateTabs = screen.getAllByRole('tab', { name: /Evaluate/i });
+    fireEvent.click(evaluateTabs[0]);
+    expect(screen.getByText('Executive Delivery & Poise Rubric')).toBeInTheDocument();
+
+    // Switch to Debrief mode
+    const debriefTabs = screen.getAllByRole('tab', { name: /Debrief/i });
+    fireEvent.click(debriefTabs[0]);
+    expect(screen.getByText('Session Debrief & Vault Archive')).toBeInTheDocument();
+    expect(screen.getByText('Next Immediate Drill')).toBeInTheDocument();
+    expect(screen.getByText('Archive Debrief to Speaker Vault')).toBeInTheDocument();
+  });
+
+  test('should close live rehearsal room when Escape key is pressed', () => {
+    const handleClose = vi.fn();
+    render(
+      <LiveRehearsalRoom
+        isOpen={true}
+        onClose={handleClose}
+        roomTitle="Pan-African Chamber"
+        speakerName="Obed Imbusi"
+        userRole="speaker"
+        branch="Academy"
+      />
+    );
+
+    fireEvent.keyDown(window, { key: 'Escape', code: 'Escape' });
+    expect(handleClose).toHaveBeenCalledTimes(1);
+  });
 });

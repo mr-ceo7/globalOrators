@@ -51,6 +51,30 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
   branch = 'Academy',
   onSaveFeedback
 }) => {
+  // Rehearsal Mode Workflow: Rehearse, Evaluate, Debrief
+  const [rehearsalMode, setRehearsalMode] = useState<'rehearse' | 'evaluate' | 'debrief'>('rehearse');
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  const previousActiveElement = useRef<HTMLElement | null>(null);
+
+  // Focus trapping and Escape key management
+  useEffect(() => {
+    if (!isOpen) return;
+    previousActiveElement.current = document.activeElement as HTMLElement;
+    dialogRef.current?.focus();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      previousActiveElement.current?.focus();
+    };
+  }, [isOpen, onClose]);
+
   // Mobile Tab State
   const [mobileTab, setMobileTab] = useState<'video' | 'forensics'>('video');
 
@@ -485,6 +509,81 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
   const isProtectedFinalMinute = isBPMode && secondsRemaining <= 60 && secondsRemaining > 0;
   const isPoiFloorOpen = isBPMode && !isProtectedFirstMinute && !isProtectedFinalMinute && secondsRemaining > 0;
 
+  const phaseProgressPercent = Math.min(100, Math.max(0, Math.round((elapsedSeconds / timerPreset) * 100)));
+
+  const sessionPhaseDetails = useMemo(() => {
+    if (isExecutiveRoom) {
+      if (isProtectedFirstMinute) {
+        return {
+          phaseLabel: 'Phase 1 of 4 · Protected Speaking Time',
+          phaseName: 'Protected Opening Hook',
+          targetOutcome: 'Anchor high-conviction premise without hedging or filler qualifiers',
+          badgeText: 'Protected Period · Uninterrupted Flow'
+        };
+      } else if (isPoiFloorOpen) {
+        return {
+          phaseLabel: 'Phase 2 of 4 · Q&A Stress Test & Defense',
+          phaseName: 'Executive Cadence & Delivery',
+          targetOutcome: 'Answer directly, bridge to unit economics, hold deliberate pauses',
+          badgeText: 'Floor Open · High-Stakes Q&A'
+        };
+      } else if (isProtectedFinalMinute) {
+        return {
+          phaseLabel: 'Phase 3 of 4 · Protected Final Sprint',
+          phaseName: 'BLUF Synthesis & Close',
+          targetOutcome: 'Deliver concise summary and definitive strategic call-to-action',
+          badgeText: 'Protected Period · High-Conviction Close'
+        };
+      } else {
+        return {
+          phaseLabel: 'Phase 4 of 4 · Session Complete',
+          phaseName: 'Debrief & Reflection',
+          targetOutcome: 'Review pacing analytics, rubric scores, and coach critique',
+          badgeText: 'Complete · Ready for Debrief'
+        };
+      }
+    }
+
+    if (isBPMode) {
+      if (isProtectedFirstMinute) {
+        return {
+          phaseLabel: 'Phase 1 of 4 · Protected Speaking Time',
+          phaseName: 'Opening Framing & Case Genesis',
+          targetOutcome: 'Establish normative framework, stakeholders, and uncontestable burden',
+          badgeText: 'Protected Period · No POIs Permitted'
+        };
+      } else if (isPoiFloorOpen) {
+        return {
+          phaseLabel: 'Phase 2 of 4 · Clash & Rebuttal Floor',
+          phaseName: 'Open Floor Clash & Cross-Examination',
+          targetOutcome: "Engage opposition's deepest mechanisms and accept 1 strategic POI",
+          badgeText: 'Floor Open · POIs Active'
+        };
+      } else if (isProtectedFinalMinute) {
+        return {
+          phaseLabel: 'Phase 3 of 4 · Protected Final Minute',
+          phaseName: 'Peroration & Whip Synthesis',
+          targetOutcome: 'Weigh key clashes and crystallize definitive voting line',
+          badgeText: 'Protected Period · Conclude Case'
+        };
+      } else {
+        return {
+          phaseLabel: 'Phase 4 of 4 · Floor Concluded',
+          phaseName: 'Adjudication & Debrief',
+          targetOutcome: 'Record team speaker points and refutation notes',
+          badgeText: 'Round Concluded · Ready for Debrief'
+        };
+      }
+    }
+
+    return {
+      phaseLabel: elapsedSeconds < timerPreset / 2 ? 'Phase 1 of 2 · Vocal Genesis' : 'Phase 2 of 2 · Sovereign Release',
+      phaseName: 'Cathartic Voice Expression',
+      targetOutcome: 'Release vocal tension and speak unvarnished truth with diaphragmatic engagement',
+      badgeText: 'Protected Period · Uninterrupted Flow'
+    };
+  }, [isExecutiveRoom, isBPMode, isProtectedFirstMinute, isPoiFloorOpen, isProtectedFinalMinute, elapsedSeconds, timerPreset]);
+
   const handleCopyLink = async () => {
     const shareUrl = studioMode === 'jitsi' ? selfHostedMeetingUrl : `${window.location.origin}/live-rehearsal?room=${safeRoomId}`;
     try {
@@ -511,7 +610,9 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
 
   return (
     <div 
-      className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex flex-col overflow-hidden select-none"
+      ref={dialogRef}
+      tabIndex={-1}
+      className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex flex-col overflow-hidden outline-none"
       role="dialog"
       aria-modal="true"
       aria-labelledby="live-room-title"
@@ -571,7 +672,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
 
           <button
             onClick={handleCopyLink}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-mono transition-colors border border-slate-700"
+            className="min-h-[44px] flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-mono transition-colors border border-slate-700"
             title="Copy rehearsal invite link"
           >
             {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -580,7 +681,8 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
 
           <button
             onClick={onClose}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-red-600/90 hover:bg-red-600 text-white text-xs font-medium transition-all shadow-sm active:scale-95"
+            aria-label="Leave Studio"
+            className="min-h-[44px] flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-red-600/90 hover:bg-red-600 text-white text-xs font-medium transition-all shadow-sm active:scale-95"
           >
             <X className="w-4 h-4" />
             <span className="hidden sm:inline">Leave Studio</span>
@@ -588,27 +690,65 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
         </div>
       </header>
 
-      {/* Mobile Tab Switcher */}
-      <div className="lg:hidden flex items-center border-b border-slate-800 bg-slate-900/60 shrink-0">
+      {/* Mobile Mode Segmented Controller (Explicit 3-Mode Workflow) */}
+      <div 
+        role="tablist" 
+        aria-label="Mobile Rehearsal Modes"
+        className="lg:hidden grid grid-cols-3 border-b border-slate-800 bg-slate-900/90 p-1 gap-1 shrink-0"
+      >
         <button
-          onClick={() => setMobileTab('video')}
-          className={`flex-1 py-2.5 text-xs font-mono uppercase tracking-wider text-center border-b-2 transition-colors ${
-            mobileTab === 'video'
-              ? 'border-[#C89630] text-[#C89630] bg-[#C89630]/5 font-bold'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
+          role="tab"
+          id="mobile-tab-rehearse"
+          aria-selected={rehearsalMode === 'rehearse'}
+          aria-controls="panel-rehearse"
+          onClick={() => {
+            setRehearsalMode('rehearse');
+            setMobileTab('video');
+          }}
+          className={`min-h-[44px] py-2 text-xs font-mono uppercase tracking-wider text-center rounded-lg flex items-center justify-center gap-1.5 transition-colors ${
+            rehearsalMode === 'rehearse'
+              ? 'bg-[#C89630] text-slate-950 font-bold shadow-sm'
+              : 'text-slate-400 hover:text-white'
           }`}
         >
-          Rehearsal Stage
+          <Clock className="w-3.5 h-3.5" />
+          <span>Rehearse</span>
         </button>
         <button
-          onClick={() => setMobileTab('forensics')}
-          className={`flex-1 py-2.5 text-xs font-mono uppercase tracking-wider text-center border-b-2 transition-colors ${
-            mobileTab === 'forensics'
-              ? 'border-[#C89630] text-[#C89630] bg-[#C89630]/5 font-bold'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
+          role="tab"
+          id="mobile-tab-evaluate"
+          aria-selected={rehearsalMode === 'evaluate'}
+          aria-controls="panel-evaluate"
+          onClick={() => {
+            setRehearsalMode('evaluate');
+            setMobileTab('forensics');
+          }}
+          className={`min-h-[44px] py-2 text-xs font-mono uppercase tracking-wider text-center rounded-lg flex items-center justify-center gap-1.5 transition-colors ${
+            rehearsalMode === 'evaluate'
+              ? 'bg-[#C89630] text-slate-950 font-bold shadow-sm'
+              : 'text-slate-400 hover:text-white'
           }`}
         >
-          Timer & Rubric
+          <FileText className="w-3.5 h-3.5" />
+          <span>Evaluate</span>
+        </button>
+        <button
+          role="tab"
+          id="mobile-tab-debrief"
+          aria-selected={rehearsalMode === 'debrief'}
+          aria-controls="panel-debrief"
+          onClick={() => {
+            setRehearsalMode('debrief');
+            setMobileTab('forensics');
+          }}
+          className={`min-h-[44px] py-2 text-xs font-mono uppercase tracking-wider text-center rounded-lg flex items-center justify-center gap-1.5 transition-colors ${
+            rehearsalMode === 'debrief'
+              ? 'bg-[#C89630] text-slate-950 font-bold shadow-sm'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <Save className="w-3.5 h-3.5" />
+          <span>Debrief</span>
         </button>
       </div>
 
@@ -850,226 +990,384 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
         </div>
 
         {/* FORENSICS & RUBRIC SIDEBAR (Cols 9-12 on desktop) */}
-        <div className={`lg:col-span-4 border-l border-slate-800 bg-slate-900/70 p-4 sm:p-6 overflow-y-auto flex flex-col gap-6 ${
+        <div className={`lg:col-span-4 border-l border-slate-800 bg-slate-900/70 p-4 sm:p-6 overflow-y-auto flex flex-col gap-4 ${
           mobileTab === 'forensics' ? 'flex' : 'hidden lg:flex'
         }`}>
 
-          {/* Section 1: Speech & Floor Timer */}
-          <section className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-slate-400">
-                <Clock className="w-3.5 h-3.5 text-[#C89630]" />
-                <span>Speech & Floor Timer</span>
-              </div>
-              <span className="text-[10px] font-mono text-slate-400">
-                {isExecutiveRoom ? 'Executive Presentation Sprint' : branch === 'Foundation' ? 'Catharsis Sprint' : 'British Parliamentary'}
-              </span>
-            </div>
-
-            {/* Big Countdown Digits */}
-            <div className="py-4 px-2 text-center bg-slate-950 rounded-xl border border-slate-800/80 mb-4">
-              <div className="font-mono text-4xl sm:text-5xl font-bold tracking-tight text-white">
-                {formatTime(secondsRemaining)}
-              </div>
-
-              {/* Phase Indicator */}
-              <div className="mt-2.5">
-                {isExecutiveRoom ? (
-                  isProtectedFirstMinute ? (
-                    <span className="inline-block text-[10px] font-mono tracking-widest uppercase bg-slate-900 text-slate-300 px-3 py-1 rounded-lg border border-slate-800">
-                      Opening Hook • Uninterrupted Flow
-                    </span>
-                  ) : isPoiFloorOpen ? (
-                    <span className="inline-block text-[10px] font-mono tracking-widest uppercase bg-amber-500/15 text-amber-300 px-3 py-1 rounded-lg border border-amber-500/30">
-                      Executive Delivery • Cadence & Presence
-                    </span>
-                  ) : (
-                    <span className="inline-block text-[10px] font-mono tracking-widest uppercase bg-slate-900 text-slate-300 px-3 py-1 rounded-lg border border-slate-800">
-                      BLUF Conclusion • High-Conviction Close
-                    </span>
-                  )
-                ) : isBPMode ? (
-                  isProtectedFirstMinute ? (
-                    <span className="inline-block text-[10px] font-mono tracking-widest uppercase bg-slate-900 text-slate-300 px-3 py-1 rounded-lg border border-slate-800">
-                      Protected Period • No POIs
-                    </span>
-                  ) : isPoiFloorOpen ? (
-                    <span className="inline-block text-[10px] font-mono tracking-widest uppercase bg-amber-500/15 text-amber-300 px-3 py-1 rounded-lg border border-amber-500/30">
-                      Floor Open • POIs Permitted
-                    </span>
-                  ) : (
-                    <span className="inline-block text-[10px] font-mono tracking-widest uppercase bg-slate-900 text-slate-300 px-3 py-1 rounded-lg border border-slate-800">
-                      Protected Final Minute • Conclude
-                    </span>
-                  )
-                ) : (
-                  <span className="inline-block text-[10px] font-mono tracking-widest uppercase bg-emerald-500/15 text-emerald-300 px-3 py-1 rounded-lg border border-emerald-500/30">
-                    Vocal Cadence Flow
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Timer Presets Grid */}
-            <div className="grid grid-cols-2 gap-2 mb-4">
-              <button
-                onClick={() => handleSelectPreset(420)}
-                className={`p-2.5 rounded-xl border text-left transition-all ${
-                  timerPreset === 420 
-                    ? 'bg-[#C89630]/15 border-[#C89630]/50 text-white' 
-                    : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                <div className="text-xs font-bold">{isExecutiveRoom ? '7:00 Boardroom Defense' : '7:00 BP Speech'}</div>
-                <div className="text-[10px] text-slate-400 font-mono">{isExecutiveRoom ? 'Q&A Stress Test & Close' : 'Full Standard Round'}</div>
-              </button>
-
-              <button
-                onClick={() => handleSelectPreset(300)}
-                className={`p-2.5 rounded-xl border text-left transition-all ${
-                  timerPreset === 300 
-                    ? 'bg-[#C89630]/15 border-[#C89630]/50 text-white' 
-                    : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                <div className="text-xs font-bold">{isExecutiveRoom ? '5:00 Venture Pitch' : '5:00 Catharsis'}</div>
-                <div className="text-[10px] text-slate-400 font-mono">{isExecutiveRoom ? 'Investor Thesis & Ask' : 'Vocal Release Flow'}</div>
-              </button>
-
-              <button
-                onClick={() => handleSelectPreset(180)}
-                className={`p-2.5 rounded-xl border text-left transition-all ${
-                  timerPreset === 180 
-                    ? 'bg-[#C89630]/15 border-[#C89630]/50 text-white' 
-                    : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                <div className="text-xs font-bold">{isExecutiveRoom ? '3:00 Exec Summary' : '3:00 Rebuttal'}</div>
-                <div className="text-[10px] text-slate-400 font-mono">{isExecutiveRoom ? 'BLUF Problem & Solution' : 'Clash & Extension'}</div>
-              </button>
-
-              <button
-                onClick={() => handleSelectPreset(60)}
-                className={`p-2.5 rounded-xl border text-left transition-all ${
-                  timerPreset === 60 
-                    ? 'bg-[#C89630]/15 border-[#C89630]/50 text-white' 
-                    : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                <div className="text-xs font-bold">{isExecutiveRoom ? '1:00 Elevator Hook' : '1:00 POI / Hook'}</div>
-                <div className="text-[10px] text-slate-400 font-mono">{isExecutiveRoom ? 'High-Stakes Introduction' : 'Impromptu Sprint'}</div>
-              </button>
-            </div>
-
-            {/* Timer Actions */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setIsTimerRunning(!isTimerRunning)}
-                className={`flex-1 py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 text-xs font-bold transition-all shadow-md active:scale-95 ${
-                  isTimerRunning 
-                    ? 'bg-amber-600 hover:bg-amber-500 text-slate-950' 
-                    : 'bg-[#C89630] hover:bg-[#d6a543] text-slate-950'
-                }`}
-              >
-                {isTimerRunning ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current" />}
-                <span>{isTimerRunning ? 'Pause Clock' : 'Start Speech Clock'}</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setIsTimerRunning(false);
-                  setSecondsRemaining(timerPreset);
-                }}
-                className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-colors"
-                title="Reset Clock"
-              >
-                <RotateCcw className="w-4 h-4" />
-              </button>
-            </div>
-          </section>
-
-          {/* Section 2: Coach Live Evaluation Rubric */}
-          <section className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-slate-400">
-                <FileText className="w-3.5 h-3.5 text-[#C89630]" />
-                <span>{isExecutiveRoom ? 'Executive Delivery & Poise Rubric' : 'Coach Live Evaluation Rubric'}</span>
-              </div>
-              <span className="text-xs font-mono text-[#C89630] font-bold">
-                {rubricScore}/10 Score
-              </span>
-            </div>
-
-            {/* Dialectic Clash & Poise Slider */}
-            <div>
-              <div className="flex justify-between text-xs font-medium text-slate-300 mb-1.5">
-                <span>{isExecutiveRoom ? 'Executive Presence & Conviction' : 'Dialectical Clash & Poise'}</span>
-                <span className="font-mono text-slate-400">{rubricScore} / 10</span>
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="10"
-                step="1"
-                value={rubricScore}
-                onChange={(e) => setRubricScore(Number(e.target.value))}
-                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-[#C89630]"
-              />
-            </div>
-
-            {/* Speaking Pace (WPM) Slider */}
-            <div>
-              <div className="flex justify-between text-xs font-medium text-slate-300 mb-1.5">
-                <span>Estimated Speaking Pace</span>
-                <span className="font-mono text-slate-400">{cadenceWpm} WPM</span>
-              </div>
-              <input
-                type="range"
-                min="100"
-                max="200"
-                step="2"
-                value={cadenceWpm}
-                onChange={(e) => setCadenceWpm(Number(e.target.value))}
-                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-[#C89630]"
-              />
-            </div>
-
-            {/* Rehearsal Critique Notes */}
-            <div>
-              <label className="block text-xs font-mono uppercase tracking-wider text-slate-400 mb-1.5">
-                {isExecutiveRoom ? 'Executive Critique & Boardroom Delivery Notes' : 'Rehearsal Critique & Refutation Notes'}
-              </label>
-              <textarea
-                value={rehearsalNotes}
-                onChange={(e) => setRehearsalNotes(e.target.value)}
-                placeholder={
-                  isExecutiveRoom
-                    ? 'Jot down specific feedback on executive composure, BLUF framing, vocal resonance, strategic pauses, and objection handling...'
-                    : 'Jot down specific feedback on framing, syllogistic structure, eye contact, vocal variety, or rebuttal execution...'
-                }
-                rows={3}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-[#C89630] resize-none"
-              />
-            </div>
-
-            {/* Save Feedback Button */}
+          {/* Segmented Mode Controller (Persistent on Desktop) */}
+          <div 
+            role="tablist" 
+            aria-label="Rehearsal Workflow Modes" 
+            className="hidden lg:grid grid-cols-3 bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-mono mb-1 shrink-0"
+          >
             <button
-              onClick={handleSaveNotes}
-              className="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 text-xs font-medium flex items-center justify-center gap-2 transition-colors active:scale-95"
+              role="tab"
+              id="tab-rehearse"
+              aria-selected={rehearsalMode === 'rehearse'}
+              aria-controls="panel-rehearse"
+              onClick={() => setRehearsalMode('rehearse')}
+              className={`min-h-[44px] px-2 py-2 rounded-lg font-semibold transition-all text-center flex items-center justify-center gap-1.5 ${
+                rehearsalMode === 'rehearse'
+                  ? 'bg-[#C89630] text-slate-950 font-bold shadow-sm'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
+              }`}
             >
-              {savedSuccess ? (
-                <>
-                  <Check className="w-4 h-4 text-emerald-400" />
-                  <span className="text-emerald-400 font-bold">Feedback Saved to Speaker Profile</span>
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4 text-slate-400" />
-                  <span>Save Feedback to Speaker Vault</span>
-                </>
-              )}
+              <Clock className="w-3.5 h-3.5" />
+              <span>Rehearse</span>
             </button>
-          </section>
+            <button
+              role="tab"
+              id="tab-evaluate"
+              aria-selected={rehearsalMode === 'evaluate'}
+              aria-controls="panel-evaluate"
+              onClick={() => setRehearsalMode('evaluate')}
+              className={`min-h-[44px] px-2 py-2 rounded-lg font-semibold transition-all text-center flex items-center justify-center gap-1.5 ${
+                rehearsalMode === 'evaluate'
+                  ? 'bg-[#C89630] text-slate-950 font-bold shadow-sm'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
+              }`}
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Evaluate</span>
+            </button>
+            <button
+              role="tab"
+              id="tab-debrief"
+              aria-selected={rehearsalMode === 'debrief'}
+              aria-controls="panel-debrief"
+              onClick={() => setRehearsalMode('debrief')}
+              className={`min-h-[44px] px-2 py-2 rounded-lg font-semibold transition-all text-center flex items-center justify-center gap-1.5 ${
+                rehearsalMode === 'debrief'
+                  ? 'bg-[#C89630] text-slate-950 font-bold shadow-sm'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
+              }`}
+            >
+              <Save className="w-3.5 h-3.5" />
+              <span>Debrief</span>
+            </button>
+          </div>
+
+          {/* Panel 1: REHEARSE */}
+          <div 
+            id="panel-rehearse" 
+            role="tabpanel" 
+            aria-labelledby="tab-rehearse"
+            className={rehearsalMode === 'rehearse' ? 'space-y-4' : 'hidden'}
+          >
+            {/* Practice Clock & Presets */}
+            <section className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-slate-400">
+                  <Clock className="w-3.5 h-3.5 text-[#C89630]" />
+                  <span>Practice Clock</span>
+                </div>
+                <span className="text-[10px] font-mono text-slate-400">
+                  {isExecutiveRoom ? 'Boardroom Defense' : isBPMode ? 'British Parliamentary' : 'Vocal Catharsis Sprint'}
+                </span>
+              </div>
+
+              {/* Phase and Session Semantics */}
+              <div className="mb-3">
+                <div className="flex items-center justify-between text-xs text-slate-300 font-mono">
+                  <span>{sessionPhaseDetails.phaseLabel}</span>
+                  <span className="text-[10px] text-slate-400">{phaseProgressPercent}%</span>
+                </div>
+                {/* Hairline Phase Progress Bar */}
+                <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden my-2">
+                  <div 
+                    className="h-full bg-[#C89630] transition-all duration-300"
+                    style={{ width: `${Math.max(4, phaseProgressPercent)}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Big Countdown Digits */}
+              <div className="py-4 px-2 text-center bg-slate-950 rounded-xl border border-slate-800/80 mb-4">
+                <div className="font-mono text-4xl sm:text-5xl font-bold tracking-tight text-white">
+                  {formatTime(secondsRemaining)}
+                </div>
+
+                <div className="sr-only" aria-live="polite" aria-atomic="true">
+                  {isTimerRunning ? `${formatTime(secondsRemaining)} remaining. ${sessionPhaseDetails.badgeText}` : `Clock paused at ${formatTime(secondsRemaining)}`}
+                </div>
+
+                {/* Target Outcome & Phase Badge */}
+                <div className="mt-3 space-y-1.5">
+                  <span className="inline-block text-[10px] font-mono tracking-widest uppercase bg-slate-900 text-slate-300 px-3 py-1 rounded-lg border border-slate-800">
+                    {sessionPhaseDetails.badgeText}
+                  </span>
+                  <p className="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
+                    Target: {sessionPhaseDetails.targetOutcome}
+                  </p>
+                </div>
+              </div>
+
+              {/* Timer Presets Grid */}
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                <button
+                  onClick={() => handleSelectPreset(420)}
+                  className={`min-h-[44px] p-2.5 rounded-xl border text-left transition-all ${
+                    timerPreset === 420 
+                      ? 'bg-[#C89630]/15 border-[#C89630]/50 text-white' 
+                      : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <div className="text-xs font-bold">{isExecutiveRoom ? '7:00 Boardroom Defense' : '7:00 BP Speech'}</div>
+                  <div className="text-[10px] text-slate-400 font-mono">{isExecutiveRoom ? 'Q&A Stress Test & Close' : 'Full Standard Round'}</div>
+                </button>
+
+                <button
+                  onClick={() => handleSelectPreset(300)}
+                  className={`min-h-[44px] p-2.5 rounded-xl border text-left transition-all ${
+                    timerPreset === 300 
+                      ? 'bg-[#C89630]/15 border-[#C89630]/50 text-white' 
+                      : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <div className="text-xs font-bold">{isExecutiveRoom ? '5:00 Venture Pitch' : '5:00 Catharsis'}</div>
+                  <div className="text-[10px] text-slate-400 font-mono">{isExecutiveRoom ? 'Investor Thesis & Ask' : 'Vocal Release Flow'}</div>
+                </button>
+
+                <button
+                  onClick={() => handleSelectPreset(180)}
+                  className={`min-h-[44px] p-2.5 rounded-xl border text-left transition-all ${
+                    timerPreset === 180 
+                      ? 'bg-[#C89630]/15 border-[#C89630]/50 text-white' 
+                      : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <div className="text-xs font-bold">{isExecutiveRoom ? '3:00 Exec Summary' : '3:00 Rebuttal'}</div>
+                  <div className="text-[10px] text-slate-400 font-mono">{isExecutiveRoom ? 'BLUF Problem & Solution' : 'Clash & Extension'}</div>
+                </button>
+
+                <button
+                  onClick={() => handleSelectPreset(60)}
+                  className={`min-h-[44px] p-2.5 rounded-xl border text-left transition-all ${
+                    timerPreset === 60 
+                      ? 'bg-[#C89630]/15 border-[#C89630]/50 text-white' 
+                      : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <div className="text-xs font-bold">{isExecutiveRoom ? '1:00 Elevator Hook' : '1:00 POI / Hook'}</div>
+                  <div className="text-[10px] text-slate-400 font-mono">{isExecutiveRoom ? 'High-Stakes Introduction' : 'Impromptu Sprint'}</div>
+                </button>
+              </div>
+
+              {/* Timer Actions */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setIsTimerRunning(!isTimerRunning)}
+                  className={`min-h-[44px] flex-1 py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 text-xs font-bold transition-all shadow-md active:scale-95 ${
+                    isTimerRunning 
+                      ? 'bg-amber-600 hover:bg-amber-500 text-slate-950' 
+                      : 'bg-[#C89630] hover:bg-[#d6a543] text-slate-950'
+                  }`}
+                >
+                  {isTimerRunning ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current" />}
+                  <span>{isTimerRunning ? 'Pause Clock' : 'Start Speech Clock'}</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setIsTimerRunning(false);
+                    setSecondsRemaining(timerPreset);
+                  }}
+                  aria-label="Reset speech clock"
+                  className="min-h-[44px] min-w-[44px] p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-colors flex items-center justify-center"
+                  title="Reset Clock"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </button>
+              </div>
+            </section>
+
+            {/* Rehearsal Objectives Card */}
+            <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4">
+              <div className="text-[10px] font-mono text-[#C89630] uppercase tracking-wider font-semibold mb-2">
+                Session Directives
+              </div>
+              <ul className="space-y-2 text-xs text-slate-300">
+                <li className="flex items-start gap-2">
+                  <Check className="w-3.5 h-3.5 text-[#C89630] shrink-0 mt-0.5" />
+                  <span>Command the opening without filler qualifiers or throat clearing.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="w-3.5 h-3.5 text-[#C89630] shrink-0 mt-0.5" />
+                  <span>Maintain diaphragmatic breath support at 135–145 WPM cadence.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="w-3.5 h-3.5 text-[#C89630] shrink-0 mt-0.5" />
+                  <span>Advance to Evaluate tab after final peroration to review coach rubric.</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Panel 2: EVALUATE */}
+          <div 
+            id="panel-evaluate" 
+            role="tabpanel" 
+            aria-labelledby="tab-evaluate"
+            className={rehearsalMode === 'evaluate' ? 'space-y-4' : 'hidden'}
+          >
+            <section className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-slate-400">
+                  <FileText className="w-3.5 h-3.5 text-[#C89630]" />
+                  <span>{isExecutiveRoom ? 'Executive Delivery & Poise Rubric' : 'Coach Live Evaluation Rubric'}</span>
+                </div>
+                <span className="text-xs font-mono text-[#C89630] font-bold">
+                  {rubricScore}/10 Score
+                </span>
+              </div>
+
+              {/* Dialectic Clash & Poise Slider */}
+              <div>
+                <div className="flex justify-between text-xs font-medium text-slate-300 mb-1.5">
+                  <span>{isExecutiveRoom ? 'Executive Presence & Conviction' : 'Dialectical Clash & Poise'}</span>
+                  <span className="font-mono text-slate-400">{rubricScore} / 10</span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="10"
+                  step="1"
+                  value={rubricScore}
+                  onChange={(e) => setRubricScore(Number(e.target.value))}
+                  className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-[#C89630]"
+                />
+              </div>
+
+              {/* Speaking Pace (WPM) Slider */}
+              <div>
+                <div className="flex justify-between text-xs font-medium text-slate-300 mb-1.5">
+                  <span>Estimated Speaking Pace</span>
+                  <span className="font-mono text-slate-400">{cadenceWpm} WPM</span>
+                </div>
+                <input
+                  type="range"
+                  min="100"
+                  max="200"
+                  step="2"
+                  value={cadenceWpm}
+                  onChange={(e) => setCadenceWpm(Number(e.target.value))}
+                  className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-[#C89630]"
+                />
+              </div>
+
+              {/* Rehearsal Critique Notes */}
+              <div>
+                <label className="block text-xs font-mono uppercase tracking-wider text-slate-400 mb-1.5">
+                  {isExecutiveRoom ? 'Executive Critique & Boardroom Delivery Notes' : 'Rehearsal Critique & Refutation Notes'}
+                </label>
+                <textarea
+                  value={rehearsalNotes}
+                  onChange={(e) => setRehearsalNotes(e.target.value)}
+                  placeholder={
+                    isExecutiveRoom
+                      ? 'Jot down specific feedback on executive composure, BLUF framing, vocal resonance, strategic pauses, and objection handling...'
+                      : 'Jot down specific feedback on framing, syllogistic structure, eye contact, vocal variety, or rebuttal execution...'
+                  }
+                  rows={3}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-[#C89630] resize-none"
+                />
+              </div>
+
+              {/* Save Feedback Button */}
+              <button
+                onClick={handleSaveNotes}
+                className="w-full min-h-[44px] py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 text-xs font-medium flex items-center justify-center gap-2 transition-colors active:scale-95"
+              >
+                {savedSuccess ? (
+                  <>
+                    <Check className="w-4 h-4 text-emerald-400" />
+                    <span className="text-emerald-400 font-bold">Feedback Saved to Speaker Profile</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 text-slate-400" />
+                    <span>Save Feedback to Speaker Vault</span>
+                  </>
+                )}
+              </button>
+            </section>
+          </div>
+
+          {/* Panel 3: DEBRIEF */}
+          <div 
+            id="panel-debrief" 
+            role="tabpanel" 
+            aria-labelledby="tab-debrief"
+            className={rehearsalMode === 'debrief' ? 'space-y-4' : 'hidden'}
+          >
+            <section className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-slate-400">
+                  <Save className="w-3.5 h-3.5 text-[#C89630]" />
+                  <span>Session Debrief & Vault Archive</span>
+                </div>
+                <span className="text-[10px] font-mono text-[#C89630] font-bold">
+                  {timerPreset - secondsRemaining > 0 ? `${Math.floor((timerPreset - secondsRemaining) / 60)}m ${(timerPreset - secondsRemaining) % 60}s Logged` : 'Ready to Debrief'}
+                </span>
+              </div>
+
+              {/* Metric Overview Grid */}
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-slate-950 p-3 rounded-xl border border-slate-800/80">
+                  <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Evaluation Score</div>
+                  <div className="text-xl font-serif font-bold text-[#C89630] mt-0.5">{rubricScore} / 10</div>
+                  <div className="text-[10px] font-mono text-emerald-400 mt-0.5">High Composure</div>
+                </div>
+                <div className="bg-slate-950 p-3 rounded-xl border border-slate-800/80">
+                  <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Speaking Cadence</div>
+                  <div className="text-xl font-serif font-bold text-white mt-0.5">{cadenceWpm} <span className="text-xs font-mono font-normal text-slate-400">WPM</span></div>
+                  <div className="text-[10px] font-mono text-[#C89630] mt-0.5">Controlled Tempo</div>
+                </div>
+              </div>
+
+              {/* Saved Notes Card */}
+              <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
+                <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1.5 font-semibold">
+                  Recorded Feedback Notes
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed font-sans italic">
+                  {rehearsalNotes ? `"${rehearsalNotes}"` : 'No immediate critique notes entered yet. Switch to Evaluate tab to capture specific speech points.'}
+                </p>
+              </div>
+
+              {/* Prescribed Next Action */}
+              <div className="bg-[#C89630]/5 border border-[#C89630]/20 rounded-xl p-3.5">
+                <div className="text-[10px] font-mono text-[#C89630] uppercase tracking-wider font-bold mb-1">
+                  Next Immediate Drill
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  {isExecutiveRoom 
+                    ? 'Counter-Factual Defense: Field 3 hostile valuation inquiries and deliver 45-second rebuttals without hesitation.' 
+                    : isBPMode 
+                      ? 'Extension Synthesis: Isolate uncontested second-half mechanisms and provide comparative weighing against opening bench.' 
+                      : 'Vocal Grounding Drill: Record a 90-second unfiltered voice reflection focusing on abdominal breath engagement.'}
+                </p>
+              </div>
+
+              {/* Save CTA in Debrief Mode */}
+              <button
+                onClick={handleSaveNotes}
+                className="w-full min-h-[44px] py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 text-xs font-medium flex items-center justify-center gap-2 transition-colors active:scale-95"
+              >
+                {savedSuccess ? (
+                  <>
+                    <Check className="w-4 h-4 text-emerald-400" />
+                    <span className="text-emerald-400 font-bold">Debrief Archived to Speaker Profile</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 text-slate-400" />
+                    <span>Archive Debrief to Speaker Vault</span>
+                  </>
+                )}
+              </button>
+            </section>
+          </div>
 
         </div>
 

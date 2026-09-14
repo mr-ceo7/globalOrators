@@ -136,10 +136,15 @@ describe('Speaker Login & Portal Integration Tests', () => {
     expect(screen.getByText('Championship Debate & Pan-African Leadership')).toBeInTheDocument();
     expect(screen.getByText('Decolonial Parliamentary Forensics')).toBeInTheDocument();
     expect(screen.getByText('Ideological Rigor & Rebuttal Depth')).toBeInTheDocument();
+    // Open profile menu to access Sign Out
+    const profileBtn = screen.getByRole('button', { name: /Speaker workspace profile and settings menu/i });
+    await act(async () => {
+      fireEvent.click(profileBtn);
+    });
     expect(screen.getByRole('button', { name: /Sign Out/i })).toBeInTheDocument();
 
     // Click habits tab
-    const habitsTabBtn = screen.getByRole('button', { name: /Daily Orator Rituals/i });
+    const habitsTabBtn = screen.getByRole('tab', { name: /Daily Orator Rituals/i });
     await act(async () => {
       fireEvent.click(habitsTabBtn);
     });
@@ -147,8 +152,14 @@ describe('Speaker Login & Portal Integration Tests', () => {
     // Verify dynamic habit rendered
     expect(screen.getByText('Decolonial Parliamentary Case Prep (15 Min)')).toBeInTheDocument();
 
-    // Click Sign Out
-    const signOutBtn = screen.getByRole('button', { name: /Sign Out/i });
+    // Open profile menu if not open and click Sign Out
+    let signOutBtn = screen.queryByRole('button', { name: /Sign Out/i });
+    if (!signOutBtn) {
+      await act(async () => {
+        fireEvent.click(profileBtn);
+      });
+      signOutBtn = screen.getByRole('button', { name: /Sign Out/i });
+    }
     await act(async () => {
       fireEvent.click(signOutBtn);
     });

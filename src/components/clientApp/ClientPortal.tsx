@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Mic, 
   Square, 
@@ -40,6 +40,8 @@ import { BranchType, SpeakerOnboardingData, ScheduledWorkout } from '../../types
 import { resolveSpeakerCurriculum } from '../../utils/curriculumResolver';
 import { LiveRehearsalRoom } from '../live/LiveRehearsalRoom';
 import { SEOHead } from '../common/SEOHead';
+
+export type SpeakerTabType = 'today' | 'practice' | 'catharsis' | 'schedule' | 'habits' | 'progress' | 'coach';
 
 export const ClientPortal: React.FC = () => {
   const { 
@@ -171,7 +173,30 @@ export const ClientPortal: React.FC = () => {
   };
 
   // Active Tab inside Client Portal
-  const [speakerTab, setSpeakerTab] = useState<'practice' | 'catharsis' | 'schedule' | 'habits' | 'coach'>('practice');
+  const [speakerTab, setSpeakerTab] = useState<SpeakerTabType>('today');
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement | null>(null);
+
+  // Close profile menu on Escape or click outside
+  useEffect(() => {
+    if (!isProfileMenuOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsProfileMenuOpen(false);
+      }
+    };
+    const handleClickOutside = (e: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isProfileMenuOpen]);
 
   // Simulated Voice Recorder State
   const [isRecording, setIsRecording] = useState(false);
@@ -523,81 +548,143 @@ export const ClientPortal: React.FC = () => {
           </div>
         </div>
 
-        {/* Action Controls in Header */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {/* Quick Demo Track Toggle */}
-          <div className="hidden md:flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-xl p-1 text-[11px]">
+        {/* Action Controls in Header: Messages & Profile Menu */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <button
+            onClick={() => setSpeakerTab('coach')}
+            aria-label="Direct message thread with Coach Qassim"
+            className="min-h-[44px] flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:text-white hover:border-slate-700 text-xs font-mono transition-colors"
+            title="Direct message thread with Coach Qassim"
+          >
+            <MessageSquare className="w-3.5 h-3.5 text-[#C89630]" />
+            <span className="hidden sm:inline">Coach Thread</span>
+          </button>
+
+          {/* Profile & Workspace Menu Dropdown */}
+          <div className="relative" ref={profileMenuRef}>
             <button
-              onClick={() => handleSwitchBranchDemo('Executive')}
-              className={`px-2 py-1 rounded-lg font-semibold transition-all ${
-                isExecutive ? 'bg-[#C89630] text-slate-950 font-bold' : 'text-slate-400 hover:text-white'
-              }`}
+              onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+              aria-expanded={isProfileMenuOpen}
+              aria-haspopup="menu"
+              aria-label="Speaker workspace profile and settings menu"
+              className="min-h-[44px] flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-mono transition-colors"
             >
-              Executive Track
+              <div className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-xs text-slate-950 ${
+                isExecutive ? 'bg-[#C89630]' : isAcademy ? 'bg-[#C89630]' : 'bg-teal-400'
+              }`}>
+                {profile.fullName.charAt(0)}
+              </div>
+              <span className="hidden sm:inline font-sans font-medium text-white">{profile.fullName.split(' ')[0]}</span>
+              <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
             </button>
-            <button
-              onClick={() => handleSwitchBranchDemo('Academy')}
-              className={`px-2 py-1 rounded-lg font-semibold transition-all ${
-                !isExecutive && isAcademy ? 'bg-emerald-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              Debate Track
-            </button>
-            <button
-              onClick={() => handleSwitchBranchDemo('Foundation')}
-              className={`px-2 py-1 rounded-lg font-semibold transition-all ${
-                !isExecutive && !isAcademy ? 'bg-teal-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              Foundation Track
-            </button>
+
+            {isProfileMenuOpen && (
+              <div 
+                role="menu"
+                aria-label="Profile and Workspace Settings"
+                className="absolute right-0 mt-2 w-72 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-2 z-50 text-xs animate-fadeIn"
+              >
+                {/* Speaker Identity */}
+                <div className="px-3 py-2.5 border-b border-slate-800/80 mb-1">
+                  <div className="font-bold text-white text-sm truncate">{profile.fullName}</div>
+                  <div className="text-[11px] font-mono text-slate-400 truncate">{profile.email}</div>
+                  <div className="text-[10px] font-mono text-[#C89630] uppercase tracking-wider mt-1">
+                    {isExecutive ? 'Executive Public Speaking Track' : `${profile.branch} Track`}
+                  </div>
+                </div>
+
+                {/* Demo Personas */}
+                <div className="px-3 py-1 text-[10px] font-mono uppercase tracking-widest text-slate-400 font-semibold">
+                  Switch Demo Persona
+                </div>
+                <button
+                  onClick={() => { handleSwitchBranchDemo('Executive'); setIsProfileMenuOpen(false); }}
+                  className={`w-full min-h-[40px] px-3 py-2 rounded-xl text-left flex items-center justify-between transition-colors ${
+                    isExecutive ? 'bg-[#C89630]/15 text-[#C89630] font-bold' : 'text-slate-300 hover:bg-slate-800'
+                  }`}
+                >
+                  <span>Executive Track (Dr. Vance)</span>
+                  {isExecutive && <CheckCircle2 className="w-3.5 h-3.5 text-[#C89630]" />}
+                </button>
+                <button
+                  onClick={() => { handleSwitchBranchDemo('Academy'); setIsProfileMenuOpen(false); }}
+                  className={`w-full min-h-[40px] px-3 py-2 rounded-xl text-left flex items-center justify-between transition-colors ${
+                    !isExecutive && isAcademy ? 'bg-[#C89630]/15 text-[#C89630] font-bold' : 'text-slate-300 hover:bg-slate-800'
+                  }`}
+                >
+                  <span>Debate Track (Kwame)</span>
+                  {!isExecutive && isAcademy && <CheckCircle2 className="w-3.5 h-3.5 text-[#C89630]" />}
+                </button>
+                <button
+                  onClick={() => { handleSwitchBranchDemo('Foundation'); setIsProfileMenuOpen(false); }}
+                  className={`w-full min-h-[40px] px-3 py-2 rounded-xl text-left flex items-center justify-between transition-colors ${
+                    !isExecutive && !isAcademy ? 'bg-teal-500/15 text-teal-300 font-bold' : 'text-slate-300 hover:bg-slate-800'
+                  }`}
+                >
+                  <span>Foundation Track (Nia)</span>
+                  {!isExecutive && !isAcademy && <CheckCircle2 className="w-3.5 h-3.5 text-teal-300" />}
+                </button>
+
+                <div className="my-1.5 border-t border-slate-800" />
+
+                {/* Workspace Navigation Links */}
+                <div className="px-3 py-1 text-[10px] font-mono uppercase tracking-widest text-slate-400 font-semibold">
+                  Workspaces & Actions
+                </div>
+                <button
+                  onClick={() => { setCurrentPortal('coach_os'); setIsProfileMenuOpen(false); }}
+                  className="w-full min-h-[40px] px-3 py-2 rounded-xl text-left flex items-center gap-2 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                >
+                  <ShieldCheck className="w-4 h-4 text-teal-400" />
+                  <span>Open Coach OS</span>
+                </button>
+                <button
+                  onClick={() => { setCurrentPortal('landing'); setIsProfileMenuOpen(false); }}
+                  className="w-full min-h-[40px] px-3 py-2 rounded-xl text-left flex items-center gap-2 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                >
+                  <Globe className="w-4 h-4 text-emerald-400" />
+                  <span>Return to Public Site</span>
+                </button>
+                <button
+                  onClick={() => { resetOnboarding(); setIsProfileMenuOpen(false); }}
+                  className="w-full min-h-[40px] px-3 py-2 rounded-xl text-left flex items-center gap-2 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                >
+                  <RefreshCw className="w-4 h-4 text-slate-400" />
+                  <span>Recalibrate Track Preferences</span>
+                </button>
+
+                <div className="my-1.5 border-t border-slate-800" />
+
+                {/* Destructive Sign Out */}
+                <button
+                  onClick={() => {
+                    setIsProfileMenuOpen(false);
+                    setActiveSpeakerProfile(null);
+                    localStorage.removeItem('globalorators_speaker_profile');
+                    setCurrentPortal('landing');
+                    showToast('Signed out of speaker profile.');
+                  }}
+                  className="w-full min-h-[40px] px-3 py-2 rounded-xl text-left flex items-center gap-2 text-rose-300 hover:bg-rose-950/40 hover:text-rose-100 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            )}
           </div>
-
-          <button
-            onClick={() => setCurrentPortal('coach_os')}
-            aria-label="Open Coach OS"
-            className="p-2 sm:px-2.5 sm:py-1.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-colors"
-            title="Open Coach OS (coach.globaloratorsproject.com)"
-          >
-            <ShieldCheck className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-teal-400" />
-            <span className="hidden md:inline">Coach OS</span>
-          </button>
-
-          <button
-            onClick={() => setCurrentPortal('landing')}
-            aria-label="Return to Public Site"
-            className="p-2 sm:px-2.5 sm:py-1.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-            title="Return to Landing Page (globaloratorsproject.com)"
-          >
-            <Globe className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-emerald-400" />
-            <span className="hidden md:inline">Public Site</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setActiveSpeakerProfile(null);
-              localStorage.removeItem('globalorators_speaker_profile');
-              setCurrentPortal('landing');
-              showToast('Signed out of speaker profile.');
-            }}
-            aria-label="Sign Out"
-            className="p-2 sm:px-2.5 sm:py-1.5 rounded-xl border border-rose-900/40 bg-rose-950/20 text-rose-300 hover:text-rose-100 hover:bg-rose-950/40 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-            title="Sign out of speaker profile"
-          >
-            <LogOut className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-            <span className="hidden md:inline">Sign Out</span>
-          </button>
         </div>
       </header>
 
       {/* 2. Speaker Segmented Navigation Bar */}
       <div className="bg-slate-900/70 border-b border-slate-800/80 px-4 sm:px-6 py-2 overflow-x-auto no-scrollbar">
-        <div className="max-w-5xl mx-auto flex items-center gap-1.5 sm:gap-2">
+        <div role="tablist" aria-label="Speaker Navigation" className="max-w-5xl mx-auto flex items-center gap-1.5 sm:gap-2">
           {[
+            { id: 'today', label: "Today's Floor", icon: Compass },
             { id: 'practice', label: 'Daily Drill Studio', icon: Mic },
             { id: 'catharsis', label: isExecutive ? 'Executive Speech Vault' : 'Catharsis & Voice Vault', icon: isExecutive ? Briefcase : Heart },
             { id: 'schedule', label: isExecutive ? 'Executive Syllabus & Roadmap' : 'My Sessions & Rounds', icon: Calendar },
             { id: 'habits', label: 'Daily Orator Rituals', icon: CheckCircle2 },
+            { id: 'progress', label: 'Speech Analytics', icon: TrendingUp },
             { id: 'coach', label: 'Coach Qassim (2-Way)', icon: MessageSquare }
           ].map(tab => {
             const Icon = tab.icon;
@@ -605,8 +692,12 @@ export const ClientPortal: React.FC = () => {
             return (
               <button
                 key={tab.id}
+                role="tab"
+                id={`tab-${tab.id}`}
+                aria-selected={isActive}
+                aria-controls={`panel-${tab.id}`}
                 onClick={() => setSpeakerTab(tab.id as any)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                className={`min-h-[44px] flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
                   isActive
                     ? isExecutive
                       ? 'bg-[#C89630] text-slate-950 shadow-md shadow-[#C89630]/20'
@@ -626,97 +717,335 @@ export const ClientPortal: React.FC = () => {
 
       {/* 3. Main Portal Body */}
       <main className="flex-1 max-w-5xl mx-auto w-full p-4 sm:p-6 lg:p-8">
-        {/* Banner with Speaker Track Overview */}
-        <div className="mb-6 rounded-3xl p-5 sm:p-6 border bg-slate-900/60 border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl">
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-2.5">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-[#C89630] font-bold">
-                {profile.institution ? `${profile.institution} • ` : ''}{curriculum.syllabusKicker}
-              </span>
-              <span className="hidden xs:inline-block w-px h-3 bg-slate-800" />
-              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
-                Day 14 Practice Cycle • 6-Day Streak
-              </span>
-            </div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-white tracking-tight leading-snug">
-              {curriculum.title}
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-300 mt-2 max-w-2xl leading-relaxed">
-              {curriculum.description}
-            </p>
+        {/* TAB 0: TODAY'S COMMAND CENTER */}
+        {speakerTab === 'today' && (
+          <div className="space-y-6 animate-fadeIn">
+            {/* 1. Protocol Strip */}
+            <div className="rounded-3xl p-5 sm:p-6 border bg-slate-900/60 border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-2">
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-[#C89630] font-bold">
+                    {profile.institution ? `${profile.institution} · ` : ''}{curriculum.syllabusKicker}
+                  </span>
+                  <span className="hidden xs:inline-block w-px h-3 bg-slate-800" />
+                  <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
+                    Week 3 · Session 2 · 42 min
+                  </span>
+                </div>
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-white tracking-tight leading-snug">
+                  {curriculum.title}
+                </h1>
+                <p className="text-xs sm:text-sm text-slate-300 mt-2 max-w-2xl leading-relaxed">
+                  {curriculum.description}
+                </p>
 
-            {/* Dynamic Curriculum Focus Tags */}
-            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 mt-3 pt-3 border-t border-slate-800/80">
-              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
-                Discipline: <strong className="text-slate-200 font-semibold">{curriculum.disciplineLabel}</strong>
-              </span>
-              <span className="hidden xs:inline-block w-1 h-1 rounded-full bg-slate-700" />
-              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
-                Focus: <strong className="text-[#C89630] font-semibold">{curriculum.focusLabel}</strong>
-              </span>
-              <span className="hidden xs:inline-block w-1 h-1 rounded-full bg-slate-700" />
-              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
-                Tier: <strong className="text-slate-200 font-semibold">{profile.experienceLevel || 'Calibrated'}</strong>
-              </span>
+                {/* Dynamic Curriculum Focus Tags */}
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-3 pt-3 border-t border-slate-800/80 text-[10px] font-mono text-slate-400 uppercase tracking-wider">
+                  <span>Discipline: <strong className="text-slate-200 font-semibold">{curriculum.disciplineLabel}</strong></span>
+                  <span className="hidden xs:inline-block w-1 h-1 rounded-full bg-slate-700" />
+                  <span>Focus: <strong className="text-[#C89630] font-semibold">{curriculum.focusLabel}</strong></span>
+                  <span className="hidden xs:inline-block w-1 h-1 rounded-full bg-slate-700" />
+                  <span>Tier: <strong className="text-slate-200 font-semibold">{profile.experienceLevel || 'Calibrated'}</strong></span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => resetOnboarding()}
+                className="min-h-[44px] px-3.5 py-1.5 rounded-lg border border-slate-800 bg-slate-900/80 hover:bg-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200 text-[11px] font-mono uppercase tracking-wider flex items-center gap-1.5 transition-colors self-start md:self-center shrink-0"
+                title="Recalibrate curriculum preferences"
+              >
+                <RefreshCw className="w-3.5 h-3.5 text-slate-400" />
+                <span>Recalibrate Track</span>
+              </button>
+            </div>
+
+            {/* 2. Dominant Next Action: Today's Rehearsal Command Center */}
+            <section className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                <div className="max-w-2xl">
+                  <div className="flex items-center gap-3 mb-2.5">
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-[#C89630] font-bold px-2.5 py-0.5 rounded bg-[#C89630]/10 border border-[#C89630]/30">
+                      Today's Rehearsal
+                    </span>
+                    <span className="text-xs font-mono text-slate-400 flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5 text-slate-500" />
+                      <span>42 min estimated duration</span>
+                    </span>
+                  </div>
+
+                  <h2 className="text-2xl sm:text-3xl font-serif font-bold text-white tracking-tight leading-tight">
+                    {curriculum.drillTitle}
+                  </h2>
+
+                  <p className="text-xs sm:text-sm text-slate-300 mt-2.5 leading-relaxed">
+                    {curriculum.drillPrompt}
+                  </p>
+
+                  {/* 3 Compact Objectives */}
+                  <div className="mt-5 space-y-2">
+                    <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-semibold">
+                      Session Objectives (3 Required Outcomes)
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs text-slate-300">
+                      <div className="flex items-start gap-2 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/80">
+                        <CheckCircle2 className="w-4 h-4 text-[#C89630] shrink-0 mt-0.5" />
+                        <span>{isExecutive ? 'Open with high-conviction BLUF premise without hedging' : 'Establish uncontestable normative framework in 60s'}</span>
+                      </div>
+                      <div className="flex items-start gap-2 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/80">
+                        <CheckCircle2 className="w-4 h-4 text-[#C89630] shrink-0 mt-0.5" />
+                        <span>{isExecutive ? 'Hold deliberate 2-second pauses before strategic claims' : 'Engage deepest opposing mechanism with 2-point refutation'}</span>
+                      </div>
+                      <div className="flex items-start gap-2 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/80">
+                        <CheckCircle2 className="w-4 h-4 text-[#C89630] shrink-0 mt-0.5" />
+                        <span>{isExecutive ? 'Bridge adversarial Q&A back to core unit economics' : 'Maintain target vocal pace at 138–148 WPM'}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* CTA Block */}
+                <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0 lg:w-56">
+                  <button
+                    onClick={() => {
+                      setActiveChamberTitle(
+                        isExecutive 
+                          ? 'The 60-Second Venture Genesis' 
+                          : isAcademy 
+                            ? 'Syllogistic Framing & Whip Extension' 
+                            : 'Unfiltered Cathartic Voice Journaling'
+                      );
+                      setIsLiveRehearsalOpen(true);
+                    }}
+                    className="min-h-[48px] px-6 py-3.5 rounded-xl bg-[#C89630] hover:bg-[#d6a543] text-slate-950 font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-[#C89630]/20 transition-all active:scale-95 cursor-pointer"
+                  >
+                    <Play className="w-4 h-4 fill-current" />
+                    <span>Begin Rehearsal</span>
+                  </button>
+
+                  <button
+                    onClick={() => setSpeakerTab('coach')}
+                    className="min-h-[44px] px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-200 hover:text-white border border-slate-700 text-xs font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5 text-[#C89630]" />
+                    <span>Message Coach</span>
+                  </button>
+
+                  <button
+                    onClick={() => setSpeakerTab('progress')}
+                    className="min-h-[44px] px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-850 text-slate-400 hover:text-slate-200 border border-slate-800 text-xs font-mono uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                  >
+                    <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Review Last Feedback</span>
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            {/* 3. Compact Cumulative Metrics Grid (Responsive 2-column mobile layout) */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4">
+              <div className="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-3.5 sm:p-4.5 transition-colors hover:border-slate-700/80">
+                <div className="text-[9px] sm:text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold">Pacing</div>
+                <div className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-[#C89630] mt-1 tracking-tight">
+                  {profile.vocalBaselinePace}
+                  <span className="font-mono text-[10px] sm:text-xs font-normal text-slate-400 uppercase tracking-wider ml-1">WPM</span>
+                </div>
+                <div className="text-[10px] font-mono text-emerald-400 mt-1">Optimal Cadence</div>
+              </div>
+
+              <div className="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-3.5 sm:p-4.5 transition-colors hover:border-slate-700/80">
+                <div className="text-[9px] sm:text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold">Clarity</div>
+                <div className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-white mt-1 tracking-tight">
+                  94.2%
+                </div>
+                <div className="text-[10px] font-mono text-slate-400 mt-1">Top 5% Tier</div>
+              </div>
+
+              <div className="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-3.5 sm:p-4.5 transition-colors hover:border-slate-700/80">
+                <div className="text-[9px] sm:text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold">
+                  {isExecutive ? 'BLUF Score' : isAcademy ? 'Argumentative Rigor' : 'Catharsis Index'}
+                </div>
+                <div className={`text-xl sm:text-2xl md:text-3xl font-serif font-bold mt-1 tracking-tight ${
+                  isExecutive ? 'text-[#C89630]' : isAcademy ? 'text-emerald-400' : 'text-teal-400'
+                }`}>
+                  {isExecutive ? '96%' : `${profile.emotionalOpennessRating * 10}%`}
+                </div>
+                <div className={`text-[10px] font-mono mt-1 ${
+                  isExecutive ? 'text-[#C89630]' : isAcademy ? 'text-emerald-400' : 'text-teal-400'
+                }`}>
+                  {isExecutive ? 'High-Stakes Gravitas' : isAcademy ? 'WUDC Standard' : 'Vulnerability Level'}
+                </div>
+              </div>
+
+              <div className="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-3.5 sm:p-4.5 transition-colors hover:border-slate-700/80">
+                <div className="text-[9px] sm:text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold">Sessions</div>
+                <div className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-white mt-1 tracking-tight">
+                  18
+                  <span className="font-mono text-[10px] sm:text-xs font-normal text-slate-400 uppercase tracking-wider ml-1">
+                    {isExecutive ? 'Sessions' : 'Rounds'}
+                  </span>
+                </div>
+                <div className="text-[10px] font-mono text-emerald-400 mt-1">+4 this week</div>
+              </div>
+            </div>
+
+            {/* 4. Two-Column Section: Coach Directive + Daily Rituals */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Left Column: Coach Directive & Dispatch */}
+              <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-5 sm:p-6 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center font-bold text-xs text-emerald-400 font-mono">
+                        HQ
+                      </div>
+                      <div>
+                        <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">Coach Assignment & Note</h3>
+                        <span className="text-[10px] text-slate-400">Head Coach Qassim · Verified Dispatch</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setSpeakerTab('coach')}
+                      className="text-[11px] text-[#C89630] hover:underline font-mono"
+                    >
+                      Reply
+                    </button>
+                  </div>
+
+                  <p className="text-xs text-slate-300 leading-relaxed font-sans">
+                    {isExecutive
+                      ? 'Dr. Vance: On today\'s 60-second venture genesis rehearsal, focus on eliminating "sort of" and "we believe". State your capital efficiency metrics as unassailable facts. Take a full 2-second deliberate pause before answering financial valuation objections.'
+                      : isAcademy
+                        ? 'Kwame: In today\'s whip extension round, refrain from rehashing opening bench definitions. Introduce the third stakeholder tier and crystallize why the policy mechanism is irreversible.'
+                        : 'Nia: Remember that your voice carries sovereign weight. In today\'s reflection, let your vocal cadence settle at your natural pace and feel the diaphragm stabilize each phrase.'}
+                  </p>
+
+                  {/* Audio Dispatch Snippet */}
+                  <div className="mt-4 bg-slate-950 p-3 rounded-2xl border border-slate-800 flex items-center gap-3">
+                    <button
+                      onClick={() => showToast('Playing Coach Qassim voice dispatch: "Calibration on BLUF timing and vocal resonance"')}
+                      aria-label="Play Coach Qassim voice dispatch"
+                      className="min-h-[44px] min-w-[44px] rounded-xl bg-[#C89630] text-slate-950 flex items-center justify-center font-bold hover:bg-[#d6a543] transition-colors shrink-0 cursor-pointer"
+                    >
+                      <Play className="w-4 h-4 fill-current" />
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[11px] font-mono text-slate-200 truncate">Voice Dispatch · Circle 07 Briefing</div>
+                      <div className="text-[10px] font-mono text-slate-400">0:45 min · High-Fidelity Voice Note</div>
+                      <div className="w-full bg-slate-800 rounded-full h-1 mt-1.5 overflow-hidden">
+                        <div className="bg-[#C89630] h-full w-2/5" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-[11px] font-mono text-slate-400">
+                  <span>Calibrated for {profile.fullName.split(' ')[0]}</span>
+                  <button onClick={() => setSpeakerTab('coach')} className="text-slate-300 hover:text-white flex items-center gap-1">
+                    <span>Open Thread</span>
+                    <ChevronRight className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Right Column: Daily Rituals Interactive Checklist */}
+              <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-5 sm:p-6 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-[#C89630]" />
+                      <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">Today's Daily Rituals</h3>
+                    </div>
+                    <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-800/40">
+                      6-Day Streak
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    {Object.entries(habitsStatus).slice(0, 3).map(([title, completed]) => (
+                      <button
+                        key={title}
+                        onClick={() => toggleHabit(title)}
+                        className={`w-full min-h-[44px] p-3 rounded-2xl border text-left flex items-center justify-between transition-all ${
+                          completed 
+                            ? 'bg-slate-950/80 border-slate-800 text-slate-400' 
+                            : 'bg-slate-950 border-slate-800/80 text-slate-200 hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                          <div className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 ${
+                            completed ? 'bg-[#C89630] border-[#C89630] text-slate-950' : 'border-slate-600'
+                          }`}>
+                            {completed && <CheckCircle2 className="w-3.5 h-3.5" />}
+                          </div>
+                          <span className={`text-xs truncate ${completed ? 'line-through text-slate-400' : 'text-slate-200'}`}>
+                            {title}
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-mono text-slate-500 shrink-0">
+                          {completed ? 'Done' : 'Tap'}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-[11px] font-mono text-slate-400">
+                  <span>{Object.values(habitsStatus).filter(Boolean).length} of {Object.keys(habitsStatus).length} Completed</span>
+                  <button onClick={() => setSpeakerTab('habits')} className="text-[#C89630] hover:underline flex items-center gap-1">
+                    <span>Full Habit Protocol</span>
+                    <ChevronRight className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* 5. Curriculum Progression / Upcoming Rehearsals */}
+            <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-5 sm:p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <span className="text-[10px] font-mono text-[#C89630] uppercase tracking-wider font-semibold">
+                    Curriculum Progression
+                  </span>
+                  <h3 className="text-sm font-serif font-bold text-white">Upcoming Rehearsals & Sessions</h3>
+                </div>
+                <button
+                  onClick={() => setSpeakerTab('schedule')}
+                  className="text-xs text-[#C89630] hover:underline font-mono flex items-center gap-1"
+                >
+                  <span>View Full Syllabus</span>
+                  <ChevronRight className="w-3 h-3" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {roadmapSessions.slice(0, 2).map((session, idx) => (
+                  <div key={session.id} className="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 mb-1.5">
+                        <span className="text-[#C89630] font-bold">Session 0{idx + 1}</span>
+                        <span>{session.date}</span>
+                      </div>
+                      <h4 className="text-xs font-bold text-white mb-1">{session.workoutTitle}</h4>
+                      <p className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed font-sans">
+                        {session.assignmentNotes || 'High-intensity floor delivery simulation.'}
+                      </p>
+                    </div>
+                    <div className="mt-3 pt-2.5 border-t border-slate-850 flex items-center justify-between">
+                      <span className="text-[10px] font-mono text-slate-500">{session.time}</span>
+                      <button
+                        onClick={() => downloadSessionIcs(session)}
+                        className="text-[10px] font-mono text-slate-300 hover:text-white flex items-center gap-1"
+                      >
+                        <Download className="w-3 h-3" />
+                        <span>.ICS</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-
-          <button
-            onClick={() => resetOnboarding()}
-            className="px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-900/80 hover:bg-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200 text-[11px] font-mono uppercase tracking-wider flex items-center gap-1.5 transition-colors self-start md:self-center shrink-0"
-            title="Recalibrate curriculum preferences"
-          >
-            <RefreshCw className="w-3 h-3 text-slate-400" />
-            <span>Recalibrate Track</span>
-          </button>
-        </div>
-
-        {/* Responsive 2-Column Mobile Stats Grid (Strictly adhering to mobile design rules) */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 mb-8">
-          <div className="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-3.5 sm:p-4.5 transition-colors hover:border-slate-700/80">
-            <div className="text-[9px] sm:text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold">Target Pacing</div>
-            <div className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-[#C89630] mt-1 tracking-tight">
-              {profile.vocalBaselinePace}
-              <span className="font-mono text-[10px] sm:text-xs font-normal text-slate-400 uppercase tracking-wider ml-1">WPM</span>
-            </div>
-            <div className="text-[10px] font-mono text-emerald-400 mt-1">Optimal Cadence</div>
-          </div>
-
-          <div className="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-3.5 sm:p-4.5 transition-colors hover:border-slate-700/80">
-            <div className="text-[9px] sm:text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold">Fluency & Clarity</div>
-            <div className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-white mt-1 tracking-tight">
-              94.2%
-            </div>
-            <div className="text-[10px] font-mono text-slate-400 mt-1">Top 5% Tier</div>
-          </div>
-
-          <div className="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-3.5 sm:p-4.5 transition-colors hover:border-slate-700/80">
-            <div className="text-[9px] sm:text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold">
-              {isExecutive ? 'Executive Composure' : isAcademy ? 'Argumentative Rigor' : 'Catharsis Index'}
-            </div>
-            <div className={`text-xl sm:text-2xl md:text-3xl font-serif font-bold mt-1 tracking-tight ${
-              isExecutive ? 'text-[#C89630]' : isAcademy ? 'text-emerald-400' : 'text-teal-400'
-            }`}>
-              {isExecutive ? '96%' : `${profile.emotionalOpennessRating * 10}%`}
-            </div>
-            <div className={`text-[10px] font-mono mt-1 ${
-              isExecutive ? 'text-[#C89630]' : isAcademy ? 'text-emerald-400' : 'text-teal-400'
-            }`}>
-              {isExecutive ? 'High-Stakes Gravitas' : isAcademy ? 'WUDC Standard' : 'Vulnerability Level'}
-            </div>
-          </div>
-
-          <div className="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-3.5 sm:p-4.5 transition-colors hover:border-slate-700/80">
-            <div className="text-[9px] sm:text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold">Rehearsals Logged</div>
-            <div className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-white mt-1 tracking-tight">
-              18
-              <span className="font-mono text-[10px] sm:text-xs font-normal text-slate-400 uppercase tracking-wider ml-1">
-                {isExecutive ? 'Sessions' : 'Rounds'}
-              </span>
-            </div>
-            <div className="text-[10px] font-mono text-emerald-400 mt-1">+4 this week</div>
-          </div>
-        </div>
+        )}
 
         {/* TAB 1: Daily Drill & Rehearsal Studio */}
         {speakerTab === 'practice' && (
@@ -1249,7 +1578,246 @@ export const ClientPortal: React.FC = () => {
           </div>
         )}
 
-        {/* TAB 5: Coach Qassim 2-Way Chat */}
+        {/* TAB 5: Longitudinal Speech Analytics */}
+        {speakerTab === 'progress' && (
+          <div id="panel-progress" role="tabpanel" aria-labelledby="tab-progress" className="space-y-6 animate-fadeIn">
+            {/* Header / Editorial Overview */}
+            <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 sm:p-8">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
+                <div>
+                  <div className="text-[10px] font-mono tracking-widest text-[#C89630] uppercase mb-1">
+                    Oratorical Trajectory · Longitudinal Speech Analytics
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-serif font-black tracking-tight text-white">
+                    Vocal Velocity & Cadence Analytics
+                  </h2>
+                  <p className="text-xs text-slate-400 mt-1 max-w-2xl leading-relaxed">
+                    Longitudinal tracking of vocal delivery rate (WPM), articulation clarity, and Bottom Line Up Front (BLUF) discipline across rehearsal chambers.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 shrink-0">
+                  <div className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px] font-mono text-slate-300">
+                    Target: <span className="text-[#C89630] font-bold">135–145 WPM</span>
+                  </div>
+                  <div className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px] font-mono text-emerald-400">
+                    10 Sessions Logged
+                  </div>
+                </div>
+              </div>
+
+              {/* 4-Metric Responsive Grid: 2 cols on mobile, 4 on desktop */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-6">
+                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-850">
+                  <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400">Average Pace</div>
+                  <div className="mt-2 flex items-baseline gap-1">
+                    <span className="text-xl sm:text-2xl font-serif font-bold text-white">136</span>
+                    <span className="text-xs font-mono text-slate-400">WPM</span>
+                  </div>
+                  <div className="mt-2 text-[10px] font-mono text-emerald-400 flex items-center gap-1">
+                    <span>Within target window</span>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-850">
+                  <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400">Consonant Clarity</div>
+                  <div className="mt-2 flex items-baseline gap-1">
+                    <span className="text-xl sm:text-2xl font-serif font-bold text-white">94</span>
+                    <span className="text-xs font-mono text-slate-400">%</span>
+                  </div>
+                  <div className="mt-2 text-[10px] font-mono text-teal-400 flex items-center gap-1">
+                    <span>High articulation score</span>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-850">
+                  <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400">BLUF Precision</div>
+                  <div className="mt-2 flex items-baseline gap-1">
+                    <span className="text-xl sm:text-2xl font-serif font-bold text-white">95</span>
+                    <span className="text-xs font-mono text-slate-400">/ 100</span>
+                  </div>
+                  <div className="mt-2 text-[10px] font-mono text-[#C89630] flex items-center gap-1">
+                    <span>Executive synthesis</span>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-850">
+                  <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400">Filler Frequency</div>
+                  <div className="mt-2 flex items-baseline gap-1">
+                    <span className="text-xl sm:text-2xl font-serif font-bold text-white">1.1</span>
+                    <span className="text-xs font-mono text-slate-400">/ min</span>
+                  </div>
+                  <div className="mt-2 text-[10px] font-mono text-emerald-400 flex items-center gap-1">
+                    <span>-42% vs baseline</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Longitudinal Pacing Trajectory Visualization */}
+              <div className="mt-6 p-5 rounded-2xl bg-slate-950 border border-slate-850">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                  <div>
+                    <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+                      Delivery Rate Trajectory · Last 6 Rehearsals
+                    </h3>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      Target corridor: 135–145 Words Per Minute (balanced executive tempo)
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 text-[10px] font-mono text-slate-400">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-xs bg-[#C89630]" /> Rehearsal Pace
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-xs bg-slate-700" /> Target Floor
+                    </span>
+                  </div>
+                </div>
+
+                {/* Trajectory Bar Chart */}
+                <div className="grid grid-cols-6 gap-2 sm:gap-4 pt-6 pb-2 items-end h-40 border-b border-slate-800/80">
+                  {[
+                    { session: 'R-01', wpm: 152, date: 'Aug 26' },
+                    { session: 'R-02', wpm: 146, date: 'Aug 29' },
+                    { session: 'R-03', wpm: 141, date: 'Sep 02' },
+                    { session: 'R-04', wpm: 139, date: 'Sep 05' },
+                    { session: 'R-05', wpm: 134, date: 'Sep 09' },
+                    { session: 'R-06', wpm: 138, date: 'Yesterday' }
+                  ].map((item, idx) => {
+                    const heightPercent = Math.min(100, Math.max(20, ((item.wpm - 100) / 60) * 100));
+                    const isOptimal = item.wpm >= 135 && item.wpm <= 145;
+                    return (
+                      <div key={idx} className="flex flex-col items-center gap-1.5 h-full justify-end group">
+                        <span className="text-[10px] font-mono text-slate-300 font-bold opacity-0 group-hover:opacity-100 transition-opacity">
+                          {item.wpm}
+                        </span>
+                        <div className="w-full max-w-[36px] bg-slate-900 rounded-t-lg overflow-hidden flex flex-col justify-end h-28 relative">
+                          <div className="absolute inset-x-0 bottom-[58%] border-t border-dashed border-[#C89630]/30 pointer-events-none" />
+                          <div
+                            style={{ height: `${heightPercent}%` }}
+                            className={`w-full rounded-t-md transition-all ${
+                              isOptimal ? 'bg-[#C89630]' : 'bg-slate-700'
+                            }`}
+                          />
+                        </div>
+                        <span className="text-[10px] font-mono text-slate-400 mt-1">{item.session}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 pt-2">
+                  <span>Initial Baseline: 152 WPM</span>
+                  <span>Latest Rehearsal: 138 WPM</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Historical Evaluations List */}
+            <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 sm:p-8">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-5 border-b border-slate-800">
+                <div>
+                  <h3 className="text-base sm:text-lg font-serif font-bold text-white">
+                    Historical Evaluations & Debrief Archive
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Detailed scoring, coach feedback directives, and recorded parameters from previous chamber workouts.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveChamberTitle(isExecutive ? 'Executive Public Speaking Chamber' : 'Live Rehearsal Chamber');
+                    setIsLiveRehearsalOpen(true);
+                  }}
+                  className="min-h-[44px] px-4 py-2 rounded-xl bg-[#C89630] hover:bg-[#d6a543] text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-colors shadow-md shadow-[#C89630]/20 shrink-0 cursor-pointer"
+                >
+                  <Video className="w-3.5 h-3.5" />
+                  <span>Launch Chamber Rehearsal</span>
+                </button>
+              </div>
+
+              <div className="mt-5 space-y-3.5">
+                {[
+                  {
+                    id: 'eval-1',
+                    title: 'Series A / Growth Capital Venture Pitch',
+                    date: 'Yesterday, 4:15 PM',
+                    duration: '7 min practice',
+                    score: '9.4',
+                    wpm: 138,
+                    clarity: '96%',
+                    bluf: '96/100',
+                    coachNote: 'Delivered the 60-second genesis without hedging. Anchored value thesis around African logistics efficiency.',
+                    directive: 'Next: Defend against aggressive valuation compression in Q&A phase.'
+                  },
+                  {
+                    id: 'eval-2',
+                    title: 'Executive Boardroom Strategic Capex Review',
+                    date: '3 days ago',
+                    duration: '10 min practice',
+                    score: '9.2',
+                    wpm: 134,
+                    clarity: '94%',
+                    bluf: '94/100',
+                    coachNote: 'Simulated 5-minute capex allocation defense with deliberate 2-second pauses before financial answers.',
+                    directive: 'Maintain eye contact and steady tone during hostile inquiries.'
+                  },
+                  {
+                    id: 'eval-3',
+                    title: 'Keynote Value Genesis Simulation',
+                    date: 'Last week',
+                    duration: '8 min practice',
+                    score: '8.9',
+                    wpm: 142,
+                    clarity: '91%',
+                    bluf: '91/100',
+                    coachNote: 'Commanding stage presence. Vocal projection was resonant, with minimal filler words detected.',
+                    directive: 'Deepen diaphragmatic breath between transitions.'
+                  }
+                ].map(item => (
+                  <div
+                    key={item.id}
+                    className="p-5 rounded-2xl bg-slate-950 border border-slate-850 hover:border-slate-800 transition-colors"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 pb-3 border-b border-slate-900">
+                      <div>
+                        <div className="text-[10px] font-mono text-[#C89630] uppercase tracking-wider">{item.date} · {item.duration}</div>
+                        <h4 className="text-sm font-bold text-white mt-0.5">{item.title}</h4>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <div className="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-mono text-xs font-bold">
+                          Score {item.score}/10
+                        </div>
+                        <div className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 font-mono text-xs">
+                          {item.wpm} WPM
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 text-xs text-slate-300 leading-relaxed">
+                      <span className="font-semibold text-slate-200">Coach Debrief: </span>
+                      "{item.coachNote}"
+                    </div>
+
+                    <div className="mt-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2.5 border-t border-slate-900/80 text-[11px]">
+                      <div className="text-slate-400 font-mono flex items-center gap-1.5">
+                        <span className="text-[#C89630] font-bold">Immediate Directive:</span>
+                        <span>{item.directive}</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-slate-400 font-mono shrink-0">
+                        <span>Clarity: <strong className="text-slate-200">{item.clarity}</strong></span>
+                        <span>BLUF: <strong className="text-slate-200">{item.bluf}</strong></span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 6: Coach Qassim 2-Way Chat */}
         {speakerTab === 'coach' && (
           <div className="space-y-4 animate-fadeIn">
             <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-5 sm:p-6 flex flex-col h-[520px]">
