@@ -1,13 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { 
-  Client, 
-  Exercise, 
-  TrainingProgram, 
-  ScheduledWorkout, 
-  MetricEntry, 
-  PersonalRecord, 
-  ProgressPhoto, 
-  ChatMessage, 
+import {
+  Client,
+  Exercise,
+  TrainingProgram,
+  ScheduledWorkout,
+  MetricEntry,
+  PersonalRecord,
+  ProgressPhoto,
+  ChatMessage,
   ActivityFeedItem,
   ClientDailyHabitLog,
   PortalView,
@@ -32,13 +32,13 @@ import {
   coachesApi,
 } from '../services/apiClient';
 
-export type NavigationTab = 
-  | 'dashboard' 
-  | 'clients' 
-  | 'programs' 
-  | 'exercises' 
-  | 'calendar' 
-  | 'progress' 
+export type NavigationTab =
+  | 'dashboard'
+  | 'clients'
+  | 'programs'
+  | 'exercises'
+  | 'calendar'
+  | 'progress'
   | 'messenger';
 
 interface AppContextType {
@@ -54,21 +54,21 @@ interface AppContextType {
   messages: ChatMessage[];
   activityFeed: ActivityFeedItem[];
   habitLogs: ClientDailyHabitLog[];
-  
+
   // Backend Connection State
   isBackendConnected: boolean;
-  
+
   // Selected state
   selectedClientId: string | null;
   setSelectedClientId: (id: string | null) => void;
   selectedClient: Client | undefined;
-  
+
   // Modals & Active actions
   isWorkoutLoggerOpen: boolean;
   activeWorkoutToLog: ScheduledWorkout | null;
   openWorkoutLogger: (workout: ScheduledWorkout) => void;
   closeWorkoutLogger: () => void;
-  
+
   // Actions
   addClient: (client: Omit<Client, 'id' | 'workoutsCompleted' | 'totalWorkoutsAssigned' | 'complianceRate' | 'lastActive'>) => void;
   updateClient: (id: string, updates: Partial<Client>) => void;
@@ -83,12 +83,12 @@ interface AppContextType {
   addMetricEntry: (entry: Omit<MetricEntry, 'id'>) => void;
   addPersonalRecord: (pr: Omit<PersonalRecord, 'id'>) => void;
   sendMessage: (
-    target: string | { clientId: string; sender?: 'coach' | 'client'; text?: string; content?: string; messageType?: string; attachmentData?: any }, 
-    text?: string, 
+    target: string | { clientId: string; sender?: 'coach' | 'client'; text?: string; content?: string; messageType?: string; attachmentData?: any },
+    text?: string,
     attachment?: ChatMessage['attachment']
   ) => void;
   toggleHabitCompletion: (clientId: string, date: string, habitId: string) => void;
-  
+
   // Refresh data from API
   refreshFromBackend: () => Promise<void>;
   isLoading: boolean;
@@ -97,7 +97,7 @@ interface AppContextType {
   theme: 'light' | 'dark';
   toggleTheme: () => void;
   resetThemeToSystem?: () => void;
-  
+
   // Toast notifications
   toastMessage: string | null;
   showToast: (msg: string) => void;
@@ -107,7 +107,7 @@ interface AppContextType {
   setCurrentPortal: (portal: PortalView) => void;
   currentPath: string;
   navigate: (path: string) => void;
-  
+
   // Speaker Client App Profile & Onboarding
   activeSpeakerProfile: SpeakerOnboardingData | null;
   setActiveSpeakerProfile: (profile: SpeakerOnboardingData | null) => void;
@@ -132,25 +132,19 @@ export const clientToSpeakerProfile = (client: Client): SpeakerOnboardingData =>
   const survey = (client.onboardingSurvey || {}) as Record<string, any>;
   return {
     branch: (client.branch || survey.branch || 'Academy') as BranchType,
-    fullName: client.name,
+    fullName: client.name || survey.fullName || '',
     email: client.email || survey.email || '',
     phone: client.phone || survey.phone || '',
-    age: client.age || survey.age || 20,
+    age: client.age || survey.age || undefined,
     institution: client.institution || survey.institution || '',
     primaryDiscipline: client.primaryDiscipline || survey.primaryDiscipline || '',
     coreFocus: client.coreFocus || survey.coreFocus || '',
-    missionFocus: client.missionFocus || survey.missionFocus || client.goal || 'Oratorical Leadership & Impact',
-    speakingGoal: client.goal,
-    experienceLevel: client.experienceLevel,
-    vocalBaselinePace: survey.vocalBaselinePace || client.currentWeightKg || 140,
-    emotionalOpennessRating: survey.emotionalOpennessRating || (client.catharsisScore ? Math.round(client.catharsisScore / 10) : 8),
-    selectedHabits: survey.selectedHabits && Array.isArray(survey.selectedHabits) && survey.selectedHabits.length > 0
-      ? survey.selectedHabits
-      : [
-          'Vocal Hydration (2.5L + Warm Lemon Water)',
-          'Diaphragmatic Breathwork (5 Min Morning Routine)',
-          'Tongue Twisters & Articulation Warmups'
-        ],
+    missionFocus: client.missionFocus || survey.missionFocus || client.goal || '',
+    speakingGoal: client.goal || survey.speakingGoal || '',
+    experienceLevel: client.experienceLevel || survey.experienceLevel || '',
+    vocalBaselinePace: survey.vocalBaselinePace || client.currentWeightKg || undefined,
+    emotionalOpennessRating: survey.emotionalOpennessRating || (client.catharsisScore ? Math.round(client.catharsisScore / 10) : undefined),
+    selectedHabits: survey.selectedHabits && Array.isArray(survey.selectedHabits) ? survey.selectedHabits : [],
     bioNotes: survey.bioNotes || (client.customCoachNotes && client.customCoachNotes[0]) || ''
   };
 };
@@ -335,7 +329,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCurrentPortal('onboarding');
   }, [setCurrentPortal]);
 
-  
+
   // Business collections initialize empty — populated exclusively from API (C1, H7 audit fix)
   const [clients, setClients] = useState<Client[]>([]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
@@ -601,11 +595,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       complianceRate: 100,
       lastActive: 'Just registered'
     };
-    
+
     // Optimistic UI update
     setClients(prev => [newClient, ...prev]);
     setSelectedClientId(newClient.id);
-    
+
     // Activity feed item
     setActivityFeed(prev => [
       {
@@ -778,78 +772,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const targetClient = clients.find(c => c.id === clientId);
     if (!targetProgram || !targetClient) return;
 
-    setClients(prev => prev.map(c => c.id === clientId ? {
-      ...c,
-      currentProgramId: targetProgram.id,
-      currentProgramName: targetProgram.title
-    } : c));
-
-    setPrograms(prev => prev.map(p => p.id === programId ? {
-      ...p,
-      assignedClientCount: p.assignedClientCount + 1
-    } : p));
-
-    // Auto-schedule sessions twice a week on Tuesdays and Thursdays (90 minutes each)
-    const scheduledDates: Date[] = [];
-    const searchDate = new Date();
-    searchDate.setDate(searchDate.getDate() + 1); // Start search from tomorrow
-    while (scheduledDates.length < targetProgram.days.length) {
-      const dayOfWeek = searchDate.getDay(); // 0 = Sun, 1 = Mon, 2 = Tue, 3 = Wed, 4 = Thu, 5 = Fri, 6 = Sat
-      if (dayOfWeek === 2 || dayOfWeek === 4) {
-        scheduledDates.push(new Date(searchDate));
-      }
-      searchDate.setDate(searchDate.getDate() + 1);
-    }
-
-    const cleanClientTag = (targetClient.name || 'speaker').toLowerCase().replace(/[^a-z0-9]/g, '-');
-
-    const newWorkouts: ScheduledWorkout[] = targetProgram.days.map((day, idx) => {
-      const scheduledDate = scheduledDates[idx] || new Date();
-      const dateStr = scheduledDate.toISOString().split('T')[0];
-
-      return {
-        id: `sched-${Date.now()}-${idx}`,
-        clientId: targetClient.id,
-        clientName: targetClient.name,
-        clientAvatar: targetClient.avatar,
-        programId: targetProgram.id,
-        programName: targetProgram.title,
-        workoutDayId: day.id,
-        workoutTitle: day.name,
-        date: dateStr,
-        time: '10:00 AM',
-        status: 'Scheduled',
-        durationMin: day.durationMinutes || 90,
-        objectives: day.objectives || [],
-        phases: day.phases || [],
-        assignmentNotes: day.assignmentNotes || '',
-        chamberRoomName: `chamber-${cleanClientTag}-session-${idx + 1}`,
-        exercises: day.exercises
-      };
-    });
-
-    setScheduledWorkouts(prev => [...newWorkouts, ...prev]);
-
-    setActivityFeed(prev => [
-      {
-        id: `act-${Date.now()}`,
-        type: 'check_in_submitted',
-        clientId: targetClient.id,
-        clientName: targetClient.name,
-        clientAvatar: targetClient.avatar,
-        title: `Assigned: ${targetProgram.title}`,
-        description: `Curriculum assigned with ${targetProgram.days.length} training rounds (Tuesdays & Thursdays, 90 mins)`,
-        timestamp: 'Just now'
-      },
-      ...prev
-    ]);
-
-    showToast(`Assigned "${targetProgram.title}" to ${targetClient.name} (Tue/Thu 90m schedule)!`);
-
     try {
       await programsApi.assign(programId, clientId);
+      await refreshFromBackend();
+      showToast(`Assigned "${targetProgram.title}" to ${targetClient.name}!`);
     } catch (err) {
       console.warn('Backend sync failed for assignProgramToClient:', err);
+      showToast('Failed to assign curriculum on server. Reverting.');
     }
   };
 
@@ -1064,8 +993,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const sendMessage = async (
-    target: string | { clientId: string; sender?: 'coach' | 'client'; text?: string; content?: string; messageType?: string; attachmentData?: any }, 
-    textParam?: string, 
+    target: string | { clientId: string; sender?: 'coach' | 'client'; text?: string; content?: string; messageType?: string; attachmentData?: any },
+    textParam?: string,
     attachmentParam?: ChatMessage['attachment']
   ) => {
     let clientId: string = '';
@@ -1094,7 +1023,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const tempId = `msg-${Date.now()}`;
     const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
+
     const newMsg: ChatMessage = {
       id: tempId,
       clientId,
@@ -1142,21 +1071,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const completeOnboarding = useCallback(async (data: SpeakerOnboardingData): Promise<{ success: boolean; error?: string }> => {
     const coachRefToUse = data.coachRef || referredCoach || undefined;
 
-    // Determine program assignment based on goal & branch
-    let programId = 'prog-1';
-    let programName = '8-Week Championship Debate Masterclass';
-    if (
-      data.speakingGoal === 'Executive & Board Pitching' || 
-      (data.primaryDiscipline && data.primaryDiscipline.toLowerCase().includes('pitch')) ||
-      (data.primaryDiscipline && data.primaryDiscipline.toLowerCase().includes('executive'))
-    ) {
-      programId = 'prog-exec-speaking-1';
-      programName = 'Executive Public Speaking & Presentation Skills';
-    } else if (data.branch === 'Foundation') {
-      programId = 'prog-3';
-      programName = '6-Week Impromptu Fluency & Extemporaneous Protocol';
-    }
-
     // Register or sync client in Coach OS
     const newClientEntry: Client & { coachRef?: string } = {
       id: `client-${Date.now()}`,
@@ -1165,55 +1079,48 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       avatar: '',
       email: data.email,
       phone: data.phone || '',
-      age: data.age || 0,
-      gender: 'Unspecified',
+      age: data.age || undefined,
+      gender: undefined,
       status: 'Active',
       branch: data.branch,
       institution: data.institution || '',
       primaryDiscipline: data.primaryDiscipline || '',
       coreFocus: data.coreFocus || '',
       missionFocus: data.missionFocus,
-      catharsisScore: data.emotionalOpennessRating ? data.emotionalOpennessRating * 10 : 0,
+      catharsisScore: data.emotionalOpennessRating ? data.emotionalOpennessRating * 10 : undefined,
       goal: data.speakingGoal,
       experienceLevel: data.experienceLevel,
       startDate: new Date().toISOString().split('T')[0],
-      currentProgramId: programId,
-      currentProgramName: programName,
+      currentProgramId: undefined,
+      currentProgramName: undefined,
       complianceRate: 0,
       workoutsCompleted: 0,
       totalWorkoutsAssigned: 0,
       lastActive: 'Just now',
-      targetWeightKg: data.vocalBaselinePace || 140,
-      currentWeightKg: data.vocalBaselinePace || 140,
-      startingWeightKg: data.vocalBaselinePace || 140,
-      heightCm: 0,
-      bodyFatPercentage: 0,
-      targetBodyFat: 0,
+      targetWeightKg: undefined,
+      currentWeightKg: data.vocalBaselinePace || undefined,
+      startingWeightKg: data.vocalBaselinePace || undefined,
+      heightCm: undefined,
+      bodyFatPercentage: undefined,
+      targetBodyFat: undefined,
       injuriesAndHealth: [],
       medicalAlerts: '',
       customCoachNotes: data.bioNotes ? [data.bioNotes] : [],
       onboardingSurvey: {
-        gymAccess: data.institution || '',
-        weeklyAvailabilityDays: 0,
-        dietaryRestrictions: '',
-        sleepAvgHours: 0,
-        stressLevel: '',
-        favoriteExercises: data.primaryDiscipline || '',
-        leastFavoriteExercises: '',
         branch: data.branch,
         fullName: data.fullName,
         email: data.email,
         phone: data.phone || '',
-        age: data.age || 0,
+        age: data.age || undefined,
         institution: data.institution || '',
         primaryDiscipline: data.primaryDiscipline || '',
         coreFocus: data.coreFocus || '',
         missionFocus: data.missionFocus,
         speakingGoal: data.speakingGoal,
         experienceLevel: data.experienceLevel,
-        vocalBaselinePace: data.vocalBaselinePace,
-        emotionalOpennessRating: data.emotionalOpennessRating,
-        selectedHabits: data.selectedHabits,
+        vocalBaselinePace: data.vocalBaselinePace || undefined,
+        emotionalOpennessRating: data.emotionalOpennessRating || undefined,
+        selectedHabits: data.selectedHabits || [],
         bioNotes: data.bioNotes || ''
       } as any
     };
@@ -1284,8 +1191,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const targetId = backendClient.id;
         setClients(prev => {
           const exists = prev.some(c => c.id === targetId || (targetEmail && (c.email || '').toLowerCase() === targetEmail));
-          return exists 
-            ? prev.map(c => (c.id === targetId || (targetEmail && (c.email || '').toLowerCase() === targetEmail)) ? backendClient : c) 
+          return exists
+            ? prev.map(c => (c.id === targetId || (targetEmail && (c.email || '').toLowerCase() === targetEmail)) ? backendClient : c)
             : [backendClient, ...prev];
         });
         setCurrentPortal('speaker_app');

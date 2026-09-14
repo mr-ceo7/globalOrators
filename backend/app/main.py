@@ -13,7 +13,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import settings
 from app.database import engine, Base
 from app.dependencies import get_db
-from seed_data import seed_database
 
 # Routers
 from app.routers import (
@@ -46,7 +45,7 @@ async def lifespan(app: FastAPI):
     logger.info("Initializing database tables...")
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-        
+
         # Ensure schema migrations for newly introduced columns
         def _migrate_columns(connection):
             from sqlalchemy import inspect, text
@@ -59,19 +58,29 @@ async def lifespan(app: FastAPI):
                     connection.execute(text("ALTER TABLE clients ADD COLUMN adjudicator_notes JSON DEFAULT '[]'"))
         await conn.run_sync(_migrate_columns)
 
-    
     logger.info("Checking / running initial database seed...")
-    try:
-        if settings.ENVIRONMENT != 'production':
-            await seed_database(force=False)
-        else:
-            from app.database import AsyncSessionLocal
-            from app.models import User
-            from sqlalchemy import select
-            from app.security import get_password_hash
-            from datetime import datetime, timezone
-            
-            async with AsyncSessionLocal() as session:
+    import os
+    enable_dev_seed = os.getenv("ENABLE_DEV_SEED", "false").lower() in ("true", "1")
+
+    if settings.ENVIRONMENT != 'production':
+        if enable_dev_seed or settings.TESTING:
+            logger.info("Database seed active (TESTING=%s, ENABLE_DEV_SEED=%s)...", settings.TESTING, enable_dev_seed)
+            try:
+                from seed_data import seed_database
+                await seed_database(force=False)
+            except Exception as e:
+                logger.error(f"Failed during database seed: {e}")
+                if settings.TESTING:
+                    raise
+    else:
+        from app.database import AsyncSessionLocal
+        from app.models import User
+        from sqlalchemy import select
+        from app.security import get_password_hash
+        from datetime import datetime, timezone
+
+        async with AsyncSessionLocal() as session:
+            try:
                 user_res = await session.execute(select(User).where(User.id == "coach-1"))
                 if not user_res.scalar_one_or_none():
                     coach_user = User(
@@ -86,9 +95,10 @@ async def lifespan(app: FastAPI):
                     )
                     session.add(coach_user)
                     await session.commit()
-    except Exception as e:
-        logger.error(f"Error during database seed: {e}")
-    
+            except Exception as e:
+                logger.critical(f"Critical failure bootstrapping coach account in production: {e}")
+                raise
+
     logger.info("global Orators FastAPI Backend ready.")
     yield
     logger.info("Shutting down global Orators FastAPI Backend...")

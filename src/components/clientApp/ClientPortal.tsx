@@ -97,10 +97,9 @@ export const ClientPortal: React.FC = () => {
   }, [clients, profile]);
 
   const execProgram = useMemo(() => {
-    return programs.find(p => p.id === (pairedClient?.currentProgramId || 'prog-exec-speaking-1')) ||
-           programs.find(p => p.id === 'prog-exec-speaking-1') ||
-           programs[0];
-  }, [programs, pairedClient]);
+    if (!pairedClient?.currentProgramId) return null;
+    return programs.find(p => p.id === pairedClient.currentProgramId) || null;
+  }, [programs, pairedClient?.currentProgramId]);
 
   const isAcademy = profile.branch === 'Academy';
   const curriculum = useMemo(() => resolveSpeakerCurriculum(profile, execProgram), [profile, execProgram]);
@@ -252,55 +251,51 @@ export const ClientPortal: React.FC = () => {
     }
   });
 
-  // Daily Habits State in Client Portal using backend via context
+  // Daily Habits State in Client Portal using backend via context (stable habit IDs)
   const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
   const currentClientHabitLog = useMemo(() => {
     if (!pairedClient?.id) return null;
     return habitLogs.find(l => l.clientId === pairedClient.id && l.date === todayStr);
   }, [habitLogs, pairedClient?.id, todayStr]);
 
-  const habitsStatus = useMemo(() => {
-    const status: { [title: string]: boolean } = {};
-    if (currentClientHabitLog) {
-      currentClientHabitLog.habits.forEach(h => {
-        status[h.title] = h.completed;
-      });
+  const activeHabitsList = useMemo(() => {
+    if (currentClientHabitLog && currentClientHabitLog.habits && currentClientHabitLog.habits.length > 0) {
+      return currentClientHabitLog.habits.map((h, i) => ({
+        habitId: h.habitId || `h-${i + 1}`,
+        title: h.title,
+        completed: Boolean(h.completed),
+      }));
     }
-    (profile.selectedHabits || []).forEach(h => {
-      if (status[h] === undefined) status[h] = false;
-    });
-    return status;
+    return (profile.selectedHabits || []).map((title, i) => ({
+      habitId: `h-${i + 1}`,
+      title,
+      completed: false,
+    }));
   }, [currentClientHabitLog, profile.selectedHabits]);
 
-  // Client to Coach simulated messages initialized with empty context
+  // Client to Coach messages initialized from authoritative AppContext
   const [clientMessageInput, setClientMessageInput] = useState('');
-  const [chatMessages, setChatMessages] = useState<{ sender: 'client' | 'coach'; text: string; time: string }[]>([]);
 
-
-
-  // Merged message list from shared AppContext messages
+  // Authoritative messages from shared AppContext
   const displayedMessages = useMemo(() => {
-    if (pairedClient) {
-      const clientMsgs = messages.filter(m => m.clientId === pairedClient.id);
-      if (clientMsgs.length > 0) {
-        return clientMsgs.map(m => ({
-          sender: m.sender,
-          text: m.text,
-          time: m.timestamp
-        }));
-      }
-    }
-    return chatMessages;
-  }, [messages, pairedClient, chatMessages]);
+    if (!pairedClient?.id) return [];
+    return messages
+      .filter(m => m.clientId === pairedClient.id)
+      .map(m => ({
+        sender: m.sender,
+        text: m.text,
+        time: m.timestamp
+      }));
+  }, [messages, pairedClient?.id]);
 
-  // Toggle habit check via Backend (server-authoritative)
-  const toggleHabit = (title: string) => {
+  // Toggle habit check via Backend (server-authoritative by stable habitId)
+  const toggleHabit = (habitId: string) => {
     if (!pairedClient?.id) {
       showToast('No active speaker profile found to record habits.');
       return;
     }
-    const todayStr = new Date().toISOString().split('T')[0];
-    toggleHabitCompletion(pairedClient.id, todayStr, title);
+    const today = new Date().toISOString().split('T')[0];
+    toggleHabitCompletion(pairedClient.id, today, habitId);
   };
 
   // Timer and cleanup effects for MediaRecorder
@@ -401,7 +396,7 @@ export const ClientPortal: React.FC = () => {
       localStorage.setItem(storageKeyJournal, JSON.stringify(updated));
     } catch {}
     setJournalText('');
-    showToast('Reflection saved to your private workspace.');
+    showToast('Reflection saved to browser storage (Local device draft).');
   };
 
   // Add Executive Simulation Entry with persistent storage
@@ -415,7 +410,7 @@ export const ClientPortal: React.FC = () => {
       arena: execArena,
       summary: execSimulationText.trim(),
       wpm: profile.vocalBaselinePace || 135,
-      coachStatus: 'Drafted'
+      coachStatus: 'Local Draft'
     };
 
     const updated = [newEntry, ...execEntries];
@@ -424,7 +419,7 @@ export const ClientPortal: React.FC = () => {
       localStorage.setItem(storageKeyExec, JSON.stringify(updated));
     } catch {}
     setExecSimulationText('');
-    showToast('Rehearsal note saved in your workspace.');
+    showToast('Rehearsal note saved to browser storage (Local device draft).');
   };
 
   // Send message to coach
@@ -440,23 +435,14 @@ export const ClientPortal: React.FC = () => {
         text: textToSend
       });
     }
-
-    setChatMessages(prev => [
-      ...prev,
-      {
-        sender: 'client' as const,
-        text: textToSend,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      }
-    ]);
     setClientMessageInput('');
   };
 
   const habitsRemainingCount = useMemo(() => {
-    const total = Object.keys(habitsStatus).length;
-    const completed = Object.values(habitsStatus).filter(Boolean).length;
+    const total = activeHabitsList.length;
+    const completed = activeHabitsList.filter(h => h.completed).length;
     return Math.max(0, total - completed);
-  }, [habitsStatus]);
+  }, [activeHabitsList]);
 
   const handleOpenLiveChamber = () => {
     setActiveChamberTitle(
@@ -887,38 +873,38 @@ export const ClientPortal: React.FC = () => {
                       <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">Today's Daily Rituals</h3>
                     </div>
                     <span className="text-[10px] font-mono text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
-                      {Object.values(habitsStatus).filter(Boolean).length} of {Object.keys(habitsStatus).length} Completed
+                      {activeHabitsList.filter(h => h.completed).length} of {activeHabitsList.length} Completed
                     </span>
                   </div>
 
                   <div className="space-y-2">
-                    {Object.keys(habitsStatus).length === 0 ? (
+                    {activeHabitsList.length === 0 ? (
                       <div className="py-4 px-3 rounded-2xl bg-slate-950/60 border border-slate-850 text-center">
                         <p className="text-xs text-slate-400">No daily rituals recorded yet today.</p>
                       </div>
                     ) : (
-                      Object.entries(habitsStatus).slice(0, 3).map(([title, completed]) => (
+                      activeHabitsList.slice(0, 3).map((habit) => (
                         <button
-                          key={title}
-                          onClick={() => toggleHabit(title)}
+                          key={habit.habitId}
+                          onClick={() => toggleHabit(habit.habitId)}
                           className={`w-full min-h-[44px] p-3 rounded-2xl border text-left flex items-center justify-between transition-all ${
-                            completed
+                            habit.completed
                               ? 'bg-slate-950/80 border-slate-800 text-slate-400'
                               : 'bg-slate-950 border-slate-800/80 text-slate-200 hover:border-slate-700'
                           }`}
                         >
                           <div className="flex items-center gap-2.5 min-w-0 pr-2">
                             <div className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 ${
-                              completed ? 'bg-[#C89630] border-[#C89630] text-slate-950' : 'border-slate-600'
+                              habit.completed ? 'bg-[#C89630] border-[#C89630] text-slate-950' : 'border-slate-600'
                             }`}>
-                              {completed && <CheckCircle2 className="w-3.5 h-3.5" />}
+                              {habit.completed && <CheckCircle2 className="w-3.5 h-3.5" />}
                             </div>
-                            <span className={`text-xs truncate ${completed ? 'line-through text-slate-400' : 'text-slate-200'}`}>
-                              {title}
+                            <span className={`text-xs truncate ${habit.completed ? 'line-through text-slate-400' : 'text-slate-200'}`}>
+                              {habit.title}
                             </span>
                           </div>
                           <span className="text-[10px] font-mono text-slate-500 shrink-0">
-                            {completed ? 'Done' : 'Tap'}
+                            {habit.completed ? 'Done' : 'Tap'}
                           </span>
                         </button>
                       ))
@@ -927,7 +913,7 @@ export const ClientPortal: React.FC = () => {
                 </div>
 
                 <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-[11px] font-mono text-slate-400">
-                  <span>{Object.values(habitsStatus).filter(Boolean).length} of {Object.keys(habitsStatus).length} Completed</span>
+                  <span>{activeHabitsList.filter(h => h.completed).length} of {activeHabitsList.length} Completed</span>
                   <button onClick={() => setSpeakerTab('habits')} className="text-[#C89630] hover:underline flex items-center gap-1">
                     <span>Full Habit Protocol</span>
                     <ChevronRight className="w-3 h-3" />
@@ -1046,7 +1032,7 @@ export const ClientPortal: React.FC = () => {
                     </div>
                   ) : (
                     <div className="text-xs text-slate-500 font-mono">
-                      Microphone standby • Click Record to begin your rehearsal
+                      Microphone standby (Local Preview) • Click Record to begin your rehearsal
                     </div>
                   )}
                 </div>
@@ -1076,13 +1062,13 @@ export const ClientPortal: React.FC = () => {
                 {/* Instant Audio Replay & Self-Evaluation */}
                 {recordedAudioUrl && (
                   <div className="mt-6 pt-5 border-t border-slate-850 animate-fadeIn text-center">
-                    <div className="text-[10px] uppercase font-bold text-slate-400 mb-2 flex items-center justify-center gap-1.5">
+                    <div className="text-[10px] uppercase font-mono font-bold text-slate-400 mb-2 flex items-center justify-center gap-1.5">
                       <Activity className="w-3.5 h-3.5 text-[#C89630]" />
-                      <span>Rehearsal Audio Capture</span>
+                      <span>In-Browser Local Audio Preview (Unpersisted)</span>
                     </div>
                     <audio controls src={recordedAudioUrl} className="w-full max-w-md mx-auto my-3 rounded-xl" />
-                    <p className="text-xs text-slate-400 max-w-md mx-auto">
-                      Rehearsal audio captured. Play back above to review delivery pacing. Automated speech scoring pipeline will activate in the next release.
+                    <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+                      In-browser local audio preview only. Audio is held in temporary browser memory and is not uploaded to the server or reviewed by coaches.
                     </p>
                   </div>
                 )}
@@ -1143,7 +1129,7 @@ export const ClientPortal: React.FC = () => {
                   <div className="flex items-center justify-between pt-2">
                     <div className="text-[10px] text-slate-500 flex items-center gap-1.5">
                       <ShieldCheck className="w-3.5 h-3.5 text-[#C89630]" />
-                      <span>Confidential Session Notes • Scoped to Speaker Workspace</span>
+                      <span>Local Device Draft (Unpersisted) • Saved in browser storage</span>
                     </div>
 
                     <button
@@ -1238,7 +1224,7 @@ export const ClientPortal: React.FC = () => {
                 <div className="flex items-center justify-between pt-2">
                   <div className="text-[10px] text-slate-500 flex items-center gap-1.5">
                     <ShieldCheck className="w-3.5 h-3.5 text-teal-400" />
-                    <span>Confidential Expression Journal • Scoped to Speaker Workspace</span>
+                    <span>Local Device Draft (Unpersisted) • Saved in browser storage</span>
                   </div>
 
                   <button
@@ -1467,12 +1453,12 @@ export const ClientPortal: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 font-mono text-xs">
                   <Flame className="w-3.5 h-3.5 fill-amber-400" />
-                  <span>{Object.values(habitsStatus).filter(Boolean).length} / {Object.keys(habitsStatus).length} Completed</span>
+                  <span>{activeHabitsList.filter(h => h.completed).length} / {activeHabitsList.length} Completed</span>
                 </div>
               </div>
 
               <div className="space-y-2.5">
-                {Object.keys(habitsStatus).length === 0 ? (
+                {activeHabitsList.length === 0 ? (
                   <div className="py-10 px-6 rounded-2xl bg-slate-950/60 border border-slate-850 text-center space-y-2">
                     <CheckCircle2 className="w-8 h-8 text-slate-600 mx-auto" />
                     <p className="text-sm font-medium text-slate-300">No daily orator rituals active</p>
@@ -1481,13 +1467,13 @@ export const ClientPortal: React.FC = () => {
                     </p>
                   </div>
                 ) : (
-                  Object.entries(habitsStatus).map(([title, completed]) => (
+                  activeHabitsList.map((habit) => (
                     <button
-                      key={title}
+                      key={habit.habitId}
                       type="button"
-                      onClick={() => toggleHabit(title)}
+                      onClick={() => toggleHabit(habit.habitId)}
                       className={`w-full p-4 rounded-2xl border text-left flex items-center justify-between transition-all ${
-                        completed
+                        habit.completed
                           ? 'bg-emerald-950/20 border-emerald-500/40 text-white'
                           : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
                       }`}
@@ -1495,18 +1481,18 @@ export const ClientPortal: React.FC = () => {
                       <div className="flex items-center gap-3">
                         <div
                           className={`w-5 h-5 rounded-lg flex items-center justify-center transition-all ${
-                            completed ? 'bg-emerald-500 text-slate-950' : 'border border-slate-700'
+                            habit.completed ? 'bg-emerald-500 text-slate-950' : 'border border-slate-700'
                           }`}
                         >
-                          {completed && <CheckCircle2 className="w-3.5 h-3.5" />}
+                          {habit.completed && <CheckCircle2 className="w-3.5 h-3.5" />}
                         </div>
-                        <span className={`text-xs font-semibold ${completed ? 'text-white line-through opacity-80' : 'text-slate-200'}`}>
-                          {title}
+                        <span className={`text-xs font-semibold ${habit.completed ? 'text-white line-through opacity-80' : 'text-slate-200'}`}>
+                          {habit.title}
                         </span>
                       </div>
 
                       <span className="text-[10px] font-mono text-slate-500">
-                        {completed ? 'Completed Today' : 'Tap to Complete'}
+                        {habit.completed ? 'Completed Today' : 'Tap to Complete'}
                       </span>
                     </button>
                   ))

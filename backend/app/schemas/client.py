@@ -23,24 +23,24 @@ class ClientBase(CamelModel):
     avatar: str = ""
     email: str = ""
     phone: str = ""
-    age: int = 25
-    gender: str = "Male"
+    age: Optional[int] = None
+    gender: Optional[str] = None
     status: str = "Active"
-    goal: str = "Competitive Debate"
-    experience_level: str = "Intermediate"
+    goal: str = ""
+    experience_level: str = ""
     start_date: str = ""
     current_program_id: Optional[str] = None
     current_program_name: Optional[str] = None
-    compliance_rate: float = 100.0
+    compliance_rate: float = 0.0
     workouts_completed: int = 0
     total_workouts_assigned: int = 0
     last_active: str = "Recently"
-    target_weight_kg: float = 140.0
-    current_weight_kg: float = 145.0
-    starting_weight_kg: float = 145.0
-    height_cm: float = 175.0
-    body_fat_percentage: float = 85.0
-    target_body_fat: float = 90.0
+    target_weight_kg: Optional[float] = None
+    current_weight_kg: Optional[float] = None
+    starting_weight_kg: Optional[float] = None
+    height_cm: Optional[float] = None
+    body_fat_percentage: Optional[float] = None
+    target_body_fat: Optional[float] = None
     injuries_and_health: List[str] = Field(default_factory=list)
     medical_alerts: Optional[str] = None
     custom_coach_notes: List[str] = Field(default_factory=list)
@@ -56,20 +56,20 @@ class ClientCreate(CamelModel):
     avatar: str = ""
     email: str = ""
     phone: str = ""
-    age: int = 25
-    gender: str = "Male"
+    age: Optional[int] = None
+    gender: Optional[str] = None
     status: str = "Active"
-    goal: str = "Competitive Debate"
-    experience_level: str = "Intermediate"
+    goal: str = ""
+    experience_level: str = ""
     start_date: str = ""
     current_program_id: Optional[str] = None
     current_program_name: Optional[str] = None
-    target_weight_kg: float = 70.0
-    current_weight_kg: float = 75.0
-    starting_weight_kg: float = 75.0
-    height_cm: float = 175.0
-    body_fat_percentage: float = 15.0
-    target_body_fat: float = 12.0
+    target_weight_kg: Optional[float] = None
+    current_weight_kg: Optional[float] = None
+    starting_weight_kg: Optional[float] = None
+    height_cm: Optional[float] = None
+    body_fat_percentage: Optional[float] = None
+    target_body_fat: Optional[float] = None
     injuries_and_health: List[str] = Field(default_factory=list)
     medical_alerts: Optional[str] = None
     custom_coach_notes: List[str] = Field(default_factory=list)
