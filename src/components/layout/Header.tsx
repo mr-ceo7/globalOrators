@@ -409,24 +409,42 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Mobile Profile Settings Menu Trigger */}
         <div className="relative md:hidden">
-          <button
-            id="mobile-profile-menu-btn"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-800 overflow-hidden active:scale-95 transition-transform"
-          >
-            <img
-              src="https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=100&auto=format&fit=crop&q=80"
-              alt="Coach Rivers"
-              className="h-full w-full object-cover"
-            />
-          </button>
+          {(() => {
+            const user = (() => {
+              try {
+                const stored = localStorage.getItem('globalorators_user') || localStorage.getItem('nubianfit_user');
+                return stored ? JSON.parse(stored) : null;
+              } catch {
+                return null;
+              }
+            })();
+            const coachName = user?.full_name || 'Head Coach Qassim';
+            const initials = coachName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'HQ';
 
-          {isMobileMenuOpen && (
-            <div className="absolute top-11 right-0 w-56 rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-2 z-50 space-y-1">
-              <div className="px-3 py-2 border-b border-slate-800/80 mb-1.5 text-left">
-                <div className="text-xs font-bold text-white">Coach Alex Rivers</div>
-                <div className="text-[10px] text-slate-400">Head Speech & Debate Coach</div>
-              </div>
+            return (
+              <>
+                <button
+                  id="mobile-profile-menu-btn"
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-800 bg-emerald-950 overflow-hidden active:scale-95 transition-transform"
+                >
+                  {user?.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt={coachName}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span className="font-bold text-emerald-400 text-xs">{initials}</span>
+                  )}
+                </button>
+
+                {isMobileMenuOpen && (
+                  <div className="absolute top-11 right-0 w-56 rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-2 z-50 space-y-1">
+                    <div className="px-3 py-2 border-b border-slate-800/80 mb-1.5 text-left">
+                      <div className="text-xs font-bold text-white">{coachName}</div>
+                      <div className="text-[10px] text-slate-400">Head Speech & Debate Coach</div>
+                    </div>
               
               {/* Theme Toggle (Mobile) */}
               <button
@@ -481,7 +499,10 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </div>
           )}
-        </div>
+        </>
+      );
+    })()}
+  </div>
 
       </div>
     </header>

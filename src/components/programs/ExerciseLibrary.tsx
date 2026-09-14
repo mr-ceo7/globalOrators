@@ -91,7 +91,7 @@ export const ExerciseLibrary: React.FC<{
       formCues: formCues.trim() 
         ? formCues.split(',').map(s => s.trim()).filter(Boolean)
         : ['Maintain steady eye contact', 'Anchor stance without pacing', 'Pause 2s before key points'],
-      thumbnailUrl: 'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=400&auto=format&fit=crop&q=80'
+      thumbnailUrl: ''
     });
 
     onCloseAddModal();
@@ -191,13 +191,20 @@ export const ExerciseLibrary: React.FC<{
             className="group rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 transition-all overflow-hidden cursor-pointer flex flex-col justify-between shadow-sm hover:shadow-emerald-950/20"
           >
             {/* Image Thumbnail */}
-            <div className="relative h-36 w-full overflow-hidden bg-slate-950">
-              <img
-                src={exercise.thumbnailUrl}
-                alt={exercise.name}
-                className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300 opacity-85 group-hover:opacity-100"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
+            <div className="relative h-36 w-full overflow-hidden bg-slate-950 flex items-center justify-center">
+              {exercise.thumbnailUrl ? (
+                <img
+                  src={exercise.thumbnailUrl}
+                  alt={exercise.name}
+                  className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300 opacity-85 group-hover:opacity-100"
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center text-slate-600 group-hover:text-emerald-400 transition-colors">
+                  <BookOpen className="h-10 w-10 mb-1" />
+                  <span className="text-[10px] font-mono tracking-widest uppercase text-slate-500">Forensics Drill</span>
+                </div>
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent pointer-events-none" />
               
               <div className="absolute top-2.5 left-2.5 flex gap-1.5">
                 <span className="px-2 py-0.5 rounded-full bg-black/70 backdrop-blur-md text-[10px] font-bold text-emerald-400 border border-emerald-500/30">
@@ -245,13 +252,20 @@ export const ExerciseLibrary: React.FC<{
       {viewingExercise && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
           <div className="relative w-full max-w-2xl max-h-[90vh] rounded-3xl bg-slate-900 border border-slate-700 shadow-2xl overflow-hidden flex flex-col">
-            <div className="relative h-48 w-full bg-slate-950 overflow-hidden">
-              <img
-                src={viewingExercise.thumbnailUrl}
-                alt={viewingExercise.name}
-                className="h-full w-full object-cover opacity-90"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
+            <div className="relative h-48 w-full bg-slate-950 overflow-hidden flex items-center justify-center">
+              {viewingExercise.thumbnailUrl ? (
+                <img
+                  src={viewingExercise.thumbnailUrl}
+                  alt={viewingExercise.name}
+                  className="h-full w-full object-cover opacity-90"
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center text-emerald-500/80">
+                  <BookOpen className="h-14 w-14 mb-2" />
+                  <span className="text-xs font-mono tracking-widest uppercase text-slate-400">{viewingExercise.category}</span>
+                </div>
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent pointer-events-none" />
               
               <button
                 onClick={() => setViewingExercise(null)}

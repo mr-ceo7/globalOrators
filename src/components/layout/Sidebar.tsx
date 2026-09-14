@@ -172,22 +172,43 @@ export const Sidebar: React.FC = () => {
       {/* Coach Profile Footer */}
       <div className="p-3 border-t border-slate-800/80 bg-slate-900/60">
         <div className="flex items-center gap-3">
-          <div className="relative">
-            <img 
-              src="https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=120&auto=format&fit=crop&q=80" 
-              alt="Coach Alex"
-              className="h-10 w-10 rounded-xl object-cover border-2 border-emerald-500/40"
-            />
-            <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-slate-950" />
+          {(() => {
+            const user = (() => {
+              try {
+                const stored = localStorage.getItem('globalorators_user') || localStorage.getItem('nubianfit_user');
+                return stored ? JSON.parse(stored) : null;
+              } catch {
+                return null;
+              }
+            })();
+            const coachName = user?.full_name || 'Head Coach Qassim';
+            const initials = coachName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'HQ';
 
-          </div>
-          
-          {!isCollapsed && (
-            <div className="flex flex-col min-w-0 flex-1">
-              <span className="text-xs font-bold text-white truncate">Coach Alex Rivers</span>
-              <span className="text-[11px] text-slate-400 truncate">Head Speech & Debate Coach</span>
-            </div>
-          )}
+            return (
+              <>
+                <div className="relative">
+                  {user?.avatar ? (
+                    <img 
+                      src={user.avatar} 
+                      alt={coachName}
+                      className="h-10 w-10 rounded-xl object-cover border-2 border-emerald-500/40"
+                    />
+                  ) : (
+                    <div className="h-10 w-10 rounded-xl bg-emerald-950 border border-emerald-500/40 flex items-center justify-center font-bold text-emerald-400 text-xs">
+                      {initials}
+                    </div>
+                  )}
+                </div>
+                
+                {!isCollapsed && (
+                  <div className="flex flex-col min-w-0 flex-1">
+                    <span className="text-xs font-bold text-white truncate">{coachName}</span>
+                    <span className="text-[11px] text-slate-400 truncate">Head Speech & Debate Coach</span>
+                  </div>
+                )}
+              </>
+            );
+          })()}
         </div>
 
         {!isCollapsed ? (

@@ -81,19 +81,11 @@ export const ClientRoster: React.FC<{
 
     setIsSaving(true);
     try {
-      const avatars = [
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80'
-      ];
-      const randomAvatar = avatars[Math.floor(Math.random() * avatars.length)];
-
       await addClient({
         name: formName.trim(),
         email: formEmail.trim(),
         phone: formPhone.trim() || '+1 (555) 000-1234',
-        avatar: randomAvatar,
+        avatar: '',
         age: Number(formAge),
         gender: formGender,
         status: formStatus,
@@ -274,11 +266,17 @@ export const ClientRoster: React.FC<{
                         {/* Speaker Column */}
                         <td className="py-3.5 px-4">
                           <div className="flex items-center gap-3">
-                            <img 
-                              src={client.avatar} 
-                              alt={client.name} 
-                              className="h-10 w-10 rounded-xl object-cover border border-slate-700" 
-                            />
+                            {client.avatar ? (
+                              <img 
+                                src={client.avatar} 
+                                alt={client.name} 
+                                className="h-10 w-10 rounded-xl object-cover border border-slate-700" 
+                              />
+                            ) : (
+                              <div className="h-10 w-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-mono font-bold text-slate-300">
+                                {client.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'SP'}
+                              </div>
+                            )}
                             <div>
                               <div className="font-bold text-white group-hover:text-emerald-400 transition-colors">
                                 {client.name}
@@ -393,11 +391,17 @@ export const ClientRoster: React.FC<{
               <div>
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <img 
-                      src={client.avatar} 
-                      alt={client.name} 
-                      className="h-12 w-12 rounded-2xl object-cover border border-slate-700" 
-                    />
+                    {client.avatar ? (
+                      <img 
+                        src={client.avatar} 
+                        alt={client.name} 
+                        className="h-12 w-12 rounded-2xl object-cover border border-slate-700" 
+                      />
+                    ) : (
+                      <div className="h-12 w-12 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-sm font-mono font-bold text-slate-300">
+                        {client.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'SP'}
+                      </div>
+                    )}
                     <div>
                       <h3 className="font-bold text-white text-sm group-hover:text-emerald-400 transition-colors">
                         {client.name}

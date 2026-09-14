@@ -81,8 +81,8 @@ export const ProgressTracker: React.FC = () => {
 
   // New Photo Form State
   const [formPhotoView, setFormPhotoView] = useState<'Front' | 'Side' | 'Back'>('Front');
-  const [formPhotoUrl, setFormPhotoUrl] = useState('https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=600&auto=format&fit=crop&q=80');
-  const [formPhotoNotes, setFormPhotoNotes] = useState('Stage posture and rostrum delivery check-in.');
+  const [formPhotoUrl, setFormPhotoUrl] = useState('');
+  const [formPhotoNotes, setFormPhotoNotes] = useState('');
 
   const handleCreateMetric = (e: React.FormEvent) => {
     e.preventDefault();

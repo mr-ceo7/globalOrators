@@ -92,7 +92,6 @@ export const CoachMessenger: React.FC = () => {
       content: `Vocal delivery analysis completed for your Oxford Union Rebuttal drill (142 WPM): Outstanding clarity. Remember to ground your posture and project to the back row!`,
       attachmentData: {
         exerciseName: 'Oxford Union Rebuttal Drill',
-        videoUrl: 'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=500&auto=format&fit=crop&q=80',
         rating: 4.8
       }
     });
@@ -229,14 +228,21 @@ export const CoachMessenger: React.FC = () => {
                     isCoach ? 'ml-auto flex-row-reverse' : 'mr-auto'
                   }`}
                 >
-                  <img
-                    src={isCoach 
-                    ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
-                    : activeClient.avatar
-                  }
-                    alt={isCoach ? 'Coach' : activeClient.name}
-                    className="h-8 w-8 rounded-xl object-cover shrink-0 self-end"
-                  />
+                  {isCoach ? (
+                    <div className="h-8 w-8 rounded-xl bg-emerald-950 border border-emerald-500/40 flex items-center justify-center font-bold text-emerald-400 text-[10px] shrink-0 self-end">
+                      HQ
+                    </div>
+                  ) : activeClient.avatar ? (
+                    <img
+                      src={activeClient.avatar}
+                      alt={activeClient.name}
+                      className="h-8 w-8 rounded-xl object-cover shrink-0 self-end"
+                    />
+                  ) : (
+                    <div className="h-8 w-8 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-slate-300 text-[10px] shrink-0 self-end">
+                      {activeClient.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'SP'}
+                    </div>
+                  )}
 
                   <div className={`space-y-2 ${isCoach ? 'items-end' : 'items-start'}`}>
                     {/* Standard Text Message Bubble */}

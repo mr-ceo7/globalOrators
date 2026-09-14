@@ -130,7 +130,7 @@ export const ClientPortal: React.FC = () => {
         id: `sched-roadmap-${idx + 1}`,
         clientId: pairedClient?.id || 'client-active',
         clientName: profile.fullName,
-        clientAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+        clientAvatar: pairedClient?.avatar || '',
         programId: execProgram.id,
         programName: execProgram.title,
         workoutDayId: day.id,
