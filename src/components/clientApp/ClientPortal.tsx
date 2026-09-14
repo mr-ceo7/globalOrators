@@ -55,7 +55,9 @@ export const ClientPortal: React.FC = () => {
     programs,
     scheduledWorkouts,
     messages,
-    sendMessage
+    sendMessage,
+    habitLogs,
+    toggleHabitCompletion
   } = useApp();
 
   const [isLiveRehearsalOpen, setIsLiveRehearsalOpen] = useState(false);
@@ -64,17 +66,17 @@ export const ClientPortal: React.FC = () => {
 
   const profile = useMemo(() => activeSpeakerProfile || {
     branch: 'Foundation' as BranchType,
-    fullName: 'Nia Adebayo',
-    email: 'nia.adebayo@globalorators.org',
-    missionFocus: 'Speaking as a Form of Escapism & Healing',
-    primaryDiscipline: 'Cathartic Voice Journaling',
-    coreFocus: 'Vulnerability & Unfiltered Truth',
-    institution: 'Independent Orator',
-    speakingGoal: 'Cathartic Expression & Healing',
-    experienceLevel: 'Novice Speaker',
+    fullName: 'Guest Speaker',
+    email: '',
+    missionFocus: '',
+    primaryDiscipline: '',
+    coreFocus: '',
+    institution: '',
+    speakingGoal: '',
+    experienceLevel: '',
     vocalBaselinePace: 135,
     emotionalOpennessRating: 8,
-    selectedHabits: ['Vocal Hydration (2.5L + Warm Lemon Water)', 'Diaphragmatic Breathwork (5 Min Morning Routine)']
+    selectedHabits: []
   }, [activeSpeakerProfile]);
 
   const isAcademy = profile.branch === 'Academy';
@@ -220,16 +222,7 @@ export const ClientPortal: React.FC = () => {
     feelBefore: string;
     feelAfter: string;
     audioLength: string;
-  }[]>([
-    {
-      id: 'j-1',
-      date: 'Yesterday, 8:45 PM',
-      text: 'Vocalized the heavy memory of being told to remain quiet during family disputes. Felt my chest tighten at first, then deep emotional relief when I finished the declaration.',
-      feelBefore: 'Guarded & Tense',
-      feelAfter: 'Lighter, Empowered & Grounded',
-      audioLength: '3 min 12 sec'
-    }
-  ]);
+  }[]>([]);
 
   // Executive Speech Vault State (Executive Track)
   const [execArena, setExecArena] = useState('Series A / Growth Capital Venture Pitch');
@@ -242,89 +235,32 @@ export const ClientPortal: React.FC = () => {
     wpm: number;
     blufScore: number;
     coachStatus: string;
-  }[]>([
-    {
-      id: 'exec-1',
-      date: 'Yesterday, 4:15 PM',
-      arena: 'Series A / Growth Capital Venture Pitch',
-      summary: 'Delivered the 60-second genesis without hedging. Anchored value thesis around African logistics efficiency.',
-      wpm: 138,
-      blufScore: 96,
-      coachStatus: 'Reviewed by Coach Qassim • Approved'
-    },
-    {
-      id: 'exec-2',
-      date: '3 days ago',
-      arena: 'Executive Boardroom Strategic Review',
-      summary: 'Simulated 5-minute capex allocation defense with deliberate 2-second pauses before financial answers.',
-      wpm: 134,
-      blufScore: 94,
-      coachStatus: 'Reviewed by Coach Qassim • Strong Gravitas'
-    }
-  ]);
+  }[]>([]);
 
-  // Daily Habits State in Client Portal initialized dynamically from profile
-  const [habitsStatus, setHabitsStatus] = useState<{ [title: string]: boolean }>(() => {
-    const initial: { [title: string]: boolean } = {};
-    const habitsList = profile.selectedHabits && profile.selectedHabits.length > 0
-      ? profile.selectedHabits
-      : [
-          'Vocal Hydration (2.5L + Warm Lemon Water)',
-          'Diaphragmatic Breathwork (5 Min Morning Routine)',
-          'Tongue Twisters & Articulation Warmups'
-        ];
-    habitsList.forEach((habitTitle, idx) => {
-      initial[habitTitle] = idx === 0;
-    });
-    return initial;
-  });
+  // Daily Habits State in Client Portal using backend via context
+  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const currentClientHabitLog = useMemo(() => {
+    return habitLogs.find(l => l.clientId === (pairedClient?.id || 'client-1') && l.date === todayStr);
+  }, [habitLogs, pairedClient?.id, todayStr]);
 
-  const habitsKey = useMemo(() => (profile.selectedHabits || []).join(':::'), [profile.selectedHabits]);
-
-  // Keep habitsStatus in sync whenever speaker profile updates
-  useEffect(() => {
-    if (profile.selectedHabits && profile.selectedHabits.length > 0) {
-      setHabitsStatus(prev => {
-        const next: { [title: string]: boolean } = {};
-        profile.selectedHabits.forEach((habitTitle, idx) => {
-          next[habitTitle] = prev[habitTitle] !== undefined ? prev[habitTitle] : idx === 0;
-        });
-        return next;
+  const habitsStatus = useMemo(() => {
+    const status: { [title: string]: boolean } = {};
+    if (currentClientHabitLog) {
+      currentClientHabitLog.habits.forEach(h => {
+        status[h.title] = h.completed;
       });
     }
-  }, [habitsKey]);
+    (profile.selectedHabits || []).forEach(h => {
+      if (status[h] === undefined) status[h] = false;
+    });
+    return status;
+  }, [currentClientHabitLog, profile.selectedHabits]);
 
-
-  // Client to Coach simulated messages initialized with personalized context
+  // Client to Coach simulated messages initialized with empty context
   const [clientMessageInput, setClientMessageInput] = useState('');
-  const [chatMessages, setChatMessages] = useState<{ sender: 'client' | 'coach'; text: string; time: string }[]>(() => [
-    {
-      sender: 'coach',
-      text: `Welcome to Global Orators, ${profile.fullName.split(' ')[0]}! I've calibrated your ${profile.branch} protocol${profile.institution ? ` for ${profile.institution}` : ''}. We are prioritizing ${curriculum.focusLabel} at your target pace of ${profile.vocalBaselinePace} WPM. Remember, your voice is your sovereign instrument.`,
-      time: '09:00 AM'
-    },
-    {
-      sender: 'client',
-      text: `Thank you Coach Qassim! I am starting today's drill on ${curriculum.focusLabel}.`,
-      time: '09:15 AM'
-    }
-  ]);
+  const [chatMessages, setChatMessages] = useState<{ sender: 'client' | 'coach'; text: string; time: string }[]>([]);
 
-  // Synchronize Coach chat whenever profile persona changes
-  useEffect(() => {
-    setChatMessages([
-      {
-        sender: 'coach',
-        text: `Welcome to Global Orators, ${profile.fullName.split(' ')[0]}! I've calibrated your ${profile.branch} protocol${profile.institution ? ` for ${profile.institution}` : ''}. We are prioritizing ${curriculum.focusLabel} at your target pace of ${profile.vocalBaselinePace} WPM. Remember, your voice is your sovereign instrument.`,
-        time: '09:00 AM'
-      },
-      {
-        sender: 'client',
-        text: `Thank you Coach Qassim! I am starting today's drill on ${curriculum.focusLabel}.`,
-        time: '09:15 AM'
-      }
-    ]);
-  }, [profile.fullName, profile.branch, profile.institution, profile.coreFocus, profile.primaryDiscipline, profile.vocalBaselinePace, curriculum.focusLabel]);
+
 
   // Merged message list from shared AppContext messages
   const displayedMessages = useMemo(() => {
@@ -341,90 +277,15 @@ export const ClientPortal: React.FC = () => {
     return chatMessages;
   }, [messages, pairedClient, chatMessages]);
 
-  // Demo Profile switcher (Allows seamless switching between Executive, Debate & Foundation personas)
-  const handleSwitchBranchDemo = (target: 'Executive' | 'Academy' | 'Foundation') => {
-    if (target === 'Executive') {
-      const executiveProfile: SpeakerOnboardingData = {
-        branch: 'Academy',
-        fullName: 'Dr. Arthur Vance',
-        email: 'arthur.vance@executive.org',
-        age: 42,
-        phone: '+254 700 889 900',
-        institution: 'Sovereign Advisory & Enterprise Capital',
-        primaryDiscipline: 'Executive Public Speaking & Boardroom Rhetoric',
-        coreFocus: 'High-Stakes Persuasion & Presence',
-        missionFocus: 'Executive Public Speaking & Presentation Skills',
-        speakingGoal: 'Executive & Board Pitching',
-        experienceLevel: 'Master Orator',
-        vocalBaselinePace: 138,
-        emotionalOpennessRating: 9,
-        selectedHabits: [
-          'Vocal Hydration (2.5L + Warm Lemon Water)',
-          'Diaphragmatic Breathwork (5 Min Morning Routine)',
-          'BLUF Executive Case Prep (10 Min Daily)'
-        ],
-        bioNotes: 'Managing Director refining boardroom delivery, shareholder addresses, and keynote composure.'
-      };
-      setActiveSpeakerProfile(executiveProfile);
-      showToast('Switched to Executive Public Speaking demo profile.');
-    } else if (target === 'Academy') {
-      const academyProfile: SpeakerOnboardingData = {
-        branch: 'Academy',
-        fullName: 'Kwame Mensah',
-        email: 'kwame.mensah@globalorators.org',
-        age: 22,
-        phone: '+254 711 223 344',
-        institution: 'Strathmore Debate Society',
-        primaryDiscipline: 'British Parliamentary (BP)',
-        coreFocus: 'Argumentation & Rebuttal Depth',
-        missionFocus: 'Pan-African Leadership & WUDC Championship Debate',
-        speakingGoal: 'Competitive Debate',
-        experienceLevel: 'Varsity / Advanced',
-        vocalBaselinePace: 148,
-        emotionalOpennessRating: 8,
-        selectedHabits: [
-          'Vocal Hydration (2.5L + Warm Lemon Water)',
-          'Diaphragmatic Breathwork (5 Min Morning Routine)',
-          'Pan-African & Current Affairs Reading (10 Min Daily)'
-        ],
-        bioNotes: 'Lead debater on the Global Orators Pan-African tournament squad.'
-      };
-      setActiveSpeakerProfile(academyProfile);
-      showToast('Switched to Global Orators Academy debate profile.');
-    } else {
-      const foundationProfile: SpeakerOnboardingData = {
-        branch: 'Foundation',
-        fullName: 'Nia Adebayo',
-        email: 'nia.adebayo@globalorators.org',
-        age: 19,
-        phone: '+254 722 334 455',
-        institution: 'Independent Orator',
-        primaryDiscipline: 'Cathartic Voice Journaling',
-        coreFocus: 'Vulnerability & Unfiltered Truth',
-        missionFocus: 'Speaking as a Form of Escapism & Catharsis from Adversity',
-        speakingGoal: 'Cathartic Expression & Healing',
-        experienceLevel: 'Novice Speaker',
-        vocalBaselinePace: 132,
-        emotionalOpennessRating: 9,
-        selectedHabits: [
-          'Vocal Hydration (2.5L + Warm Lemon Water)',
-          'Diaphragmatic Breathwork (5 Min Morning Routine)',
-          'Cathartic Voice Journaling (1-Min Audio Reflection)'
-        ],
-        bioNotes: 'Foundation fellow transforming past domestic adversity into voice advocacy.'
-      };
-      setActiveSpeakerProfile(foundationProfile);
-      showToast('Switched to Global Orators Foundation demo profile.');
-    }
-  };
-
-  // Toggle habit check
+  // Toggle habit check via Backend
   const toggleHabit = (title: string) => {
-    setHabitsStatus(prev => {
-      const updated = { ...prev, [title]: !prev[title] };
-      showToast(updated[title] ? `Completed: ${title}` : `Unchecked: ${title}`);
-      return updated;
-    });
+    const clientIdToUse = pairedClient?.id || 'client-1';
+    const todayStr = new Date().toISOString().split('T')[0];
+    
+    // Attempt to map title back to habitId if available, else use a hash or just title as ID 
+    // In AppContext, habit ID is needed but it accepts anything. Let's pass title.
+    toggleHabitCompletion(clientIdToUse, todayStr, title);
+    showToast(`Toggled habit status for: ${title}`);
   };
 
   // Recording Simulation Handlers
@@ -437,15 +298,8 @@ export const ClientPortal: React.FC = () => {
   const handleStopRecording = () => {
     setIsRecording(false);
     setRecordingCompleted(true);
-    // Generate personalized feedback
-    const baseWpm = profile.vocalBaselinePace || 135;
-    setRecordedFeedback({
-      wpm: Math.round(baseWpm + (Math.random() * 8 - 4)),
-      clarity: 94,
-      fillers: 2,
-      catharsisScore: profile.emotionalOpennessRating ? profile.emotionalOpennessRating * 10 : 85
-    });
-    showToast('Rehearsal processed! Instant delivery metrics ready.');
+    setRecordedFeedback(null);
+    showToast('Rehearsal processed! Analysis coming soon.');
   };
 
   // Add Journal Entry
@@ -594,39 +448,6 @@ export const ClientPortal: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Demo Personas */}
-                <div className="px-3 py-1 text-[10px] font-mono uppercase tracking-widest text-slate-400 font-semibold">
-                  Switch Demo Persona
-                </div>
-                <button
-                  onClick={() => { handleSwitchBranchDemo('Executive'); setIsProfileMenuOpen(false); }}
-                  className={`w-full min-h-[40px] px-3 py-2 rounded-xl text-left flex items-center justify-between transition-colors ${
-                    isExecutive ? 'bg-[#C89630]/15 text-[#C89630] font-bold' : 'text-slate-300 hover:bg-slate-800'
-                  }`}
-                >
-                  <span>Executive Track (Dr. Vance)</span>
-                  {isExecutive && <CheckCircle2 className="w-3.5 h-3.5 text-[#C89630]" />}
-                </button>
-                <button
-                  onClick={() => { handleSwitchBranchDemo('Academy'); setIsProfileMenuOpen(false); }}
-                  className={`w-full min-h-[40px] px-3 py-2 rounded-xl text-left flex items-center justify-between transition-colors ${
-                    !isExecutive && isAcademy ? 'bg-[#C89630]/15 text-[#C89630] font-bold' : 'text-slate-300 hover:bg-slate-800'
-                  }`}
-                >
-                  <span>Debate Track (Kwame)</span>
-                  {!isExecutive && isAcademy && <CheckCircle2 className="w-3.5 h-3.5 text-[#C89630]" />}
-                </button>
-                <button
-                  onClick={() => { handleSwitchBranchDemo('Foundation'); setIsProfileMenuOpen(false); }}
-                  className={`w-full min-h-[40px] px-3 py-2 rounded-xl text-left flex items-center justify-between transition-colors ${
-                    !isExecutive && !isAcademy ? 'bg-teal-500/15 text-teal-300 font-bold' : 'text-slate-300 hover:bg-slate-800'
-                  }`}
-                >
-                  <span>Foundation Track (Nia)</span>
-                  {!isExecutive && !isAcademy && <CheckCircle2 className="w-3.5 h-3.5 text-teal-300" />}
-                </button>
-
-                <div className="my-1.5 border-t border-slate-800" />
 
                 {/* Workspace Navigation Links */}
                 <div className="px-3 py-1 text-[10px] font-mono uppercase tracking-widest text-slate-400 font-semibold">
@@ -730,7 +551,7 @@ export const ClientPortal: React.FC = () => {
                   </span>
                   <span className="hidden xs:inline-block w-px h-3 bg-slate-800" />
                   <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
-                    Week 3 · Session 2 · 42 min
+                    {roadmapSessions.length > 0 ? `Week 1 · Session 1 · ${roadmapSessions[0].durationMin || 42} min` : '—'}
                   </span>
                 </div>
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-white tracking-tight leading-snug">
@@ -856,7 +677,7 @@ export const ClientPortal: React.FC = () => {
               <div className="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-3.5 sm:p-4.5 transition-colors hover:border-slate-700/80">
                 <div className="text-[9px] sm:text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold">Clarity</div>
                 <div className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-white mt-1 tracking-tight">
-                  94.2%
+                  —
                 </div>
                 <div className="text-[10px] font-mono text-slate-400 mt-1">Top 5% Tier</div>
               </div>
@@ -868,7 +689,7 @@ export const ClientPortal: React.FC = () => {
                 <div className={`text-xl sm:text-2xl md:text-3xl font-serif font-bold mt-1 tracking-tight ${
                   isExecutive ? 'text-[#C89630]' : isAcademy ? 'text-emerald-400' : 'text-teal-400'
                 }`}>
-                  {isExecutive ? '96%' : `${profile.emotionalOpennessRating * 10}%`}
+                  {isExecutive ? '—' : `${profile.emotionalOpennessRating * 10}%`}
                 </div>
                 <div className={`text-[10px] font-mono mt-1 ${
                   isExecutive ? 'text-[#C89630]' : isAcademy ? 'text-emerald-400' : 'text-teal-400'
@@ -880,12 +701,12 @@ export const ClientPortal: React.FC = () => {
               <div className="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-3.5 sm:p-4.5 transition-colors hover:border-slate-700/80">
                 <div className="text-[9px] sm:text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold">Sessions</div>
                 <div className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-white mt-1 tracking-tight">
-                  18
+                  {roadmapSessions.length || 0}
                   <span className="font-mono text-[10px] sm:text-xs font-normal text-slate-400 uppercase tracking-wider ml-1">
                     {isExecutive ? 'Sessions' : 'Rounds'}
                   </span>
                 </div>
-                <div className="text-[10px] font-mono text-emerald-400 mt-1">+4 this week</div>
+                <div className="text-[10px] font-mono text-emerald-400 mt-1"></div>
               </div>
             </div>
 
@@ -913,11 +734,7 @@ export const ClientPortal: React.FC = () => {
                   </div>
 
                   <p className="text-xs text-slate-300 leading-relaxed font-sans">
-                    {isExecutive
-                      ? 'Dr. Vance: On today\'s 60-second venture genesis rehearsal, focus on eliminating "sort of" and "we believe". State your capital efficiency metrics as unassailable facts. Take a full 2-second deliberate pause before answering financial valuation objections.'
-                      : isAcademy
-                        ? 'Kwame: In today\'s whip extension round, refrain from rehashing opening bench definitions. Introduce the third stakeholder tier and crystallize why the policy mechanism is irreversible.'
-                        : 'Nia: Remember that your voice carries sovereign weight. In today\'s reflection, let your vocal cadence settle at your natural pace and feel the diaphragm stabilize each phrase.'}
+                    {curriculum.drillPrompt || 'Awaiting personalized coach directive.'}
                   </p>
 
                   {/* Audio Dispatch Snippet */}
@@ -1130,46 +947,15 @@ export const ClientPortal: React.FC = () => {
                 </div>
 
                 {/* Instant Metric Feedback Display */}
-                {recordingCompleted && recordedFeedback && (
-                  <div className="mt-6 pt-5 border-t border-slate-850 animate-fadeIn text-left">
-                    <div className="text-[10px] uppercase font-bold text-slate-400 mb-2 flex items-center gap-1.5">
+                {recordingCompleted && !recordedFeedback && (
+                  <div className="mt-6 pt-5 border-t border-slate-850 animate-fadeIn text-center">
+                    <div className="text-[10px] uppercase font-bold text-slate-400 mb-2 flex items-center justify-center gap-1.5">
                       <Activity className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>Speech Delivery Diagnostics</span>
+                      <span>Analysis coming soon</span>
                     </div>
-
-                    {/* 2-Column Responsive Metrics on Mobile */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                      <div className="bg-slate-900 border border-slate-800 rounded-xl p-3">
-                        <div className="text-[10px] text-slate-400">Pacing (WPM)</div>
-                        <div className="text-base font-bold text-white mt-0.5">{recordedFeedback.wpm} WPM</div>
-                        <div className="text-[9px] text-emerald-400">In optimal target zone</div>
-                      </div>
-                      <div className="bg-slate-900 border border-slate-800 rounded-xl p-3">
-                        <div className="text-[10px] text-slate-400">Articulation Score</div>
-                        <div className="text-base font-bold text-emerald-400 mt-0.5">{recordedFeedback.clarity}%</div>
-                        <div className="text-[9px] text-slate-400">Zero mumbling detected</div>
-                      </div>
-                      <div className="bg-slate-900 border border-slate-800 rounded-xl p-3">
-                        <div className="text-[10px] text-slate-400">Filler Words</div>
-                        <div className="text-base font-bold text-white mt-0.5">{recordedFeedback.fillers}</div>
-                        <div className="text-[9px] text-emerald-400">2 'ums' in 2 min</div>
-                      </div>
-                      <div className="bg-slate-900 border border-slate-800 rounded-xl p-3">
-                        <div className="text-[10px] text-slate-400">
-                          {isExecutive ? 'Executive Gravitas' : 'Emotional Resonance'}
-                        </div>
-                        <div className={`text-base font-bold mt-0.5 ${
-                          isExecutive ? 'text-[#C89630]' : 'text-teal-400'
-                        }`}>
-                          {recordedFeedback.catharsisScore}%
-                        </div>
-                        <div className={`text-[9px] ${
-                          isExecutive ? 'text-[#C89630]' : 'text-teal-400'
-                        }`}>
-                          {isExecutive ? 'Commanding composure' : 'Deep conviction'}
-                        </div>
-                      </div>
-                    </div>
+                    <p className="text-xs text-slate-500">
+                      Your speech rehearsal has been logged. Advanced delivery metrics and coach review will be available shortly.
+                    </p>
                   </div>
                 )}
               </div>
@@ -1855,27 +1641,33 @@ export const ClientPortal: React.FC = () => {
 
               {/* Chat Message List */}
               <div className="flex-1 overflow-y-auto py-4 space-y-3 pr-1">
-                {displayedMessages.map((msg, index) => (
-                  <div
-                    key={index}
-                    className={`flex flex-col ${
-                      msg.sender === 'client' ? 'items-end' : 'items-start'
-                    }`}
-                  >
+                {displayedMessages.length === 0 ? (
+                  <div className="flex items-center justify-center h-full text-xs text-slate-500 italic">
+                    Start a conversation with your coach
+                  </div>
+                ) : (
+                  displayedMessages.map((msg, index) => (
                     <div
-                      className={`max-w-[85%] sm:max-w-md p-3.5 rounded-2xl text-xs leading-relaxed ${
-                        msg.sender === 'client'
-                          ? isExecutive
-                            ? 'bg-[#C89630] text-slate-950 font-medium rounded-br-none'
-                            : 'bg-emerald-500 text-slate-950 font-medium rounded-br-none'
-                          : 'bg-slate-950 border border-slate-800 text-slate-200 rounded-bl-none'
+                      key={index}
+                      className={`flex flex-col ${
+                        msg.sender === 'client' ? 'items-end' : 'items-start'
                       }`}
                     >
-                      {msg.text}
+                      <div
+                        className={`max-w-[85%] sm:max-w-md p-3.5 rounded-2xl text-xs leading-relaxed ${
+                          msg.sender === 'client'
+                            ? isExecutive
+                              ? 'bg-[#C89630] text-slate-950 font-medium rounded-br-none'
+                              : 'bg-emerald-500 text-slate-950 font-medium rounded-br-none'
+                            : 'bg-slate-950 border border-slate-800 text-slate-200 rounded-bl-none'
+                        }`}
+                      >
+                        {msg.text}
+                      </div>
+                      <span className="text-[9px] text-slate-500 mt-1 px-1">{msg.time}</span>
                     </div>
-                    <span className="text-[9px] text-slate-500 mt-1 px-1">{msg.time}</span>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
 
               {/* Message Input Box */}

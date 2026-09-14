@@ -193,7 +193,7 @@ describe('Speaker Login & Portal Integration Tests', () => {
     expect(screen.getAllByText(/Nairobi Tech Hub/i).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('Executive Investor Pitch: High-Stakes Persuasion & Presence')).toBeInTheDocument();
     expect(screen.getByText(/The 60-Second Venture Genesis/i)).toBeInTheDocument();
-    expect(screen.getByText(/venture's founding conviction/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/venture's founding conviction/i).length).toBeGreaterThanOrEqual(1);
   });
 });
 

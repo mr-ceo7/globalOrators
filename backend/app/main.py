@@ -45,7 +45,30 @@ async def lifespan(app: FastAPI):
     
     logger.info("Checking / running initial database seed...")
     try:
-        await seed_database(force=False)
+        if settings.ENVIRONMENT != 'production':
+            await seed_database(force=False)
+        else:
+            from app.database import AsyncSessionLocal
+            from app.models import User
+            from sqlalchemy import select
+            from app.security import get_password_hash
+            from datetime import datetime, timezone
+            
+            async with AsyncSessionLocal() as session:
+                user_res = await session.execute(select(User).where(User.id == "coach-1"))
+                if not user_res.scalar_one_or_none():
+                    coach_user = User(
+                        id="coach-1",
+                        email=settings.DEFAULT_COACH_EMAIL.lower(),
+                        hashed_password=get_password_hash(settings.DEFAULT_COACH_PASSWORD),
+                        full_name=settings.DEFAULT_COACH_NAME,
+                        role="coach",
+                        avatar="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+                        is_active=True,
+                        created_at=datetime.now(timezone.utc),
+                    )
+                    session.add(coach_user)
+                    await session.commit()
     except Exception as e:
         logger.error(f"Error during database seed: {e}")
     

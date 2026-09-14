@@ -14,18 +14,8 @@ import {
   SpeakerOnboardingData,
   BranchType
 } from '../types';
-import { 
-  INITIAL_CLIENTS, 
-  INITIAL_EXERCISES, 
-  INITIAL_PROGRAMS, 
-  INITIAL_SCHEDULED_WORKOUTS, 
-  INITIAL_METRICS, 
-  INITIAL_PRS, 
-  INITIAL_PHOTOS, 
-  INITIAL_MESSAGES, 
-  INITIAL_ACTIVITY_FEED,
-  INITIAL_HABIT_LOGS
-} from '../data/mockData';
+// mockData.ts removed from production bundle (C1 audit fix).
+// All business collections initialize as empty arrays and are populated exclusively from the API.
 import {
   authApi,
   clientsApi,
@@ -126,25 +116,7 @@ interface AppContextType {
 }
 
 
-const DEFAULT_SPEAKER_PROFILE: SpeakerOnboardingData = {
-  branch: 'Foundation',
-  fullName: 'Kofi Mensah',
-  email: 'kofi.mensah@globalorators.org',
-  age: 20,
-  phone: '+254 712 345 678',
-  missionFocus: 'Breaking Patriarchal Silence & Speaking as Catharsis from Childhood Adversity',
-  speakingGoal: 'Cathartic Expression & Healing',
-  experienceLevel: 'Novice Speaker',
-  vocalBaselinePace: 135,
-  emotionalOpennessRating: 8,
-  selectedHabits: [
-    'Vocal Hydration (2.5L + Warm Lemon Water)',
-    'Diaphragmatic Breathwork (5 Min Morning Routine)',
-    'Cathartic Voice Journaling (1-Min Audio Reflection)',
-    'Tongue Twisters & Articulation Warmups'
-  ],
-  bioNotes: 'Foundation scholar working on cathartic expression, healing from past adversity, and discovering his oratorical voice.'
-};
+// No default speaker profile — user must authenticate or complete onboarding (H1 audit fix).
 
 export const clientToSpeakerProfile = (client: Client): SpeakerOnboardingData => {
   const survey = (client.onboardingSurvey || {}) as Record<string, any>;
@@ -344,7 +316,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Speaker Client App Profile & Onboarding
   const [activeSpeakerProfile, setActiveSpeakerProfile] = useState<SpeakerOnboardingData | null>(() => {
     const saved = localStorage.getItem('globalorators_speaker_profile');
-    return saved ? JSON.parse(saved) : DEFAULT_SPEAKER_PROFILE;
+    return saved ? JSON.parse(saved) : null;
   });
 
   const resetOnboarding = useCallback(() => {
@@ -354,52 +326,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [setCurrentPortal]);
 
   
-  const [clients, setClients] = useState<Client[]>(() => {
-    const saved = localStorage.getItem('globalorators_clients') || localStorage.getItem('nubianfit_clients');
-    return saved ? JSON.parse(saved) : INITIAL_CLIENTS;
-  });
-  
-  const [exercises, setExercises] = useState<Exercise[]>(() => {
-    const saved = localStorage.getItem('globalorators_drills') || localStorage.getItem('nubianfit_exercises');
-    return saved ? JSON.parse(saved) : INITIAL_EXERCISES;
-  });
-  
-  const [programs, setPrograms] = useState<TrainingProgram[]>(() => {
-    const saved = localStorage.getItem('globalorators_curriculums') || localStorage.getItem('nubianfit_programs');
-    return saved ? JSON.parse(saved) : INITIAL_PROGRAMS;
-  });
-  
-  const [scheduledWorkouts, setScheduledWorkouts] = useState<ScheduledWorkout[]>(() => {
-    const saved = localStorage.getItem('globalorators_sessions') || localStorage.getItem('nubianfit_workouts');
-    return saved ? JSON.parse(saved) : INITIAL_SCHEDULED_WORKOUTS;
-  });
-  
-  const [metrics, setMetrics] = useState<MetricEntry[]>(() => {
-    const saved = localStorage.getItem('globalorators_metrics') || localStorage.getItem('nubianfit_metrics');
-    return saved ? JSON.parse(saved) : INITIAL_METRICS;
-  });
-  
-  const [personalRecords, setPersonalRecords] = useState<PersonalRecord[]>(() => {
-    const saved = localStorage.getItem('globalorators_prs') || localStorage.getItem('nubianfit_prs');
-    return saved ? JSON.parse(saved) : INITIAL_PRS;
-  });
-  
-  const [photos, setPhotos] = useState<ProgressPhoto[]>(() => {
-    const saved = localStorage.getItem('globalorators_photos') || localStorage.getItem('nubianfit_photos');
-    return saved ? JSON.parse(saved) : INITIAL_PHOTOS;
-  });
-  
-  const [messages, setMessages] = useState<ChatMessage[]>(() => {
-    const saved = localStorage.getItem('globalorators_messages') || localStorage.getItem('nubianfit_messages');
-    return saved ? JSON.parse(saved) : INITIAL_MESSAGES;
-  });
-  
-  const [activityFeed, setActivityFeed] = useState<ActivityFeedItem[]>(INITIAL_ACTIVITY_FEED);
-  
-  const [habitLogs, setHabitLogs] = useState<ClientDailyHabitLog[]>(() => {
-    const saved = localStorage.getItem('globalorators_habits') || localStorage.getItem('nubianfit_habits');
-    return saved ? JSON.parse(saved) : INITIAL_HABIT_LOGS;
-  });
+  // Business collections initialize empty — populated exclusively from API (C1, H7 audit fix)
+  const [clients, setClients] = useState<Client[]>([]);
+  const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [programs, setPrograms] = useState<TrainingProgram[]>([]);
+  const [scheduledWorkouts, setScheduledWorkouts] = useState<ScheduledWorkout[]>([]);
+  const [metrics, setMetrics] = useState<MetricEntry[]>([]);
+  const [personalRecords, setPersonalRecords] = useState<PersonalRecord[]>([]);
+  const [photos, setPhotos] = useState<ProgressPhoto[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [activityFeed, setActivityFeed] = useState<ActivityFeedItem[]>([]);
+  const [habitLogs, setHabitLogs] = useState<ClientDailyHabitLog[]>([]);
 
   const [selectedClientId, setSelectedClientId] = useState<string | null>('client-1');
   const [isWorkoutLoggerOpen, setIsWorkoutLoggerOpen] = useState<boolean>(false);
@@ -474,54 +411,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [theme]);
 
 
-  // Sync to localStorage as backup
-  useEffect(() => {
-    localStorage.setItem('globalorators_clients', JSON.stringify(clients));
-    localStorage.setItem('nubianfit_clients', JSON.stringify(clients));
-  }, [clients]);
-  
-  useEffect(() => {
-    localStorage.setItem('globalorators_drills', JSON.stringify(exercises));
-    localStorage.setItem('nubianfit_exercises', JSON.stringify(exercises));
-  }, [exercises]);
-  
-  useEffect(() => {
-    localStorage.setItem('globalorators_curriculums', JSON.stringify(programs));
-    localStorage.setItem('nubianfit_programs', JSON.stringify(programs));
-  }, [programs]);
-  
-  useEffect(() => {
-    localStorage.setItem('globalorators_sessions', JSON.stringify(scheduledWorkouts));
-    localStorage.setItem('nubianfit_workouts', JSON.stringify(scheduledWorkouts));
-  }, [scheduledWorkouts]);
-
-  useEffect(() => {
-    localStorage.setItem('globalorators_metrics', JSON.stringify(metrics));
-    localStorage.setItem('nubianfit_metrics', JSON.stringify(metrics));
-  }, [metrics]);
-
-  useEffect(() => {
-    localStorage.setItem('globalorators_messages', JSON.stringify(messages));
-    localStorage.setItem('nubianfit_messages', JSON.stringify(messages));
-  }, [messages]);
-
-  useEffect(() => {
-    localStorage.setItem('globalorators_habits', JSON.stringify(habitLogs));
-    localStorage.setItem('nubianfit_habits', JSON.stringify(habitLogs));
-  }, [habitLogs]);
+  // localStorage sync removed for business data (H7 audit fix).
+  // Business records (clients, exercises, programs, workouts, metrics, messages, habits)
+  // are sourced exclusively from the API. Only preferences (theme, portal) and
+  // auth tokens remain in localStorage.
 
   // Fetch initial data from FastAPI backend
   const refreshFromBackend = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Check auth / log in if needed
+      // Require an existing auth token — no auto-login with hardcoded credentials (C2 audit fix)
       const token = localStorage.getItem('globalorators_token') || localStorage.getItem('nubianfit_token');
       if (!token) {
-        try {
-          await authApi.login('coach@globalorators.com', 'Coach@123');
-        } catch {
-          // continue even if login fails
-        }
+        // No token: skip API sync, UI will show empty/login state
+        setIsLoading(false);
+        return;
       }
 
       const results = await Promise.allSettled([
@@ -552,83 +456,79 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       const failedEndpoints: string[] = [];
 
+      // Always set state from API response, including empty arrays (C1 audit fix)
       if (clientsRes.status === 'fulfilled') {
-        if (clientsRes.value && clientsRes.value.length > 0) {
-          setClients(clientsRes.value);
-        }
+        setClients(clientsRes.value || []);
       } else {
         failedEndpoints.push('speakers');
         console.error('Failed to sync speakers from API:', clientsRes.reason);
       }
 
       if (exercisesRes.status === 'fulfilled') {
-        if (exercisesRes.value && exercisesRes.value.length > 0) setExercises(exercisesRes.value);
+        setExercises(exercisesRes.value || []);
       } else {
         failedEndpoints.push('drills');
         console.error('Failed to sync drills from API:', exercisesRes.reason);
       }
 
       if (programsRes.status === 'fulfilled') {
-        if (programsRes.value && programsRes.value.length > 0) setPrograms(programsRes.value);
+        setPrograms(programsRes.value || []);
       } else {
         failedEndpoints.push('curriculums');
         console.error('Failed to sync curriculums from API:', programsRes.reason);
       }
 
       if (workoutsRes.status === 'fulfilled') {
-        if (workoutsRes.value && workoutsRes.value.length > 0) setScheduledWorkouts(workoutsRes.value);
+        setScheduledWorkouts(workoutsRes.value || []);
       } else {
         failedEndpoints.push('rehearsals');
         console.error('Failed to sync rehearsals from API:', workoutsRes.reason);
       }
 
       if (metricsRes.status === 'fulfilled') {
-        if (metricsRes.value && metricsRes.value.length > 0) setMetrics(metricsRes.value);
+        setMetrics(metricsRes.value || []);
       } else {
         console.error('Failed to sync metrics from API:', metricsRes.reason);
       }
 
       if (prsRes.status === 'fulfilled') {
-        if (prsRes.value && prsRes.value.length > 0) setPersonalRecords(prsRes.value);
+        setPersonalRecords(prsRes.value || []);
       } else {
         console.error('Failed to sync personal records from API:', prsRes.reason);
       }
 
       if (habitsRes.status === 'fulfilled') {
-        if (habitsRes.value && habitsRes.value.length > 0) setHabitLogs(habitsRes.value);
+        setHabitLogs(habitsRes.value || []);
       } else {
         console.error('Failed to sync habits from API:', habitsRes.reason);
       }
 
       if (photosRes.status === 'fulfilled') {
-        if (photosRes.value && photosRes.value.length > 0) setPhotos(photosRes.value);
+        setPhotos(photosRes.value || []);
       } else {
         console.error('Failed to sync photos from API:', photosRes.reason);
       }
 
       if (messagesRes.status === 'fulfilled') {
-        if (messagesRes.value && messagesRes.value.length > 0) setMessages(messagesRes.value);
+        setMessages(messagesRes.value || []);
       } else {
         console.error('Failed to sync messages from API:', messagesRes.reason);
       }
 
       if (activityRes.status === 'fulfilled') {
-        if (activityRes.value && activityRes.value.length > 0) setActivityFeed(activityRes.value);
+        setActivityFeed(activityRes.value || []);
       } else {
         console.error('Failed to sync activity from API:', activityRes.reason);
       }
 
       if (failedEndpoints.length > 0) {
         setIsBackendConnected(false);
-        const hasAuthToken = Boolean(localStorage.getItem('globalorators_token') || localStorage.getItem('nubianfit_token'));
-        if (hasAuthToken) {
-          showToast(`Offline mode: unable to synchronize ${failedEndpoints.join(', ')}.`);
-        }
+        showToast(`Unable to load ${failedEndpoints.join(', ')}. Check your connection.`);
       } else {
         setIsBackendConnected(true);
       }
     } catch (err) {
-      console.error('Backend synchronization failure, using offline store:', err);
+      console.error('Backend synchronization failure:', err);
       setIsBackendConnected(false);
     } finally {
       setIsLoading(false);
@@ -1105,68 +1005,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     if (sender === 'coach') {
       showToast('Message sent to speaker.');
-      // Auto simulate client reply after short delay
-      setTimeout(() => {
-        const client = clients.find(c => c.id === clientId);
-        if (!client) return;
-
-        const clientReplies = [
-          'Thanks Coach! Crushed the rehearsal session today. Feeling confident for the tournament!',
-          'Got it, will incorporate the 2-second pause before my rebuttal next time.',
-          'Submitted my speaking pace and fluency check-in for this morning!',
-          'Vocal projection felt strong and resonant with the diaphragmatic breathwork adjustments. Appreciate you!'
-        ];
-        const randomReply = clientReplies[Math.floor(Math.random() * clientReplies.length)];
-
-        const clientMsg: ChatMessage = {
-          id: `msg-${Date.now() + 1}`,
-          clientId,
-          sender: 'client',
-          text: randomReply,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          isRead: false
-        };
-
-        setMessages(prev => [...prev, clientMsg]);
-
-        setActivityFeed(af => [
-          {
-            id: `act-${Date.now()}`,
-            type: 'new_message',
-            clientId: client.id,
-            clientName: client.name,
-            clientAvatar: client.avatar,
-            title: `Reply from ${client.name}`,
-            description: `"${randomReply.substring(0, 45)}..."`,
-            timestamp: 'Just now'
-          },
-          ...af
-        ]);
-      }, 2800);
     } else {
-      // Sent by speaker (client)
-      showToast('Message sent to Coach Qassim.');
-      setTimeout(() => {
-        const coachReplies = [
-          'Received! Keep your diaphragm engaged and maintain strong vocal projection.',
-          'Great insight. Review your rebuttal transitions for the upcoming round.',
-          'Acknowledged. Let’s jump into the Live Rehearsal room to run this drill live.',
-          'Excellent work. Your cadence is settling right into the 135 WPM pocket.'
-        ];
-        const randomReply = coachReplies[Math.floor(Math.random() * coachReplies.length)];
-
-        const coachMsg: ChatMessage = {
-          id: `msg-${Date.now() + 1}`,
-          clientId,
-          sender: 'coach',
-          text: randomReply,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          isRead: false
-        };
-
-        setMessages(prev => [...prev, coachMsg]);
-      }, 1800);
+      showToast('Message sent.');
     }
+    // No simulated replies — all responses must come from real messages via the API (H4 audit fix)
   };
 
   const toggleHabitCompletion = async (clientId: string, date: string, habitId: string) => {
@@ -1284,8 +1126,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
       })
       .catch(err => {
-        console.warn('Backend client persistence failed (local fallback retained):', err);
-        showToast('Offline mode: Profile saved locally. Cloud sync pending.');
+        console.warn('Backend client persistence failed:', err);
+        showToast('Unable to save profile to server. Please check your connection and try again.');
       });
   }, [setCurrentPortal, showToast]);
 

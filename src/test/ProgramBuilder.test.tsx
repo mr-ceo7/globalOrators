@@ -44,22 +44,31 @@ describe('Global Orators Minimalist Split-View ProgramBuilder', () => {
     expect(screen.getByText('+ Add Session')).toBeInTheDocument();
   });
 
-  test('displays session items on the roadmap and selects a session', () => {
+  test('adds a session and displays it on the roadmap', () => {
     render(
       <AppProvider>
         <ProgramBuilder />
       </AppProvider>
     );
 
+    // Start with empty program, add a session
+    const addSessionBtn = screen.getByRole('button', { name: /\+ Add Session/i });
+    fireEvent.click(addSessionBtn);
+
+    // After adding a session, canvas elements should appear
     expect(screen.getByText('TAKE-HOME DISPATCH (VOICE VAULT PROMPT)')).toBeInTheDocument();
   });
 
-  test('allows adding and removing session objectives on the canvas', () => {
+  test('allows adding session objectives on the canvas after creating a session', () => {
     render(
       <AppProvider>
         <ProgramBuilder />
       </AppProvider>
     );
+
+    // Add a session first
+    const addSessionBtn = screen.getByRole('button', { name: /\+ Add Session/i });
+    fireEvent.click(addSessionBtn);
 
     const input = screen.getByPlaceholderText(/\+ Add specific learning outcome/i);
     fireEvent.change(input, { target: { value: 'Master eye contact during executive pauses' } });
@@ -70,12 +79,16 @@ describe('Global Orators Minimalist Split-View ProgramBuilder', () => {
     expect(screen.getByText('Master eye contact during executive pauses')).toBeInTheDocument();
   });
 
-  test('opens drill picker modal when clicking Add Drill', () => {
+  test('opens drill picker modal when clicking Add Drill on a session', () => {
     render(
       <AppProvider>
         <ProgramBuilder />
       </AppProvider>
     );
+
+    // Add a session first
+    const addSessionBtn = screen.getByRole('button', { name: /\+ Add Session/i });
+    fireEvent.click(addSessionBtn);
 
     const addDrillBtn = screen.getByRole('button', { name: /\+ Add Drill/i });
     fireEvent.click(addDrillBtn);
