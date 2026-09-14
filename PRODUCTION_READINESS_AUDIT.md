@@ -260,13 +260,72 @@ The test suite intentionally uses mock APIs and values such as `coach@globalorat
 |---|---|---|
 | Frontend TypeScript check | **Passed** | `npm run lint` |
 | Frontend production build | **Passed** | Largest emitted chunk approximately 364 kB; no Vite size warning |
-| Frontend tests | **Passed** | 13 files, 90 tests |
-| Backend tests | **Passed** | 8 tests, 330 warnings |
+| Frontend tests | **Passed** | 13 files, 91 tests |
+| Backend tests | **Passed** | 9 tests, 1 warning |
 | Production dependency audit | **Passed** | `npm audit --omit=dev --audit-level=high`: 0 vulnerabilities |
+| Lighthouse audit (Mobile) | **Mixed (63/100)** | Perf: 63, A11y: 87, Best Practices: 96, SEO: 100, Agentic: 67 |
+| Lighthouse audit (Desktop) | **Passed (99/100)** | Perf: 99, A11y: 87, Best Practices: 96, SEO: 100, Agentic: 67 |
 | Repository whitespace check | **Failed** | Existing trailing whitespace in `src/context/AppContext.tsx` and `src/test/EmptyStateAudit.test.tsx` |
 | Runtime demo/static audit | **Failed** | Literal history, simulated recording/vault flows, fixed dispatch, generated roadmap, and synthetic Google defaults remain |
 | Persistence audit | **Failed** | Local-only workflows and optimistic writes without rollback/retry remain |
 | Deployed-environment audit | **Incomplete** | Actual production database, OAuth origins, backups/restore, monitoring, distributed rate limiting, and live signaling were not verified |
+
+## Lighthouse Audit (Production Build)
+
+A comprehensive Lighthouse 13.4 audit was executed against the optimized production build (`vite preview` serving `dist/` with minified bundles, tree-shaking, and code splitting) across both Mobile and Desktop profiles.
+
+### Score Summary
+
+| Category | Mobile Score | Desktop Score | Status |
+|---|:---:|:---:|---|
+| **Performance** | **63 / 100** | **99 / 100** | Needs mobile image & font optimization |
+| **Accessibility** | **87 / 100** | **87 / 100** | Needs viewport zoom unlock, color contrast & touch targets |
+| **Best Practices** | **96 / 100** | **96 / 100** | 1 console 404 from non-Vercel analytics script |
+| **SEO** | **100 / 100** | **100 / 100** | **Full compliance** (meta, OpenGraph, canonical, robots) |
+| **Agentic Browsing** | **67 / 100** | **67 / 100** | Missing standard `llms.txt` manifest |
+
+### Core Web Vitals (CWV) Comparison
+
+| Metric | Mobile | Desktop | Good Threshold | Status |
+|---|:---:|:---:|:---:|---|
+| **First Contentful Paint (FCP)** | 3.2 s | 0.7 s | ≤ 1.8 s | Mobile needs optimization |
+| **Largest Contentful Paint (LCP)** | 4.9 s | 0.9 s | ≤ 2.5 s | Mobile hero image needs responsive srcset |
+| **Total Blocking Time (TBT)** | 390 ms | 0 ms | ≤ 200 ms | Acceptable on mobile; perfect on desktop |
+| **Cumulative Layout Shift (CLS)** | 0.000 | 0.000 | ≤ 0.1 | **Flawless (Zero shift)** |
+| **Speed Index (SI)** | 5.2 s | 0.8 s | ≤ 3.4 s | Desktop instant; Mobile delayed by font/image |
+
+### Detailed Findings & Actionable Remediation
+
+#### 1. Performance Diagnostics (Mobile: 63, Desktop: 99)
+- **Hero Image Sizing (`/images/hero-orator.jpg`):**
+  - *Finding:* The hero photo is served at 1575×1066 JPEG (162 kB), while the mobile display frame renders at 672×448 (or 378×256 on viewport). Lighthouse estimates a 130 kB payload reduction.
+  - *Remediation:* Provide responsive `<picture>` srcset or modern WebP/AVIF variants sized appropriately for mobile breakpoints.
+- **Render-Blocking Web Font (`Bruno Ace`):**
+  - *Finding:* `https://fonts.googleapis.com/css2?family=Bruno+Ace&display=swap` blocks initial render by ~1,029 ms on simulated mobile network latency.
+  - *Remediation:* Self-host the font woff2 file locally or load via asynchronous stylesheet link with `preconnect` pre-resolution.
+- **Main Thread JavaScript Execution:**
+  - *Finding:* Mobile TBT reached 390 ms during initial React hydration and Framer Motion initialization.
+
+#### 2. Accessibility Diagnostics (87 / 100)
+- **Mobile Viewport Zoom Disabled (`meta-viewport`):**
+  - *Finding:* In `index.html`, `<meta name="viewport" content="... maximum-scale=1.0, user-scalable=no ...">` violates WCAG 1.4.4 by disabling pinch-to-zoom for low-vision users.
+  - *Remediation:* Remove `maximum-scale=1.0, user-scalable=no` to allow native browser magnification.
+- **Color Contrast Ratios (`color-contrast`):**
+  - *Finding:* Micro-mono gold accent text `#A06C18` on cream `#FBF6F0` has a 4.2:1 contrast ratio (expected ≥ 4.5:1 for normal text). `#C89630` on `#FFFFFF` displays 2.67:1.
+  - *Remediation:* Darken light-mode accent tokens to at least `#8B5E14` or `#785112` to ensure strict WCAG AA 4.5:1 compliance.
+- **Touch Target Sizing (`target-size`):**
+  - *Finding:* Navigation anchor links in footer (`/`, `/about`, `/academy`, `/foundation`, `/escapism`) measure ~13px high without sufficient padding, falling below the 24×24px minimum touch target size.
+  - *Remediation:* Add `py-1.5` or `min-h-[24px] inline-flex items-center` to footer link items.
+
+#### 3. Best Practices Diagnostics (96 / 100)
+- **Console Network Error:**
+  - *Finding:* A 404 network failure occurs when `@vercel/analytics` attempts to request `/_vercel/insights/script.js` in preview or non-Vercel environments.
+  - *Remediation:* Guard analytics loading behind an environment variable check (e.g. `window.location.hostname.includes('vercel.app') || import.meta.env.PROD_VERCEL`).
+
+#### 4. Agentic Web Indexing (67 / 100)
+- **LLM Manifest (`llms.txt`):**
+  - *Finding:* The site lacks an `llms.txt` file adhering to standard agentic browsing specifications for LLM web crawlers.
+  - *Remediation:* Deploy `/public/llms.txt` and `/public/llms-full.txt` providing plain-text summaries of Global Orators programs, faculties, and enrollment endpoints.
 
 ## Required release gate
 
