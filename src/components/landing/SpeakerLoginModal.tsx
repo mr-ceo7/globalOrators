@@ -76,7 +76,7 @@ export const SpeakerLoginModal: React.FC<SpeakerLoginModalProps> = ({
       const result = await sendSpeakerOtp(sanitized);
       if (result.success) {
         setStep('otp');
-        setInfoMsg(`Passcode dispatched to ${sanitized}. Valid for 10 minutes.`);
+        setInfoMsg(`A 1-click magic login link and 6-digit passcode were sent to ${sanitized}. Check your inbox.`);
       } else {
         setErrorMsg(result.error || 'Unable to dispatch verification passcode. Please verify your email.');
       }
@@ -94,7 +94,7 @@ export const SpeakerLoginModal: React.FC<SpeakerLoginModalProps> = ({
     try {
       const result = await sendSpeakerOtp(email.trim().toLowerCase());
       if (result.success) {
-        setInfoMsg(`A fresh passcode was dispatched to ${email.trim().toLowerCase()}.`);
+        setInfoMsg(`A fresh magic link and passcode were dispatched to ${email.trim().toLowerCase()}.`);
       } else {
         setErrorMsg(result.error || 'Failed to resend code.');
       }
@@ -120,33 +120,45 @@ export const SpeakerLoginModal: React.FC<SpeakerLoginModalProps> = ({
 
     try {
       const result = await verifySpeakerOtp(cleanEmail, cleanCode);
-      if (result.success) {
-        onClose();
+      if (!result.success) {
+        setErrorMsg(result.error || 'Invalid or expired verification passcode.');
       } else {
-        setErrorMsg(result.error || 'Invalid or expired verification code.');
+        onClose();
       }
     } catch {
-      setErrorMsg('Authentication error. Please check your passcode and retry.');
+      setErrorMsg('Authentication failed. Please verify your code and retry.');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleReset = () => {
+    setStep('email');
+    setErrorMsg(null);
+    setInfoMsg(null);
+    setOtpCode('');
+  };
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fadeIn"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn"
       role="dialog"
       aria-modal="true"
       aria-labelledby="speaker-login-title"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
     >
-      <div className="bg-[#101318] border border-slate-800 rounded-2xl w-full max-w-md p-6 sm:p-8 shadow-2xl relative animate-scaleIn text-slate-100">
+      {/* Backdrop click handler */}
+      <div
+        className="absolute inset-0"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
+      {/* Modal Container */}
+      <div className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl shadow-black/80 z-10">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-850 transition-colors cursor-pointer"
+          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800/60 transition-colors cursor-pointer"
           aria-label="Close modal"
         >
           <X className="w-5 h-5" />
@@ -165,8 +177,8 @@ export const SpeakerLoginModal: React.FC<SpeakerLoginModalProps> = ({
           </h2>
           <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
             {step === 'email'
-              ? 'Enter your registered email address to receive a secure single-use passcode.'
-              : `Enter the 6-digit passcode dispatched to ${email}.`}
+              ? 'Enter your registered email address to receive an instant 1-click magic link and passcode.'
+              : `Enter the 6-digit passcode or click the 1-click link sent to ${email}.`}
           </p>
         </div>
 

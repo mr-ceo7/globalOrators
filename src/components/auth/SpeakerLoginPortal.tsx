@@ -18,18 +18,47 @@ import { GlobalOratorsLogo } from '../common/GlobalOratorsLogo';
 import { GoogleAuthButton } from './GoogleAuthButton';
 
 export const SpeakerLoginPortal: React.FC = () => {
-  const { sendSpeakerOtp, verifySpeakerOtp, setCurrentPortal } = useApp();
+  const { sendSpeakerOtp, verifySpeakerOtp, verifySpeakerMagicLink, setCurrentPortal } = useApp();
 
   const [step, setStep] = useState<'email' | 'otp'>('email');
   const [email, setEmail] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [magicLinkValidating, setMagicLinkValidating] = useState(false);
   const [resending, setResending] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [infoMsg, setInfoMsg] = useState<string | null>(null);
 
   const emailInputRef = useRef<HTMLInputElement | null>(null);
   const otpInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Check for 1-click magic link in URL search params on mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const magicToken = params.get('magic_token') || params.get('token');
+    const emailParam = params.get('email');
+
+    if (magicToken) {
+      setMagicLinkValidating(true);
+      setErrorMsg(null);
+      verifySpeakerMagicLink(magicToken, emailParam || undefined)
+        .then((res) => {
+          if (!res.success) {
+            setErrorMsg(res.error || 'Magic login link is invalid or has expired.');
+            setMagicLinkValidating(false);
+          } else {
+            // Clean magic link token from URL history to avoid repeat triggers on page reload
+            const cleanUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, cleanUrl);
+          }
+        })
+        .catch(() => {
+          setErrorMsg('Failed to verify magic login link. Please enter your email to request a new link.');
+          setMagicLinkValidating(false);
+        });
+    }
+  }, [verifySpeakerMagicLink]);
 
   useEffect(() => {
     if (step === 'email') {
@@ -55,7 +84,7 @@ export const SpeakerLoginPortal: React.FC = () => {
       const result = await sendSpeakerOtp(sanitized);
       if (result.success) {
         setStep('otp');
-        setInfoMsg(`Passcode dispatched to ${sanitized}. Valid for 10 minutes.`);
+        setInfoMsg(`A 1-click magic login link and 6-digit passcode were sent to ${sanitized}. Check your inbox.`);
       } else {
         setErrorMsg(result.error || 'No active speaker profile found with that email address.');
       }
@@ -73,7 +102,7 @@ export const SpeakerLoginPortal: React.FC = () => {
     try {
       const result = await sendSpeakerOtp(email.trim().toLowerCase());
       if (result.success) {
-        setInfoMsg(`A fresh passcode was dispatched to ${email.trim().toLowerCase()}.`);
+        setInfoMsg(`A fresh magic link and passcode were dispatched to ${email.trim().toLowerCase()}.`);
       } else {
         setErrorMsg(result.error || 'Failed to resend code.');
       }
@@ -148,21 +177,32 @@ export const SpeakerLoginPortal: React.FC = () => {
 
       {/* Main Authentication Card */}
       <main className="flex-1 flex items-center justify-center px-4 py-8 sm:py-12">
-        <div className="w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl shadow-black/80 backdrop-blur-sm">
-          {/* Header Greeting & Title */}
-          <div className="text-center mb-6">
-            <div className="text-xs font-serif italic text-[#C89630] mb-2 tracking-wide">
-              Welcome, Speaker
+        {magicLinkValidating ? (
+          <div className="w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl shadow-black/80 backdrop-blur-sm text-center">
+            <GlobalOratorsLogo className="w-12 h-12 mx-auto mb-4 animate-pulse" colorMode="gold" />
+            <h2 className="text-2xl font-serif font-bold text-white mb-2">Authenticating Magic Link</h2>
+            <p className="text-xs text-slate-400 mb-6">Verifying your cryptographic token and preparing your Orators App workspace...</p>
+            <div className="flex justify-center items-center gap-2 text-xs font-mono text-[#C89630]">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Establishing session...</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-serif font-bold text-white tracking-tight">
-              {step === 'email' ? 'Access Your Protocol' : 'Verify Identity'}
-            </h1>
-            <p className="mt-2 text-xs text-slate-400 font-sans leading-relaxed">
-              {step === 'email'
-                ? 'Enter your registered email address to receive a secure single-use passcode.'
-                : `Enter the 6-digit passcode dispatched to ${email}.`}
-            </p>
           </div>
+        ) : (
+          <div className="w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl shadow-black/80 backdrop-blur-sm">
+            {/* Header Greeting & Title */}
+            <div className="text-center mb-6">
+              <div className="text-xs font-serif italic text-[#C89630] mb-2 tracking-wide">
+                Welcome, Speaker
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-serif font-bold text-white tracking-tight">
+                {step === 'email' ? 'Access Your Protocol' : 'Verify Identity'}
+              </h1>
+              <p className="mt-2 text-xs text-slate-400 font-sans leading-relaxed">
+                {step === 'email'
+                  ? 'Enter your registered email address to receive an instant 1-click magic link and passcode.'
+                  : `Enter the 6-digit passcode or click the 1-click link sent to ${email}.`}
+              </p>
+            </div>
 
           {/* Active Email Identity Pill (Step 2) */}
           {step === 'otp' && (
@@ -357,6 +397,7 @@ export const SpeakerLoginPortal: React.FC = () => {
             .
           </div>
         </div>
+        )}
       </main>
 
       {/* Footer */}

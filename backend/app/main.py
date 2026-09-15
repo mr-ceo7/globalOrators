@@ -67,6 +67,10 @@ async def lifespan(app: FastAPI):
                 ex_cols = [c["name"] for c in inspector.get_columns("exercises")]
                 if "instructional_video_url" not in ex_cols:
                     connection.execute(text("ALTER TABLE exercises ADD COLUMN instructional_video_url VARCHAR(512)"))
+            if "email_otps" in inspector.get_table_names():
+                otp_cols = [c["name"] for c in inspector.get_columns("email_otps")]
+                if "magic_token" not in otp_cols:
+                    connection.execute(text("ALTER TABLE email_otps ADD COLUMN magic_token VARCHAR(255)"))
         await conn.run_sync(_migrate_columns)
 
     logger.info("Checking / running initial database seed...")

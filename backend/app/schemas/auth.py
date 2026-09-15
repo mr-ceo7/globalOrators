@@ -46,6 +46,7 @@ class TokenResponse(BaseModel):
 
 class SendOtpRequest(BaseModel):
     email: str
+    redirect_url: Optional[str] = None
 
     @field_validator("email")
     @classmethod
@@ -69,10 +70,16 @@ class VerifyOtpRequest(BaseModel):
         return clean
 
 
+class VerifyMagicLinkRequest(BaseModel):
+    token: str
+    email: Optional[str] = None
+
+
 class OtpResponse(BaseModel):
     status: str
     email: str
     message: str
+    magic_link: Optional[str] = None
 
 
 class CheckEmailRequest(BaseModel):

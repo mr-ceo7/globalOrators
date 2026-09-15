@@ -221,13 +221,29 @@ export const authApi = {
     }
     return data;
   },
-  sendOtp: async (email: string) => {
-    return api.post<{ status: string; email: string; message: string }>('/auth/otp/send', { email });
+  sendOtp: async (email: string, redirectUrl?: string) => {
+    return api.post<{ status: string; email: string; message: string; magic_link?: string }>('/auth/otp/send', {
+      email,
+      redirect_url: redirectUrl || (typeof window !== 'undefined' ? window.location.origin : undefined)
+    });
   },
   verifyOtp: async (email: string, code: string) => {
     const data = await api.post<{ access_token: string; token_type: string; user: any }>('/auth/otp/verify', {
       email,
       code,
+    });
+    if (data?.access_token) {
+      localStorage.setItem('nubianfit_token', data.access_token);
+      localStorage.setItem('globalorators_token', data.access_token);
+      localStorage.setItem('nubianfit_user', JSON.stringify(data.user));
+      localStorage.setItem('globalorators_user', JSON.stringify(data.user));
+    }
+    return data;
+  },
+  verifyMagicLink: async (token: string, email?: string) => {
+    const data = await api.post<{ access_token: string; token_type: string; user: any }>('/auth/magic-link/verify', {
+      token,
+      email,
     });
     if (data?.access_token) {
       localStorage.setItem('nubianfit_token', data.access_token);

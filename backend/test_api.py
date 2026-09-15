@@ -1290,6 +1290,73 @@ async def test_email_otp_authentication_flow():
 
 
 @pytest.mark.asyncio
+async def test_magic_link_authentication_flow():
+    """Verify 1-click magic link dispatch, verification, anti-replay, and speaker auto-provisioning."""
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        import time
+        import urllib.parse
+        ts = int(time.time() * 1000)
+        magic_email = f"magic.speaker.{ts}@example.com"
+
+        # 1. Request OTP / magic link with redirect_url
+        res_send = await client.post(
+            "/api/auth/otp/send",
+            json={"email": magic_email, "redirect_url": "http://localhost:3000"}
+        )
+        assert res_send.status_code == 200
+        send_data = res_send.json()
+        assert send_data["status"] == "sent"
+        assert send_data["email"] == magic_email
+        assert "magic_link" in send_data
+        magic_link = send_data["magic_link"]
+        assert magic_link is not None
+        assert "magic_token=" in magic_link
+
+        # Extract token from magic link url
+        parsed = urllib.parse.urlparse(magic_link)
+        params = urllib.parse.parse_qs(parsed.query)
+        magic_token = params["magic_token"][0]
+
+        # 2. Attempt verification with invalid token fails (400)
+        res_invalid = await client.post(
+            "/api/auth/magic-link/verify",
+            json={"token": "invalid-token-xyz"}
+        )
+        assert res_invalid.status_code == 400
+
+        # 3. Verify magic link with valid token succeeds (200)
+        res_verify = await client.post(
+            "/api/auth/magic-link/verify",
+            json={"token": magic_token, "email": magic_email}
+        )
+        assert res_verify.status_code == 200
+        verify_data = res_verify.json()
+        assert "access_token" in verify_data
+        assert verify_data["user"]["email"] == magic_email
+        assert verify_data["user"]["role"] == "speaker"
+
+        # 4. Anti-replay check: Attempting to verify the exact same token again fails (400)
+        res_replay = await client.post(
+            "/api/auth/magic-link/verify",
+            json={"token": magic_token, "email": magic_email}
+        )
+        assert res_replay.status_code == 400
+
+        # 5. Verify the issued access token works on /api/clients/me
+        speaker_token = verify_data["access_token"]
+        res_me = await client.get(
+            "/api/clients/me",
+            headers={"Authorization": f"Bearer {speaker_token}"}
+        )
+        assert res_me.status_code == 200
+        assert res_me.json()["email"] == magic_email
+
+        print("Magic link authentication flow verified successfully!")
+
+
+
+@pytest.mark.asyncio
 async def test_authenticated_vault_persistence_and_recordings():
     """Verify authenticated database persistence for journals, executive simulations, and audio recordings."""
     transport = httpx.ASGITransport(app=app)

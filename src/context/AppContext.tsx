@@ -117,6 +117,7 @@ interface AppContextType {
   loginSpeaker: (email: string, code?: string) => Promise<{ success: boolean; error?: string }>;
   sendSpeakerOtp: (email: string) => Promise<{ success: boolean; error?: string }>;
   verifySpeakerOtp: (email: string, code: string) => Promise<{ success: boolean; error?: string }>;
+  verifySpeakerMagicLink: (token: string, email?: string) => Promise<{ success: boolean; error?: string }>;
   loginWithGoogle: (credential: string, role?: 'coach' | 'speaker') => Promise<{ success: boolean; error?: string; user?: any }>;
   resetOnboarding: () => void;
 
@@ -230,6 +231,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (pathname === '/onboarding' || pathname === '/apply') return 'onboarding';
 
       const params = new URLSearchParams(window.location.search);
+      if (params.has('magic_token') || params.has('token')) return 'speaker_app';
       const portalParam = params.get('portal');
       if (portalParam === 'coach' || portalParam === 'coach_os') return 'coach_os';
       if (portalParam === 'app' || portalParam === 'speaker_app') return 'speaker_app';
@@ -1339,6 +1341,51 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [refreshFromBackend, setCurrentPortal, showToast]);
 
+  const verifySpeakerMagicLink = useCallback(async (token: string, email?: string): Promise<{ success: boolean; error?: string }> => {
+    const cleanToken = token.trim();
+    if (!cleanToken) {
+      return { success: false, error: 'Magic login token is required.' };
+    }
+
+    try {
+      const res = await authApi.verifyMagicLink(cleanToken, email ? email.trim().toLowerCase() : undefined);
+      if (!res || !res.access_token) {
+        throw new Error('Authentication failed: No token returned from server.');
+      }
+
+      await refreshFromBackend();
+
+      let matchedClient: Client | null = null;
+      try {
+        matchedClient = await clientsApi.getMe();
+      } catch {
+        // No client profile found for this authenticated account
+      }
+
+      if (matchedClient) {
+        setClients(prev => {
+          const exists = prev.some(c => c.id === matchedClient!.id);
+          return exists ? prev.map(c => c.id === matchedClient!.id ? matchedClient! : c) : [matchedClient!, ...prev];
+        });
+        const profile = clientToSpeakerProfile(matchedClient);
+        setActiveSpeakerProfile(profile);
+        localStorage.setItem('globalorators_speaker_profile', JSON.stringify(profile));
+        setCurrentPortal('speaker_app');
+        showToast(`Welcome back, ${profile.fullName}. Session authenticated.`);
+        return { success: true };
+      } else {
+        setActiveSpeakerProfile(null);
+        localStorage.removeItem('globalorators_speaker_profile');
+        setCurrentPortal('speaker_onboarding');
+        showToast('Account verified. Please complete your orator onboarding intake to initialize your syllabus.');
+        return { success: true };
+      }
+    } catch (err: any) {
+      const msg = err?.response?.data?.detail || err?.message || 'Magic login link has expired or has already been used.';
+      return { success: false, error: msg };
+    }
+  }, [refreshFromBackend, setCurrentPortal, showToast]);
+
   const loginSpeaker = useCallback(async (email: string, code?: string): Promise<{ success: boolean; error?: string }> => {
     if (code) {
       return verifySpeakerOtp(email, code);
@@ -1522,6 +1569,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         loginSpeaker,
         sendSpeakerOtp,
         verifySpeakerOtp,
+        verifySpeakerMagicLink,
         loginWithGoogle,
         resetOnboarding,
         coaches,

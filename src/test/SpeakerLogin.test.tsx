@@ -33,6 +33,21 @@ vi.mock('../services/apiClient', () => ({
         });
       }
       return Promise.reject(new Error('Invalid or expired verification passcode.'));
+    }),
+    verifyMagicLink: vi.fn().mockImplementation((token: string, email?: string) => {
+      if (token === 'valid-magic-token') {
+        return Promise.resolve({
+          access_token: 'mock-jwt-token',
+          token_type: 'bearer',
+          user: {
+            id: 'u-1',
+            email: email || 'kassimmusa322@gmail.com',
+            full_name: 'KASSIM MUSA',
+            role: 'speaker'
+          }
+        });
+      }
+      return Promise.reject(new Error('Magic login link has expired or has already been used.'));
     })
   },
   clientsApi: {
@@ -122,7 +137,11 @@ vi.mock('../services/apiClient', () => ({
   photosApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },
   messagesApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },
   activityApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },
-  inquiriesApi: { submit: vi.fn().mockResolvedValue({ status: 'success' }), list: vi.fn().mockResolvedValue([]) }
+  inquiriesApi: { submit: vi.fn().mockResolvedValue({ status: 'success' }), list: vi.fn().mockResolvedValue([]) },
+  recordingsApi: { getAll: vi.fn().mockResolvedValue([]), upload: vi.fn().mockResolvedValue({}) },
+  journalsApi: { getAll: vi.fn().mockResolvedValue([]), create: vi.fn().mockResolvedValue({}) },
+  simulationsApi: { getAll: vi.fn().mockResolvedValue([]), create: vi.fn().mockResolvedValue({}) },
+  vaultApi: { getJournals: vi.fn().mockResolvedValue([]), getExecSimulations: vi.fn().mockResolvedValue([]) }
 }));
 
 describe('Speaker Login & Portal Integration Tests', () => {
@@ -153,7 +172,7 @@ describe('Speaker Login & Portal Integration Tests', () => {
 
     // Step 2 should now be visible
     expect(await screen.findByText('Verify Identity')).toBeInTheDocument();
-    expect(screen.getByText(/Valid for 10 minutes/i)).toBeInTheDocument();
+    expect(screen.getByText(/passcode were sent/i)).toBeInTheDocument();
 
     // Enter 6-digit passcode
     const otpInput = screen.getByPlaceholderText('123456');
@@ -332,6 +351,35 @@ describe('Speaker Login & Portal Integration Tests', () => {
     expect(screen.getByText('Access Your Protocol')).toBeInTheDocument();
     expect(screen.getByLabelText(/Speaker Email/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Send Login Passcode/i })).toBeInTheDocument();
+  });
+
+  test('should automatically authenticate via 1-click magic link URL parameters', async () => {
+    localStorage.clear();
+
+    // Set magic_token in window.location.search
+    const originalLocation = window.location;
+    delete (window as any).location;
+    window.location = {
+      ...originalLocation,
+      pathname: '/speaker',
+      search: '?magic_token=valid-magic-token&email=kassimmusa322@gmail.com'
+    } as any;
+
+    render(
+      <AppProvider>
+        <ClientPortal />
+      </AppProvider>
+    );
+
+    // Verify loading state or successful login profile
+    expect(await screen.findByText('KASSIM MUSA')).toBeInTheDocument();
+    const saved = localStorage.getItem('globalorators_speaker_profile');
+    expect(saved).not.toBeNull();
+    const parsed = JSON.parse(saved || '{}');
+    expect(parsed.fullName).toBe('KASSIM MUSA');
+
+    // Restore window.location
+    window.location = originalLocation;
   });
 });
 
