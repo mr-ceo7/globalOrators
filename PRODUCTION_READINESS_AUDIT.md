@@ -1,200 +1,179 @@
 # Global Orators Full Application Audit
 
 **Audit date:** 2026-09-14
-**Audited revision:** `cc5784a`
-**Scope:** Demo/mock/fixture/static data, hardcoded user facts, persistence, authentication, dynamic API behavior, deployment safety, and production validation
+**Audited HEAD:** `ef0b249` (`feat(production): implement durable storage service, isolate fixtures, harden auth session and admin bootstrap`)
+**Scope:** Demo/mock/fixture data, hardcoded user-facing facts, browser-only state, API persistence, authentication, authorization, storage, deployment configuration, and production validation
 **Verdict:** **NO-GO for professional public production**
 
 ## Executive summary
 
-The latest commit improves data integrity:
+The latest remediation closes several prior defects:
 
-- Server failure rollback was added to many create/update/delete mutations.
-- `selectedClientId` now starts as `null` instead of the legacy `client-1`.
-- Synthetic Google-client creation remains removed.
-- Onboarding still fails closed when client persistence fails.
-- Core business collections start empty and hydrate from API responses.
-- Portal roadmap, metrics, and adjudication views use persisted API data rather than the previous literal history arrays.
-- Local fixture seeding remains explicit through `start.sh --seed`.
-- Frontend and backend validation suites pass.
+- `src/data/mockData.ts` was moved to `tests/fixtures/legacyMockData.ts`, outside the production source tree.
+- Development seed data was moved to `backend/fixtures` and remains explicitly gated.
+- Speaker profile resolution uses authenticated `/clients/me`; `/clients/lookup` remains extinguished.
+- Journals and simulations fail closed without a server-linked profile.
+- Recordings have authenticated ownership checks, binary validation, a 25 MB limit, retry/discard UI, deletion, storage keys, and storage service tests.
+- Program assignment is API-first and refreshes from the backend.
+- Fallback curriculum is now labeled `Recommendation Preview`; assigned curriculum is labeled separately.
+- Initial admin provisioning is controllable through `BOOTSTRAP_INITIAL_ADMIN` or `bootstrap_admin.py`.
+- Frontend validation, backend validation, production build, dependency audit, and whitespace checks pass.
 
-The app is still not ready for professional production or for the requirement that every production-facing workflow be dynamic, authenticated, durable, and evidence-backed. The most urgent blocker is unchanged: speaker access is granted by an unauthenticated email/phone profile lookup.
+The app is still **not ready for professional production**. The most important remaining blockers are production configuration and fail-closed storage behavior: storage defaults to local disk, S3 upload/read failures silently fall back to local storage, Render does not configure the required SMTP/storage/admin variables, and JWT bearer tokens remain in `localStorage`. The repository also contains static authored curriculum and public editorial content; these are acceptable only where clearly labeled and never treated as live user activity.
 
 ## Critical findings
 
-### C1. Speaker login is an unauthenticated profile lookup
+### C1. Storage is not fail-closed or guaranteed durable in production
 
-`src/context/AppContext.tsx` implements `loginSpeaker` by calling `clientsApi.lookup(emailOrPhone)`. `backend/app/routers/clients.py` exposes `GET /api/clients/lookup` with `get_optional_user`, so the request does not require authentication. A matching email or phone returns a client record, and the frontend activates the speaker portal and stores the profile locally. If the API lookup fails, an in-memory client match can still activate the portal.
+`backend/app/storage.py` supports S3-compatible storage, but:
 
-**Impact:** Anyone who knows a speaker's email or phone can impersonate that speaker and access their portal.
+- `STORAGE_BACKEND` defaults to `local`.
+- If S3 upload fails, `save_file()` logs the error and silently writes to local disk.
+- If S3 read fails, `read_file()` silently attempts local lookup.
+- If S3 delete fails, local deletion can still succeed and the API can continue.
+- Production configuration does not require `STORAGE_BACKEND=s3` or a configured bucket.
 
-**Required fix:** Replace lookup-based login with password, passkey, OTP, or a verified identity-provider session bound to the client. Remove unauthenticated profile lookup as an access mechanism and require a server-issued authenticated session before loading speaker data.
+**Impact:** A production deployment can report a successful recording upload while storing it on ephemeral application disk, or mask an object-storage outage by changing the durability path without an operator decision.
 
-### C2. Journals and executive simulations are browser-only records
+**Required fix:** In production, require a configured durable backend and fail closed on S3/object-storage errors. Do not silently fall back to local disk. Add startup validation and an integration test against the actual production-compatible object store.
 
-`ClientPortal.tsx` stores `go_journal_*` and `go_exec_*` entries in `localStorage`. There is no authenticated API, database model, ownership enforcement, server backup, cross-device synchronization, or coach review workflow.
+### C2. Render deployment configuration is incomplete for the claimed production features
 
-**Impact:** Professional records disappear across devices or browser storage clearing and can be modified by JavaScript executing in the origin.
+`render.yaml` configures the database, JWT secret, coach invite code, generated coach password, and Google OAuth variables, but does not configure:
 
-**Required fix:** Add authenticated persistence with explicit draft/review/deletion/retention states, or disable these features. Do not describe them as secure, encrypted, reviewed, or durable while browser-only.
+- `SMTP_USERNAME` and `SMTP_PASSWORD`, which production settings require;
+- `FROM_EMAIL` and SMTP delivery settings;
+- `STORAGE_BACKEND`, `S3_BUCKET`, region, endpoint, or object-storage credentials;
+- `BOOTSTRAP_INITIAL_ADMIN`;
+- `DEFAULT_COACH_EMAIL`/`DEFAULT_COACH_NAME` if they are expected to be deployment-specific.
 
-### C3. Recording is local capture, not a production recording workflow
+**Impact:** The service can fail to start in production because SMTP settings are required, or it can start with local storage and lose recordings on redeploy. The code and deployment manifest do not describe one coherent production configuration.
 
-The portal uses browser `MediaRecorder`, but the resulting audio is only a local object URL:
+**Required fix:** Add all required production environment variables to the deployment contract, mark secrets appropriately, make durable storage mandatory, and add a deployment validation step that fails before traffic is served.
 
-- no upload;
-- no recording model or durable storage;
-- no processing/transcription/analysis job;
-- no coach or second-device access;
-- no retention or deletion controls.
+### C3. Bearer tokens and identity caches remain in localStorage
 
-**Impact:** The UI can imply that a rehearsal was recorded into the platform even though it disappears after refresh or navigation.
+`src/services/apiClient.ts`, `AppContext.tsx`, and `LiveRehearsalRoom.tsx` still read and write JWT bearer tokens from `localStorage`. User metadata and the cached speaker profile are also stored there.
 
-**Required fix:** Implement authenticated upload/object storage, recording metadata, processing status, access control, retention, and analysis. Otherwise label it explicitly as local preview only or remove it from the production workflow.
+**Impact:** Any XSS or compromised third-party script can exfiltrate active credentials. The CSP improves browser hardening but does not make localStorage bearer tokens equivalent to HttpOnly cookies.
 
-### C4. Onboarding still persists invented defaults
-
-`completeOnboarding` still writes values that were not supplied by the speaker, including:
-
-- automatic program IDs/names such as `prog-1`, `prog-3`, and `prog-exec-speaking-1`;
-- `gender: 'Unspecified'`;
-- default pacing values of `140` when no baseline is supplied;
-- derived current/starting/target performance fields from vocal pace;
-- automatic active status and start date;
-- default zero/empty survey fields and branch-derived facility/exercise values;
-- automatic catharsis score derived from the form rating.
-
-Some defaults are less harmful than the previous fabricated health values, but they are still stored as if they were client facts or assignments.
-
-**Required fix:** Persist only submitted or explicitly consented values. Represent unknown values as `null`/unknown. Separate curriculum recommendations from factual client attributes and require explicit assignment actions before storing a program.
-
-### C5. Program assignment still fabricates schedule state before confirmation
-
-`assignProgramToClient` immediately updates the client, program count, scheduled workouts, activity feed, and success toast. It then calls `programsApi.assign`. Its failure path only logs a warning and does not rollback the client, program, workouts, activity feed, or toast.
-
-**Impact:** A coach can see a program and a full Tue/Thu schedule as assigned even when the server rejected the assignment.
-
-**Required fix:** Make assignment server-first or snapshot and rollback every affected collection. Only generate/display sessions returned by the backend.
+**Required fix:** Use secure HttpOnly SameSite cookies or a short-lived token exchange. Keep server identity authoritative and treat browser storage as non-authoritative UI preference state only.
 
 ## High-severity findings
 
-### H1. Authentication tokens and profile identity remain in localStorage
+### H1. S3/object-storage integration is not exercised by the test suite
 
-`src/services/apiClient.ts` stores bearer tokens and user metadata in `localStorage`. `AppContext.tsx` independently stores `globalorators_speaker_profile`.
+The new storage tests verify the local backend only. There is no production-compatible S3/R2 integration test covering upload, read, delete, quota behavior, credential failure, or deployment configuration.
 
-An XSS or compromised third-party script can exfiltrate a long-lived token. Stale profile data can outlive token expiry or another user signing in on the same browser.
+**Required fix:** Add an opt-in integration test using a real or test object-storage service and verify the application refuses to start or upload when durable storage is misconfigured.
 
-**Required fix:** Prefer secure HttpOnly SameSite cookies or a short-lived token exchange, bind profile hydration to the authenticated server identity, and clear all user state on logout and 401.
+### H2. Static recommendation content remains extensive, though now labeled
 
-### H2. Profile and program fallbacks can fabricate live context
+`src/utils/curriculumResolver.ts` still generates authored drills, prompts, sessions, workshops, objectives, and descriptions when no coach-assigned database program exists. `ClientPortal.tsx` now labels this state as `Recommendation Preview` and uses `Recommended Rehearsal Preview`, which materially reduces the risk of presenting it as a factual user record.
 
-`clientToSpeakerProfile` still supplies defaults such as branch `Academy`, age `20`, and other profile values when backend records are incomplete. `ClientPortal.tsx` searches for hardcoded program ID `prog-exec-speaking-1` and then falls back to the first program.
+**Assessment:** This is acceptable as product recommendation content, not as live business data. It must remain visually and semantically separate from assigned, scheduled, completed, or coach-authored records.
 
-These fallbacks can prevent a blank screen but are unsafe when displayed as the user's identity, assigned track, or curriculum.
+### H3. Static public/editorial content remains in the application
 
-**Required fix:** Render an explicit incomplete/onboarding state when required server fields are absent. Resolve programs only from the authenticated client's persisted assignment.
+Landing pages, testimonials, photography, speaker spotlights, authored curriculum copy, and the explicitly labeled `Educational Demo Model` are static by design. They are not defects when confined to public/editorial surfaces. They would be defects if copied into authenticated dashboards as real speaker history, metrics, verified testimonials, or coach communications.
 
-### H3. Fixture/demo data remains in the repository
+### H4. Production bootstrap still has a dangerous opt-in path
 
-`src/data/mockData.ts`, `backend/seed_data.json`, and `backend/seed_data.py` remain present. The frontend no longer imports the fixture collection in the production context, but the files still contain fictional clients, IDs, messages, metrics, and media URLs.
+The default for `BOOTSTRAP_INITIAL_ADMIN` is false, and `bootstrap_admin.py` provides controlled provisioning and rotation. However, setting `BOOTSTRAP_INITIAL_ADMIN=true` still creates an administrator from environment-provided credentials during application startup.
 
-The development backend still imports `seed_database` from `backend/app/main.py` and invokes it automatically for non-production environments. The production build does not run the full seed, and `start.sh --seed` is explicit, but the fixtures remain runtime-adjacent and easy to reuse accidentally.
+**Required fix:** Prefer a one-time deployment job or manual bootstrap command, then disable the startup path permanently. Add an explicit audit check that production never starts with bootstrap enabled after initial provisioning.
 
-**Required fix:** Move fixtures into an explicitly excluded development/test package, import them only inside a dedicated seed command, and verify the deployed database contains no historical fixture rows.
+### H5. Fixture files remain available in the repository
 
-### H4. Production startup still auto-provisions a coach account
+Fixtures are better isolated:
 
-Production lifespan creates `coach-1` with configured bootstrap credentials if absent and uses an external Unsplash avatar URL.
+- frontend legacy mock data is under `tests/fixtures`;
+- backend seed data is under `backend/fixtures`;
+- production runtime seed remains gated and prohibited in production.
 
-**Required fix:** Provision through a controlled one-time migration/job, force credential rotation, audit access, and use a managed/local avatar or an explicit empty value.
+They still contain fictional records and are reachable through explicit seed commands. This is acceptable for development only, but not if the deployment artifact or production-adjacent package includes them unnecessarily.
 
-### H5. Message delivery is server-backed but still briefly optimistic
-
-Messages are appended locally before the API responds and are removed on failure. This is better than the previous silent-success behavior, but the UI has no explicit pending or retry state during the request and the portal also keeps a local `chatMessages` fallback when no API messages exist.
-
-**Required fix:** Use explicit pending/sent/failed message states, retry controls, and do not present the local fallback as an authoritative conversation history.
-
-### H6. Habits still use title strings as identifiers
-
-The portal passes habit titles to the toggle API rather than stable server habit IDs. Server-authoritative response handling is present, but title-based identity can break when labels change or duplicate.
-
-**Required fix:** Load server-defined habit IDs and send those IDs through the full client/API flow.
-
-### H7. Live-room persistence and deployment behavior remain unverified
-
-The live room has real WebRTC/Jitsi interaction and evaluation controls, but the repository audit does not prove that all live feedback, media, and session state survive reload, reconnect, a second device, and a second authenticated session in the deployed environment.
+**Required fix:** Exclude fixture packages from production build artifacts and CI deployment bundles, or move them to a separate development-only package/repository.
 
 ## Medium findings
 
-### M1. Insecure source defaults remain in backend configuration
+### M1. Hardcoded source defaults remain
 
-`backend/app/config.py` contains defaults for JWT secret, coach password, invite code, and Google client ID. Production validation rejects several insecure values, but a non-production deployment can still start with them and may be connected to real data.
+`backend/app/config.py` still contains development defaults for JWT secret, coach password, invite code, default coach identity, SMTP host/from address, local storage backend, and a real-looking Google client ID. Production validation rejects several insecure values, but source defaults remain risky and can confuse operators or leak into non-production deployments.
 
-**Required fix:** Require explicit secrets for every environment capable of handling real data. Keep local-only values in untracked development/test configuration.
+**Required fix:** Use neutral placeholders or required settings for production-capable configuration. Validate Google OAuth, SMTP sender, storage backend, database URL, and CORS origins explicitly in production.
 
-### M2. Production configuration validation is incomplete
+### M2. Backend source documentation is stale
 
-Fail-closed validation should also cover Google client configuration, exact OAuth origins, production database scheme, storage configuration, and bootstrap provisioning state.
+`backend/app/main.py` still describes the lifespan as initializing tables and “seed mock data,” although the current implementation gates development fixtures and does not seed production. This is operationally confusing and should be corrected.
 
-### M3. Startup seed/bootstrap errors are swallowed
+### M3. Local preview behavior is correctly disclosed but still browser-only
 
-`backend/app/main.py` catches seed/bootstrap exceptions, logs an error, and continues startup. Required migration/bootstrap failures should fail readiness or stop startup rather than produce a partially initialized service.
+Failed or unlinked recording uploads remain playable as local previews. The UI explicitly says `local preview only` and provides retry/discard behavior, so this is no longer a fabricated persistence claim. It remains unavailable across reloads and must not be counted as a recording, metric, or coach-visible artifact.
 
-### M4. Static editorial content must remain separated from live data
+### M4. Production operational evidence remains incomplete
 
-Marketing pages, curriculum descriptions, testimonials, authored labels, and the new sidebar navigation are static by design and are not defects by themselves. They become defects if presented as completed user history, real rankings, verified coach communication, actual metrics, or persisted activity.
+Repository tests cannot prove:
 
-Notably, `VoiceDispatchPlayer.tsx` explicitly labels its audio concept an **“Educational Demo Model.”** That is acceptable for public marketing only if it is not presented as an actual private coach dispatch or production speaker record.
+- the deployed database contains no historical fixture rows;
+- SMTP delivery works and is monitored;
+- object storage is durable and backed up;
+- OAuth origins and redirects are correct;
+- backups/restores have been executed;
+- rate limiting works across multiple instances;
+- WebRTC/Jitsi signaling works through the production proxy;
+- monitoring, alerting, audit logs, incident recovery, and credential rotation are active.
+
+### M5. Backend warnings remain
+
+The backend suite passes but emits Pydantic alias/serialization warnings. These should be resolved before release to prevent API contract drift.
 
 ## Dynamic-data matrix
 
-| Surface | Current source | Durable/authenticated | Assessment |
-|---|---|---:|---|
-| Coach roster | API plus rollback-enabled mutations | Partial | Conditional |
-| Speaker authentication | Exact email/phone lookup | No | **Fail** |
-| Speaker profile | API record plus local cache/fallbacks | Partial | **Fail** |
-| Programs and drills | API plus resolver/static curriculum copy | Partial | Conditional |
-| Program assignment/schedule | Optimistic client-generated schedule; API assignment | Partial | **Fail** |
-| Roadmap display | Persisted scheduled workouts | Yes when API succeeds | Conditional |
-| Metrics/evaluations | Persisted metrics/adjudication notes | Yes when API succeeds | Conditional |
-| Recording | Local `MediaRecorder` object URL | No | **Fail** |
-| Journals/simulations | Browser localStorage | No | **Fail** |
-| Messaging | API send with rollback plus local fallback | Partial | Conditional |
-| Habits | Server toggle with title-based identifier | Partial | Conditional |
-| Live rehearsal | Browser/WebRTC plus API paths; deployment unverified | Unknown | Conditional |
-| Marketing/editorial | Authored static content | Intentional | Acceptable when clearly editorial |
-| Theme/portal preference | Browser preference storage | Not business data | Pass |
+| Surface | Current source | Assessment |
+|---|---|---|
+| Coach roster | Authenticated API and rollback-enabled mutations | Dynamic; deployment verification pending |
+| Speaker profile | Authenticated `/clients/me` | Dynamic and access-controlled |
+| Programs/drills | API-assigned data or labeled recommendation preview | Conditional but semantically separated |
+| Program assignment | Backend assignment followed by refresh | Dynamic |
+| Roadmap/workouts | API-backed scheduled records | Dynamic when API succeeds |
+| Metrics/evaluations | API-backed records | Dynamic when API succeeds |
+| Journals | Authenticated database records only | Dynamic and fail-closed |
+| Simulations | Authenticated database records only | Dynamic and fail-closed |
+| Recordings | Database metadata plus pluggable storage service | Code supports durable storage, production backend not enforced |
+| Habits | Server-selected onboarding rituals and persisted logs | Dynamic |
+| Messaging | API-backed send/list with rollback | Dynamic when API succeeds |
+| Live rehearsal | Authenticated WebSocket/WebRTC/Jitsi paths | Code path exists; deployment unverified |
+| Marketing/editorial | Authored static content | Acceptable only on public/editorial surfaces |
+| Theme/portal preference | Browser preference storage | Acceptable; not business data |
 
 ## Validation performed
 
 | Check | Result | Notes |
 |---|---|---|
 | Frontend type-check | **Passed** | `npm run lint` |
-| Frontend production build | **Passed** | `npm run build`; largest emitted chunk approximately 363 kB |
-| Frontend tests | **Passed** | 13 files, 91 tests |
-| Backend tests | **Passed** | 9 tests; pytest emitted 363 warnings |
-| Production dependency audit | **Passed** | `npm audit --omit=dev --audit-level=high`; 0 vulnerabilities |
+| Frontend tests | **Passed** | 13 files, 92 tests |
+| Frontend production build | **Passed** | Vite build; largest emitted chunk approximately 363.56 kB |
+| Backend tests | **Passed** | 12 tests |
+| Production dependency audit | **Passed** | 0 high-severity vulnerabilities |
 | Git whitespace check | **Passed** | `git diff --check` |
-| Demo/mock/static audit | **Failed** | Unauthenticated lookup login, browser-only records, local recordings, invented onboarding defaults, assignment fallback state, fixtures, and storage-based identity remain |
-| Deployed-environment verification | **Incomplete** | Production database, OAuth, backups/restore, monitoring, rate limiting, signaling, and credential rotation were not independently verified |
+| Demo/mock/static audit | **Failed release gate** | Static authored content and development fixtures remain; localStorage auth and storage fallback remain |
+| Production deployment audit | **Incomplete** | Render environment lacks required SMTP/storage/bootstrap configuration |
 
-## Required release gate
+## Release gate
 
-Do not approve professional public production until all of the following are complete:
+Do not approve professional public production until:
 
-1. Replace lookup-based speaker login with real authentication and remove unauthenticated profile access.
-2. Remove invented onboarding defaults, especially program, identity, performance, and health-related values.
-3. Add authenticated durable persistence for journals and executive simulations, or disable them.
-4. Upload and persist recordings with access control, processing status, retention, and analysis, or disable production recording.
-5. Complete rollback/server-first behavior for program assignment and every related schedule/activity update.
-6. Replace title-based habit identity with stable server IDs.
-7. Replace localStorage bearer-token storage with a safer session design.
-8. Remove or isolate fixture files and the module-level seed import from runtime startup.
-9. Remove insecure defaults from any environment capable of handling real data.
-10. Add end-to-end tests proving authentication, onboarding, assignment, schedules, habits, messages, journals, evaluations, and recordings survive reload and a second session.
-11. Inspect the actual production database for fictional seed rows and remove/quarantine them.
-12. Verify deployed OAuth origins, live-session signaling, backups/restores, monitoring/alerting, distributed rate limiting, and bootstrap credential rotation.
+1. Production requires a durable object-storage backend and fails closed on storage errors; no silent S3-to-local fallback is allowed.
+2. `render.yaml` and the production environment define SMTP, storage, OAuth, database, CORS, and admin-bootstrap configuration consistently.
+3. JWT bearer tokens are moved out of localStorage, or the risk is formally accepted after a dedicated XSS/CSP review.
+4. Object-storage integration is tested against the production-compatible service, including failure and restore paths.
+5. Fixtures are excluded from production deployment artifacts and the deployed database is confirmed free of fictional rows.
+6. Startup admin bootstrap is disabled after one-time provisioning and is covered by an operational control.
+7. Recommendation previews remain clearly distinct from assigned/scheduled/completed work.
+8. Production SMTP, OAuth, backups/restores, monitoring, distributed rate limiting, and live-session signaling are verified in the deployed environment.
+9. Pydantic schema warnings are corrected or explicitly accepted with an API compatibility review.
 
 ## Final verdict
 
-**NO-GO.** The latest commit improves rollback and removes the stale client-selection default, and all automated checks pass. The application is still not safe for professional production because speaker authentication is bypassable, private records and recordings are browser-only, onboarding persists invented facts, program assignment can leave fabricated schedule state after failure, and demo/fixture paths remain in the runtime-adjacent codebase.
+**NO-GO.** The latest commit substantially improves the app: fixtures are isolated, recommendation previews are labeled, admin bootstrapping is controllable, and storage abstraction plus validation are present. The application is still not ready for professional production because durable storage is not enforced and silently falls back to local disk, the deployment manifest omits required production variables, JWTs remain in localStorage, fixture/static content remains in the repository, and real production infrastructure has not been verified end to end.
