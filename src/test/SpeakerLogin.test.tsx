@@ -379,7 +379,7 @@ describe('Speaker Login & Portal Integration Tests', () => {
     expect(parsed.fullName).toBe('KASSIM MUSA');
 
     // Restore window.location
-    window.location = originalLocation;
+    (window as any).location = originalLocation;
   });
 });
 

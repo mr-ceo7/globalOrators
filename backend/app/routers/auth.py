@@ -148,6 +148,67 @@ import json
 from app.schemas.auth import GoogleAuthRequest
 
 
+async def _get_or_create_speaker(
+    email_clean: str,
+    now: datetime,
+    db: AsyncSession,
+    full_name_hint: str = "",
+    avatar_hint: str = ""
+) -> User:
+    """Retrieve existing user or auto-provision verified speaker and client profile."""
+    user_res = await db.execute(select(User).where(User.email == email_clean))
+    user = user_res.scalar_one_or_none()
+
+    c_res = await db.execute(select(Client).where(Client.email.ilike(email_clean)))
+    matched_client = c_res.scalar_one_or_none()
+
+    resolved_name = (
+        (user.full_name if user and user.full_name else None) or
+        (matched_client.name if matched_client else None) or
+        full_name_hint or
+        email_clean.split("@")[0].title()
+    )
+    resolved_avatar = (
+        (user.avatar if user and user.avatar else None) or
+        (matched_client.avatar if matched_client else None) or
+        avatar_hint or
+        ""
+    )
+
+    if not user:
+        user = User(
+            id=f"speaker-{uuid.uuid4().hex[:8]}",
+            email=email_clean,
+            hashed_password="",
+            full_name=resolved_name,
+            role="speaker",
+            avatar=resolved_avatar,
+            is_active=True,
+            created_at=now
+        )
+        db.add(user)
+
+    if not matched_client:
+        new_client = Client(
+            id=f"client-{uuid.uuid4().hex[:8]}",
+            name=resolved_name,
+            email=email_clean,
+            avatar=resolved_avatar,
+            status="Active",
+            experience_level="Intermediate",
+            start_date=now.strftime("%Y-%m-%d"),
+            compliance_rate=100.0,
+            workouts_completed=0,
+            total_workouts_assigned=0,
+            last_active="Just now"
+        )
+        db.add(new_client)
+
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+
 @router.post(
     "/google", 
     response_model=TokenResponse,
@@ -173,7 +234,8 @@ async def google_auth(req: GoogleAuthRequest, db: AsyncSession = Depends(get_db)
         email = idinfo.get("email")
         name = idinfo.get("name")
         picture = idinfo.get("picture")
-    except Exception:
+    except Exception as exc:
+        logger.warning(f"Google OAuth token verification failed: {exc}")
         # Strictly restricted to TESTING environment and mock header signatures
         if settings.TESTING and req.credential.startswith("mockHeader."):
             try:
@@ -198,6 +260,7 @@ async def google_auth(req: GoogleAuthRequest, db: AsyncSession = Depends(get_db)
     email_clean = email.strip().lower()
     full_name = name or email_clean.split("@")[0].title()
     avatar_url = picture or ""
+    now = datetime.now(timezone.utc)
 
     result = await db.execute(select(User).where(User.email == email_clean))
     user = result.scalar_one_or_none()
@@ -206,35 +269,45 @@ async def google_auth(req: GoogleAuthRequest, db: AsyncSession = Depends(get_db)
         # Determine role: only allow coach if invite code is provided and matches
         if req.role == "coach" and req.coach_invite_code == settings.COACH_INVITE_CODE:
             role = "coach"
+            user = User(
+                id=f"{role}-{uuid.uuid4().hex[:8]}",
+                email=email_clean,
+                hashed_password="",
+                full_name=full_name,
+                role=role,
+                google_id=google_id,
+                avatar=avatar_url,
+                is_active=True,
+                created_at=now
+            )
+            db.add(user)
+            await db.commit()
+            await db.refresh(user)
         else:
             role = "speaker"
-
-        user = User(
-            id=f"{role}-{uuid.uuid4().hex[:8]}",
-            email=email_clean,
-            hashed_password="",
-            full_name=full_name,
-            role=role,
-            google_id=google_id,
-            avatar=avatar_url,
-            is_active=True,
-            created_at=datetime.now(timezone.utc)
-        )
-        db.add(user)
-        await db.commit()
-        await db.refresh(user)
+            user = await _get_or_create_speaker(email_clean, now, db, full_name_hint=full_name, avatar_hint=avatar_url)
+            if google_id and not user.google_id:
+                user.google_id = google_id
+            if avatar_url and not user.avatar:
+                user.avatar = avatar_url
+            await db.commit()
+            await db.refresh(user)
     else:
         role = user.role
         updated = False
         if google_id and not user.google_id:
             user.google_id = google_id
             updated = True
-        if picture and user.avatar != picture:
-            user.avatar = picture
+        if avatar_url and (not user.avatar or user.avatar == ""):
+            user.avatar = avatar_url
             updated = True
         if updated:
             await db.commit()
             await db.refresh(user)
+
+        # For speakers, guarantee domain Client profile exists
+        if role == "speaker":
+            await _get_or_create_speaker(email_clean, now, db, full_name_hint=full_name, avatar_hint=avatar_url)
 
     token = create_access_token(user.id)
     return TokenResponse(
@@ -314,51 +387,6 @@ async def send_otp(req: SendOtpRequest, request: Request, db: AsyncSession = Dep
         message="A 1-click magic login link and 6-digit verification passcode have been dispatched to your email.",
         magic_link=magic_link_url if settings.ENVIRONMENT != "production" else None
     )
-
-
-async def _get_or_create_speaker(email_clean: str, now: datetime, db: AsyncSession) -> User:
-    """Retrieve existing user or auto-provision verified speaker and client profile."""
-    user_res = await db.execute(select(User).where(User.email == email_clean))
-    user = user_res.scalar_one_or_none()
-
-    if not user:
-        c_res = await db.execute(select(Client).where(Client.email.ilike(email_clean)))
-        matched_client = c_res.scalar_one_or_none()
-        full_name = matched_client.name if matched_client else email_clean.split("@")[0].title()
-        avatar = matched_client.avatar if matched_client else ""
-
-        user = User(
-            id=f"speaker-{uuid.uuid4().hex[:8]}",
-            email=email_clean,
-            hashed_password="",
-            full_name=full_name,
-            role="speaker",
-            avatar=avatar,
-            is_active=True,
-            created_at=now
-        )
-        db.add(user)
-
-        if not matched_client:
-            new_client = Client(
-                id=f"client-{uuid.uuid4().hex[:8]}",
-                name=full_name,
-                email=email_clean,
-                avatar=avatar,
-                status="Active",
-                experience_level="Intermediate",
-                start_date=now.strftime("%Y-%m-%d"),
-                compliance_rate=100.0,
-                workouts_completed=0,
-                total_workouts_assigned=0,
-                last_active="Just now"
-            )
-            db.add(new_client)
-
-        await db.commit()
-        await db.refresh(user)
-
-    return user
 
 
 @router.post(

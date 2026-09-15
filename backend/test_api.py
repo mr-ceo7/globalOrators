@@ -81,6 +81,12 @@ async def test_api_endpoints():
         assert speaker_token_data["user"]["email"] == "executive.speaker@globalorators.org"
         assert speaker_token_data["user"]["role"] == "speaker"
 
+        # Verify Google-authenticated speaker has Client record provisioned
+        speaker_headers = {"Authorization": f"Bearer {speaker_token_data['access_token']}"}
+        res_me = await client.get("/api/clients/me", headers=speaker_headers)
+        assert res_me.status_code == 200
+        assert res_me.json()["email"] == "executive.speaker@globalorators.org"
+
         # 4. Clients
         res = await client.get("/api/clients", headers=headers)
         assert res.status_code == 200
