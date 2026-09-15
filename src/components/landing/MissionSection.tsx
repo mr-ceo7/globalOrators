@@ -72,14 +72,14 @@ export const MissionSection: React.FC = () => {
           </div>
         </div>
 
-        <blockquote className="space-y-2">
+        <blockquote className="space-y-3">
           <p className="font-serif italic text-sm sm:text-base text-slate-100 leading-relaxed">
-            "Debate is not mere recitation; it is dialectical armor. When African youth master argumentation, structural clash, and rebuttal, they cease to be spectators of their own destiny."
+            "I believe words can change the trajectory of a life. A voice can awaken courage, challenge injustice, inspire dreams, and give someone the confidence to believe that they are capable of more. I value speaking because it is not simply about being heard—it is about using your voice to move minds, touch lives, and create change. To speak is to have the opportunity to shape the world, one person and one idea at a time."
           </p>
         </blockquote>
 
         <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
-          Competitive debater, adjudicator, trainer, and debate academy co-founder. Mashujaa & Indaba V Novice Champion, Ikenga Open finalist, TOC East Africa judge, and assistant coach for Team Ecuador. Tyrese directs forensic preparation across British Parliamentary and World Schools formats, ensuring our orators build the intellectual stamina to dismantle flawed policies on global stages.
+          Competitive debater, adjudicator, trainer, and debate academy co-founder. Mashujaa & Indaba V Novice Champion, Ikenga Open finalist, TOC East Africa judge, and assistant coach for Team Ecuador. Tyrese directs forensic preparation across British Parliamentary and World Schools formats, training orators to command global stages with substance and conviction.
         </p>
 
         {/* Documentary Photo Essay: Tyrese at Rostrum, Laureate Medals, and Championship Delegation */}

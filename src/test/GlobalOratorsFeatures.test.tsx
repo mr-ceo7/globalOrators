@@ -99,7 +99,7 @@ describe('Global Orators Landing Page & Features Tests', () => {
     // Verify Co-Founder's Note & Documentary Dispatch (Tyrese)
     expect(screen.getByText('Tyrese King’ori Nyawira')).toBeInTheDocument();
     expect(screen.getByText(/Co-Founder & Head Debate Coach · The Global Orators Project/i)).toBeInTheDocument();
-    expect(screen.getByText(/Debate is not mere recitation; it is dialectical armor/i)).toBeInTheDocument();
+    expect(screen.getByText(/I believe words can change the trajectory of a life/i)).toBeInTheDocument();
     expect(screen.getByAltText(/City of Nairobi rostrum/i)).toBeInTheDocument();
     expect(screen.getByAltText(/Championship Laureate holding trophy and gold medals/i)).toBeInTheDocument();
   }, 15000);

@@ -37,7 +37,7 @@ const teamMembers: TeamMember[] = [
     image: '/images/tyrese.jpg',
     imagePosition: 'object-[center_15%]',
     specialty: 'WSDC & BP Debate · Adjudication',
-    bio: 'Competitive debater, adjudicator, trainer, and debate academy co-founder. Mashujaa & Indaba V Novice Champion, Ikenga Open finalist, TOC East Africa judge, and assistant coach for Team Ecuador. Trains students in rigorous argumentation, rebuttal, and global affairs.'
+    bio: 'Competitive debater, adjudicator, trainer, and debate academy co-founder. Mashujaa & Indaba V Novice Champion, Ikenga Open finalist, TOC East Africa judge, and assistant coach for Team Ecuador. Driven by the conviction that words change the trajectory of a life, he trains students in rigorous argumentation, rebuttal, and stage command.'
   },
   {
     name: 'Milo Brian',
