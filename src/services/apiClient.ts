@@ -18,7 +18,13 @@ import {
 } from '../types';
 
 
-export const API_BASE_URL = ((import.meta as unknown as { env?: { VITE_API_URL?: string } }).env?.VITE_API_URL) || '/api';
+export const API_BASE_URL = (() => {
+  const envUrl = (import.meta as unknown as { env?: { VITE_API_URL?: string } }).env?.VITE_API_URL;
+  if (!envUrl || envUrl.includes('trycloudflare.com')) {
+    return '/api';
+  }
+  return envUrl;
+})();
 
 export const clearAuthSession = () => {
   localStorage.removeItem('globalorators_token');

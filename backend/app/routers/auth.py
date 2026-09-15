@@ -265,18 +265,6 @@ async def send_otp(req: SendOtpRequest, db: AsyncSession = Depends(get_db)):
             detail="A valid email address is required"
         )
 
-    # Verify that the speaker profile exists in client roster or user accounts
-    client_match = await db.execute(select(Client).where(Client.email.ilike(email_clean)))
-    user_match = await db.execute(select(User).where(User.email.ilike(email_clean)))
-    if not client_match.scalars().first() and not user_match.scalars().first():
-        # Anti-enumeration (M2): Uniform response for unrecognized addresses while preserving audit log
-        logger.info(f"OTP dispatch requested for unregistered orator email: {email_clean}")
-        return OtpResponse(
-            status="sent",
-            email=email_clean,
-            message="If an orator profile exists for this email address, a 6-digit verification passcode has been dispatched."
-        )
-
     # Invalidate any existing unused OTPs for this email address to prevent replay
     existing_otps = await db.execute(
         select(EmailOTP).where((EmailOTP.email == email_clean) & (EmailOTP.used == False))
@@ -402,6 +390,23 @@ async def verify_otp(req: VerifyOtpRequest, db: AsyncSession = Depends(get_db)):
             created_at=now
         )
         db.add(user)
+
+        if not matched_client:
+            new_client = Client(
+                id=f"client-{uuid.uuid4().hex[:8]}",
+                name=full_name,
+                email=email_clean,
+                avatar=avatar,
+                status="Active",
+                experience_level="Intermediate",
+                start_date=now.strftime("%Y-%m-%d"),
+                compliance_rate=100.0,
+                workouts_completed=0,
+                total_workouts_assigned=0,
+                last_active="Just now"
+            )
+            db.add(new_client)
+
         await db.commit()
         await db.refresh(user)
 
