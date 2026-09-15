@@ -49,6 +49,99 @@ export const MissionSection: React.FC = () => {
         </p>
       </div>
 
+      {/* Co-Founder's Note & Forensic Track Record: Tyrese King’ori Nyawira */}
+      <div className="p-6 sm:p-7 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-5 mb-10 text-left">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+          <div className="flex items-center gap-3.5">
+            <img
+              src="/images/tyrese-podium.jpg"
+              alt="Tyrese King’ori Nyawira, Co-Founder and Head Debate Coach of The Global Orators Project"
+              className="w-12 h-12 rounded-full object-cover object-[center_15%] border-2 border-[#C89630]/40 shrink-0"
+              width={48}
+              height={48}
+              loading="lazy"
+              decoding="async"
+            />
+            <div>
+              <div className="font-serif font-bold text-slate-100 text-sm sm:text-base">Tyrese King’ori Nyawira</div>
+              <div className="text-[10px] text-slate-400 font-mono">Co-Founder & Head Debate Coach · The Global Orators Project</div>
+            </div>
+          </div>
+          <div className="text-[10px] font-mono tracking-widest text-[#A06C18] dark:text-[#E3B95C] uppercase font-bold px-2.5 py-1 rounded-md bg-[#C89630]/10 border border-[#C89630]/20 self-start sm:self-center">
+            Co-Founding Conviction
+          </div>
+        </div>
+
+        <blockquote className="space-y-2">
+          <p className="font-serif italic text-sm sm:text-base text-slate-100 leading-relaxed">
+            "Debate is not mere recitation; it is dialectical armor. When African youth master argumentation, structural clash, and rebuttal, they cease to be spectators of their own destiny."
+          </p>
+        </blockquote>
+
+        <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
+          Competitive debater, adjudicator, trainer, and debate academy co-founder. Mashujaa & Indaba V Novice Champion, Ikenga Open finalist, TOC East Africa judge, and assistant coach for Team Ecuador. Tyrese directs forensic preparation across British Parliamentary and World Schools formats, ensuring our orators build the intellectual stamina to dismantle flawed policies on global stages.
+        </p>
+
+        {/* Documentary Photo Essay: Tyrese at Rostrum, Laureate Medals, and Championship Delegation */}
+        <div className="pt-2 border-t border-slate-800/80">
+          <div className="text-[10px] font-mono tracking-widest text-slate-400 uppercase font-semibold mb-3">
+            Forensic Track Record · Podium Command & Championship Laurels
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+            {/* Visual 1: Rostrum Command (Tyrese.jpeg) */}
+            <figure className="rounded-xl overflow-hidden border border-slate-800 bg-slate-950 flex flex-col justify-between">
+              <div className="h-44 sm:h-52 w-full overflow-hidden">
+                <img
+                  src="/images/tyrese-podium.jpg"
+                  alt="Tyrese King’ori Nyawira delivering address at the City of Nairobi rostrum"
+                  className="w-full h-full object-cover object-[center_15%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+              <figcaption className="p-2 sm:p-2.5 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono">
+                <span className="text-[#A06C18] dark:text-[#E3B95C] font-semibold">Rostrum Address</span>
+                <span className="text-slate-400">Nairobi</span>
+              </figcaption>
+            </figure>
+
+            {/* Visual 2: Solo Championship Laureate with Trophy & Medals (tyrese2.jpeg) */}
+            <figure className="rounded-xl overflow-hidden border border-slate-800 bg-slate-950 flex flex-col justify-between">
+              <div className="h-44 sm:h-52 w-full overflow-hidden">
+                <img
+                  src="/images/tyrese-laureate.jpg"
+                  alt="Tyrese King’ori Nyawira, Championship Laureate holding trophy and gold medals"
+                  className="w-full h-full object-cover object-[center_20%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+              <figcaption className="p-2 sm:p-2.5 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono">
+                <span className="text-emerald-500 font-semibold">Trophy & Medals</span>
+                <span className="text-slate-400">Forensic Laureate</span>
+              </figcaption>
+            </figure>
+
+            {/* Visual 3: Championship Delegation Victory (tyrese1.jpeg) */}
+            <figure className="col-span-2 sm:col-span-1 rounded-xl overflow-hidden border border-slate-800 bg-slate-950 flex flex-col justify-between">
+              <div className="h-44 sm:h-52 w-full overflow-hidden">
+                <img
+                  src="/images/tyrese-delegation.jpg"
+                  alt="Tyrese King’ori Nyawira and debate champions celebrating tournament victory with trophies and medals"
+                  className="w-full h-full object-cover object-center filter contrast-[1.03] hover:scale-102 transition-transform duration-500"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+              <figcaption className="p-2 sm:p-2.5 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono">
+                <span className="text-slate-200 font-semibold">Championship Delegation</span>
+                <span className="text-slate-400">Team Victory</span>
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+      </div>
+
       {/* Editorial 2-Column Split */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 text-left">
         {/* Pillar 1 */}

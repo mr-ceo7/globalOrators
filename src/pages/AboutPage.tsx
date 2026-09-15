@@ -31,13 +31,13 @@ const teamMembers: TeamMember[] = [
   },
   {
     name: 'Tyrese King’ori Nyawira',
-    role: 'Founder & Debate Coach',
+    role: 'Co-Founder & Head Debate Coach',
     category: 'Founder',
     initials: 'TN',
     image: '/images/tyrese.jpg',
     imagePosition: 'object-[center_15%]',
     specialty: 'WSDC & BP Debate · Adjudication',
-    bio: 'Competitive debater, adjudicator, trainer, and debate academy founder. Mashujaa & Indaba V Novice Champion, Ikenga Open finalist, TOC East Africa judge, and assistant coach for Team Ecuador. Trains students in rigorous argumentation, rebuttal, and global affairs.'
+    bio: 'Competitive debater, adjudicator, trainer, and debate academy co-founder. Mashujaa & Indaba V Novice Champion, Ikenga Open finalist, TOC East Africa judge, and assistant coach for Team Ecuador. Trains students in rigorous argumentation, rebuttal, and global affairs.'
   },
   {
     name: 'Milo Brian',

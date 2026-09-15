@@ -95,6 +95,13 @@ describe('Global Orators Landing Page & Features Tests', () => {
     expect(screen.getByText('Geoffrey Anyona')).toBeInTheDocument();
     expect(screen.getByText(/Founder & Forensics Director · The Global Orators Project/i)).toBeInTheDocument();
     expect(screen.getByText(/a generation that can speak must also learn to think/i)).toBeInTheDocument();
+
+    // Verify Co-Founder's Note & Documentary Dispatch (Tyrese)
+    expect(screen.getByText('Tyrese King’ori Nyawira')).toBeInTheDocument();
+    expect(screen.getByText(/Co-Founder & Head Debate Coach · The Global Orators Project/i)).toBeInTheDocument();
+    expect(screen.getByText(/Debate is not mere recitation; it is dialectical armor/i)).toBeInTheDocument();
+    expect(screen.getByAltText(/City of Nairobi rostrum/i)).toBeInTheDocument();
+    expect(screen.getByAltText(/Championship Laureate holding trophy and gold medals/i)).toBeInTheDocument();
   }, 15000);
 
   test('should render SubdomainSwitcher with globaloratorsproject.com, app, and coach domains', () => {
