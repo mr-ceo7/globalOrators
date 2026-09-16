@@ -43,6 +43,9 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
   if (!request.url.startsWith(self.location.origin)) return;
 
+  // Never intercept auth API calls — they must always hit the live server
+  if (request.url.includes('/api/auth/')) return;
+
   // Handle SPA navigation requests
   if (request.mode === 'navigate') {
     event.respondWith(

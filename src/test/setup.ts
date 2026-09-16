@@ -16,3 +16,28 @@ if (typeof window !== 'undefined' && !window.matchMedia) {
     })),
   });
 }
+
+import React from 'react';
+
+vi.mock('@react-oauth/google', () => ({
+  GoogleOAuthProvider: ({ children }: any) => children,
+  GoogleLogin: ({ onSuccess }: any) =>
+    React.createElement(
+      'div',
+      { 'data-testid': 'mock-google-login' },
+      React.createElement(
+        'button',
+        {
+          type: 'button',
+          onClick: () =>
+            onSuccess?.({
+              credential:
+                'mockHeader.eyJzdWIiOiJnb29nbGUtdGVzdC1leGVjLTEyMyIsImVtYWlsIjoiZXhlY3V0aXZlLnNwZWFrZXJAZ2xvYmFsb3JhdG9ycy5vcmciLCJuYW1lIjoiVGVzdCBPcmF0b3IifQ.mockSig',
+            }),
+        },
+        'Sign in with Google',
+      ),
+    ),
+  useGoogleOneTapLogin: vi.fn(),
+}));
+

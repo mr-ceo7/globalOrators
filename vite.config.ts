@@ -17,6 +17,11 @@ export default defineConfig(() => {
       allowedHosts: true as const,
       port: 3000,
       host: '0.0.0.0',
+      headers: {
+        // Google Identity Services (GSI) requires this header so the sign-in
+        // popup can postMessage credentials back to the opener window.
+        'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
+      },
       proxy: {
         '/api': {
           target: 'http://127.0.0.1:8005',

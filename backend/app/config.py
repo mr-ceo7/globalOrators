@@ -68,7 +68,7 @@ class Settings(BaseSettings):
     # Google OAuth / One Tap
     GOOGLE_CLIENT_ID: str = os.getenv(
         "GOOGLE_CLIENT_ID", 
-        "664033502342-9sijfg71v3c0i0riah1hhhgdufalfvk5.apps.googleusercontent.com"
+        "924177133255-g3duhln1pfflnr50qqg3le5mh3jo59pa.apps.googleusercontent.com"
     )
     GOOGLE_CLIENT_SECRET: str = os.getenv("GOOGLE_CLIENT_SECRET", "")
     
