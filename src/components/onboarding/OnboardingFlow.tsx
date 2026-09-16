@@ -1036,8 +1036,31 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 
   const activeConfig = useMemo(() => getStep3Config(branch, missionFocus), [branch, missionFocus]);
 
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
+  const [fullName, setFullName] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const u = localStorage.getItem('globalorators_user') || localStorage.getItem('nubianfit_user');
+        if (u) {
+          const parsed = JSON.parse(u);
+          if (parsed.full_name) return parsed.full_name;
+        }
+      } catch {}
+    }
+    return '';
+  });
+
+  const [email, setEmail] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const u = localStorage.getItem('globalorators_user') || localStorage.getItem('nubianfit_user');
+        if (u) {
+          const parsed = JSON.parse(u);
+          if (parsed.email) return parsed.email;
+        }
+      } catch {}
+    }
+    return '';
+  });
   const [phone, setPhone] = useState('');
   const [otherDescription, setOtherDescription] = useState('');
   const [customFormatDescription, setCustomFormatDescription] = useState('');

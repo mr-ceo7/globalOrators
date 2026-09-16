@@ -194,13 +194,15 @@ async def _get_or_create_speaker(
             name=resolved_name,
             email=email_clean,
             avatar=resolved_avatar,
-            status="Active",
-            experience_level="Intermediate",
+            status="Pending Onboarding",
+            goal="",
+            experience_level="",
             start_date=now.strftime("%Y-%m-%d"),
             compliance_rate=100.0,
             workouts_completed=0,
             total_workouts_assigned=0,
-            last_active="Just now"
+            last_active="Just now",
+            onboarding_survey={}
         )
         db.add(new_client)
 

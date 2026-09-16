@@ -161,6 +161,19 @@ export const clientToSpeakerProfile = (client: Client): SpeakerOnboardingData =>
   };
 };
 
+export const isProfileOnboarded = (client: Client | null | undefined): boolean => {
+  if (!client) return false;
+  if (client.status === 'Pending Onboarding') return false;
+  const survey = (client.onboardingSurvey || {}) as Record<string, any>;
+  const hasSurveyContent = Boolean(
+    survey &&
+    Object.keys(survey).length > 0 &&
+    (survey.speakingGoal || survey.branch || survey.primaryDiscipline)
+  );
+  const hasGoal = Boolean(client.goal && client.goal.trim().length > 0);
+  return hasSurveyContent || hasGoal;
+};
+
 const getSavedTheme = (): 'light' | 'dark' | null => {
   if (typeof window === 'undefined') return null;
   try {
@@ -616,10 +629,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } else {
         try {
           const me = await clientsApi.getMe();
-          if (me) {
+          if (me && isProfileOnboarded(me)) {
             const profile = clientToSpeakerProfile(me);
             setActiveSpeakerProfile(profile);
             localStorage.setItem('globalorators_speaker_profile', JSON.stringify(profile));
+          } else {
+            setActiveSpeakerProfile(null);
+            localStorage.removeItem('globalorators_speaker_profile');
           }
         } catch {
           setActiveSpeakerProfile(null);
@@ -1315,7 +1331,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         // No client profile found for this authenticated account
       }
 
-      if (matchedClient) {
+      const onboarded = isProfileOnboarded(matchedClient);
+      if (matchedClient && onboarded) {
         setClients(prev => {
           const exists = prev.some(c => c.id === matchedClient!.id);
           return exists ? prev.map(c => c.id === matchedClient!.id ? matchedClient! : c) : [matchedClient!, ...prev];
@@ -1327,11 +1344,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         showToast(`Welcome back, ${profile.fullName}. Session authenticated.`);
         return { success: true };
       } else {
-        // Fail-closed against synthetic client creation (C4/H8/M3 audit fix).
-        // Authenticated user has no domain client profile; route to Onboarding.
+        // Authenticated user has not completed onboarding; route to Onboarding
         setActiveSpeakerProfile(null);
         localStorage.removeItem('globalorators_speaker_profile');
-        setCurrentPortal('speaker_onboarding');
+        setCurrentPortal('onboarding');
         showToast('Account verified. Please complete your orator onboarding intake to initialize your syllabus.');
         return { success: true };
       }
@@ -1362,7 +1378,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         // No client profile found for this authenticated account
       }
 
-      if (matchedClient) {
+      const onboarded = isProfileOnboarded(matchedClient);
+      if (matchedClient && onboarded) {
         setClients(prev => {
           const exists = prev.some(c => c.id === matchedClient!.id);
           return exists ? prev.map(c => c.id === matchedClient!.id ? matchedClient! : c) : [matchedClient!, ...prev];
@@ -1376,12 +1393,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } else {
         setActiveSpeakerProfile(null);
         localStorage.removeItem('globalorators_speaker_profile');
-        setCurrentPortal('speaker_onboarding');
-        showToast('Account verified. Please complete your orator onboarding intake to initialize your syllabus.');
+        setCurrentPortal('onboarding');
+        showToast('Magic link verified. Please complete your orator onboarding intake to initialize your syllabus.');
         return { success: true };
       }
     } catch (err: any) {
-      const msg = err?.response?.data?.detail || err?.message || 'Magic login link has expired or has already been used.';
+      const msg = err?.response?.data?.detail || err?.message || 'Invalid or expired magic login link.';
       return { success: false, error: msg };
     }
   }, [refreshFromBackend, setCurrentPortal, showToast]);
@@ -1411,7 +1428,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             // No client profile found for account
           }
 
-          if (matchedClient) {
+          const onboarded = isProfileOnboarded(matchedClient);
+          if (matchedClient && onboarded) {
             setClients(prev => {
               const exists = prev.some(c => c.id === matchedClient!.id);
               return exists ? prev.map(c => c.id === matchedClient!.id ? matchedClient! : c) : [matchedClient!, ...prev];
@@ -1423,12 +1441,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             showToast(`Welcome back, ${res.user.full_name}. Orators App loaded.`);
             return { success: true, user: res.user };
           } else {
-            // Fail-closed against synthetic client creation (C4/H8/M3 audit fix).
-            // Authenticated user has no domain client profile; route to Onboarding.
+            // New speaker who has not completed onboarding -> Route to Onboarding!
             setActiveSpeakerProfile(null);
             localStorage.removeItem('globalorators_speaker_profile');
-            setCurrentPortal('speaker_onboarding');
-            showToast(`Google identity verified. Please complete your speaker profile onboarding.`);
+            setCurrentPortal('onboarding');
+            showToast(`Welcome, ${res.user.full_name}! Please complete your orator onboarding.`);
             return { success: true, user: res.user };
           }
         }
