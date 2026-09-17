@@ -418,7 +418,7 @@ export const CoachDashboard: React.FC<{
                     <div className="text-xs font-medium text-emerald-400 truncate mt-0.5">
                       {item.title}
                     </div>
-                    <div className="text-[11px] text-slate-400 line-clamp-1">
+                    <div className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed">
                       {item.description}
                     </div>
                   </div>
@@ -448,7 +448,7 @@ export const CoachDashboard: React.FC<{
                     <span className="text-xs font-bold text-slate-200">{c.name}</span>
                     <span className="text-[10px] text-amber-400 font-semibold">{c.injuriesAndHealth.length} focus area</span>
                   </div>
-                  <div className="text-[11px] text-slate-400 mt-1 line-clamp-1">
+                  <div className="text-[11px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">
                     {c.medicalAlerts || c.injuriesAndHealth[0]}
                   </div>
                 </div>

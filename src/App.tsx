@@ -49,7 +49,7 @@ const MainLayout: React.FC = () => {
   }, [isLoadingApp]);
 
   return (
-    <div className="flex-1 bg-slate-950 text-slate-100 flex font-sans antialiased selection:bg-emerald-500 selection:text-slate-950 min-h-[calc(100vh-42px)]">
+    <div className="flex-1 min-h-0 bg-slate-950 text-slate-100 flex font-sans antialiased selection:bg-emerald-500 selection:text-slate-950 h-full overflow-hidden">
       <SEOHead
         title="Coach App"
         description="Private coaching dashboard and forensics workbench for Global Orators speech and debate coaches."
@@ -72,7 +72,7 @@ const MainLayout: React.FC = () => {
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 h-[calc(100vh-42px)] overflow-hidden">
+      <div className="flex-1 min-w-0 min-h-0 flex flex-col h-full overflow-hidden">
         {/* Global Header */}
         <Header 
           onOpenNewClient={() => setIsAddClientModalOpen(true)}
@@ -82,8 +82,16 @@ const MainLayout: React.FC = () => {
         />
 
         {/* Scrollable View Area with bottom padding for mobile bar */}
-        <main className="flex-1 overflow-y-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-28 md:pb-6 touch-pan-y">
-          <div className="max-w-7xl mx-auto">
+        <main className={`flex-1 min-h-0 ${
+          activeTab === 'messenger' 
+            ? 'flex flex-col overflow-hidden px-2 sm:px-6 py-2 sm:py-3 pb-20 md:pb-3' 
+            : 'overflow-y-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-28 md:pb-6 touch-pan-y'
+        }`}>
+          <div className={`mx-auto w-full ${
+            activeTab === 'messenger' 
+              ? 'flex-1 min-h-0 flex flex-col max-w-7xl' 
+              : 'max-w-7xl'
+          }`}>
             {activeTab === 'dashboard' && (
               <CoachDashboard onOpenAddClientModal={() => setIsAddClientModalOpen(true)} />
             )}
@@ -156,7 +164,7 @@ const AppContent: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans antialiased">
+    <div className={`${currentPortal === 'coach_os' || currentPortal === 'speaker_app' ? 'h-screen overflow-hidden' : 'min-h-screen'} bg-slate-950 text-slate-100 flex flex-col font-sans antialiased`}>
       {isPreviewOrDev && currentPortal !== 'landing' && currentPortal !== 'onboarding' && isAuthenticatedCoach && <SubdomainSwitcher />}
       {currentPortal === 'landing' && <LandingPage />}
       {currentPortal === 'speaker_app' && (activeSpeakerProfile ? <ClientPortal /> : <SpeakerLoginPortal />)}

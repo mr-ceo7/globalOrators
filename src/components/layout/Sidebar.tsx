@@ -59,8 +59,7 @@ export const Sidebar: React.FC = () => {
   return (
     <aside 
       id="sidebar-navigation"
-      className={`relative hidden md:flex flex-col border-r border-slate-800 bg-slate-950 text-slate-200 transition-all duration-300 z-30 shrink-0 ${
-
+      className={`relative hidden md:flex flex-col border-r border-slate-800 bg-slate-950 text-slate-200 transition-all duration-300 z-30 shrink-0 h-full overflow-hidden ${
         isCollapsed ? 'w-20' : 'w-64'
       }`}
     >
@@ -102,7 +101,7 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* Navigation Links */}
-      <div className="flex-1 py-4 px-3 space-y-1.5 overflow-y-auto">
+      <div className="flex-1 min-h-0 py-4 px-3 space-y-1.5 overflow-y-auto">
         <div className={`px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 ${isCollapsed ? 'text-center' : ''}`}>
           {isCollapsed ? '•' : 'Main Menu'}
         </div>

@@ -62,12 +62,15 @@ export const CoachMessenger: React.FC = () => {
   const [replyingToMessage, setReplyingToMessage] = useState<ChatMessage | null>(null);
   const [mobileView, setMobileView] = useState<'roster' | 'thread'>('thread');
 
-  // Voice Note Recording State
   const [isRecordingAudio, setIsRecordingAudio] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
+  const [playbackProgress, setPlaybackProgress] = useState<number>(0);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const recordingTimerRef = useRef<any>(null);
+  const recordingStartTimeRef = useRef<number>(0);
+  const recordingDurationRef = useRef<number>(0);
+  const playbackTimerRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -75,6 +78,36 @@ export const CoachMessenger: React.FC = () => {
   // Active client conversation
   const activeClient = clients.find(c => c.id === selectedClientId) || clients[0];
   const isClientOnline = activeClient ? onlineClientIds.includes(activeClient.id) : false;
+
+  // Voice Note Helper Utilities
+  const isVoiceNote = (msg: ChatMessage) => {
+    if (msg.messageType === 'audio') return true;
+    if (msg.attachment?.type === 'voice' || msg.attachmentData?.type === 'voice') return true;
+    if (msg.attachment?.audioUrl || msg.attachmentData?.audioUrl) return true;
+    if (msg.attachment?.waveform || msg.attachmentData?.waveform) return true;
+    const t = msg.text || (msg as any).content || '';
+    if (typeof t === 'string' && (t.startsWith('🎙️') || t.toLowerCase().includes('voice rehearsal') || t.toLowerCase().includes('voice critique'))) return true;
+    return false;
+  };
+
+  const getVoiceDuration = (msg: ChatMessage) => {
+    const rawDur = msg.attachment?.duration || msg.attachmentData?.duration;
+    if (rawDur && rawDur !== '0:00') return rawDur;
+    const t = msg.text || (msg as any).content || '';
+    const match = typeof t === 'string' ? t.match(/\((\d+:\d\d)\)/) : null;
+    if (match && match[1] !== '0:00') return match[1];
+    return '0:18';
+  };
+
+  const getVoiceWaveform = (msg: ChatMessage) => {
+    if (Array.isArray(msg.attachment?.waveform) && msg.attachment.waveform.length > 0) return msg.attachment.waveform;
+    if (Array.isArray(msg.attachmentData?.waveform) && msg.attachmentData.waveform.length > 0) return msg.attachmentData.waveform;
+    return [14, 28, 18, 32, 16, 24, 36, 20, 30, 18, 22, 28, 14, 20, 26, 12];
+  };
+
+  const getVoiceAudioUrl = (msg: ChatMessage) => {
+    return msg.attachment?.audioUrl || msg.attachment?.url || msg.attachmentData?.audioUrl || msg.attachmentData?.url || null;
+  };
 
   // Active messages filtered by client
   const activeMessages = useMemo(() => {
@@ -142,10 +175,20 @@ export const CoachMessenger: React.FC = () => {
     setShowAttachmentMenu(false);
   };
 
-  // Voice Note Recording
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.pause();
+      }
+      clearInterval(playbackTimerRef.current);
+      clearInterval(recordingTimerRef.current);
+    };
+  }, []);
+
+  // Voice Note Recording with Ref-based Duration (prevents stale closure bug)
   const startRecording = async () => {
     if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
-      // Fallback voice memo simulation
       simulateVoiceNote();
       return;
     }
@@ -155,6 +198,7 @@ export const CoachMessenger: React.FC = () => {
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
+      recordingStartTimeRef.current = Date.now();
 
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
@@ -163,30 +207,39 @@ export const CoachMessenger: React.FC = () => {
       };
 
       mediaRecorder.onstop = () => {
+        const elapsedSec = Math.max(1, Math.round((Date.now() - recordingStartTimeRef.current) / 1000));
+        const finalDurationSec = elapsedSec > 0 ? elapsedSec : (recordingDurationRef.current || 15);
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         const audioUrl = URL.createObjectURL(audioBlob);
-        sendVoiceNote(audioUrl, recordingDuration);
+        sendVoiceNote(audioUrl, finalDurationSec);
         stream.getTracks().forEach(track => track.stop());
       };
 
       mediaRecorder.start();
       setIsRecordingAudio(true);
       setRecordingDuration(0);
+      recordingDurationRef.current = 0;
 
       recordingTimerRef.current = setInterval(() => {
-        setRecordingDuration(prev => prev + 1);
+        setRecordingDuration(prev => {
+          const next = prev + 1;
+          recordingDurationRef.current = next;
+          return next;
+        });
       }, 1000);
     } catch {
-      // Browser microphone permission denied or unavailable, use audio memo simulator
       simulateVoiceNote();
     }
   };
 
   const stopAndSendRecording = () => {
+    const elapsedSec = Math.max(1, Math.round((Date.now() - recordingStartTimeRef.current) / 1000));
+    const finalSec = elapsedSec > 0 ? elapsedSec : (recordingDurationRef.current || 18);
+
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
     } else {
-      simulateVoiceNote();
+      simulateVoiceNote(finalSec);
     }
     clearInterval(recordingTimerRef.current);
     setIsRecordingAudio(false);
@@ -196,17 +249,18 @@ export const CoachMessenger: React.FC = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.onstop = null;
       mediaRecorderRef.current.stop();
-      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      mediaRecorderRef.current.stream?.getTracks().forEach(track => track.stop());
     }
     clearInterval(recordingTimerRef.current);
     setIsRecordingAudio(false);
     setRecordingDuration(0);
+    recordingDurationRef.current = 0;
     audioChunksRef.current = [];
   };
 
-  const simulateVoiceNote = () => {
+  const simulateVoiceNote = (forcedDurationSec?: number) => {
     if (!activeClient) return;
-    const durSec = recordingDuration > 0 ? recordingDuration : 18;
+    const durSec = forcedDurationSec && forcedDurationSec > 0 ? forcedDurationSec : (recordingDurationRef.current > 0 ? recordingDurationRef.current : 18);
     const minutes = Math.floor(durSec / 60);
     const seconds = durSec % 60;
     const durationStr = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
@@ -226,13 +280,15 @@ export const CoachMessenger: React.FC = () => {
     });
     setIsRecordingAudio(false);
     setRecordingDuration(0);
+    recordingDurationRef.current = 0;
     clearInterval(recordingTimerRef.current);
   };
 
   const sendVoiceNote = (audioUrl: string, durationSec: number) => {
     if (!activeClient) return;
-    const minutes = Math.floor(durationSec / 60);
-    const seconds = durationSec % 60;
+    const safeSec = durationSec > 0 ? durationSec : 15;
+    const minutes = Math.floor(safeSec / 60);
+    const seconds = safeSec % 60;
     const durationStr = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 
     sendMessage({
@@ -246,10 +302,83 @@ export const CoachMessenger: React.FC = () => {
         url: audioUrl,
         audioUrl,
         duration: durationStr,
-        durationSeconds: durationSec,
+        durationSeconds: safeSec,
         waveform: [12, 24, 18, 28, 14, 20, 32, 16, 26, 12, 18, 22, 10, 24, 18, 14]
       }
     });
+  };
+
+  // Audio Playback Handling with WhatsApp Speed & Real/Simulated Controller
+  const handleTogglePlayAudio = (msg: ChatMessage) => {
+    if (isPlayingAudio === msg.id) {
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.pause();
+      }
+      clearInterval(playbackTimerRef.current);
+      setIsPlayingAudio(null);
+      return;
+    }
+
+    if (audioPlayerRef.current) {
+      audioPlayerRef.current.pause();
+    }
+    clearInterval(playbackTimerRef.current);
+
+    setIsPlayingAudio(msg.id);
+    setPlaybackProgress(0);
+
+    const audioUrl = getVoiceAudioUrl(msg);
+    if (audioUrl) {
+      if (!audioPlayerRef.current) {
+        audioPlayerRef.current = new Audio();
+      }
+      audioPlayerRef.current.src = audioUrl;
+      audioPlayerRef.current.playbackRate = audioSpeed;
+      audioPlayerRef.current.ontimeupdate = () => {
+        if (audioPlayerRef.current && audioPlayerRef.current.duration) {
+          setPlaybackProgress((audioPlayerRef.current.currentTime / audioPlayerRef.current.duration) * 100);
+        }
+      };
+      audioPlayerRef.current.onended = () => {
+        setIsPlayingAudio(null);
+        setPlaybackProgress(0);
+      };
+      audioPlayerRef.current.play().catch(() => {
+        startSimulatedPlayback(msg);
+      });
+    } else {
+      startSimulatedPlayback(msg);
+    }
+  };
+
+  const startSimulatedPlayback = (msg: ChatMessage) => {
+    const durStr = getVoiceDuration(msg);
+    const [mins, secs] = durStr.split(':').map(Number);
+    const totalSecs = Math.max(3, (mins || 0) * 60 + (secs || 18));
+    const effectiveSecs = totalSecs / audioSpeed;
+    const intervalMs = 100;
+    const stepPercent = (intervalMs / (effectiveSecs * 1000)) * 100;
+
+    let current = 0;
+    playbackTimerRef.current = setInterval(() => {
+      current += stepPercent;
+      if (current >= 100) {
+        clearInterval(playbackTimerRef.current);
+        setIsPlayingAudio(null);
+        setPlaybackProgress(0);
+      } else {
+        setPlaybackProgress(current);
+      }
+    }, intervalMs);
+  };
+
+  const cycleAudioSpeed = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const nextSpeed: 1 | 1.5 | 2 = audioSpeed === 1 ? 1.5 : audioSpeed === 1.5 ? 2 : 1;
+    setAudioSpeed(nextSpeed);
+    if (audioPlayerRef.current) {
+      audioPlayerRef.current.playbackRate = nextSpeed;
+    }
   };
 
   const handleSendWorkoutAttachment = () => {
@@ -325,7 +454,7 @@ export const CoachMessenger: React.FC = () => {
   );
 
   return (
-    <div className="h-[calc(100vh-140px)] flex flex-col md:flex-row rounded-3xl bg-slate-900/90 border border-slate-800 overflow-hidden shadow-2xl">
+    <div className="flex-1 min-h-0 flex flex-col md:flex-row rounded-3xl bg-slate-900/95 border border-slate-800 overflow-hidden shadow-2xl">
       {/* Hidden file input */}
       <input 
         type="file" 
@@ -622,7 +751,9 @@ export const CoachMessenger: React.FC = () => {
                       )}
 
                       {/* Message Text Content */}
-                      <p className="leading-relaxed text-xs break-words">{msg.text || (msg as any).content}</p>
+                      {(!isVoiceNote(msg) || (msg.text && !msg.text.startsWith('🎙️') && !msg.text.includes('Voice critique') && !msg.text.includes('Voice Rehearsal'))) && (
+                        <p className="leading-relaxed text-xs break-words">{msg.text || (msg as any).content}</p>
+                      )}
 
                       {/* Workout Assignment Card Attachment */}
                       {msg.messageType === 'workout_assignment' && msg.attachmentData && (
@@ -680,38 +811,68 @@ export const CoachMessenger: React.FC = () => {
                       )}
 
                       {/* Voice Note Audio Bubble (WhatsApp Voice Note Player) */}
-                      {(msg.messageType === 'audio' || msg.attachment?.type === 'voice') && (
-                        <div className="mt-2.5 flex items-center gap-3 p-2.5 rounded-xl bg-black/40 border border-white/5">
-                          <button
-                            onClick={() => setIsPlayingAudio(isPlayingAudio === msg.id ? null : msg.id)}
-                            className="h-8 w-8 rounded-full bg-emerald-400 hover:bg-emerald-300 text-slate-950 flex items-center justify-center shrink-0 transition-transform cursor-pointer"
-                          >
-                            {isPlayingAudio === msg.id ? (
-                              <Pause className="h-4 w-4" />
-                            ) : (
-                              <Play className="h-4 w-4 ml-0.5 fill-current" />
-                            )}
-                          </button>
+                      {isVoiceNote(msg) && (() => {
+                        const voiceWaveform = getVoiceWaveform(msg);
+                        const voiceDuration = getVoiceDuration(msg);
+                        const isThisPlaying = isPlayingAudio === msg.id;
 
-                          {/* Animated / Scrubber Waveform Bars */}
-                          <div className="flex-1 flex items-center gap-1 h-6">
-                            {(msg.attachment?.waveform || [12, 24, 18, 28, 14, 20, 32, 16, 26, 12, 18, 22, 10, 16, 20]).map((h: number, i: number) => (
-                              <div
-                                key={i}
-                                className={`w-1 rounded-full transition-all duration-200 ${
-                                  isPlayingAudio === msg.id ? 'bg-emerald-300 animate-pulse' : 'bg-slate-400/80'
-                                }`}
-                                style={{ height: `${Math.max(8, h)}px` }}
-                              />
-                            ))}
+                        return (
+                          <div className="mt-2.5 flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-2xl bg-black/40 border border-white/5 min-w-[240px] sm:min-w-[280px]">
+                            <button
+                              type="button"
+                              onClick={() => handleTogglePlayAudio(msg)}
+                              className="h-9 w-9 rounded-full bg-emerald-400 hover:bg-emerald-300 text-slate-950 flex items-center justify-center shrink-0 transition-transform active:scale-95 cursor-pointer shadow-md"
+                              title={isThisPlaying ? 'Pause Voice Memo' : 'Play Voice Memo'}
+                            >
+                              {isThisPlaying ? (
+                                <Pause className="h-4 w-4" />
+                              ) : (
+                                <Play className="h-4 w-4 ml-0.5 fill-current" />
+                              )}
+                            </button>
+
+                            {/* Animated / Scrubber Waveform Bars */}
+                            <div 
+                              className="flex-1 flex items-center gap-1 h-7 cursor-pointer py-1"
+                              onClick={() => handleTogglePlayAudio(msg)}
+                              title="Tap to play/pause"
+                            >
+                              {voiceWaveform.map((h: number, i: number) => {
+                                const barProgress = (i / voiceWaveform.length) * 100;
+                                const isPlayed = isThisPlaying && barProgress <= playbackProgress;
+                                return (
+                                  <div
+                                    key={i}
+                                    className={`w-1 rounded-full transition-all duration-150 ${
+                                      isPlayed 
+                                        ? 'bg-emerald-300' 
+                                        : isThisPlaying
+                                          ? 'bg-emerald-500/40 animate-pulse'
+                                          : 'bg-slate-400/80'
+                                    }`}
+                                    style={{ height: `${Math.max(8, h)}px` }}
+                                  />
+                                );
+                              })}
+                            </div>
+
+                            {/* Duration label & WhatsApp Speed Multiplier */}
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <span className="text-[10px] font-mono text-slate-300">
+                                {voiceDuration}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={cycleAudioSpeed}
+                                className="px-1.5 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-[9px] font-mono text-emerald-400 border border-slate-700 cursor-pointer transition-colors"
+                                title="Toggle Playback Speed (1x, 1.5x, 2x)"
+                              >
+                                {audioSpeed}x
+                              </button>
+                            </div>
                           </div>
-
-                          {/* Duration label */}
-                          <span className="text-[10px] font-mono text-slate-300 shrink-0">
-                            {msg.attachment?.duration || '0:18'}
-                          </span>
-                        </div>
-                      )}
+                        );
+                      })()}
 
                       {/* Message Footer: Timestamp & WhatsApp Delivery Checkmarks */}
                       <div className="flex items-center justify-end gap-1 mt-1 text-[9px] text-slate-400">

@@ -887,8 +887,16 @@ export const ClientPortal: React.FC = () => {
         </header>
 
         {/* Scrollable View Area with bottom padding for mobile bar */}
-        <main className="flex-1 overflow-y-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-28 md:pb-6 touch-pan-y">
-          <div className="max-w-6xl mx-auto space-y-6">
+        <main className={`flex-1 ${
+          speakerTab === 'coach' 
+            ? 'min-h-0 flex flex-col overflow-hidden px-2 sm:px-6 py-2 sm:py-3 pb-20 md:pb-3' 
+            : 'overflow-y-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-28 md:pb-6 touch-pan-y'
+        }`}>
+          <div className={`mx-auto w-full ${
+            speakerTab === 'coach' 
+              ? 'flex-1 min-h-0 flex flex-col max-w-6xl' 
+              : 'max-w-6xl space-y-6'
+          }`}>
         {/* TAB 0: TODAY'S COMMAND CENTER */}
         {speakerTab === 'today' && (
           <div className="space-y-6 animate-fadeIn">
@@ -2070,9 +2078,9 @@ export const ClientPortal: React.FC = () => {
 
         {/* TAB 6: Messenger */}
         {speakerTab === 'coach' && (
-          <div className="space-y-4 animate-fadeIn">
+          <div className="flex-1 min-h-0 flex flex-col space-y-3 animate-fadeIn">
             {!assignedCoach && (
-              <div className="bg-slate-950/80 border border-amber-500/30 rounded-2xl p-3.5 text-left flex items-start gap-3">
+              <div className="bg-slate-950/80 border border-amber-500/30 rounded-2xl p-3.5 text-left flex items-start gap-3 shrink-0">
                 <AlertTriangle className="w-4 h-4 text-[#C89630] shrink-0 mt-0.5" />
                 <div>
                   <h4 className="text-[11px] font-bold text-amber-300 uppercase tracking-wider font-mono">Faculty Triage & Allocation</h4>

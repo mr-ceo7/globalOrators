@@ -1285,10 +1285,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (target.sender) sender = target.sender;
       if (target.attachmentData) {
         attachment = {
-          type: target.messageType === 'workout_assignment' ? 'workout_link' : 'video_form_check',
-          title: target.attachmentData.title || target.attachmentData.exerciseName || 'Assignment',
+          ...target.attachmentData,
+          type: target.attachmentData.type || (
+            target.messageType === 'workout_assignment' 
+              ? 'workout_link' 
+              : target.messageType === 'audio' 
+                ? 'voice' 
+                : 'video_form_check'
+          ),
+          title: target.attachmentData.title || target.attachmentData.exerciseName || (target.messageType === 'audio' ? 'Voice Memo' : 'Attachment'),
           workoutId: target.attachmentData.workoutId,
-          url: target.attachmentData.videoUrl
+          url: target.attachmentData.url || target.attachmentData.audioUrl || target.attachmentData.videoUrl,
+          audioUrl: target.attachmentData.audioUrl || target.attachmentData.url
         };
       }
     } else if (typeof target === 'string') {
@@ -1312,7 +1320,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       text,
       timestamp: nowTime,
       isRead: true,
-      attachment
+      attachment,
+      messageType: (typeof target === 'object' && target !== null ? target.messageType : undefined) || (attachment?.type === 'voice' ? 'audio' : undefined),
+      attachmentData: attachment
     };
 
     setMessages(prev => [...prev, newMsg]);
