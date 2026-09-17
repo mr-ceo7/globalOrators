@@ -20,7 +20,7 @@ import {
 
 export const API_BASE_URL = (() => {
   const envUrl = (import.meta as unknown as { env?: { VITE_API_URL?: string } }).env?.VITE_API_URL;
-  if (!envUrl || envUrl.includes('trycloudflare.com')) {
+  if (!envUrl || envUrl.includes('trycloudflare.com') || envUrl.includes('ngrok-free.dev')) {
     return '/api';
   }
   return envUrl;
@@ -49,6 +49,7 @@ class ApiClient {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
+      'ngrok-skip-browser-warning': '1',
       ...((options.headers as Record<string, string>) || {}),
     };
     if (token && !headers['Authorization']) {
@@ -130,6 +131,7 @@ class ApiClient {
 
     const headers: Record<string, string> = {
       Accept: 'application/json',
+      'ngrok-skip-browser-warning': '1',
     };
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
@@ -164,7 +166,9 @@ class ApiClient {
     const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
     const token = localStorage.getItem('globalorators_token') || localStorage.getItem('nubianfit_token');
 
-    const headers: Record<string, string> = {};
+    const headers: Record<string, string> = {
+      'ngrok-skip-browser-warning': '1',
+    };
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
