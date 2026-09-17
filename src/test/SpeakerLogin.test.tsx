@@ -381,5 +381,46 @@ describe('Speaker Login & Portal Integration Tests', () => {
     // Restore window.location
     (window as any).location = originalLocation;
   });
+
+  test('should recognize speaker as onboarded and enter speaker studio when onboardingSurvey is filled even if status is Pending Onboarding', async () => {
+    localStorage.clear();
+    const { clientsApi } = await import('../services/apiClient');
+    (clientsApi.getMe as any).mockResolvedValueOnce({
+      id: 'client-17860310',
+      name: 'Geoffrey Anyona',
+      email: 'anyonageoffrey49@gmail.com',
+      status: 'Pending Onboarding',
+      goal: 'Executive & Board Pitching',
+      onboardingSurvey: {
+        branch: 'Academy',
+        fullName: 'Geoffrey Anyona',
+        email: 'anyonageoffrey49@gmail.com',
+        speakingGoal: 'Executive & Board Pitching',
+        primaryDiscipline: 'VC Investment Pitch (Seed/Series A)'
+      }
+    });
+
+    const originalLocation = window.location;
+    delete (window as any).location;
+    window.location = {
+      ...originalLocation,
+      pathname: '/speaker',
+      search: '?magic_token=valid-magic-token&email=anyonageoffrey49@gmail.com'
+    } as any;
+
+    render(
+      <AppProvider>
+        <ClientPortal />
+      </AppProvider>
+    );
+
+    expect(await screen.findByText('Geoffrey Anyona')).toBeInTheDocument();
+    const saved = localStorage.getItem('globalorators_speaker_profile');
+    expect(saved).not.toBeNull();
+    const parsed = JSON.parse(saved || '{}');
+    expect(parsed.fullName).toBe('Geoffrey Anyona');
+
+    (window as any).location = originalLocation;
+  });
 });
 

@@ -84,9 +84,12 @@ export const ClientRoster: React.FC<{
     const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           c.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           c.goal.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = selectedStatusFilter === 'All' || c.status === selectedStatusFilter;
+    const matchesStatus = selectedStatusFilter === 'All' || 
+                          c.status === selectedStatusFilter ||
+                          (selectedStatusFilter === 'Onboarding' && (c.status as string) === 'Pending Onboarding');
     const matchesGoal = selectedGoalFilter === 'All' || c.goal === selectedGoalFilter;
-    const matchesBranch = selectedBranchFilter === 'All' || (c.branch || 'Academy') === selectedBranchFilter;
+    const speakerBranch = c.branch || (c.onboardingSurvey as any)?.branch || 'Academy';
+    const matchesBranch = selectedBranchFilter === 'All' || speakerBranch === selectedBranchFilter;
     const matchesIntake = 
       selectedIntakeFilter === 'all' ? true :
       selectedIntakeFilter === 'unassigned' ? !c.coachId :
@@ -500,13 +503,18 @@ export const ClientRoster: React.FC<{
                       </div>
                       <div className="text-[11px] text-slate-400">{client.email}</div>
                       <div className="mt-1 flex items-center gap-1.5 flex-wrap">
-                        <span className={`text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded ${
-                          client.branch === 'Foundation'
-                            ? 'bg-teal-500/15 text-teal-300 border border-teal-500/30'
-                            : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                        }`}>
-                          {client.branch || 'Academy'} Track
-                        </span>
+                        {(() => {
+                          const branch = client.branch || (client.onboardingSurvey as any)?.branch || 'Academy';
+                          return (
+                            <span className={`text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded ${
+                              branch === 'Foundation'
+                                ? 'bg-teal-500/15 text-teal-300 border border-teal-500/30'
+                                : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                            }`}>
+                              {branch} Track
+                            </span>
+                          );
+                        })()}
                         {!client.coachId && currentUser?.id && (
                           <button
                             onClick={(e) => {

@@ -303,6 +303,22 @@ async def create_client(
                 if key in safe_allowed_keys:
                     setattr(existing, key, value)
 
+            # If client was Pending Onboarding and submitted onboarding survey or goal, transition to Active
+            survey_data = submitted_data.get("onboarding_survey") or {}
+            has_survey = bool(
+                survey_data.get("speaking_goal") or 
+                survey_data.get("branch") or 
+                survey_data.get("primary_discipline") or
+                survey_data.get("speakingGoal") or
+                survey_data.get("primaryDiscipline") or
+                survey_data.get("fullName") or
+                survey_data.get("full_name")
+            )
+            if existing.status == "Pending Onboarding" and (has_survey or existing.goal):
+                existing.status = "Active"
+            elif submitted_data.get("status") in {"Active", "Onboarding"}:
+                existing.status = submitted_data["status"]
+
         existing.last_active = "Just now"
         await db.commit()
         await db.refresh(existing)

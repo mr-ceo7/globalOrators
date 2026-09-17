@@ -163,14 +163,16 @@ export const clientToSpeakerProfile = (client: Client): SpeakerOnboardingData =>
 
 export const isProfileOnboarded = (client: Client | null | undefined): boolean => {
   if (!client) return false;
-  if (client.status === 'Pending Onboarding') return false;
   const survey = (client.onboardingSurvey || {}) as Record<string, any>;
   const hasSurveyContent = Boolean(
     survey &&
     Object.keys(survey).length > 0 &&
-    (survey.speakingGoal || survey.branch || survey.primaryDiscipline)
+    (survey.speakingGoal || survey.speaking_goal || survey.branch || survey.primaryDiscipline || survey.primary_discipline)
   );
   const hasGoal = Boolean(client.goal && client.goal.trim().length > 0);
+  if (client.status === 'Pending Onboarding' && !hasSurveyContent && !hasGoal) {
+    return false;
+  }
   return hasSurveyContent || hasGoal;
 };
 
@@ -1210,7 +1212,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       phone: data.phone || '',
       age: data.age || undefined,
       gender: undefined,
-      status: 'Onboarding',
+      status: 'Active',
       branch: data.branch,
       institution: data.institution || '',
       primaryDiscipline: data.primaryDiscipline || '',

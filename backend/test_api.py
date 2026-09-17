@@ -3,10 +3,18 @@ FastAPI Backend API Test Suite
 """
 
 import os
+_test_db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_globalorators.db")
+if os.path.exists(_test_db_path):
+    try:
+        os.remove(_test_db_path)
+    except OSError:
+        pass
 os.environ["TESTING"] = "true"
+os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///{_test_db_path}"
 
 import pytest
 import httpx
+import uuid
 from app.config import settings
 settings.TESTING = True
 from app.main import app
@@ -14,24 +22,25 @@ from app.main import app
 
 @pytest.fixture(autouse=True, scope="session")
 def setup_test_database():
-    """Ensure all database tables and schema migrations are applied before running tests."""
+    """Ensure test database is isolated and populated with fresh fixtures."""
     import asyncio
-    from app.database import engine, Base
+    from fixtures.seed_data import seed_database
+    from app.database import engine
     from sqlalchemy import text, inspect
 
     async def _init_db():
+        await seed_database(force=True)
+        def _mig(connection):
+            insp = inspect(connection)
+            if "exercises" in insp.get_table_names():
+                cols = [c["name"] for c in insp.get_columns("exercises")]
+                if "instructional_video_url" not in cols:
+                    connection.execute(text("ALTER TABLE exercises ADD COLUMN instructional_video_url VARCHAR(512)"))
+            if "audio_recordings" in insp.get_table_names():
+                cols = [c["name"] for c in insp.get_columns("audio_recordings")]
+                if "storage_key" not in cols:
+                    connection.execute(text("ALTER TABLE audio_recordings ADD COLUMN storage_key VARCHAR(500)"))
         async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-            def _mig(connection):
-                insp = inspect(connection)
-                if "exercises" in insp.get_table_names():
-                    cols = [c["name"] for c in insp.get_columns("exercises")]
-                    if "instructional_video_url" not in cols:
-                        connection.execute(text("ALTER TABLE exercises ADD COLUMN instructional_video_url VARCHAR(512)"))
-                if "audio_recordings" in insp.get_table_names():
-                    cols = [c["name"] for c in insp.get_columns("audio_recordings")]
-                    if "storage_key" not in cols:
-                        connection.execute(text("ALTER TABLE audio_recordings ADD COLUMN storage_key VARCHAR(500)"))
             await conn.run_sync(_mig)
     asyncio.run(_init_db())
 
@@ -1872,4 +1881,57 @@ async def test_email_notifications_lifecycle():
         res_inquiry = await client.post("/api/inquiries", json=inquiry_payload)
         assert res_inquiry.status_code == 201
         assert res_inquiry.json()["status"] == "success"
+
+
+@pytest.mark.asyncio
+async def test_pending_onboarding_speaker_transitions_to_active_on_survey_completion():
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        test_email = f"pending.speaker.{uuid.uuid4().hex[:6]}@example.com"
+        
+        # 1. Simulate authentication creation of stub client with Pending Onboarding
+        otp_send = await client.post("/api/auth/otp/send", json={"email": test_email, "redirect_url": "http://localhost:3000"})
+        assert otp_send.status_code == 200
+        send_data = otp_send.json()
+        assert "magic_link" in send_data
+
+        import urllib.parse
+        parsed = urllib.parse.urlparse(send_data["magic_link"])
+        params = urllib.parse.parse_qs(parsed.query)
+        magic_token = params["magic_token"][0]
+
+        auth_res = await client.post("/api/auth/magic-link/verify", json={"token": magic_token, "email": test_email})
+        assert auth_res.status_code == 200
+        speaker_token = auth_res.json()["access_token"]
+        speaker_headers = {"Authorization": f"Bearer {speaker_token}"}
+        
+        # Verify profile is currently Pending Onboarding
+        me_before = await client.get("/api/clients/me", headers=speaker_headers)
+        assert me_before.status_code == 200
+        assert me_before.json()["status"] == "Pending Onboarding"
+        
+        # 2. Speaker submits completed onboarding survey
+        survey_payload = {
+            "name": "Geoff Onboarding Test",
+            "email": test_email,
+            "branch": "Academy",
+            "goal": "Executive & Board Pitching",
+            "experience_level": "Novice Speaker",
+            "onboarding_survey": {
+                "branch": "Academy",
+                "fullName": "Geoff Onboarding Test",
+                "email": test_email,
+                "speakingGoal": "Executive & Board Pitching",
+                "primaryDiscipline": "VC Investment Pitch (Seed/Series A)"
+            }
+        }
+        submit_res = await client.post("/api/clients", json=survey_payload, headers=speaker_headers)
+        assert submit_res.status_code == 201
+        
+        # 3. Verify status automatically transitioned to Active
+        me_after = await client.get("/api/clients/me", headers=speaker_headers)
+        assert me_after.status_code == 200
+        assert me_after.json()["status"] == "Active"
+        assert me_after.json()["goal"] == "Executive & Board Pitching"
+
 
