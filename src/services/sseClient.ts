@@ -11,6 +11,9 @@ export interface SSEOptions {
   token: string;
   onConnected?: (data: { status: string; userId: string; role: string }) => void;
   onNewMessage?: (message: ChatMessage) => void;
+  onMessagesRead?: (data: { clientId: string; readerRole?: string }) => void;
+  onMessageReaction?: (data: { messageId: string; clientId: string; reactions: any[] }) => void;
+  onPresence?: (data: { userId: string; clientId?: string; role?: string; status: 'online' | 'offline' }) => void;
   onClientUpdated?: (data: { action: string; clientId: string; status?: string; coachId?: string; name?: string }) => void;
   onRosterUpdated?: (data: { action: string; clientId?: string; coachId?: string; coachName?: string; name?: string; status?: string }) => void;
   onActivity?: (activity: ActivityFeedItem) => void;
@@ -59,6 +62,33 @@ export class SSEClient {
           this.options.onNewMessage?.(message);
         } catch (err) {
           console.warn('[SSE] Failed to parse new_message:', err);
+        }
+      });
+
+      this.eventSource.addEventListener('messages_read', (e: MessageEvent) => {
+        try {
+          const data = JSON.parse(e.data);
+          this.options.onMessagesRead?.(data);
+        } catch (err) {
+          console.warn('[SSE] Failed to parse messages_read:', err);
+        }
+      });
+
+      this.eventSource.addEventListener('message_reaction', (e: MessageEvent) => {
+        try {
+          const data = JSON.parse(e.data);
+          this.options.onMessageReaction?.(data);
+        } catch (err) {
+          console.warn('[SSE] Failed to parse message_reaction:', err);
+        }
+      });
+
+      this.eventSource.addEventListener('presence', (e: MessageEvent) => {
+        try {
+          const data = JSON.parse(e.data);
+          this.options.onPresence?.(data);
+        } catch (err) {
+          console.warn('[SSE] Failed to parse presence:', err);
         }
       });
 

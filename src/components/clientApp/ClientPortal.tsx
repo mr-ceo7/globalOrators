@@ -40,7 +40,8 @@ import {
   Trash2,
   AlertTriangle,
   Loader2,
-  CheckCircle
+  CheckCircle,
+  CheckCheck
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { BranchType, SpeakerOnboardingData, ScheduledWorkout } from '../../types';
@@ -110,6 +111,7 @@ export const ClientPortal: React.FC = () => {
     scheduledWorkouts,
     messages,
     sendMessage,
+    markMessagesRead,
     habitLogs,
     toggleHabitCompletion,
     metrics,
@@ -633,11 +635,20 @@ export const ClientPortal: React.FC = () => {
     return messages
       .filter(m => m.clientId === pairedClient.id)
       .map(m => ({
+        id: m.id,
         sender: m.sender,
         text: m.text,
-        time: m.timestamp
+        time: m.timestamp?.split('T')[1]?.substring(0, 5) || m.timestamp,
+        isRead: m.isRead,
+        attachment: m.attachment
       }));
   }, [messages, pairedClient?.id]);
+
+  useEffect(() => {
+    if (pairedClient?.id && markMessagesRead) {
+      markMessagesRead(pairedClient.id);
+    }
+  }, [pairedClient?.id, displayedMessages.length, markMessagesRead]);
 
   // Toggle habit check via Backend (server-authoritative by stable habitId)
   const toggleHabit = (habitId: string) => {
@@ -2136,7 +2147,12 @@ export const ClientPortal: React.FC = () => {
                       >
                         {msg.text}
                       </div>
-                      <span className="text-[9px] text-slate-500 mt-1 px-1">{msg.time}</span>
+                      <div className="flex items-center gap-1 mt-1 px-1 text-[9px] text-slate-500">
+                        <span>{msg.time}</span>
+                        {msg.sender === 'client' && (
+                          <CheckCheck className={`w-3 h-3 ${msg.isRead ? 'text-cyan-400' : 'text-slate-500'}`} />
+                        )}
+                      </div>
                     </div>
                   ))
                 )}

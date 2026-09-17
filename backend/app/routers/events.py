@@ -77,7 +77,8 @@ async def sse_event_stream(
     queue = await sse_manager.subscribe(
         user_id=user.id,
         role=user.role,
-        client_id=client_id
+        client_id=client_id,
+        email=user.email
     )
 
     async def event_generator():
@@ -115,3 +116,10 @@ async def sse_event_stream(
             "Access-Control-Allow-Origin": "*",
         }
     )
+
+
+@router.get("/presence")
+async def get_presence():
+    """Return real-time active SSE presence snapshot (online users and speaker clients)."""
+    return sse_manager.get_presence_snapshot()
+

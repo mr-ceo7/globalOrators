@@ -27,7 +27,8 @@ class SSEManager:
         self, 
         user_id: str, 
         role: str, 
-        client_id: Optional[str] = None
+        client_id: Optional[str] = None,
+        email: Optional[str] = None
     ) -> asyncio.Queue:
         """Register a new SSE client subscriber queue."""
         queue: asyncio.Queue = asyncio.Queue(maxsize=128)
@@ -38,20 +39,106 @@ class SSEManager:
             self._queue_meta[queue] = {
                 "user_id": user_id,
                 "role": role,
-                "client_id": client_id
+                "client_id": client_id,
+                "email": email.strip().lower() if email else None
             }
-        logger.info(f"SSE subscriber connected: user={user_id}, role={role}, active_users={len(self._subscribers)}")
+        logger.info(f"SSE subscriber connected: user={user_id}, role={role}, client={client_id}, active_users={len(self._subscribers)}")
+        
+        # Broadcast presence change to active listeners
+        try:
+            asyncio.create_task(
+                self.broadcast(
+                    event="presence",
+                    data={
+                        "userId": user_id,
+                        "clientId": client_id,
+                        "role": role,
+                        "status": "online"
+                    }
+                )
+            )
+        except Exception as e:
+            logger.debug(f"Could not broadcast presence on connect: {e}")
+
         return queue
 
     async def unsubscribe(self, user_id: str, queue: asyncio.Queue):
         """Remove a subscriber queue when the HTTP streaming connection closes."""
+        client_id = None
+        role = None
         async with self._lock:
+            meta = self._queue_meta.pop(queue, None)
+            if meta:
+                client_id = meta.get("client_id")
+                role = meta.get("role")
             if user_id in self._subscribers:
                 self._subscribers[user_id].discard(queue)
                 if not self._subscribers[user_id]:
                     del self._subscribers[user_id]
-            self._queue_meta.pop(queue, None)
         logger.info(f"SSE subscriber disconnected: user={user_id}, active_users={len(self._subscribers)}")
+
+        # Broadcast offline presence if user has no remaining connections
+        if user_id not in self._subscribers:
+            try:
+                asyncio.create_task(
+                    self.broadcast(
+                        event="presence",
+                        data={
+                            "userId": user_id,
+                            "clientId": client_id,
+                            "role": role,
+                            "status": "offline"
+                        }
+                    )
+                )
+            except Exception as e:
+                logger.debug(f"Could not broadcast presence on disconnect: {e}")
+
+    def is_user_online(
+        self,
+        user_id: Optional[str] = None,
+        client_id: Optional[str] = None,
+        email: Optional[str] = None
+    ) -> bool:
+        """
+        Check if a user, speaker client, or email is actively connected
+        via an active Server-Sent Events stream.
+        """
+        if user_id and user_id in self._subscribers and len(self._subscribers[user_id]) > 0:
+            return True
+
+        if client_id:
+            for meta in self._queue_meta.values():
+                if meta.get("client_id") == client_id:
+                    return True
+
+        if email:
+            normalized = email.strip().lower()
+            for meta in self._queue_meta.values():
+                m_email = meta.get("email")
+                if m_email and m_email == normalized:
+                    return True
+                # Also check if user_id was stored as email
+                if meta.get("user_id", "").lower() == normalized:
+                    return True
+
+        return False
+
+    def get_presence_snapshot(self) -> Dict[str, Any]:
+        """Return snapshot of active online user IDs and speaker client IDs."""
+        online_users = set()
+        online_clients = set()
+        for meta in self._queue_meta.values():
+            u_id = meta.get("user_id")
+            c_id = meta.get("client_id")
+            if u_id:
+                online_users.add(u_id)
+            if c_id:
+                online_clients.add(c_id)
+        return {
+            "onlineUserIds": list(online_users),
+            "onlineClientIds": list(online_clients)
+        }
 
     async def broadcast(
         self,

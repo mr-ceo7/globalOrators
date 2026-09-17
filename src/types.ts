@@ -315,13 +315,36 @@ export interface ProgressPhoto {
   notes?: string;
 }
 
+export interface MessageReaction {
+  emoji: string;
+  userId: string;
+  userName?: string;
+  senderRole?: string;
+}
+
 export interface ChatAttachment {
-  type: 'workout_link' | 'video_form_check' | 'progress_photo' | 'audio_note';
-  title: string;
+  type: 'workout_link' | 'video_form_check' | 'progress_photo' | 'audio_note' | 'voice' | 'document' | 'workout_assignment' | 'form_check' | string;
+  title?: string;
   url?: string;
   workoutId?: string;
   durationSeconds?: number;
   feedbackGiven?: boolean;
+  audioUrl?: string;
+  duration?: string;
+  waveform?: number[];
+  fileName?: string;
+  fileSize?: string;
+  rating?: number;
+  exerciseName?: string;
+  videoUrl?: string;
+  replyTo?: {
+    id: string;
+    text: string;
+    sender: 'coach' | 'client';
+    senderName?: string;
+  };
+  reactions?: MessageReaction[];
+  [key: string]: any;
 }
 
 export interface ChatMessage {
@@ -332,6 +355,9 @@ export interface ChatMessage {
   timestamp: string;
   isRead: boolean;
   attachment?: ChatAttachment;
+  messageType?: string;
+  attachmentData?: any;
+  content?: string;
 }
 
 export interface ActivityFeedItem {

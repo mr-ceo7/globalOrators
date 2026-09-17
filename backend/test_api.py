@@ -1979,5 +1979,158 @@ async def test_sse_events_streaming_and_broadcasting():
             assert test_user_id not in sse_manager._subscribers
 
 
+@pytest.mark.asyncio
+async def test_message_debouncer_and_whatsapp_features():
+    """Verify presence-aware message debouncing, offline notification suppression, reactions, and read receipts."""
+    from app.services.notifications import MessageNotificationDebouncer
+    from app.services.events import sse_manager
+    from app.main import app
+
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        # 1. Login as Head Coach
+        login_res = await client.post(
+            "/api/auth/login",
+            json={"email": settings.DEFAULT_COACH_EMAIL, "password": settings.DEFAULT_COACH_PASSWORD}
+        )
+        assert login_res.status_code == 200
+        coach_token = login_res.json()["access_token"]
+        coach_headers = {"Authorization": f"Bearer {coach_token}"}
+
+        # 2. Get first client
+        clients_res = await client.get("/api/clients", headers=coach_headers)
+        assert clients_res.status_code == 200
+        all_clients = clients_res.json()
+        target_client = all_clients[0]
+        c_id = target_client["id"]
+        c_email = target_client["email"]
+
+        # 3. Test Presence API
+        presence_res = await client.get("/api/messages/presence", headers=coach_headers)
+        assert presence_res.status_code == 200
+        assert "onlineUserIds" in presence_res.json()
+        assert "onlineClientIds" in presence_res.json()
+
+        # 4. Test Notification Debouncer (Offline recipient)
+        debouncer = MessageNotificationDebouncer(debounce_seconds=1)
+        # Ensure recipient is offline
+        assert not sse_manager.is_user_online(client_id=c_id, email=c_email)
+
+        dispatched_snippets = []
+        async def mock_send(recipient_email, recipient_name, sender_name, sender_role, message_snippet, thread_url):
+            dispatched_snippets.append(message_snippet)
+            return True
+
+        import app.services.notifications as notif_mod
+        orig_send = notif_mod.send_direct_message_email
+        notif_mod.send_direct_message_email = mock_send
+
+        try:
+            # Send 2 messages in quick succession while offline
+            await debouncer.queue_message_notification(
+                recipient_email=c_email,
+                recipient_name=target_client["name"],
+                sender_name="Coach Qassim",
+                sender_role="Coach",
+                message_snippet="First practice pointer on vocal cadence.",
+                thread_url="http://test/speaker",
+                client_id=c_id
+            )
+            await debouncer.queue_message_notification(
+                recipient_email=c_email,
+                recipient_name=target_client["name"],
+                sender_name="Coach Qassim",
+                sender_role="Coach",
+                message_snippet="Also check the rebuttal slide flow.",
+                thread_url="http://test/speaker",
+                client_id=c_id
+            )
+
+            # Check that notification is buffered
+            assert debouncer.is_pending(c_email, "http://test/speaker")
+
+            # Flush debouncer
+            await debouncer.flush_all()
+            assert len(dispatched_snippets) == 1
+            assert "First practice pointer" in dispatched_snippets[0]
+            assert "Also check the rebuttal" in dispatched_snippets[0]
+
+            # 5. Test Notification Suppression when Recipient is ONLINE via SSE
+            dispatched_snippets.clear()
+            speaker_queue = await sse_manager.subscribe(
+                user_id="speaker-user-test",
+                role="client",
+                client_id=c_id,
+                email=c_email
+            )
+            try:
+                assert sse_manager.is_user_online(client_id=c_id, email=c_email)
+                # Message sent while speaker is online -> Should suppress email entirely
+                await debouncer.queue_message_notification(
+                    recipient_email=c_email,
+                    recipient_name=target_client["name"],
+                    sender_name="Coach Qassim",
+                    sender_role="Coach",
+                    message_snippet="Live message while you are in the session!",
+                    thread_url="http://test/speaker",
+                    client_id=c_id
+                )
+                assert not debouncer.is_pending(c_email, "http://test/speaker")
+                await debouncer.flush_all()
+                assert len(dispatched_snippets) == 0  # SUPPRESSED!
+            finally:
+                await sse_manager.unsubscribe(user_id="speaker-user-test", queue=speaker_queue)
+
+        finally:
+            notif_mod.send_direct_message_email = orig_send
+
+        # 6. Test Sending a message and toggling WhatsApp Reaction
+        post_msg = await client.post(
+            "/api/messages",
+            json={
+                "clientId": c_id,
+                "sender": "coach",
+                "text": "Terrific opening hook at the Oxford debate!"
+            },
+            headers=coach_headers
+        )
+        assert post_msg.status_code == 201
+        created_msg = post_msg.json()
+        msg_id = created_msg["id"]
+        assert created_msg["isRead"] is False
+
+        # Add Reaction 👍
+        react_res = await client.patch(
+            f"/api/messages/{msg_id}/react",
+            json={"emoji": "👍"},
+            headers=coach_headers
+        )
+        assert react_res.status_code == 200
+        updated_msg = react_res.json()
+        assert updated_msg["attachment"] is not None
+        reactions = updated_msg["attachment"].get("reactions", [])
+        assert len(reactions) == 1
+        assert reactions[0]["emoji"] == "👍"
+
+        # Toggle Reaction off
+        react_off_res = await client.patch(
+            f"/api/messages/{msg_id}/react",
+            json={"emoji": "👍"},
+            headers=coach_headers
+        )
+        assert react_off_res.status_code == 200
+        assert len(react_off_res.json()["attachment"].get("reactions", [])) == 0
+
+        # 7. Test Mark Read endpoint
+        mark_read_res = await client.post(
+            "/api/messages/mark-read",
+            json={"clientId": c_id},
+            headers=coach_headers
+        )
+        assert mark_read_res.status_code == 200
+        assert mark_read_res.json()["status"] == "ok"
+
+
+
 
 

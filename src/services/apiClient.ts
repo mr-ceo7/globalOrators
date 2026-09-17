@@ -356,8 +356,14 @@ export const photosApi = {
 // Chat Messages Endpoints
 export const messagesApi = {
   getAll: (params?: { clientId?: string }) => api.get<ChatMessage[]>('/messages', params),
-  send: (clientId: string, text: string, attachment?: any) =>
-    api.post<ChatMessage>('/messages', { clientId, sender: 'coach', text, attachment }),
+  send: (clientId: string, text: string, attachment?: any, sender: 'coach' | 'client' = 'coach') =>
+    api.post<ChatMessage>('/messages', { clientId, sender, text, attachment }),
+  markRead: (clientId: string) =>
+    api.post<{ status: string; clientId: string }>('/messages/mark-read', { clientId }),
+  react: (messageId: string, emoji: string) =>
+    api.patch<ChatMessage>(`/messages/${messageId}/react`, { emoji }),
+  getPresence: () =>
+    api.get<{ onlineUserIds: string[]; onlineClientIds: string[] }>('/messages/presence'),
 };
 
 // Activity Feed Endpoints

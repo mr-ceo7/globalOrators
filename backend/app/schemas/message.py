@@ -34,3 +34,12 @@ class ChatMessageCreate(CamelModel):
 
 class ChatMessageResponse(ChatMessageBase):
     id: str
+
+
+class MarkReadRequest(CamelModel):
+    client_id: str
+
+
+class MessageReactRequest(CamelModel):
+    emoji: str
+

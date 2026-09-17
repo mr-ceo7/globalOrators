@@ -93,6 +93,10 @@ interface AppContextType {
     text?: string,
     attachment?: ChatMessage['attachment']
   ) => void;
+  markMessagesRead: (clientId: string) => Promise<void>;
+  reactToMessage: (messageId: string, emoji: string) => Promise<void>;
+  onlineClientIds: string[];
+  onlineUserIds: string[];
   toggleHabitCompletion: (clientId: string, date: string, habitId: string) => void;
 
   // Refresh data from API
@@ -373,6 +377,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [activityFeed, setActivityFeed] = useState<ActivityFeedItem[]>([]);
   const [habitLogs, setHabitLogs] = useState<ClientDailyHabitLog[]>([]);
+  const [onlineClientIds, setOnlineClientIds] = useState<string[]>([]);
+  const [onlineUserIds, setOnlineUserIds] = useState<string[]>([]);
 
   // Faculty Coaches & Referrals
   const [coaches, setCoaches] = useState<CoachItem[]>([]);
@@ -619,6 +625,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         console.error('Failed to sync activity from API:', activityRes.reason);
       }
 
+      try {
+        const presence = await messagesApi.getPresence();
+        if (presence?.onlineClientIds) setOnlineClientIds(presence.onlineClientIds);
+        if (presence?.onlineUserIds) setOnlineUserIds(presence.onlineUserIds);
+      } catch {
+        // Non-blocking presence fetch
+      }
+
       // Bind identity hydration strictly to authenticated server identity (H1/M3)
       let serverUser: any = null;
       try {
@@ -681,6 +695,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           showToast(`New message from speaker: ${incomingMsg.text.slice(0, 40)}`);
         } else if (incomingMsg.sender === 'coach' && activeSpeakerProfile) {
           showToast(`Coach feedback: ${incomingMsg.text.slice(0, 40)}`);
+        }
+      },
+      onMessagesRead: (data) => {
+        if (data.clientId) {
+          setMessages(prev => prev.map(m => m.clientId === data.clientId ? { ...m, isRead: true } : m));
+        }
+      },
+      onMessageReaction: (data) => {
+        if (data.messageId && data.reactions) {
+          setMessages(prev => prev.map(m => {
+            if (m.id !== data.messageId) return m;
+            const att = { ...(m.attachment || { type: 'text' }), reactions: data.reactions };
+            return { ...m, attachment: att };
+          }));
+        }
+      },
+      onPresence: (data) => {
+        if (data.clientId) {
+          setOnlineClientIds(prev => {
+            if (data.status === 'online') {
+              return prev.includes(data.clientId!) ? prev : [...prev, data.clientId!];
+            } else {
+              return prev.filter(id => id !== data.clientId);
+            }
+          });
+        }
+        if (data.userId) {
+          setOnlineUserIds(prev => {
+            if (data.status === 'online') {
+              return prev.includes(data.userId) ? prev : [...prev, data.userId];
+            } else {
+              return prev.filter(id => id !== data.userId);
+            }
+          });
         }
       },
       onRosterUpdated: () => {
@@ -1248,7 +1296,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       text = (textParam || '').trim();
     }
 
-    if (!clientId || !text) return;
+    if (!clientId) return;
+    if (!text && attachment) {
+      text = attachment.title || (attachment.type === 'voice' ? 'Voice memo' : 'Attachment');
+    }
+    if (!text) return;
 
     const tempId = `msg-${Date.now()}`;
     const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -1266,7 +1318,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setMessages(prev => [...prev, newMsg]);
 
     try {
-      await messagesApi.send(clientId, text, attachment);
+      await messagesApi.send(clientId, text, attachment, sender);
       if (sender === 'coach') {
         showToast('Message sent to speaker.');
       } else {
@@ -1277,8 +1329,44 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setMessages(prev => prev.filter(m => m.id !== tempId));
       showToast('Failed to deliver message. Server could not be reached.');
     }
-    // No simulated replies — all responses must come from real messages via the API (H4 audit fix)
   };
+
+  const markMessagesRead = useCallback(async (clientId: string) => {
+    if (!clientId) return;
+    setMessages(prev => prev.map(m => m.clientId === clientId ? { ...m, isRead: true } : m));
+    try {
+      await messagesApi.markRead(clientId);
+    } catch (e) {
+      console.debug('Failed to sync markRead:', e);
+    }
+  }, []);
+
+  const reactToMessage = useCallback(async (messageId: string, emoji: string) => {
+    if (!messageId || !emoji) return;
+    const currentUserId = currentCoachUser?.id || activeSpeakerProfile?.id || 'current-user';
+    const currentRole = currentCoachUser ? 'coach' : 'client';
+    const currentName = currentCoachUser?.full_name || activeSpeakerProfile?.name || 'User';
+
+    setMessages(prev => prev.map(m => {
+      if (m.id !== messageId) return m;
+      const att = { ...(m.attachment || { type: 'text' }) };
+      const currentReactions = [...(att.reactions || [])];
+      const existingIdx = currentReactions.findIndex(r => r.userId === currentUserId && r.emoji === emoji);
+      if (existingIdx >= 0) {
+        currentReactions.splice(existingIdx, 1);
+      } else {
+        currentReactions.push({ emoji, userId: currentUserId, userName: currentName, senderRole: currentRole });
+      }
+      return { ...m, attachment: { ...att, reactions: currentReactions } };
+    }));
+
+    try {
+      await messagesApi.react(messageId, emoji);
+    } catch (e) {
+      console.debug('Failed to sync reaction:', e);
+    }
+  }, [currentCoachUser, activeSpeakerProfile]);
+  // No simulated replies — all responses must come from real messages via the API (H4 audit fix)
 
   const toggleHabitCompletion = async (clientId: string, date: string, habitId: string) => {
     try {
@@ -1671,6 +1759,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addPersonalRecord,
         addProgressPhoto,
         sendMessage,
+        markMessagesRead,
+        reactToMessage,
+        onlineClientIds,
+        onlineUserIds,
         toggleHabitCompletion,
         refreshFromBackend,
         isLoading,
