@@ -23,7 +23,7 @@ describe('SpeakerMobileBottomNav', () => {
     expect(screen.getByRole('tab', { name: /^Today$/i })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /^Drills$/i })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /^Rituals$/i })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /^Coach$/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /^Messenger$/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/Speaker quick actions and live rehearsal/i)).toBeInTheDocument();
   });
 
@@ -42,7 +42,7 @@ describe('SpeakerMobileBottomNav', () => {
     });
     expect(defaultProps.setSpeakerTab).toHaveBeenCalledWith('habits');
 
-    const coachTab = screen.getByRole('tab', { name: /^Coach$/i });
+    const coachTab = screen.getByRole('tab', { name: /^Messenger$/i });
     await act(async () => {
       fireEvent.click(coachTab);
     });

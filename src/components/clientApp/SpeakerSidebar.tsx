@@ -90,7 +90,7 @@ export const SpeakerSidebar: React.FC<SpeakerSidebarProps> = ({
     },
     {
       id: 'coach' as SpeakerTabType,
-      label: coachLabel || 'Coach Consultation (2-Way)',
+      label: coachLabel || 'Messenger',
       icon: MessageSquare,
       badge: unreadMessagesCount > 0 ? unreadMessagesCount : undefined,
       badgeColor: 'bg-[#C89630] text-slate-950'

@@ -225,7 +225,7 @@ export const SpeakerMobileBottomNav: React.FC<SpeakerMobileBottomNavProps> = ({
                 ? isExecutive ? 'text-[#C89630] font-bold' : isAcademy ? 'text-emerald-400 font-bold' : 'text-teal-400 font-bold'
                 : 'text-slate-400'
             }`}>
-              Coach
+              Messenger
             </span>
           </button>
         </div>

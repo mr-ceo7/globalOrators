@@ -53,6 +53,7 @@ import { SpeakerLoginPortal } from '../auth/SpeakerLoginPortal';
 import { SpeakerSidebar } from './SpeakerSidebar';
 import { GlobalOratorsLogo } from '../common/GlobalOratorsLogo';
 import { journalsApi, simulationsApi, recordingsApi, RecordingResponse } from '../../services/apiClient';
+import { SpeakerMessenger } from '../messenger/SpeakerMessenger';
 
 export type SpeakerTabType = 'today' | 'practice' | 'catharsis' | 'schedule' | 'habits' | 'progress' | 'coach';
 
@@ -168,16 +169,7 @@ export const ClientPortal: React.FC = () => {
     ? (assignedCoachName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'FC')
     : 'FD';
 
-  const coachSidebarLabel = useMemo(() => {
-    if (assignedCoach) {
-      if (isAssignedHeadCoach) {
-        return 'Coach Qassim (2-Way)';
-      }
-      const cleanName = assignedCoach.name.replace(/^(Head\s+Coach|Faculty\s+Coach)\s+/i, 'Coach ');
-      return `${cleanName} (2-Way)`;
-    }
-    return 'Faculty Coach (2-Way)';
-  }, [assignedCoach, isAssignedHeadCoach]);
+  const coachSidebarLabel = 'Messenger';
 
   const execProgram = useMemo(() => {
     if (!pairedClient?.currentProgramId) return null;
@@ -720,7 +712,7 @@ export const ClientPortal: React.FC = () => {
       case 'schedule': return isExecutive ? 'Executive Syllabus & Roadmap' : 'Syllabus & Roadmap';
       case 'habits': return 'Orator Rituals';
       case 'progress': return 'Speech Analytics';
-      case 'coach': return 'Coach Consultation';
+      case 'coach': return 'Messenger';
       default: return 'Speaker Studio';
     }
   };
@@ -2076,114 +2068,32 @@ export const ClientPortal: React.FC = () => {
           </div>
         )}
 
-        {/* TAB 6: Coach 2-Way Chat */}
+        {/* TAB 6: Messenger */}
         {speakerTab === 'coach' && (
           <div className="space-y-4 animate-fadeIn">
-            <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-5 sm:p-6 flex flex-col h-[520px]">
-              {!assignedCoach && (
-                <div className="bg-slate-950/80 border border-amber-500/30 rounded-2xl p-3.5 mb-3 text-left flex items-start gap-3">
-                  <AlertTriangle className="w-4 h-4 text-[#C89630] shrink-0 mt-0.5" />
-                  <div>
-                    <h4 className="text-[11px] font-bold text-amber-300 uppercase tracking-wider font-mono">Faculty Triage & Allocation</h4>
-                    <p className="text-xs text-slate-300 mt-0.5 leading-relaxed">
-                      A faculty coach is not yet assigned to your account. Your inquiries and practice submissions route directly to Head Coach Qassim and the Global Orators Faculty Desk.
-                    </p>
-                  </div>
-                </div>
-              )}
-              <div className="flex items-center justify-between pb-4 border-b border-slate-800">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center font-bold text-slate-950 text-sm">
-                    {assignedCoachInitials}
-                  </div>
-                  <div>
-                    <h3 className="text-xs sm:text-sm font-bold text-white">{assignedCoachName}</h3>
-                    <div className="text-[10px] text-emerald-400 font-mono uppercase tracking-wider">
-                      {assignedCoachTitle}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => {
-                      setActiveChamberTitle(isExecutive ? 'Executive Public Speaking Chamber' : 'Live Rehearsal Chamber');
-                      setIsLiveRehearsalOpen(true);
-                    }}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-slate-950 text-xs font-bold transition-all shadow-sm cursor-pointer ${
-                      isExecutive ? 'bg-[#C89630] hover:bg-[#d6a543]' : 'bg-emerald-500 hover:bg-emerald-400'
-                    }`}
-                    title="Start Live Rehearsal Room"
-                  >
-                    <Video className="w-3.5 h-3.5" />
-                    <span>Live Rehearsal</span>
-                  </button>
-                  <span className="hidden sm:inline text-[10px] text-slate-400 font-mono">Direct Faculty Thread</span>
+            {!assignedCoach && (
+              <div className="bg-slate-950/80 border border-amber-500/30 rounded-2xl p-3.5 text-left flex items-start gap-3">
+                <AlertTriangle className="w-4 h-4 text-[#C89630] shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="text-[11px] font-bold text-amber-300 uppercase tracking-wider font-mono">Faculty Triage & Allocation</h4>
+                  <p className="text-xs text-slate-300 mt-0.5 leading-relaxed">
+                    A faculty coach is being assigned to your account. Your inquiries and practice submissions route directly to Head Coach Qassim and the Global Orators Faculty Desk.
+                  </p>
                 </div>
               </div>
-
-              {/* Chat Message List */}
-              <div className="flex-1 overflow-y-auto py-4 space-y-3 pr-1">
-                {displayedMessages.length === 0 ? (
-                  <div className="flex items-center justify-center h-full text-xs text-slate-500 italic">
-                    Start a conversation with your coach
-                  </div>
-                ) : (
-                  displayedMessages.map((msg, index) => (
-                    <div
-                      key={index}
-                      className={`flex flex-col ${
-                        msg.sender === 'client' ? 'items-end' : 'items-start'
-                      }`}
-                    >
-                      <div
-                        className={`max-w-[85%] sm:max-w-md p-3.5 rounded-2xl text-xs leading-relaxed ${
-                          msg.sender === 'client'
-                            ? isExecutive
-                              ? 'bg-[#C89630] text-slate-950 font-medium rounded-br-none'
-                              : 'bg-emerald-500 text-slate-950 font-medium rounded-br-none'
-                            : 'bg-slate-950 border border-slate-800 text-slate-200 rounded-bl-none'
-                        }`}
-                      >
-                        {msg.text}
-                      </div>
-                      <div className="flex items-center gap-1 mt-1 px-1 text-[9px] text-slate-500">
-                        <span>{msg.time}</span>
-                        {msg.sender === 'client' && (
-                          <CheckCheck className={`w-3 h-3 ${msg.isRead ? 'text-cyan-400' : 'text-slate-500'}`} />
-                        )}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              {/* Message Input Box */}
-              <form onSubmit={handleSendMessage} className="pt-3 border-t border-slate-800 flex items-center gap-2">
-                <input
-                  type="text"
-                  value={clientMessageInput}
-                  onChange={(e) => setClientMessageInput(e.target.value)}
-                  placeholder={
-                    isExecutive
-                      ? `Ask ${assignedCoach ? assignedCoach.name : 'the Faculty Coaching Desk'} about your pitch deck, boardroom presentation, or pacing...`
-                      : `Ask ${assignedCoach ? assignedCoach.name : 'the Faculty Coaching Desk'} about your speech, pacing, or catharsis...`
-                  }
-                  className="flex-1 h-10 px-4 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:border-emerald-500 focus:outline-hidden"
-                />
-                <button
-                  type="submit"
-                  className={`h-10 px-4 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer ${
-                    isExecutive
-                      ? 'bg-[#C89630] hover:bg-[#d6a543] text-slate-950 shadow-[#C89630]/20'
-                      : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/20'
-                  }`}
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Send</span>
-                </button>
-              </form>
-            </div>
+            )}
+            <SpeakerMessenger
+              assignedCoach={assignedCoach}
+              pairedClient={pairedClient}
+              profile={profile}
+              isExecutive={isExecutive}
+              isAcademy={isAcademy}
+              persistedRecordings={persistedRecordings}
+              onOpenLiveRehearsal={() => {
+                setActiveChamberTitle(isExecutive ? 'Executive Public Speaking Chamber' : 'Live Rehearsal Chamber');
+                setIsLiveRehearsalOpen(true);
+              }}
+            />
           </div>
         )}
           </div>
