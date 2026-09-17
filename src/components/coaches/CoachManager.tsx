@@ -207,7 +207,7 @@ export const CoachManager: React.FC = () => {
               >
                 <div>
                   <div className="font-semibold text-xs text-white">{spk.name}</div>
-                  <div className="text-[11px] text-slate-400 font-mono">{spk.email} · {spk.goal}</div>
+                  <div className="text-[11px] text-slate-400 font-mono">{spk.email} · {spk.goal || 'Pending Intake'}</div>
                 </div>
 
                 <div className="flex items-center gap-2">

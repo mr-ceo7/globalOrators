@@ -14,7 +14,8 @@ import {
   Award, 
   Phone, 
   Mail, 
-  Target
+  Target,
+  UserPlus
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { Client } from '../../types';
@@ -40,7 +41,8 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({ client, 
     coaches,
     fetchCoaches,
     reassignClientCoach,
-    addAdjudicationNote
+    addAdjudicationNote,
+    showToast
   } = useApp();
 
   const [activeTab, setActiveModalTab] = useState<'overview' | 'health' | 'notes' | 'adjudication' | 'program' | 'metrics'>('overview');
@@ -69,6 +71,15 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({ client, 
   const assignedCoach = React.useMemo(() => {
     return coaches.find(c => c.id === client.coachId);
   }, [coaches, client.coachId]);
+
+  const currentUser = React.useMemo(() => {
+    try {
+      const u = localStorage.getItem('globalorators_user') || localStorage.getItem('nubianfit_user');
+      return u ? JSON.parse(u) : null;
+    } catch {
+      return null;
+    }
+  }, []);
 
   if (!isOpen) return null;
 
@@ -145,11 +156,27 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({ client, 
                   <span className="flex items-center gap-1"><Phone className="h-3.5 w-3.5 text-slate-400" /> {client.phone}</span>
                   <span>Age {client.age} • {client.gender}</span>
                   <span className="text-slate-600">•</span>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400">Faculty Coach:</span>
                     <span className={`font-mono text-xs font-semibold ${assignedCoach ? 'text-emerald-400' : 'text-amber-400'}`}>
                       {assignedCoach ? assignedCoach.name : 'Unassigned Triage'}
                     </span>
+                    {!assignedCoach && currentUser?.id && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const ok = await reassignClientCoach(client.id, currentUser.id, 'Claimed by coach from intake pool');
+                          if (ok) {
+                            showToast(`Claimed ${client.name} to your roster.`);
+                          }
+                        }}
+                        className="ml-1 inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider px-2.5 py-0.5 rounded bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold shadow-sm transition-all cursor-pointer"
+                        title={`Claim ${client.name} to your personal coaching roster`}
+                      >
+                        <UserPlus className="h-3 w-3 stroke-[2.5]" />
+                        <span>Claim to My Roster</span>
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => setIsReassignOpen(prev => !prev)}
@@ -210,6 +237,23 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({ client, 
 
             {/* Quick action buttons */}
             <div className="flex items-center gap-2">
+              {!client.coachId && currentUser?.id && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const ok = await reassignClientCoach(client.id, currentUser.id, 'Claimed by coach from intake pool');
+                    if (ok) {
+                      showToast(`Claimed ${client.name} to your roster.`);
+                    }
+                  }}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 text-slate-950 text-xs font-bold shadow-md shadow-emerald-500/25 hover:shadow-emerald-500/40 active:scale-95 transition-all cursor-pointer"
+                  title={`Claim ${client.name} to your coaching roster`}
+                >
+                  <UserPlus className="h-3.5 w-3.5 stroke-[2.5]" />
+                  <span>Claim Speaker</span>
+                </button>
+              )}
+
               <button
                 onClick={() => {
                   setSelectedClientId(client.id);
@@ -240,7 +284,12 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({ client, 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5 pt-4 border-t border-slate-800/80 text-xs">
             <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800">
               <span className="text-[10px] uppercase font-bold text-slate-400">Current Focus</span>
-              <div className="font-bold text-emerald-400 text-sm truncate">{client.goal}</div>
+              <div 
+                className={`text-sm font-bold truncate ${client.goal ? 'text-emerald-400' : 'text-slate-500 italic font-normal'}`}
+                title={client.goal || 'Pending Intake'}
+              >
+                {client.goal || 'Pending Intake'}
+              </div>
             </div>
             <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800">
               <span className="text-[10px] uppercase font-bold text-slate-400">Speaking Pace</span>

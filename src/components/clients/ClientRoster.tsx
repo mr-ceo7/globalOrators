@@ -15,7 +15,8 @@ import {
   CheckCircle2, 
   X, 
   Target,
-  Link2
+  Link2,
+  UserPlus
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { Client, ClientStatus, SpeakingGoal, ExperienceLevel } from '../../types';
@@ -81,9 +82,9 @@ export const ClientRoster: React.FC<{
 
   // Filter clients
   const filteredClients = clients.filter(c => {
-    const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          c.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          c.goal.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (c.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          (c.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (c.goal || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = selectedStatusFilter === 'All' || 
                           c.status === selectedStatusFilter ||
                           (selectedStatusFilter === 'Onboarding' && (c.status as string) === 'Pending Onboarding');
@@ -147,18 +148,42 @@ export const ClientRoster: React.FC<{
   const getStatusBadge = (status: ClientStatus) => {
     switch (status) {
       case 'Active':
-        return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">● Active</span>;
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono font-bold tracking-wider uppercase bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+            Active
+          </span>
+        );
       case 'Needs Check-in':
-        return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30 animate-pulse">● Review Due</span>;
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono font-bold tracking-wider uppercase bg-amber-500/15 text-amber-300 border border-amber-500/30 animate-pulse">
+            Review Due
+          </span>
+        );
       case 'Onboarding':
       case 'Pending Onboarding' as any:
-        return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">● Onboarding</span>;
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono font-bold tracking-wider uppercase bg-sky-500/15 text-sky-300 border border-sky-500/30">
+            Onboarding
+          </span>
+        );
       case 'Needs Review':
-        return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30">● Needs Review</span>;
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono font-bold tracking-wider uppercase bg-amber-500/15 text-amber-300 border border-amber-500/30">
+            Needs Review
+          </span>
+        );
       case 'Inactive':
-        return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-800 text-slate-400 border border-slate-700">● Inactive</span>;
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono font-bold tracking-wider uppercase bg-slate-800 text-slate-400 border border-slate-700">
+            Inactive
+          </span>
+        );
       default:
-        return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">● Onboarding</span>;
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono font-bold tracking-wider uppercase bg-sky-500/15 text-sky-300 border border-sky-500/30">
+            Onboarding
+          </span>
+        );
     }
   };
 
@@ -337,10 +362,10 @@ export const ClientRoster: React.FC<{
                               <img 
                                 src={client.avatar} 
                                 alt={client.name} 
-                                className="h-10 w-10 rounded-xl object-cover border border-slate-700" 
+                                className="h-10 w-10 rounded-xl object-cover border border-slate-700 shrink-0" 
                               />
                             ) : (
-                              <div className="h-10 w-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-mono font-bold text-slate-300">
+                              <div className="h-10 w-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-mono font-bold text-slate-200 shrink-0">
                                 {client.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'SP'}
                               </div>
                             )}
@@ -349,25 +374,18 @@ export const ClientRoster: React.FC<{
                                 <span className="font-bold text-white group-hover:text-emerald-400 transition-colors">
                                   {client.name}
                                 </span>
-                                {!client.coachId && (
-                                  <span className="text-[9px] font-mono tracking-widest uppercase px-1.5 py-0.5 rounded border border-amber-500/40 text-amber-300 bg-amber-950/40">
+                                {!client.coachId ? (
+                                  <span className="text-[9px] font-mono tracking-wider uppercase px-1.5 py-0.5 rounded border border-amber-500/40 text-amber-300 bg-amber-950/40 font-semibold">
                                     Triage
                                   </span>
-                                )}
+                                ) : client.coachId === currentUser?.id ? (
+                                  <span className="text-[9px] font-mono tracking-wider uppercase px-1.5 py-0.5 rounded border border-emerald-500/40 text-emerald-300 bg-emerald-950/40 font-semibold">
+                                    My Roster
+                                  </span>
+                                ) : null}
                               </div>
-                              <div className="text-[11px] text-slate-400 flex items-center gap-2">
-                                <span>{client.email}</span>
-                                {!client.coachId && currentUser?.id && (
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      reassignClientCoach(client.id, currentUser.id, 'Claimed by coach from intake pool');
-                                    }}
-                                    className="text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/40 transition-colors cursor-pointer"
-                                  >
-                                    Claim
-                                  </button>
-                                )}
+                              <div className="text-[11px] text-slate-400">
+                                {client.email}
                               </div>
                             </div>
 
@@ -381,7 +399,7 @@ export const ClientRoster: React.FC<{
 
                         {/* Goal & Program */}
                         <td className="py-3.5 px-4">
-                          <div className="font-semibold text-slate-200">{client.goal}</div>
+                          <div className="font-semibold text-slate-200">{client.goal || 'Pending Intake'}</div>
                           <div className="text-[11px] text-slate-400 truncate max-w-[180px]">
                             {client.currentProgramName || 'No curriculum assigned'}
                           </div>
@@ -418,7 +436,7 @@ export const ClientRoster: React.FC<{
 
                         {/* Health alerts */}
                         <td className="py-3.5 px-4">
-                          {client.injuriesAndHealth.length > 0 ? (
+                          {(client.injuriesAndHealth?.length ?? 0) > 0 ? (
                             <span className="inline-flex items-center gap-1 text-[11px] text-amber-400 font-semibold px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20">
                               <ShieldAlert className="h-3 w-3" />
                               {client.injuriesAndHealth.length} focus area
@@ -431,6 +449,21 @@ export const ClientRoster: React.FC<{
                         {/* Actions */}
                         <td className="py-3.5 px-4 text-right" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center justify-end gap-1.5">
+                            {!client.coachId && currentUser?.id && (
+                              <button
+                                onClick={async () => {
+                                  const ok = await reassignClientCoach(client.id, currentUser.id, 'Claimed by coach from intake pool');
+                                  if (ok) {
+                                    showToast(`Claimed ${client.name} to your roster.`);
+                                  }
+                                }}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold shadow-sm active:scale-95 transition-all cursor-pointer"
+                                title={`Claim ${client.name} to your coaching roster`}
+                              >
+                                <UserPlus className="h-3.5 w-3.5 stroke-[2.5]" />
+                                <span>Claim</span>
+                              </button>
+                            )}
                             <button
                               onClick={() => {
                                 setSelectedClientId(client.id);
@@ -470,94 +503,160 @@ export const ClientRoster: React.FC<{
       ) : (
         /* Grid Card View */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredClients.map((client) => (
-            <div
-              key={client.id}
-              onClick={() => setViewingClientProfile(client)}
-              className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 transition-all cursor-pointer group shadow-sm flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex items-start justify-between gap-3">
+          {filteredClients.map((client) => {
+            const isUnassigned = !client.coachId;
+            const isMySpeaker = client.coachId === currentUser?.id;
+            const branch = client.branch || (client.onboardingSurvey as any)?.branch || 'Academy';
+
+            return (
+              <div
+                key={client.id}
+                onClick={() => setViewingClientProfile(client)}
+                className={`p-5 rounded-2xl transition-all cursor-pointer group shadow-sm flex flex-col justify-between border ${
+                  isUnassigned
+                    ? 'bg-slate-900/95 border-amber-500/30 hover:border-amber-500/60 shadow-amber-950/10'
+                    : 'bg-slate-900/90 border-slate-800 hover:border-slate-700'
+                }`}
+              >
+                <div>
+                  {/* Top Architectural Divider Row: Track & Status Badges */}
+                  <div className="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-800/80">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className={`text-[10px] uppercase font-mono font-bold tracking-wider px-2 py-0.5 rounded-md ${
+                        branch === 'Foundation'
+                          ? 'bg-teal-500/15 text-teal-300 border border-teal-500/30'
+                          : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                      }`}>
+                        {branch} Track
+                      </span>
+
+                      {isUnassigned ? (
+                        <span className="text-[10px] font-mono tracking-wider uppercase px-2 py-0.5 rounded-md border border-amber-500/40 text-amber-300 bg-amber-950/40 font-semibold">
+                          Triage
+                        </span>
+                      ) : isMySpeaker ? (
+                        <span className="text-[10px] font-mono tracking-wider uppercase px-2 py-0.5 rounded-md border border-emerald-500/40 text-emerald-300 bg-emerald-950/40 font-semibold">
+                          My Roster
+                        </span>
+                      ) : null}
+                    </div>
+
+                    <div>
+                      {getStatusBadge(client.status)}
+                    </div>
+                  </div>
+
+                  {/* Speaker Info Row: Avatar + Name + Email */}
                   <div className="flex items-center gap-3">
                     {client.avatar ? (
                       <img 
                         src={client.avatar} 
                         alt={client.name} 
-                        className="h-12 w-12 rounded-2xl object-cover border border-slate-700" 
+                        className="h-12 w-12 rounded-xl object-cover border border-slate-700 shrink-0" 
                       />
                     ) : (
-                      <div className="h-12 w-12 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-sm font-mono font-bold text-slate-300">
+                      <div className="h-12 w-12 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-sm font-mono font-bold text-slate-200 shrink-0">
                         {client.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'SP'}
                       </div>
                     )}
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-white text-sm group-hover:text-emerald-400 transition-colors">
-                          {client.name}
-                        </h3>
-                        {!client.coachId && (
-                          <span className="text-[9px] font-mono tracking-widest uppercase px-1.5 py-0.5 rounded border border-amber-500/40 text-amber-300 bg-amber-950/40">
-                            Triage
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-[11px] text-slate-400">{client.email}</div>
-                      <div className="mt-1 flex items-center gap-1.5 flex-wrap">
-                        {(() => {
-                          const branch = client.branch || (client.onboardingSurvey as any)?.branch || 'Academy';
-                          return (
-                            <span className={`text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded ${
-                              branch === 'Foundation'
-                                ? 'bg-teal-500/15 text-teal-300 border border-teal-500/30'
-                                : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                            }`}>
-                              {branch} Track
-                            </span>
-                          );
-                        })()}
-                        {!client.coachId && currentUser?.id && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              reassignClientCoach(client.id, currentUser.id, 'Claimed by coach from intake pool');
-                            }}
-                            className="text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/40 transition-colors cursor-pointer"
-                          >
-                            Claim
-                          </button>
-                        )}
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-bold text-white text-base leading-tight group-hover:text-emerald-400 transition-colors truncate">
+                        {client.name}
+                      </h3>
+                      <div className="text-xs text-slate-400 truncate mt-0.5" title={client.email}>
+                        {client.email}
                       </div>
                     </div>
-
                   </div>
-                  {getStatusBadge(client.status)}
+
+                  {/* Intake Pool Callout Banner when unassigned */}
+                  {isUnassigned && (
+                    <div className="mt-3.5 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-between">
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-amber-300 font-semibold flex items-center gap-1.5">
+                        <Target className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                        Awaiting Coach Allocation
+                      </span>
+                      <span className="text-[10px] font-mono text-amber-400/90 font-medium">
+                        Open Pool
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Metrics Grid: Focus & Fluency */}
+                  <div className="mt-3.5 grid grid-cols-2 gap-2 text-xs">
+                    <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800 min-w-0">
+                      <span className="text-[10px] text-slate-400 uppercase font-mono font-bold tracking-wider block">Focus</span>
+                      <div 
+                        className={`font-semibold truncate mt-0.5 ${client.goal ? 'text-emerald-400' : 'text-slate-500 italic'}`}
+                        title={client.goal || 'Pending Intake Assessment'}
+                      >
+                        {client.goal || 'Pending Intake'}
+                      </div>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800 min-w-0">
+                      <span className="text-[10px] text-slate-400 uppercase font-mono font-bold tracking-wider block">Fluency</span>
+                      <div className="font-bold text-white truncate mt-0.5">{client.complianceRate}%</div>
+                    </div>
+                  </div>
+
+                  {/* Curriculum row */}
+                  <div className="mt-3 text-xs text-slate-300 flex items-center justify-between gap-2">
+                    <span className="text-slate-400 font-mono text-[11px] shrink-0">Curriculum:</span>
+                    <span 
+                      className="font-medium text-slate-200 truncate max-w-[200px]" 
+                      title={client.currentProgramName || 'Not assigned'}
+                    >
+                      {client.currentProgramName || 'Not assigned'}
+                    </span>
+                  </div>
                 </div>
 
-                <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
-                  <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">Focus</span>
-                    <div className="font-bold text-emerald-400 truncate mt-0.5">{client.goal}</div>
-                  </div>
-                  <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">Fluency</span>
-                    <div className="font-bold text-white truncate mt-0.5">{client.complianceRate}%</div>
-                  </div>
-                </div>
+                {/* Card Action Footer */}
+                <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                  <span className="text-[11px] font-mono text-slate-400 truncate">
+                    Active: {client.lastActive}
+                  </span>
 
-                <div className="mt-3 text-xs text-slate-300">
-                  <span className="text-slate-400">Curriculum: </span>
-                  <span className="font-medium text-slate-200">{client.currentProgramName || 'Not assigned'}</span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {isUnassigned && currentUser?.id ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setViewingClientProfile(client);
+                          }}
+                          className="px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 border border-slate-700/80 transition-colors cursor-pointer"
+                        >
+                          Profile
+                        </button>
+                        <button
+                          id={`claim-speaker-${client.id}`}
+                          type="button"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            const ok = await reassignClientCoach(client.id, currentUser.id, 'Claimed by coach from intake pool');
+                            if (ok) {
+                              showToast(`Claimed ${client.name} to your roster.`);
+                            }
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 text-slate-950 font-bold text-xs shadow-md shadow-emerald-500/25 hover:shadow-emerald-500/40 active:scale-95 transition-all cursor-pointer"
+                          title={`Claim ${client.name} to your personal coaching roster`}
+                        >
+                          <UserPlus className="h-3.5 w-3.5 stroke-[2.5]" />
+                          <span>Claim Speaker</span>
+                        </button>
+                      </>
+                    ) : (
+                      <span className="text-xs font-bold text-emerald-400 flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                        View Profile <ChevronRight className="h-3.5 w-3.5" />
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
-
-              <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between">
-                <span className="text-[11px] text-slate-400">Last active: {client.lastActive}</span>
-                <span className="text-xs font-bold text-emerald-400 flex items-center gap-1">
-                  View Profile <ChevronRight className="h-3.5 w-3.5" />
-                </span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
