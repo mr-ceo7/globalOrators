@@ -35,6 +35,7 @@ from app.routers import (
     simulations_router,
     recordings_router,
     events_router,
+    system_router,
 )
 
 logging.basicConfig(
@@ -211,6 +212,7 @@ app.include_router(journals_router, prefix=settings.API_PREFIX)
 app.include_router(simulations_router, prefix=settings.API_PREFIX)
 app.include_router(recordings_router, prefix=settings.API_PREFIX)
 app.include_router(events_router, prefix=settings.API_PREFIX)
+app.include_router(system_router, prefix=settings.API_PREFIX)
 app.include_router(webrtc_router)
 
 

@@ -26,7 +26,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/client https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' blob: https: data:; connect-src 'self' https://accounts.google.com https://globaloratorsproject.com https://app.globaloratorsproject.com https://coach.globaloratorsproject.com https://*.render.com https://*.ngrok-free.dev http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:* wss://*; frame-src 'self' https://accounts.google.com https://meet.globalorators.com https://meet.jit.si; object-src 'none'; base-uri 'self';"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/client https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' blob: https: data:; connect-src 'self' https://accounts.google.com https://globaloratorsproject.com https://app.globaloratorsproject.com https://coach.globaloratorsproject.com https://*.render.com https://*.ngrok-free.dev http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:* wss://*; frame-src 'self' https://accounts.google.com https://meet.globalorators.com https://meet.jit.si https://*.trycloudflare.com; object-src 'none'; base-uri 'self';"
         },
         {
           "key": "Cross-Origin-Opener-Policy",

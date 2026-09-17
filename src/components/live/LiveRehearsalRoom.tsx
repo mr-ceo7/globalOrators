@@ -22,6 +22,7 @@ import {
   ShieldCheck, 
   AlertCircle 
 } from 'lucide-react';
+import { fetchLiveJitsiDomain } from '../../services/jitsiDiscovery';
 
 export interface LiveRehearsalRoomProps {
   isOpen: boolean;
@@ -79,8 +80,25 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
   const [mobileTab, setMobileTab] = useState<'video' | 'forensics'>('video');
 
   // Studio Mode: Self-Hosted Jitsi (meet.globalorators.com) vs Native P2P Studio
-  const jitsiDomain = (import.meta as any).env?.VITE_JITSI_DOMAIN || 'meet.globalorators.com';
+  const [jitsiDomain, setJitsiDomain] = useState<string>(() => {
+    return (import.meta as any).env?.VITE_JITSI_DOMAIN || 'meet.globalorators.com';
+  });
   const [studioMode, setStudioMode] = useState<'jitsi' | 'native'>('jitsi');
+
+  // Real-time dynamic sync with live active Jitsi tunnel
+  useEffect(() => {
+    let isMounted = true;
+    fetchLiveJitsiDomain()
+      .then((domain) => {
+        if (isMounted && domain) {
+          setJitsiDomain(domain);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Room Identifier: unique, stable room string for this speaker
   const cleanSpeakerName = (speakerName || 'Speaker').replace(/[^a-zA-Z0-9]/g, '');

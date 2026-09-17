@@ -1,0 +1,18 @@
+[Unit]
+Description=Global Orators Jitsi Cloudflare Tunnel Auto-Healing Watchdog
+After=network.target docker.service globalorators-backend.service
+Wants=docker.service globalorators-backend.service
+
+[Service]
+Type=simple
+User=qsm
+WorkingDirectory=/home/qsm/jitsi
+ExecStart=/usr/bin/python3 /home/qsm/jitsi/jitsi_tunnel_watchdog.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

@@ -477,3 +477,27 @@ export const recordingsApi = {
   getStreamBlob: (recordingId: string) => api.getBlob(`/recordings/${recordingId}/stream`),
   delete: (recordingId: string) => api.delete<{ message: string; id: string }>(`/recordings/${recordingId}`),
 };
+
+// System Configuration Endpoints (Dynamic Infrastructure Discovery)
+export interface JitsiDomainConfig {
+  domain: string;
+  url: string;
+  source: string;
+  updated_at?: string;
+}
+
+export const systemApi = {
+  getJitsiDomain: async (): Promise<JitsiDomainConfig> => {
+    try {
+      return await api.get<JitsiDomainConfig>('/system/jitsi-domain');
+    } catch {
+      const fallbackDomain = (import.meta as unknown as { env?: { VITE_JITSI_DOMAIN?: string } }).env?.VITE_JITSI_DOMAIN || 'meet.globalorators.com';
+      return {
+        domain: fallbackDomain,
+        url: `https://${fallbackDomain}`,
+        source: 'client_fallback',
+      };
+    }
+  },
+};
+
