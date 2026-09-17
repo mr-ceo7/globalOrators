@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
+from app.config import settings
 from app.dependencies import get_db, require_coach
 from app.models.user import User
 from app.schemas.client import CoachDirectoryItem, CreateCoachRequest
@@ -39,6 +40,16 @@ async def create_coach(
     current_user: User = Depends(require_coach)
 ):
     """Allow master coach to provision a new coach account directly."""
+    is_default_coach = (
+        current_user.email.lower() == settings.DEFAULT_COACH_EMAIL.lower() 
+        or current_user.id == "coach-1"
+    )
+    if not is_default_coach:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied: only the Head Coach can provision faculty accounts"
+        )
+
     email_clean = req.email.strip().lower()
     existing = await db.execute(select(User).where(User.email == email_clean))
     if existing.scalar_one_or_none():

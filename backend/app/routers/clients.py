@@ -4,6 +4,8 @@ Clients Management Router
 
 import time
 import uuid
+import asyncio
+import logging
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -23,7 +25,9 @@ from app.schemas.client import (
     AddAdjudicationNoteRequest
 )
 from app.rate_limiter import rate_limit
+from app.services.email import send_welcome_protocol_email, send_coach_new_speaker_email
 
+logger = logging.getLogger("globalorators.clients")
 router = APIRouter(prefix="/clients", tags=["Clients"])
 
 
@@ -165,6 +169,86 @@ async def get_client(
     return resp
 
 
+async def _dispatch_onboarding_emails(target_client: Client, survey_data: dict, db: AsyncSession):
+    """Trigger background email dispatch for speaker protocol briefing and faculty enrollment alert."""
+    try:
+        speaker_email = (target_client.email or "").strip().lower()
+        if not speaker_email:
+            return
+
+        speaker_name = target_client.name or "Orator"
+        branch = survey_data.get("branch") or getattr(target_client, "branch", None) or "Academy"
+        mission_focus = (
+            survey_data.get("mission_focus")
+            or survey_data.get("missionFocus")
+            or survey_data.get("speaking_goal")
+            or survey_data.get("speakingGoal")
+            or getattr(target_client, "goal", None)
+            or "Executive & Board Pitching"
+        )
+        primary_format = (
+            survey_data.get("primary_discipline")
+            or survey_data.get("primaryDiscipline")
+            or "VC Investment Pitch (Seed/Series A)"
+        )
+        curriculum_focus = (
+            survey_data.get("core_focus")
+            or survey_data.get("coreFocus")
+            or "Concise Metric Defensibility"
+        )
+        target_cadence = (
+            survey_data.get("vocal_baseline_pace")
+            or survey_data.get("vocalBaselinePace")
+            or 145
+        )
+        institution = (
+            survey_data.get("institution")
+            or getattr(target_client, "institution", "")
+            or ""
+        )
+
+        # 1. Welcome Protocol Email to Speaker
+        asyncio.create_task(
+            send_welcome_protocol_email(
+                speaker_email=speaker_email,
+                speaker_name=speaker_name,
+                branch=branch,
+                mission_focus=mission_focus,
+                primary_format=primary_format,
+                curriculum_focus=curriculum_focus,
+                target_cadence=int(target_cadence),
+                institution=institution,
+            )
+        )
+
+        # 2. Coach Notification Email
+        coach_email = settings.DEFAULT_COACH_EMAIL
+        coach_name = settings.DEFAULT_COACH_NAME
+        if target_client.coach_id:
+            c_res = await db.execute(select(User).where(User.id == target_client.coach_id))
+            coach = c_res.scalar_one_or_none()
+            if coach and coach.email:
+                coach_email = coach.email
+                coach_name = coach.full_name or settings.DEFAULT_COACH_NAME
+
+        asyncio.create_task(
+            send_coach_new_speaker_email(
+                coach_email=coach_email,
+                coach_name=coach_name,
+                speaker_name=speaker_name,
+                speaker_email=speaker_email,
+                branch=branch,
+                mission_focus=mission_focus,
+                primary_format=primary_format,
+                curriculum_focus=curriculum_focus,
+                target_cadence=int(target_cadence),
+                institution=institution,
+            )
+        )
+    except Exception as exc:
+        logger.error(f"Error preparing onboarding email dispatch: {exc}")
+
+
 @router.post(
     "", 
     response_model=ClientResponse, 
@@ -222,6 +306,10 @@ async def create_client(
         existing.last_active = "Just now"
         await db.commit()
         await db.refresh(existing)
+
+        # Dispatch emails if onboarding survey was provided
+        if client_in.onboarding_survey:
+            await _dispatch_onboarding_emails(existing, client_in.onboarding_survey, db)
         
         # Redact coach notes for public response without mutating database model
         resp = ClientResponse.model_validate(existing)
@@ -293,6 +381,10 @@ async def create_client(
     
     await db.commit()
     await db.refresh(new_client)
+
+    # Dispatch onboarding briefing to speaker and alert to coach
+    await _dispatch_onboarding_emails(new_client, new_client.onboarding_survey or {}, db)
+
     return new_client
 
 

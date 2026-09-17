@@ -1754,3 +1754,122 @@ async def test_auth_check_email():
         assert data_coach["exists"] is True
         assert data_coach["auth_method"] == "password"
         assert data_coach["role"] == "coach"
+
+
+@pytest.mark.asyncio
+async def test_email_notifications_lifecycle():
+    """Verify email notification templates and platform lifecycle dispatches."""
+    from app.services.email import (
+        send_welcome_protocol_email,
+        send_coach_new_speaker_email,
+        send_drill_submission_email,
+        send_coach_feedback_email,
+        send_direct_message_email,
+        send_inquiry_notification_email
+    )
+
+    # 1. Direct unit verification of email service functions in testing mode
+    res_welcome = await send_welcome_protocol_email(
+        speaker_email="anyonageoffrey49@gmail.com",
+        speaker_name="Geoffrey Anyona",
+        branch="Academy",
+        mission_focus="Executive & Board Pitching",
+        primary_format="VC Investment Pitch (Seed/Series A)",
+        curriculum_focus="Concise Metric Defensibility",
+        target_cadence=145,
+        institution="Global Orators Academy",
+        magic_link_url="http://test/speaker"
+    )
+    assert res_welcome is True
+
+    res_coach_alert = await send_coach_new_speaker_email(
+        coach_email="coach@globalorators.com",
+        coach_name="Coach Qassim",
+        speaker_name="Geoffrey Anyona",
+        speaker_email="anyonageoffrey49@gmail.com",
+        branch="Academy",
+        mission_focus="Executive & Board Pitching",
+        primary_format="VC Investment Pitch (Seed/Series A)",
+        curriculum_focus="Concise Metric Defensibility",
+        target_cadence=145,
+        institution="Global Orators Academy"
+    )
+    assert res_coach_alert is True
+
+    res_drill_sub = await send_drill_submission_email(
+        coach_email="coach@globalorators.com",
+        coach_name="Coach Qassim",
+        speaker_name="Geoffrey Anyona",
+        drill_title="VC Elevator Hook - 90s Drill",
+        duration_seconds=92,
+        notes="First attempt with strict cadence pacing."
+    )
+    assert res_drill_sub is True
+
+    res_feedback = await send_coach_feedback_email(
+        speaker_email="anyonageoffrey49@gmail.com",
+        speaker_name="Geoffrey Anyona",
+        drill_title="VC Elevator Hook - 90s Drill",
+        coach_name="Coach Qassim",
+        feedback_text="Exceptional vocal clarity and metric defense. Maintain eye contact during the closing ask.",
+        rating=5
+    )
+    assert res_feedback is True
+
+    res_msg = await send_direct_message_email(
+        recipient_email="coach@globalorators.com",
+        recipient_name="Coach Qassim",
+        sender_name="Geoffrey Anyona",
+        sender_role="Speaker",
+        message_snippet="I have submitted the revised opening hook for the board pitch review.",
+        thread_url="http://test/coach"
+    )
+    assert res_msg is True
+
+    res_inq = await send_inquiry_notification_email(
+        coach_email="coach@globalorators.com",
+        organization="Oxford Union Forensics Society",
+        contact_email="partnerships@oxfordforensics.org",
+        branch="Academy",
+        focus="Parliamentary Forensics Cohort",
+        message="Requesting intake partnership for 25 varsity debaters."
+    )
+    assert res_inq is True
+
+    # 2. Integration test: Onboarding a speaker dispatches welcome & coach alerts
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        onboard_payload = {
+            "name": "Amira Al-Mansoor",
+            "email": "amira.test.speaker@globalorators.org",
+            "branch": "Academy",
+            "goal": "Parliamentary Debate",
+            "experience_level": "Advanced",
+            "onboarding_survey": {
+                "branch": "Academy",
+                "fullName": "Amira Al-Mansoor",
+                "email": "amira.test.speaker@globalorators.org",
+                "missionFocus": "Parliamentary Forensics Championship",
+                "primaryDiscipline": "British Parliamentary (Prime Minister)",
+                "coreFocus": "Rhetorical Counter-Framing",
+                "vocalBaselinePace": 150,
+                "institution": "University Forensics Team"
+            }
+        }
+        res_onboard = await client.post("/api/clients/onboard", json=onboard_payload)
+        assert res_onboard.status_code == 201
+        data = res_onboard.json()
+        assert data["email"] == "amira.test.speaker@globalorators.org"
+
+        # 3. Integration test: Submitting partnership inquiry dispatches notification
+        inquiry_payload = {
+            "organization": "Cambridge Debate Union",
+            "email": "inquiries@cambridge.edu",
+            "branch": "Academy",
+            "focus": "High-Performance Forensics",
+            "message": "Inquiry regarding cohort enrollment."
+        }
+        res_inquiry = await client.post("/api/inquiries", json=inquiry_payload)
+        assert res_inquiry.status_code == 201
+        assert res_inquiry.json()["status"] == "success"
+

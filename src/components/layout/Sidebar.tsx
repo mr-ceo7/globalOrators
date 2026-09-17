@@ -34,10 +34,21 @@ export const Sidebar: React.FC = () => {
   const todayStr = new Date().toISOString().split('T')[0];
   const todayPendingCount = scheduledWorkouts.filter(w => w.date === todayStr && w.status === 'Scheduled').length;
 
+  const currentUser = (() => {
+    try {
+      const stored = localStorage.getItem('globalorators_user') || localStorage.getItem('nubianfit_user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  })();
+
+  const isHeadCoach = currentUser?.id === 'coach-1' || currentUser?.email?.toLowerCase() === 'kassimmusa322@gmail.com' || currentUser?.email?.toLowerCase() === 'coach@globalorators.com';
+
   const navItems: { id: NavigationTab; label: string; icon: React.FC<{ className?: string }>; badge?: number; badgeColor?: string }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'clients', label: 'Speakers & Debaters', icon: Users, badge: clients.filter(c => c.status === 'Active').length },
-    { id: 'coaches', label: 'Faculty Coaches', icon: ShieldCheck, badge: coaches.length },
+    ...(isHeadCoach ? [{ id: 'coaches' as NavigationTab, label: 'Faculty Coaches', icon: ShieldCheck, badge: coaches.length }] : []),
     { id: 'programs', label: 'Curriculum Builder', icon: ScrollText },
     { id: 'exercises', label: 'Drill & Speech Library', icon: BookOpen },
     { id: 'calendar', label: 'Session Schedule', icon: CalendarDays, badge: todayPendingCount > 0 ? todayPendingCount : undefined, badgeColor: 'bg-emerald-500' },
@@ -181,16 +192,10 @@ export const Sidebar: React.FC = () => {
       <div className="p-3 border-t border-slate-800/80 bg-slate-900/60">
         <div className="flex items-center gap-3">
           {(() => {
-            const user = (() => {
-              try {
-                const stored = localStorage.getItem('globalorators_user') || localStorage.getItem('nubianfit_user');
-                return stored ? JSON.parse(stored) : null;
-              } catch {
-                return null;
-              }
-            })();
-            const coachName = user?.full_name || 'Head Coach Qassim';
-            const initials = coachName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'HQ';
+            const user = currentUser;
+            const coachName = user?.full_name || (isHeadCoach ? 'Head Coach Qassim' : 'Faculty Coach');
+            const coachTitle = isHeadCoach ? 'Head Speech & Debate Coach' : 'Faculty Coach';
+            const initials = coachName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || (isHeadCoach ? 'HQ' : 'FC');
 
             return (
               <>
@@ -211,7 +216,7 @@ export const Sidebar: React.FC = () => {
                 {!isCollapsed && (
                   <div className="flex flex-col min-w-0 flex-1">
                     <span className="text-xs font-bold text-white truncate">{coachName}</span>
-                    <span className="text-[11px] text-slate-400 truncate">Head Speech & Debate Coach</span>
+                    <span className="text-[11px] text-slate-400 truncate">{coachTitle}</span>
                   </div>
                 )}
               </>

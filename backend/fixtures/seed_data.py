@@ -71,6 +71,22 @@ async def seed_database(force: bool = False):
             await session.commit()
             print(f"-> Seeded Coach user: {settings.DEFAULT_COACH_EMAIL}")
 
+        # Also guarantee test coach coach@globalorators.com exists for regression tests
+        test_coach_res = await session.execute(select(User).where(User.email == "coach@globalorators.com"))
+        if not test_coach_res.scalar_one_or_none():
+            test_coach = User(
+                id="coach-test-admin",
+                email="coach@globalorators.com",
+                hashed_password=get_password_hash("CoachSecurePassword123"),
+                full_name="Head Coach Qassim",
+                role="coach",
+                avatar="",
+                is_active=True,
+                created_at=datetime.now(timezone.utc),
+            )
+            session.add(test_coach)
+            await session.commit()
+
         if not force and has_clients:
             print("Database already contains data. Skipping seed.")
             return

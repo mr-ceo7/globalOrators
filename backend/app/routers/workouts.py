@@ -3,6 +3,8 @@ Scheduled Workouts & Logging Router
 """
 
 import time
+import asyncio
+import logging
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,7 +22,9 @@ from app.schemas.workout import (
     ScheduledWorkoutResponse,
     CompleteWorkoutRequest
 )
+from app.services.email import send_drill_submission_email, send_coach_feedback_email
 
+logger = logging.getLogger("globalorators.workouts")
 router = APIRouter(prefix="/workouts", tags=["Workouts"])
 
 
@@ -177,6 +181,23 @@ async def update_workout_log(
         
     await db.commit()
     await db.refresh(w)
+
+    # If coach updated feedback on workout, dispatch notification to speaker
+    if workout_in.coach_feedback and client and client.email:
+        try:
+            asyncio.create_task(
+                send_coach_feedback_email(
+                    speaker_email=client.email,
+                    speaker_name=client.name,
+                    drill_title=w.workout_title,
+                    coach_name=current_user.full_name or "Faculty Coach",
+                    feedback_text=workout_in.coach_feedback,
+                    rating=w.rating
+                )
+            )
+        except Exception as notify_err:
+            logger.error(f"Failed to dispatch coach feedback notification: {notify_err}")
+
     return w
 
 
@@ -240,6 +261,46 @@ async def complete_workout(
     
     await db.commit()
     await db.refresh(w)
+
+    # Dispatch email alerts based on caller role
+    try:
+        if req.coach_feedback and client and client.email:
+            # Coach provided adjudication feedback -> Alert speaker
+            asyncio.create_task(
+                send_coach_feedback_email(
+                    speaker_email=client.email,
+                    speaker_name=client.name,
+                    drill_title=w.workout_title,
+                    coach_name=current_user.full_name if current_user.role == "coach" else "Faculty Coach",
+                    feedback_text=req.coach_feedback,
+                    rating=w.rating
+                )
+            )
+        elif current_user.role != "coach" and client:
+            # Speaker completed rehearsal drill -> Alert assigned coach
+            coach_email = settings.DEFAULT_COACH_EMAIL
+            coach_name = settings.DEFAULT_COACH_NAME
+            target_coach_id = w.coach_id or client.coach_id
+            if target_coach_id:
+                c_res = await db.execute(select(User).where(User.id == target_coach_id))
+                coach = c_res.scalar_one_or_none()
+                if coach and coach.email:
+                    coach_email = coach.email
+                    coach_name = coach.full_name or settings.DEFAULT_COACH_NAME
+
+            asyncio.create_task(
+                send_drill_submission_email(
+                    coach_email=coach_email,
+                    coach_name=coach_name,
+                    speaker_name=client.name,
+                    drill_title=w.workout_title,
+                    duration_seconds=(w.duration_min or 55) * 60,
+                    notes=req.client_feedback or f"Completed drill session with {w.rating}/5 self-rating."
+                )
+            )
+    except Exception as notify_err:
+        logger.error(f"Failed to dispatch workout email notification: {notify_err}")
+
     return w
 
 

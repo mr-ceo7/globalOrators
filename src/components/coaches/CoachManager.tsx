@@ -12,7 +12,8 @@ import {
   CheckCircle2, 
   ArrowRightLeft,
   Search,
-  UserCheck
+  UserCheck,
+  Copy
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { sanitizeText } from '../../utils/sanitization';
@@ -28,6 +29,16 @@ export const CoachManager: React.FC = () => {
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+
+  const isHeadCoach = (() => {
+    try {
+      const stored = localStorage.getItem('globalorators_user') || localStorage.getItem('nubianfit_user');
+      const u = stored ? JSON.parse(stored) : null;
+      return u?.id === 'coach-1' || u?.email?.toLowerCase() === 'kassimmusa322@gmail.com' || u?.email?.toLowerCase() === 'coach@globalorators.com';
+    } catch {
+      return false;
+    }
+  })();
 
   // Add Coach Modal State
   const [formName, setFormName] = useState('');
@@ -108,6 +119,20 @@ export const CoachManager: React.FC = () => {
       setIsReassigning(false);
     }
   };
+
+  if (!isHeadCoach) {
+    return (
+      <div className="space-y-6 animate-fadeIn pb-12">
+        <div className="rounded-2xl bg-slate-900 border border-slate-800 p-8 text-center max-w-xl mx-auto my-12">
+          <ShieldCheck className="w-12 h-12 text-[#C89630] mx-auto mb-4" />
+          <h2 className="text-xl font-serif font-bold text-white mb-2">Master Coach Administration Restricted</h2>
+          <p className="text-xs text-slate-400 leading-relaxed">
+            Faculty Coach provisioning and global speaker allocation are reserved for the Head Coach & Faculty Director. You can manage your assigned debaters directly from your roster.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fadeIn pb-12">
@@ -288,7 +313,18 @@ export const CoachManager: React.FC = () => {
 
                 <div className="pt-2 text-[10px] font-mono text-slate-500 border-t border-slate-800/60 flex items-center justify-between">
                   <span>ID: {coach.id}</span>
-                  <span className="text-emerald-400">Active Faculty</span>
+                  <button
+                    onClick={() => {
+                      const link = `${window.location.origin}/apply?ref=${encodeURIComponent(coach.id)}`;
+                      navigator.clipboard?.writeText(link);
+                      showToast(`Referral link for ${coach.name} copied.`);
+                    }}
+                    className="text-[#C89630] hover:text-[#E3B95C] text-[10px] font-mono flex items-center gap-1 cursor-pointer transition-colors"
+                    title={`Copy referral link for ${coach.name}`}
+                  >
+                    <Copy className="w-3 h-3" />
+                    <span>Copy Referral Link</span>
+                  </button>
                 </div>
               </div>
             );

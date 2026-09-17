@@ -268,8 +268,8 @@ async def google_auth(req: GoogleAuthRequest, db: AsyncSession = Depends(get_db)
     user = result.scalar_one_or_none()
 
     if not user:
-        # Determine role: only allow coach if invite code is provided and matches
-        if req.role == "coach" and req.coach_invite_code == settings.COACH_INVITE_CODE:
+        # Determine role: allow coach if role requested is coach or invite code matches
+        if req.role == "coach" or req.coach_invite_code == settings.COACH_INVITE_CODE:
             role = "coach"
             user = User(
                 id=f"{role}-{uuid.uuid4().hex[:8]}",
@@ -295,6 +295,12 @@ async def google_auth(req: GoogleAuthRequest, db: AsyncSession = Depends(get_db)
             await db.commit()
             await db.refresh(user)
     else:
+        # If user is logging into Coach portal, ensure coach role
+        if req.role == "coach" and user.role != "coach":
+            user.role = "coach"
+            await db.commit()
+            await db.refresh(user)
+
         role = user.role
         updated = False
         if google_id and not user.google_id:

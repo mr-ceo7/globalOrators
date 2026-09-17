@@ -4,6 +4,8 @@ Recordings Router - Authenticated Rehearsal Audio Upload, Storage & Streaming
 
 import os
 import uuid
+import asyncio
+import logging
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Query
 from fastapi.responses import FileResponse, Response
@@ -19,7 +21,9 @@ from app.models.client import Client
 from app.models.user import User
 from app.schemas.recording import RecordingResponse
 from app.storage import storage_service
+from app.services.email import send_drill_submission_email
 
+logger = logging.getLogger("globalorators.recordings")
 router = APIRouter(prefix="/recordings", tags=["Recordings"])
 
 # Storage directory fallback for audio recordings
@@ -182,6 +186,31 @@ async def upload_recording(
         db.add(recording)
         await db.commit()
         await db.refresh(recording)
+
+        # Alert coach of new audio rehearsal submission
+        try:
+            coach_email = settings.DEFAULT_COACH_EMAIL
+            coach_name = settings.DEFAULT_COACH_NAME
+            if client.coach_id:
+                c_res = await db.execute(select(User).where(User.id == client.coach_id))
+                coach = c_res.scalar_one_or_none()
+                if coach and coach.email:
+                    coach_email = coach.email
+                    coach_name = coach.full_name or settings.DEFAULT_COACH_NAME
+
+            asyncio.create_task(
+                send_drill_submission_email(
+                    coach_email=coach_email,
+                    coach_name=coach_name,
+                    speaker_name=client.name,
+                    drill_title=recording.title,
+                    duration_seconds=recording.duration_seconds,
+                    notes=f"Audio rehearsal recorded and durably persisted (size: {recording.file_size_bytes} bytes)."
+                )
+            )
+        except Exception as notify_err:
+            logger.error(f"Failed to dispatch recording submission notification: {notify_err}")
+
         return recording
     except Exception as exc:
         await storage_service.delete_file(storage_key)

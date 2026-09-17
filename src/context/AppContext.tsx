@@ -614,18 +614,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
 
       // Bind identity hydration strictly to authenticated server identity (H1/M3)
-      const savedUserStr = localStorage.getItem('globalorators_user') || localStorage.getItem('nubianfit_user');
-      const currentUserRole = savedUserStr ? JSON.parse(savedUserStr)?.role : null;
-      if (currentUserRole === 'coach') {
-        try {
-          const me = await authApi.me();
-          if (me && me.role === 'coach') {
-            setCurrentCoachUser(me);
-            localStorage.setItem('globalorators_user', JSON.stringify(me));
-          }
-        } catch {
-          // Keep current in-memory state or fail-closed on next request
-        }
+      let serverUser: any = null;
+      try {
+        serverUser = await authApi.me();
+      } catch {
+        // Not authenticated with authApi.me()
+      }
+
+      if (serverUser && serverUser.role === 'coach') {
+        setCurrentCoachUser(serverUser);
+        localStorage.setItem('globalorators_user', JSON.stringify(serverUser));
       } else {
         try {
           const me = await clientsApi.getMe();
@@ -1414,11 +1412,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await authApi.googleAuth(credential, role);
       if (res && res.user) {
-        if (res.user.role === 'coach') {
-          setCurrentCoachUser(res.user);
+        if (res.user.role === 'coach' || role === 'coach') {
+          const coachUser = {
+            ...res.user,
+            role: 'coach'
+          };
+          setCurrentCoachUser(coachUser);
+          localStorage.setItem('globalorators_user', JSON.stringify(coachUser));
           setCurrentPortal('coach_os');
           showToast(`Welcome back, Coach ${res.user.full_name}.`);
-          return { success: true, user: res.user };
+          return { success: true, user: coachUser };
         } else {
           // Look up real client record created in backend strictly via authenticated /me endpoint
           let matchedClient: Client | null = null;

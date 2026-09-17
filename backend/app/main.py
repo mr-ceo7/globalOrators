@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.database import engine, Base
+import app.models  # Guarantees all ORM models are registered in Base.metadata for create_all
 from app.dependencies import get_db
 
 # Routers

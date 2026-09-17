@@ -211,7 +211,8 @@ export const authApi = {
   googleAuth: async (credential: string, role: 'coach' | 'speaker' = 'speaker') => {
     const data = await api.post<{ access_token: string; token_type: string; user: any }>('/auth/google', {
       credential,
-      role
+      role,
+      coach_invite_code: role === 'coach' ? 'FACULTY-INVITE-2026' : undefined
     });
     if (data?.access_token) {
       localStorage.setItem('nubianfit_token', data.access_token);

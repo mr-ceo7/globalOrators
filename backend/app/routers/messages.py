@@ -3,6 +3,8 @@ Chat Messages Router
 """
 
 import time
+import asyncio
+import logging
 from datetime import datetime
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
@@ -15,7 +17,9 @@ from app.models.message import ChatMessage
 from app.models.client import Client
 from app.models.user import User
 from app.schemas.message import ChatMessageCreate, ChatMessageResponse
+from app.services.email import send_direct_message_email
 
+logger = logging.getLogger("globalorators.messages")
 router = APIRouter(prefix="/messages", tags=["Messages"])
 
 
@@ -113,4 +117,45 @@ async def send_message(
     db.add(new_msg)
     await db.commit()
     await db.refresh(new_msg)
+
+    # Dispatch direct message email notification
+    try:
+        if msg_in.sender == "client" or current_user.role != "coach":
+            # Speaker messaged coach -> Notify coach
+            coach_email = settings.DEFAULT_COACH_EMAIL
+            coach_name = settings.DEFAULT_COACH_NAME
+            if coach_id:
+                c_res = await db.execute(select(User).where(User.id == coach_id))
+                coach = c_res.scalar_one_or_none()
+                if coach and coach.email:
+                    coach_email = coach.email
+                    coach_name = coach.full_name or settings.DEFAULT_COACH_NAME
+
+            speaker_name = client.name if client else "Orator"
+            asyncio.create_task(
+                send_direct_message_email(
+                    recipient_email=coach_email,
+                    recipient_name=coach_name,
+                    sender_name=speaker_name,
+                    sender_role="Speaker",
+                    message_snippet=msg_in.text,
+                    thread_url=f"{settings.APP_URL}/coach"
+                )
+            )
+        else:
+            # Coach messaged speaker -> Notify speaker
+            if client and client.email:
+                asyncio.create_task(
+                    send_direct_message_email(
+                        recipient_email=client.email,
+                        recipient_name=client.name,
+                        sender_name=current_user.full_name or "Faculty Coach",
+                        sender_role="Coach",
+                        message_snippet=msg_in.text,
+                        thread_url=f"{settings.APP_URL}/speaker"
+                    )
+                )
+    except Exception as notify_err:
+        logger.error(f"Failed to dispatch message notification: {notify_err}")
+
     return new_msg

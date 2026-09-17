@@ -1000,7 +1000,8 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   initialBranch: propBranch,
   initialStep: propStep
 }) => {
-  const { completeOnboarding, setCurrentPortal } = useApp();
+  const { completeOnboarding, setCurrentPortal, referredCoach, activeSpeakerProfile } = useApp();
+  const [coachReferralInput, setCoachReferralInput] = useState(referredCoach || '');
 
   // Form State & Preselection Check
   const rawStoredBranch = typeof window !== 'undefined'
@@ -1289,7 +1290,8 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         selectedHabits: resolvedHabits,
         bioNotes: sanitizedOtherDesc.trim()
           ? `${branch} member from ${sanitizedInstitution}. Custom Objective: ${sanitizedOtherDesc.trim()}. Primary discipline: ${resolvedDiscipline}, specializing in ${resolvedFocus}.`
-          : `${branch} member from ${sanitizedInstitution}. Primary discipline: ${resolvedDiscipline}, specializing in ${resolvedFocus}. Mission: ${missionFocus}.`
+          : `${branch} member from ${sanitizedInstitution}. Primary discipline: ${resolvedDiscipline}, specializing in ${resolvedFocus}. Mission: ${missionFocus}.`,
+        coachRef: coachReferralInput.trim() || referredCoach || undefined
       };
 
       await completeOnboarding(data);
@@ -1342,6 +1344,26 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 
       {/* Main Questionnaire Container */}
       <div className="max-w-2xl mx-auto w-full my-auto py-8">
+        {/* Active Speaker Session Notice */}
+        {activeSpeakerProfile && (
+          <div className="mb-6 p-4 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
+            <div>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-[#C89630]">
+                Active Speaker Calibration
+              </div>
+              <p className="text-xs text-slate-300 mt-0.5">
+                You are enrolled as <strong className="text-white">{activeSpeakerProfile.fullName}</strong> ({activeSpeakerProfile.branch} Track).
+              </p>
+            </div>
+            <button
+              onClick={() => setCurrentPortal('speaker_app')}
+              className="px-3.5 py-2 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-slate-950 font-serif font-bold text-xs transition-colors shrink-0 cursor-pointer shadow-sm"
+            >
+              Open Speaker App →
+            </button>
+          </div>
+        )}
+
         {/* STEP 1: Branch Selection */}
         {currentStep === 1 && (
           <div className="space-y-6 animate-fadeIn">
@@ -1853,6 +1875,36 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                         ))}
                       </select>
                     </div>
+                  </div>
+
+                  {/* Coach Referral Code (Optional or URL Captured) */}
+                  <div className="pt-1">
+                    {referredCoach ? (
+                      <div className="p-3 rounded-xl bg-slate-950/80 border border-[#C89630]/40 flex items-center justify-between text-xs">
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
+                          Attributed Coach Referral
+                        </span>
+                        <span className="font-mono text-xs text-[#C89630] font-bold">
+                          {referredCoach}
+                        </span>
+                      </div>
+                    ) : (
+                      <div>
+                        <label htmlFor="coach-referral-input" className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
+                          Coach Referral Code (Optional)
+                        </label>
+                        <input
+                          id="coach-referral-input"
+                          name="coachReferral"
+                          type="text"
+                          maxLength={60}
+                          value={coachReferralInput}
+                          onChange={(e) => setCoachReferralInput(sanitizeText(e.target.value, 60))}
+                          placeholder="e.g. coach-1 or coach email"
+                          className="w-full h-10 px-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-600 focus:border-[#C89630] focus:ring-1 focus:ring-[#C89630]/30 focus:outline-hidden transition-all font-mono"
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
 

@@ -418,8 +418,10 @@ export const Header: React.FC<HeaderProps> = ({
                 return null;
               }
             })();
-            const coachName = user?.full_name || 'Head Coach Qassim';
-            const initials = coachName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'HQ';
+            const isHeadCoach = user?.id === 'coach-1' || user?.email?.toLowerCase() === 'kassimmusa322@gmail.com' || user?.email?.toLowerCase() === 'coach@globalorators.com';
+            const coachName = user?.full_name || (isHeadCoach ? 'Head Coach Qassim' : 'Faculty Coach');
+            const coachTitle = isHeadCoach ? 'Head Speech & Debate Coach' : 'Faculty Coach';
+            const initials = coachName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || (isHeadCoach ? 'HQ' : 'FC');
 
             return (
               <>
@@ -443,7 +445,7 @@ export const Header: React.FC<HeaderProps> = ({
                   <div className="absolute top-11 right-0 w-56 rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-2 z-50 space-y-1">
                     <div className="px-3 py-2 border-b border-slate-800/80 mb-1.5 text-left">
                       <div className="text-xs font-bold text-white">{coachName}</div>
-                      <div className="text-[10px] text-slate-400">Head Speech & Debate Coach</div>
+                      <div className="text-[10px] text-slate-400">{coachTitle}</div>
                     </div>
               
               {/* Theme Toggle (Mobile) */}

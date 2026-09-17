@@ -14,7 +14,8 @@ import {
   Mail, 
   CheckCircle2, 
   X, 
-  Target
+  Target,
+  Link2
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { Client, ClientStatus, SpeakingGoal, ExperienceLevel } from '../../types';
@@ -31,7 +32,8 @@ export const ClientRoster: React.FC<{
     selectedClientId, 
     setSelectedClientId, 
     setActiveTab,
-    reassignClientCoach 
+    reassignClientCoach,
+    showToast
   } = useApp();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -146,9 +148,14 @@ export const ClientRoster: React.FC<{
       case 'Needs Check-in':
         return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30 animate-pulse">● Review Due</span>;
       case 'Onboarding':
+      case 'Pending Onboarding' as any:
         return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">● Onboarding</span>;
+      case 'Needs Review':
+        return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30">● Needs Review</span>;
       case 'Inactive':
         return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-800 text-slate-400 border border-slate-700">● Inactive</span>;
+      default:
+        return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">● Onboarding</span>;
     }
   };
 
@@ -166,14 +173,31 @@ export const ClientRoster: React.FC<{
           </p>
         </div>
 
-        <button
-          id="open-add-client-modal-btn"
-          onClick={onOpenAddModal}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20 transition-all self-start sm:self-auto"
-        >
-          <Plus className="h-4 w-4 stroke-[3]" />
-          <span>+ Onboard New Speaker</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          <button
+            id="copy-roster-referral-link-btn"
+            onClick={() => {
+              const coachId = currentUser?.id || 'coach-1';
+              const link = `${window.location.origin}/apply?ref=${encodeURIComponent(coachId)}`;
+              navigator.clipboard?.writeText(link);
+              showToast('Coach referral link copied to clipboard.');
+            }}
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-850 text-slate-300 hover:text-white font-mono text-xs transition-all cursor-pointer"
+            title="Copy your personal speaker intake link"
+          >
+            <Link2 className="h-4 w-4 text-[#C89630]" />
+            <span>Copy Referral Link</span>
+          </button>
+
+          <button
+            id="open-add-client-modal-btn"
+            onClick={onOpenAddModal}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20 transition-all cursor-pointer"
+          >
+            <Plus className="h-4 w-4 stroke-[3]" />
+            <span>+ Onboard New Speaker</span>
+          </button>
+        </div>
       </div>
 
       {/* Filter and Search Bar */}

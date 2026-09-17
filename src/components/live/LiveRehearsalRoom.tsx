@@ -88,7 +88,17 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
   const safeRoomId = `GlobalOrators-${cleanSpeakerName}-${cleanSpeakerId}`;
 
   // Jitsi URL for Self-Hosted Instance
-  const displayName = userRole === 'coach' ? 'Head Coach Tyrese / Qassim' : speakerName;
+  const currentStoredUser = (() => {
+    try {
+      const stored = localStorage.getItem('globalorators_user') || localStorage.getItem('nubianfit_user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  })();
+  const isHeadCoach = currentStoredUser?.id === 'coach-1' || currentStoredUser?.email?.toLowerCase() === 'kassimmusa322@gmail.com' || currentStoredUser?.email?.toLowerCase() === 'coach@globalorators.com';
+  const coachLabel = currentStoredUser?.full_name || (isHeadCoach ? 'Head Coach Qassim' : 'Faculty Coach');
+  const displayName = userRole === 'coach' ? coachLabel : speakerName;
   const selfHostedMeetingUrl = `https://${jitsiDomain}/${safeRoomId}#config.prejoinConfig.enabled=false&config.prejoinPageEnabled=false&config.defaultLanguage="en"&config.disableDeepLinking=true&userInfo.displayName=${encodeURIComponent(displayName)}&interfaceConfig.SHOW_JITSI_WATERMARK=false&interfaceConfig.SHOW_WATERMARK_FOR_GUESTS=false&interfaceConfig.SHOW_BRAND_WATERMARK=false&interfaceConfig.SHOW_POWERED_BY=false&interfaceConfig.SHOW_CHROME_EXTENSION_BANNER=false`;
 
   // Security Context Check (Mobile WebRTC strictly requires HTTPS or localhost)
@@ -874,7 +884,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
                     </span>
                     <span className="text-slate-700">|</span>
                     <span>
-                      {userRole === 'coach' ? `${speakerName} (Speaker)` : 'Head Coach Tyrese / Qassim'}
+                      {userRole === 'coach' ? `${speakerName} (Speaker)` : `${coachLabel} (Coach)`}
                     </span>
                   </div>
                 </div>

@@ -3,7 +3,7 @@ Application Configuration and Settings
 """
 
 import os
-from typing import List, Set
+from typing import List, Set, Optional
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -51,9 +51,19 @@ class Settings(BaseSettings):
     # Administrator Bootstrapping (Audit & Controlled Provisioning)
     BOOTSTRAP_INITIAL_ADMIN: bool = os.getenv("BOOTSTRAP_INITIAL_ADMIN", "false").lower() in ("true", "1")
     DEFAULT_COACH_NAME: str = os.getenv("DEFAULT_COACH_NAME", "Head Coach Qassim")
-    DEFAULT_COACH_EMAIL: str = os.getenv("DEFAULT_COACH_EMAIL", "coach@globalorators.com")
+    DEFAULT_COACH_EMAIL: str = os.getenv("DEFAULT_COACH_EMAIL", "kassimmusa322@gmail.com")
     DEFAULT_COACH_PASSWORD: str = os.getenv("DEFAULT_COACH_PASSWORD", "Coach@123")
     COACH_INVITE_CODE: str = os.getenv("COACH_INVITE_CODE", "globalorators-coach-invite-2026")
+
+    def is_head_coach_email(self, email: Optional[str]) -> bool:
+        if not email:
+            return False
+        clean = email.strip().lower()
+        return clean in {
+            self.DEFAULT_COACH_EMAIL.strip().lower(),
+            "kassimmusa322@gmail.com",
+            "coach@globalorators.com",
+        }
 
     # Durable Storage Configuration (Local Disk or Private S3/Object Storage)
     STORAGE_BACKEND: str = os.getenv("STORAGE_BACKEND", "local")  # "local" or "s3"
@@ -92,8 +102,10 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5173",
     ]
 
+    APP_URL: str = os.getenv("APP_URL", "http://localhost:3000")
+
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(os.path.join(_backend_dir, ".env"), ".env"),
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="ignore"

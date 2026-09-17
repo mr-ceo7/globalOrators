@@ -3,6 +3,7 @@ Partnership & Institutional Inquiries Router
 """
 
 import time
+import asyncio
 import logging
 from datetime import datetime, timezone
 from typing import List
@@ -10,11 +11,13 @@ from fastapi import APIRouter, status, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
+from app.config import settings
 from app.dependencies import get_db, require_coach
 from app.models.inquiry import Inquiry
 from app.models.user import User
 from app.schemas.inquiry import InquiryCreate, InquiryResponse
 from app.rate_limiter import rate_limit
+from app.services.email import send_inquiry_notification_email
 
 logger = logging.getLogger("globalorators.inquiries")
 router = APIRouter(prefix="/inquiries", tags=["Inquiries"])
@@ -49,6 +52,20 @@ async def submit_inquiry(
     await db.refresh(inquiry_record)
     
     logger.info(f"New partnership inquiry persisted: {inquiry_id} from {inquiry_record.organization} ({inquiry_record.email})")
+
+    try:
+        asyncio.create_task(
+            send_inquiry_notification_email(
+                coach_email=settings.DEFAULT_COACH_EMAIL,
+                organization=inquiry_record.organization,
+                contact_email=inquiry_record.email,
+                branch=inquiry_record.branch,
+                focus=inquiry_record.focus,
+                message=inquiry_record.message or "No message provided."
+            )
+        )
+    except Exception as notify_err:
+        logger.error(f"Failed to dispatch inquiry notification: {notify_err}")
     
     return InquiryResponse(
         status="success",

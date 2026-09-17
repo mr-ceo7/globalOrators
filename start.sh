@@ -65,10 +65,10 @@ fi
 echo "Starting FastAPI Backend Server..."
 cd backend
 if [ -f "./venv/bin/uvicorn" ]; then
-  ./venv/bin/uvicorn app.main:app --host 0.0.0.0 --port $BACKEND_PORT &
+  ./venv/bin/uvicorn app.main:app --reload --host 0.0.0.0 --port $BACKEND_PORT &
   BACKEND_PID=$!
 else
-  python3 -m uvicorn app.main:app --host 0.0.0.0 --port $BACKEND_PORT &
+  python3 -m uvicorn app.main:app --reload --host 0.0.0.0 --port $BACKEND_PORT &
   BACKEND_PID=$!
 fi
 cd ..

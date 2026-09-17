@@ -1,12 +1,20 @@
 """
 SMTP Email Dispatch Service for Global Orators Platform
-Handles passwordless OTP delivery with SSL encryption and editorial formatting.
+Handles editorial notifications across the orator and coach lifecycles:
+- Speaker Welcome & Formulated Protocol Briefing (Onboarding Step 5)
+- Faculty Coach Dispatch: New Orator Enrolled
+- Rehearsal & Drill Submission Alerts (to Coach)
+- Faculty Adjudication & Feedback Alerts (to Speaker)
+- Direct Secure Messaging Alerts
+- Institutional & Partnership Inquiry Alerts
+- Passwordless OTP & 1-Click Magic Login Links
 """
 
 import ssl
 import smtplib
 import asyncio
 import logging
+from typing import Optional
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
@@ -15,98 +23,25 @@ from app.config import settings
 logger = logging.getLogger("globalorators.email")
 
 
-from typing import Optional
+def _dispatch_smtp_email_sync(recipient_email: str, subject: str, text_body: str, html_body: str) -> bool:
+    """
+    Transmit an email via authenticated SMTP with TLS/SSL encryption.
+    Gracefully logs and suppresses errors in testing/development environments.
+    """
+    if settings.TESTING:
+        logger.info(f"[TESTING] Email dispatch simulated: '{subject}' -> {recipient_email}")
+        return True
 
-def send_otp_email_sync(recipient_email: str, otp_code: str, magic_link_url: Optional[str] = None) -> bool:
-    """
-    Transmit a 1-click magic login link and single-use verification passcode via authenticated SMTP SSL.
-    Adheres strictly to Global Orators editorial typography and Anti-AI Slop guidelines.
-    """
     if not settings.SMTP_USERNAME or not settings.SMTP_PASSWORD:
-        logger.warning("SMTP credentials not configured; skipping actual email transmission.")
+        logger.warning(
+            f"SMTP credentials not configured; skipping email dispatch: '{subject}' -> {recipient_email}"
+        )
         return False
 
     msg = MIMEMultipart("alternative")
-    msg["Subject"] = f"Your Global Orators Magic Login Link & Passcode"
+    msg["Subject"] = subject
     msg["From"] = f"Global Orators <{settings.FROM_EMAIL}>"
     msg["To"] = recipient_email
-
-    magic_link_section_text = f"""1-CLICK MAGIC LOGIN LINK:
-Click the link below to enter your Orators App workspace instantly:
-{magic_link_url}
-
-""" if magic_link_url else ""
-
-    text_body = f"""GLOBAL ORATORS · SPEAKER PROTOCOL ACCESS
-Authentication Passcode & Magic Login Link
-
-{magic_link_section_text}YOUR 6-DIGIT PASSCODE:
-{otp_code}
-
-This passcode and link are valid for 15 minutes.
-
-Enter this code in your Global Orators portal window or click the 1-click login link to access your training workspace.
-If you did not request this link, you can safely disregard this message.
-"""
-
-    magic_link_section_html = f"""
-        <div style="text-align: center; margin: 32px 0 28px 0;">
-          <a href="{magic_link_url}" style="background-color: #c89630; color: #080a0e; font-family: Georgia, serif; font-size: 16px; font-weight: 800; padding: 16px 36px; text-decoration: none; border-radius: 10px; display: inline-block; letter-spacing: 0.02em; box-shadow: 0 4px 14px rgba(200, 150, 48, 0.35);">
-            Enter Orators App (1-Click Login) &rarr;
-          </a>
-        </div>
-        <div style="text-align: center; margin-bottom: 24px;">
-          <span style="font-size: 11px; color: #64748b; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
-            Direct link: <a href="{magic_link_url}" style="color: #c89630; word-break: break-all;">{magic_link_url}</a>
-          </span>
-        </div>
-        <div style="border-top: 1px solid #1e293b; margin: 28px 0; text-align: center; position: relative;">
-          <span style="background-color: #10141d; padding: 0 12px; color: #64748b; font-family: ui-monospace, monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em;">
-            Or Enter 6-Digit Passcode
-          </span>
-        </div>
-""" if magic_link_url else ""
-
-    html_body = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Global Orators Speaker Verification</title>
-</head>
-<body style="margin: 0; padding: 40px 16px; background-color: #080a0e; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #f8fafc;">
-  <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 540px; background-color: #10141d; border: 1px solid #1e293b; border-radius: 16px; overflow: hidden; padding: 40px 32px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
-    <tr>
-      <td>
-        <div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 11px; letter-spacing: 0.18em; color: #c89630; text-transform: uppercase; margin-bottom: 8px; font-weight: 700;">
-          Global Orators · Speaker Protocol
-        </div>
-        <h1 style="font-family: Georgia, Cambria, 'Times New Roman', serif; font-size: 24px; font-weight: 900; color: #ffffff; margin: 0 0 16px 0; line-height: 1.25; letter-spacing: -0.02em;">
-          Authentication & Magic Login
-        </h1>
-        <p style="font-size: 14px; line-height: 1.6; color: #94a3b8; margin: 0 0 20px 0;">
-          Click the button below to instantly access your speaker workspace, or enter the single-use verification passcode in your open browser window.
-        </p>
-
-        {magic_link_section_html}
-
-        <div style="background-color: #080a0e; border: 1px solid #334155; border-radius: 12px; padding: 22px; text-align: center; margin-bottom: 24px;">
-          <div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 32px; font-weight: 800; letter-spacing: 0.28em; color: #ffffff;">
-            {otp_code}
-          </div>
-          <div style="font-size: 11px; color: #64748b; margin-top: 8px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; text-transform: uppercase; letter-spacing: 0.08em;">
-            Single-Use Passcode · Valid for 15 minutes
-          </div>
-        </div>
-
-        <p style="font-size: 12px; line-height: 1.5; color: #64748b; margin: 0; border-top: 1px solid #1e293b; padding-top: 20px;">
-          If you did not request this verification link, you can safely ignore this email. No changes will be made to your records.
-        </p>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-"""
 
     msg.attach(MIMEText(text_body, "plain", "utf-8"))
     msg.attach(MIMEText(html_body, "html", "utf-8"))
@@ -123,13 +58,764 @@ If you did not request this link, you can safely disregard this message.
                 server.login(settings.SMTP_USERNAME, settings.SMTP_PASSWORD)
                 server.send_message(msg)
 
-        logger.info(f"Magic link & OTP email successfully delivered to {recipient_email}")
+        logger.info(f"Email successfully delivered: '{subject}' -> {recipient_email}")
         return True
     except Exception as exc:
-        logger.error(f"Failed to dispatch OTP email to {recipient_email}: {exc}")
+        logger.error(f"Failed to dispatch email to {recipient_email} ('{subject}'): {exc}")
         return False
+
+
+def _wrap_editorial_html(kicker: str, headline: str, lead_text: str, content_html: str, action_url: Optional[str] = None, action_label: Optional[str] = None) -> str:
+    """
+    Render an authoritative editorial email document adhering strictly to
+    Anti-AI Slop standards (commanding serif display, gold accents, hairline dividers, micro-mono labels).
+    """
+    action_button_html = ""
+    if action_url and action_label:
+        action_button_html = f"""
+        <div style="text-align: center; margin: 32px 0 24px 0;">
+          <a href="{action_url}" style="background-color: #c89630; color: #080a0e; font-family: Georgia, Cambria, 'Times New Roman', serif; font-size: 15px; font-weight: 800; padding: 15px 34px; text-decoration: none; border-radius: 10px; display: inline-block; letter-spacing: 0.02em; box-shadow: 0 4px 14px rgba(200, 150, 48, 0.35);">
+            {action_label} &rarr;
+          </a>
+        </div>
+        <div style="text-align: center; margin-bottom: 24px;">
+          <span style="font-size: 11px; color: #64748b; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
+            Direct link: <a href="{action_url}" style="color: #c89630; word-break: break-all;">{action_url}</a>
+          </span>
+        </div>
+        """
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{headline}</title>
+</head>
+<body style="margin: 0; padding: 40px 16px; background-color: #080a0e; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #f8fafc;">
+  <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 560px; background-color: #10141d; border: 1px solid #1e293b; border-radius: 16px; overflow: hidden; padding: 40px 32px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.55);">
+    <tr>
+      <td>
+        <!-- Kicker -->
+        <div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 11px; letter-spacing: 0.18em; color: #c89630; text-transform: uppercase; margin-bottom: 10px; font-weight: 700;">
+          {kicker}
+        </div>
+        
+        <!-- Headline -->
+        <h1 style="font-family: Georgia, Cambria, 'Times New Roman', serif; font-size: 24px; font-weight: 900; color: #ffffff; margin: 0 0 14px 0; line-height: 1.25; letter-spacing: -0.02em;">
+          {headline}
+        </h1>
+
+        <!-- Lead paragraph -->
+        <p style="font-size: 14px; line-height: 1.6; color: #94a3b8; margin: 0 0 22px 0;">
+          {lead_text}
+        </p>
+
+        <!-- Body content -->
+        {content_html}
+
+        <!-- Call-to-action button -->
+        {action_button_html}
+
+        <!-- Architectural hairline divider -->
+        <div style="border-top: 1px solid #1e293b; margin: 28px 0 20px 0;"></div>
+
+        <!-- Editorial Dispatch Footer -->
+        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+          <tr>
+            <td style="font-size: 11px; line-height: 1.6; color: #64748b; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
+              <strong style="color: #94a3b8;">Global Orators Project</strong> · Forensics, Rhetoric & Voice Sovereignty<br>
+              This is an automated dispatch sent to registered platform participants.
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+"""
+
+
+# ---------------------------------------------------------------------------
+# 1. Passwordless OTP & Magic Login Link
+# ---------------------------------------------------------------------------
+
+def send_otp_email_sync(recipient_email: str, otp_code: str, magic_link_url: Optional[str] = None) -> bool:
+    """Transmit a 1-click magic login link and single-use verification passcode."""
+    magic_link_section_text = f"""1-CLICK MAGIC LOGIN LINK:
+Click the link below to enter your Orators App workspace instantly:
+{magic_link_url}
+
+""" if magic_link_url else ""
+
+    text_body = f"""GLOBAL ORATORS · SPEAKER PROTOCOL ACCESS
+Authentication Passcode & Magic Login Link
+
+{magic_link_section_text}YOUR 6-DIGIT PASSCODE:
+{otp_code}
+
+This passcode and link are valid for 15 minutes.
+Enter this code in your Global Orators portal window or click the 1-click login link to access your training workspace.
+If you did not request this link, you can safely disregard this message.
+"""
+
+    otp_block_html = f"""
+    <div style="background-color: #080a0e; border: 1px solid #334155; border-radius: 12px; padding: 22px; text-align: center; margin: 20px 0 24px 0;">
+      <div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 32px; font-weight: 800; letter-spacing: 0.28em; color: #ffffff;">
+        {otp_code}
+      </div>
+      <div style="font-size: 11px; color: #64748b; margin-top: 8px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; text-transform: uppercase; letter-spacing: 0.08em;">
+        Single-Use Passcode · Valid for 15 minutes
+      </div>
+    </div>
+    """
+
+    html_body = _wrap_editorial_html(
+        kicker="Global Orators · Speaker Protocol",
+        headline="Authentication & Magic Login",
+        lead_text="Click the button below to instantly access your speaker workspace, or enter the single-use verification passcode in your open browser window.",
+        content_html=otp_block_html,
+        action_url=magic_link_url,
+        action_label="Enter Orators App (1-Click Login)" if magic_link_url else None
+    )
+
+    return _dispatch_smtp_email_sync(
+        recipient_email=recipient_email,
+        subject="Your Global Orators Magic Login Link & Passcode",
+        text_body=text_body,
+        html_body=html_body
+    )
 
 
 async def send_otp_email(recipient_email: str, otp_code: str, magic_link_url: Optional[str] = None) -> bool:
     """Non-blocking async wrapper executing SMTP operations in worker threadpool."""
     return await asyncio.to_thread(send_otp_email_sync, recipient_email, otp_code, magic_link_url)
+
+
+# ---------------------------------------------------------------------------
+# 2. Speaker Welcome & Formulated Protocol Briefing (Onboarding Step 5)
+# ---------------------------------------------------------------------------
+
+def send_welcome_protocol_email_sync(
+    speaker_email: str,
+    speaker_name: str,
+    branch: str,
+    mission_focus: str,
+    primary_format: str,
+    curriculum_focus: str,
+    target_cadence: int,
+    institution: str = "",
+    magic_link_url: Optional[str] = None
+) -> bool:
+    """
+    Transmit high-end editorial briefing containing the speaker's customized protocol,
+    mirroring Step 5 of the onboarding journey.
+    """
+    clean_branch = branch if branch in ("Academy", "Foundation") else "Academy"
+    faculty_quote = (
+        "Your pathway in Global Orators Academy is calibrated to awaken cognitive sovereignty, "
+        "rigorous forensics argumentation, and commanding rhetorical delivery. Enter your portal to begin your first drill."
+        if clean_branch == "Academy"
+        else "Your sanctuary in Global Orators Foundation is calibrated for emotional safety, "
+        "vulnerability-without-apology, and discovering the healing power of your authentic voice. Enter your portal to begin your first reflection."
+    )
+
+    portal_url = magic_link_url or f"{settings.APP_URL}/speaker"
+
+    text_body = f"""GLOBAL ORATORS · PROTOCOL FORMULATION BRIEFING
+Your Personalized Orator Training Protocol is Formulated
+
+Speaker: {speaker_name} ({clean_branch} Scholar)
+Institution: {institution or 'Independent Scholar'}
+
+ORATOR CALIBRATION SUMMARY:
+- Speaking Mission: {mission_focus}
+- Primary Format: {primary_format}
+- Curriculum Focus: {curriculum_focus}
+- Target Cadence: {target_cadence} WPM
+
+FACULTY WELCOME:
+"{faculty_quote}"
+
+Enter your workspace to access your curriculum and initial diagnostic drills:
+{portal_url}
+"""
+
+    institution_line = f"""<div style="font-size: 12px; color: #94a3b8; margin-top: 2px;">{institution}</div>""" if institution else ""
+
+    content_html = f"""
+    <!-- Speaker Summary Card -->
+    <div style="background-color: #080a0e; border: 1px solid rgba(200, 150, 48, 0.4); border-radius: 14px; padding: 22px; margin-bottom: 24px;">
+      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 18px;">
+        <tr>
+          <td>
+            <div style="font-size: 16px; font-weight: 800; color: #ffffff; font-family: Georgia, serif;">{speaker_name}</div>
+            <div style="font-size: 12px; color: #64748b; margin-top: 2px;">{speaker_email}</div>
+            {institution_line}
+          </td>
+          <td align="right" valign="top">
+            <span style="font-family: ui-monospace, monospace; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; padding: 5px 10px; border-radius: 6px; border: 1px solid rgba(200, 150, 48, 0.4); background-color: rgba(200, 150, 48, 0.15); color: #c89630;">
+              {clean_branch} Scholar
+            </span>
+          </td>
+        </tr>
+      </table>
+
+      <!-- 2-Column Metrics Table -->
+      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-top: 1px solid #1e293b; padding-top: 14px;">
+        <tr>
+          <td width="50%" style="padding: 6px 8px 10px 0;" valign="top">
+            <div style="font-family: ui-monospace, monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; font-weight: 700;">Speaking Mission</div>
+            <div style="font-size: 13px; font-weight: 700; color: #ffffff; margin-top: 3px;">{mission_focus}</div>
+          </td>
+          <td width="50%" style="padding: 6px 0 10px 8px;" valign="top">
+            <div style="font-family: ui-monospace, monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; font-weight: 700;">Primary Format</div>
+            <div style="font-size: 13px; font-weight: 700; color: #c89630; margin-top: 3px;">{primary_format}</div>
+          </td>
+        </tr>
+        <tr>
+          <td width="50%" style="padding: 6px 8px 0 0;" valign="top">
+            <div style="font-family: ui-monospace, monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; font-weight: 700;">Curriculum Focus</div>
+            <div style="font-size: 13px; font-weight: 700; color: #f59e0b; margin-top: 3px;">{curriculum_focus}</div>
+          </td>
+          <td width="50%" style="padding: 6px 0 0 8px;" valign="top">
+            <div style="font-family: ui-monospace, monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; font-weight: 700;">Target Cadence</div>
+            <div style="font-size: 13px; font-weight: 700; color: #ffffff; margin-top: 3px;">{target_cadence} WPM</div>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Faculty Welcome Statement -->
+      <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid #1e293b;">
+        <div style="font-family: ui-monospace, monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: #c89630; font-weight: 700; margin-bottom: 4px;">
+          Global Orators Faculty Welcome
+        </div>
+        <div style="font-size: 12px; line-height: 1.55; color: #cbd5e1; font-style: italic;">
+          &ldquo;{faculty_quote}&rdquo;
+        </div>
+      </div>
+    </div>
+    """
+
+    html_body = _wrap_editorial_html(
+        kicker="Global Orators · Protocol Formulation",
+        headline="Your Protocol is Formulated",
+        lead_text="Welcome to the Global Orators Project. Your personalized client portal has been calibrated and is ready for your initial diagnostics.",
+        content_html=content_html,
+        action_url=portal_url,
+        action_label="Enter Orators App"
+    )
+
+    return _dispatch_smtp_email_sync(
+        recipient_email=speaker_email,
+        subject="Global Orators · Your Speaking Protocol Formulation Briefing",
+        text_body=text_body,
+        html_body=html_body
+    )
+
+
+async def send_welcome_protocol_email(
+    speaker_email: str,
+    speaker_name: str,
+    branch: str,
+    mission_focus: str,
+    primary_format: str,
+    curriculum_focus: str,
+    target_cadence: int,
+    institution: str = "",
+    magic_link_url: Optional[str] = None
+) -> bool:
+    """Async wrapper for welcome protocol briefing dispatch."""
+    return await asyncio.to_thread(
+        send_welcome_protocol_email_sync,
+        speaker_email,
+        speaker_name,
+        branch,
+        mission_focus,
+        primary_format,
+        curriculum_focus,
+        target_cadence,
+        institution,
+        magic_link_url
+    )
+
+
+# ---------------------------------------------------------------------------
+# 3. Faculty Coach Alert: New Orator Enrolled
+# ---------------------------------------------------------------------------
+
+def send_coach_new_speaker_email_sync(
+    coach_email: str,
+    coach_name: str,
+    speaker_name: str,
+    speaker_email: str,
+    branch: str,
+    mission_focus: str,
+    primary_format: str,
+    curriculum_focus: str,
+    target_cadence: int,
+    institution: str = ""
+) -> bool:
+    """Alert coach when a new orator completes intake and joins their roster."""
+    coach_portal_url = f"{settings.APP_URL}/coach"
+
+    text_body = f"""GLOBAL ORATORS · FACULTY DISPATCH: NEW ORATOR ENROLLED
+Coach {coach_name}, an orator has completed onboarding and formulated their initial diagnostic protocol.
+
+NEW SPEAKER DOSSIER:
+- Name: {speaker_name}
+- Email: {speaker_email}
+- Cohort: {branch} Scholar
+- Institution: {institution or 'Independent Scholar'}
+- Speaking Mission: {mission_focus}
+- Primary Format: {primary_format}
+- Curriculum Focus: {curriculum_focus}
+- Target Baseline: {target_cadence} WPM
+
+Review the speaker's diagnostic profile in Coach OS:
+{coach_portal_url}
+"""
+
+    institution_line = f"""<tr><td style="color: #64748b; font-size: 11px; padding: 4px 0; width: 140px; font-family: ui-monospace, monospace; text-transform: uppercase;">Institution</td><td style="color: #ffffff; font-size: 13px; font-weight: 600;">{institution}</td></tr>""" if institution else ""
+
+    content_html = f"""
+    <div style="background-color: #080a0e; border: 1px solid #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+      <table border="0" cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+          <td style="color: #64748b; font-size: 11px; padding: 4px 0; width: 140px; font-family: ui-monospace, monospace; text-transform: uppercase;">Speaker</td>
+          <td style="color: #ffffff; font-size: 13px; font-weight: 700;">{speaker_name} &lt;{speaker_email}&gt;</td>
+        </tr>
+        <tr>
+          <td style="color: #64748b; font-size: 11px; padding: 4px 0; font-family: ui-monospace, monospace; text-transform: uppercase;">Cohort</td>
+          <td style="color: #c89630; font-size: 13px; font-weight: 700;">{branch} Scholar</td>
+        </tr>
+        {institution_line}
+        <tr>
+          <td style="color: #64748b; font-size: 11px; padding: 4px 0; font-family: ui-monospace, monospace; text-transform: uppercase;">Mission</td>
+          <td style="color: #cbd5e1; font-size: 13px;">{mission_focus}</td>
+        </tr>
+        <tr>
+          <td style="color: #64748b; font-size: 11px; padding: 4px 0; font-family: ui-monospace, monospace; text-transform: uppercase;">Format</td>
+          <td style="color: #cbd5e1; font-size: 13px;">{primary_format}</td>
+        </tr>
+        <tr>
+          <td style="color: #64748b; font-size: 11px; padding: 4px 0; font-family: ui-monospace, monospace; text-transform: uppercase;">Focus</td>
+          <td style="color: #f59e0b; font-size: 13px; font-weight: 600;">{curriculum_focus}</td>
+        </tr>
+        <tr>
+          <td style="color: #64748b; font-size: 11px; padding: 4px 0; font-family: ui-monospace, monospace; text-transform: uppercase;">Target Baseline</td>
+          <td style="color: #ffffff; font-size: 13px; font-weight: 600;">{target_cadence} WPM</td>
+        </tr>
+      </table>
+    </div>
+    """
+
+    html_body = _wrap_editorial_html(
+        kicker="Global Orators · Faculty Dispatch",
+        headline="New Orator Intake Enrolled",
+        lead_text=f"Coach {coach_name}, an orator has completed onboarding and formulated their initial diagnostic protocol.",
+        content_html=content_html,
+        action_url=coach_portal_url,
+        action_label="Review Speaker Dossier in Coach OS"
+    )
+
+    return _dispatch_smtp_email_sync(
+        recipient_email=coach_email,
+        subject=f"Global Orators Faculty · New Orator Enrolled: {speaker_name}",
+        text_body=text_body,
+        html_body=html_body
+    )
+
+
+async def send_coach_new_speaker_email(
+    coach_email: str,
+    coach_name: str,
+    speaker_name: str,
+    speaker_email: str,
+    branch: str,
+    mission_focus: str,
+    primary_format: str,
+    curriculum_focus: str,
+    target_cadence: int,
+    institution: str = ""
+) -> bool:
+    """Async wrapper for coach new speaker notification."""
+    return await asyncio.to_thread(
+        send_coach_new_speaker_email_sync,
+        coach_email,
+        coach_name,
+        speaker_name,
+        speaker_email,
+        branch,
+        mission_focus,
+        primary_format,
+        curriculum_focus,
+        target_cadence,
+        institution
+    )
+
+
+# ---------------------------------------------------------------------------
+# 4. Faculty Coach Alert: Rehearsal / Drill Submission
+# ---------------------------------------------------------------------------
+
+def send_drill_submission_email_sync(
+    coach_email: str,
+    coach_name: str,
+    speaker_name: str,
+    drill_title: str,
+    duration_seconds: Optional[int] = None,
+    notes: Optional[str] = None
+) -> bool:
+    """Alert coach that a speaker has recorded and submitted a drill for adjudication."""
+    coach_portal_url = f"{settings.APP_URL}/coach"
+
+    duration_str = ""
+    if duration_seconds and duration_seconds > 0:
+        minutes = duration_seconds // 60
+        secs = duration_seconds % 60
+        duration_str = f"{minutes}m {secs:02d}s" if minutes else f"{secs}s"
+
+    text_body = f"""GLOBAL ORATORS · DRILL SUBMISSION DISPATCH
+Coach {coach_name}, orator {speaker_name} has submitted a rehearsal session for faculty adjudication.
+
+SUBMISSION DETAILS:
+- Speaker: {speaker_name}
+- Drill / Rehearsal: {drill_title}
+- Duration: {duration_str or 'Completed Session'}
+- Notes: {notes or 'Audio rehearsal recorded and submitted for evaluation.'}
+
+Open Coach OS to listen to the recording and submit evaluation feedback:
+{coach_portal_url}
+"""
+
+    notes_line = f"""<tr><td style="color: #64748b; font-size: 11px; padding: 4px 0; width: 130px; font-family: ui-monospace, monospace; text-transform: uppercase;">Notes</td><td style="color: #cbd5e1; font-size: 13px;">{notes}</td></tr>""" if notes else ""
+    dur_line = f"""<tr><td style="color: #64748b; font-size: 11px; padding: 4px 0; width: 130px; font-family: ui-monospace, monospace; text-transform: uppercase;">Duration</td><td style="color: #ffffff; font-size: 13px; font-weight: 600;">{duration_str}</td></tr>""" if duration_str else ""
+
+    content_html = f"""
+    <div style="background-color: #080a0e; border: 1px solid #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+      <table border="0" cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+          <td style="color: #64748b; font-size: 11px; padding: 4px 0; width: 130px; font-family: ui-monospace, monospace; text-transform: uppercase;">Speaker</td>
+          <td style="color: #ffffff; font-size: 13px; font-weight: 700;">{speaker_name}</td>
+        </tr>
+        <tr>
+          <td style="color: #64748b; font-size: 11px; padding: 4px 0; font-family: ui-monospace, monospace; text-transform: uppercase;">Drill / Speech</td>
+          <td style="color: #c89630; font-size: 13px; font-weight: 700;">{drill_title}</td>
+        </tr>
+        {dur_line}
+        {notes_line}
+      </table>
+    </div>
+    """
+
+    html_body = _wrap_editorial_html(
+        kicker="Global Orators · Drill Submission Dispatch",
+        headline="Rehearsal Submission Received",
+        lead_text=f"Coach {coach_name}, orator {speaker_name} has submitted a rehearsal session for faculty adjudication.",
+        content_html=content_html,
+        action_url=coach_portal_url,
+        action_label="Adjudicate in Coach OS"
+    )
+
+    return _dispatch_smtp_email_sync(
+        recipient_email=coach_email,
+        subject=f"Global Orators Faculty · Rehearsal Submission: {speaker_name}",
+        text_body=text_body,
+        html_body=html_body
+    )
+
+
+async def send_drill_submission_email(
+    coach_email: str,
+    coach_name: str,
+    speaker_name: str,
+    drill_title: str,
+    duration_seconds: Optional[int] = None,
+    notes: Optional[str] = None
+) -> bool:
+    """Async wrapper for drill submission notification."""
+    return await asyncio.to_thread(
+        send_drill_submission_email_sync,
+        coach_email,
+        coach_name,
+        speaker_name,
+        drill_title,
+        duration_seconds,
+        notes
+    )
+
+
+# ---------------------------------------------------------------------------
+# 5. Speaker Alert: Coach Feedback & Review Published
+# ---------------------------------------------------------------------------
+
+def send_coach_feedback_email_sync(
+    speaker_email: str,
+    speaker_name: str,
+    drill_title: str,
+    coach_name: str,
+    feedback_text: str,
+    rating: Optional[int] = None
+) -> bool:
+    """Alert speaker when their coach has reviewed and adjudicated their rehearsal."""
+    speaker_portal_url = f"{settings.APP_URL}/speaker"
+
+    rating_str = f"{rating}/5" if rating else "Evaluated"
+
+    text_body = f"""GLOBAL ORATORS · FACULTY ADJUDICATION DISPATCH
+{speaker_name}, your coach {coach_name} has published feedback on your rehearsal.
+
+EVALUATION DETAILS:
+- Drill: {drill_title}
+- Adjudicator: Coach {coach_name}
+- Rating: {rating_str}
+
+COACH CRITIQUE & NOTES:
+"{feedback_text}"
+
+Enter your speaker workspace to review full notes, practice recommendations, and upcoming drills:
+{speaker_portal_url}
+"""
+
+    rating_badge = f"""<div style="font-size: 12px; color: #f59e0b; font-weight: 700; margin-top: 4px;">Rating: {rating_str}</div>""" if rating else ""
+
+    content_html = f"""
+    <div style="background-color: #080a0e; border: 1px solid #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+      <div style="font-size: 11px; font-family: ui-monospace, monospace; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b;">
+        Rehearsal Session
+      </div>
+      <div style="font-size: 15px; font-weight: 800; color: #ffffff; font-family: Georgia, serif; margin: 4px 0 10px 0;">
+        {drill_title}
+      </div>
+      <div style="font-size: 12px; color: #94a3b8;">
+        Adjudicated by <strong style="color: #ffffff;">Coach {coach_name}</strong>
+      </div>
+      {rating_badge}
+
+      <!-- Coach Feedback Quote Box -->
+      <div style="background-color: #10141d; border-left: 3px solid #c89630; padding: 14px 16px; border-radius: 0 8px 8px 0; margin-top: 16px;">
+        <div style="font-size: 10px; font-family: ui-monospace, monospace; text-transform: uppercase; letter-spacing: 0.1em; color: #c89630; font-weight: 700; margin-bottom: 6px;">
+          Faculty Critique
+        </div>
+        <div style="font-size: 13px; line-height: 1.6; color: #e2e8f0; font-style: italic;">
+          &ldquo;{feedback_text}&rdquo;
+        </div>
+      </div>
+    </div>
+    """
+
+    html_body = _wrap_editorial_html(
+        kicker="Global Orators · Faculty Adjudication",
+        headline="Faculty Feedback Published",
+        lead_text=f"{speaker_name}, your coach {coach_name} has published feedback on your rehearsal session.",
+        content_html=content_html,
+        action_url=speaker_portal_url,
+        action_label="Review Feedback & Rehearsals"
+    )
+
+    return _dispatch_smtp_email_sync(
+        recipient_email=speaker_email,
+        subject=f"Global Orators · Faculty Evaluation: {drill_title}",
+        text_body=text_body,
+        html_body=html_body
+    )
+
+
+async def send_coach_feedback_email(
+    speaker_email: str,
+    speaker_name: str,
+    drill_title: str,
+    coach_name: str,
+    feedback_text: str,
+    rating: Optional[int] = None
+) -> bool:
+    """Async wrapper for coach feedback email dispatch."""
+    return await asyncio.to_thread(
+        send_coach_feedback_email_sync,
+        speaker_email,
+        speaker_name,
+        drill_title,
+        coach_name,
+        feedback_text,
+        rating
+    )
+
+
+# ---------------------------------------------------------------------------
+# 6. Direct Message Notification (Speaker & Coach)
+# ---------------------------------------------------------------------------
+
+def send_direct_message_email_sync(
+    recipient_email: str,
+    recipient_name: str,
+    sender_name: str,
+    sender_role: str,
+    message_snippet: str,
+    thread_url: Optional[str] = None
+) -> bool:
+    """Notify user of a new direct communication in the platform."""
+    default_url = f"{settings.APP_URL}/coach" if sender_role.lower() == "speaker" else f"{settings.APP_URL}/speaker"
+    target_url = thread_url or default_url
+
+    clean_snippet = message_snippet[:280] + ("..." if len(message_snippet) > 280 else "")
+
+    text_body = f"""GLOBAL ORATORS · SECURE DISPATCH
+Hello {recipient_name}, you have received a direct message from {sender_name} ({sender_role}).
+
+MESSAGE PREVIEW:
+"{clean_snippet}"
+
+Log in to your workspace to view the full conversation and reply:
+{target_url}
+"""
+
+    content_html = f"""
+    <div style="background-color: #080a0e; border: 1px solid #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+      <div style="font-size: 11px; font-family: ui-monospace, monospace; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin-bottom: 6px;">
+        Sender
+      </div>
+      <div style="font-size: 14px; font-weight: 700; color: #ffffff;">
+        {sender_name} <span style="font-size: 11px; color: #c89630; font-family: ui-monospace, monospace; text-transform: uppercase; font-weight: 600;">({sender_role})</span>
+      </div>
+
+      <div style="background-color: #10141d; border-left: 3px solid #c89630; padding: 14px 16px; border-radius: 0 8px 8px 0; margin-top: 14px;">
+        <div style="font-size: 13px; line-height: 1.6; color: #e2e8f0;">
+          &ldquo;{clean_snippet}&rdquo;
+        </div>
+      </div>
+    </div>
+    """
+
+    html_body = _wrap_editorial_html(
+        kicker="Global Orators · Secure Dispatch",
+        headline="New Direct Message Received",
+        lead_text=f"Hello {recipient_name}, {sender_name} sent you a message.",
+        content_html=content_html,
+        action_url=target_url,
+        action_label="Open Conversation Thread"
+    )
+
+    return _dispatch_smtp_email_sync(
+        recipient_email=recipient_email,
+        subject=f"Global Orators · New Message from {sender_name}",
+        text_body=text_body,
+        html_body=html_body
+    )
+
+
+async def send_direct_message_email(
+    recipient_email: str,
+    recipient_name: str,
+    sender_name: str,
+    sender_role: str,
+    message_snippet: str,
+    thread_url: Optional[str] = None
+) -> bool:
+    """Async wrapper for direct message email notification."""
+    return await asyncio.to_thread(
+        send_direct_message_email_sync,
+        recipient_email,
+        recipient_name,
+        sender_name,
+        sender_role,
+        message_snippet,
+        thread_url
+    )
+
+
+# ---------------------------------------------------------------------------
+# 7. Institutional & Partnership Inquiry Alert (to Faculty Coach)
+# ---------------------------------------------------------------------------
+
+def send_inquiry_notification_email_sync(
+    coach_email: str,
+    organization: str,
+    contact_email: str,
+    branch: str,
+    focus: str,
+    message: str
+) -> bool:
+    """Alert faculty coaches of new school, grant, or institutional inquiries."""
+    coach_portal_url = f"{settings.APP_URL}/coach"
+
+    text_body = f"""GLOBAL ORATORS · INTAKE INQUIRY DISPATCH
+A new institutional partnership inquiry has been submitted.
+
+INQUIRY DETAILS:
+- Organization: {organization}
+- Contact Email: {contact_email}
+- Program / Branch: {branch}
+- Strategic Focus: {focus}
+
+INQUIRY STATEMENT:
+"{message}"
+
+Access Coach OS to review intake inquiries:
+{coach_portal_url}
+"""
+
+    content_html = f"""
+    <div style="background-color: #080a0e; border: 1px solid #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+      <table border="0" cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+          <td style="color: #64748b; font-size: 11px; padding: 4px 0; width: 130px; font-family: ui-monospace, monospace; text-transform: uppercase;">Organization</td>
+          <td style="color: #ffffff; font-size: 14px; font-weight: 700;">{organization}</td>
+        </tr>
+        <tr>
+          <td style="color: #64748b; font-size: 11px; padding: 4px 0; font-family: ui-monospace, monospace; text-transform: uppercase;">Contact Email</td>
+          <td style="color: #c89630; font-size: 13px;">{contact_email}</td>
+        </tr>
+        <tr>
+          <td style="color: #64748b; font-size: 11px; padding: 4px 0; font-family: ui-monospace, monospace; text-transform: uppercase;">Branch & Focus</td>
+          <td style="color: #cbd5e1; font-size: 13px;">{branch} &middot; {focus}</td>
+        </tr>
+      </table>
+
+      <div style="background-color: #10141d; border-left: 3px solid #c89630; padding: 14px 16px; border-radius: 0 8px 8px 0; margin-top: 14px;">
+        <div style="font-size: 10px; font-family: ui-monospace, monospace; text-transform: uppercase; letter-spacing: 0.1em; color: #c89630; font-weight: 700; margin-bottom: 6px;">
+          Applicant Message
+        </div>
+        <div style="font-size: 13px; line-height: 1.6; color: #e2e8f0;">
+          &ldquo;{message}&rdquo;
+        </div>
+      </div>
+    </div>
+    """
+
+    html_body = _wrap_editorial_html(
+        kicker="Global Orators · Intake Inquiry Dispatch",
+        headline="New Institutional Partnership Inquiry",
+        lead_text=f"A new partnership or grant inquiry was received from {organization}.",
+        content_html=content_html,
+        action_url=coach_portal_url,
+        action_label="Review Inquiries in Coach OS"
+    )
+
+    return _dispatch_smtp_email_sync(
+        recipient_email=coach_email,
+        subject=f"Global Orators Faculty · Institutional Inquiry: {organization}",
+        text_body=text_body,
+        html_body=html_body
+    )
+
+
+async def send_inquiry_notification_email(
+    coach_email: str,
+    organization: str,
+    contact_email: str,
+    branch: str,
+    focus: str,
+    message: str
+) -> bool:
+    """Async wrapper for inquiry email dispatch."""
+    return await asyncio.to_thread(
+        send_inquiry_notification_email_sync,
+        coach_email,
+        organization,
+        contact_email,
+        branch,
+        focus,
+        message
+    )

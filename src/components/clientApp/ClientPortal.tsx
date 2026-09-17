@@ -105,6 +105,7 @@ export const ClientPortal: React.FC = () => {
     showToast,
     resetOnboarding,
     clients,
+    coaches,
     programs,
     scheduledWorkouts,
     messages,
@@ -144,6 +145,16 @@ export const ClientPortal: React.FC = () => {
       (c.name && profile.fullName && c.name.toLowerCase() === profile.fullName.toLowerCase())
     );
   }, [clients, profile]);
+
+  const assignedCoach = useMemo(() => {
+    if (!pairedClient?.coachId) return null;
+    return coaches.find(c => c.id === pairedClient.coachId) || null;
+  }, [coaches, pairedClient?.coachId]);
+
+  const isAssignedHeadCoach = !assignedCoach || assignedCoach.id === 'coach-1' || assignedCoach.email?.toLowerCase() === 'kassimmusa322@gmail.com' || assignedCoach.email?.toLowerCase() === 'coach@globalorators.com';
+  const assignedCoachName = assignedCoach?.name || (isAssignedHeadCoach ? 'Head Coach Qassim' : 'Faculty Coach');
+  const assignedCoachTitle = isAssignedHeadCoach ? 'Head Speech & Debate Coach' : 'Faculty Coach';
+  const assignedCoachInitials = assignedCoachName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || (isAssignedHeadCoach ? 'HQ' : 'FC');
 
   const execProgram = useMemo(() => {
     if (!pairedClient?.currentProgramId) return null;
@@ -206,7 +217,7 @@ export const ClientPortal: React.FC = () => {
       'CALSCALE:GREGORIAN',
       'BEGIN:VEVENT',
       `SUMMARY:Global Orators: ${cleanTitle}`,
-      `DESCRIPTION:Executive Public Speaking 90-Minute Live Consultation & Drill Protocol with Head Coach Qassim.\\nRoom: ${session.chamberRoomName || 'live-chamber'}\\nAssignments: ${session.assignmentNotes || 'Prepared speech simulation.'}`,
+      `DESCRIPTION:Executive Public Speaking 90-Minute Live Consultation & Drill Protocol with ${assignedCoachName}.\\nRoom: ${session.chamberRoomName || 'live-chamber'}\\nAssignments: ${session.assignmentNotes || 'Prepared speech simulation.'}`,
       'STATUS:CONFIRMED',
       'END:VEVENT',
       'END:VCALENDAR'
@@ -1064,7 +1075,7 @@ export const ClientPortal: React.FC = () => {
                   <div className="mt-4 bg-slate-950 p-3.5 rounded-2xl border border-slate-800 flex items-center justify-between">
                     <div>
                       <div className="text-[11px] font-mono text-slate-200 font-semibold">Faculty Direct Consultation</div>
-                      <div className="text-[10px] font-mono text-slate-400">Send an inquiry or consultation to Head Coach Qassim</div>
+                      <div className="text-[10px] font-mono text-slate-400">Send an inquiry or consultation to {assignedCoachName}</div>
                     </div>
                     <button
                       onClick={() => setSpeakerTab('coach')}
@@ -2036,12 +2047,12 @@ export const ClientPortal: React.FC = () => {
               <div className="flex items-center justify-between pb-4 border-b border-slate-800">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center font-bold text-slate-950 text-sm">
-                    HQ
+                    {assignedCoachInitials}
                   </div>
                   <div>
-                    <h3 className="text-xs sm:text-sm font-bold text-white">Head Coach Qassim</h3>
+                    <h3 className="text-xs sm:text-sm font-bold text-white">{assignedCoachName}</h3>
                     <div className="text-[10px] text-emerald-400 font-mono uppercase tracking-wider">
-                      Online • Coaching Lead
+                      {assignedCoachTitle}
                     </div>
                   </div>
                 </div>
