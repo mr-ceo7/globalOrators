@@ -2134,29 +2134,48 @@ async def test_message_debouncer_and_whatsapp_features():
 @pytest.mark.asyncio
 async def test_system_jitsi_domain_endpoints():
     """Verify dynamic Jitsi domain registration and discovery."""
-    transport = httpx.ASGITransport(app=app)
-    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
-        # 1. Initial GET should return a domain (either cached or default fallback)
-        res_get = await client.get("/api/system/jitsi-domain")
-        assert res_get.status_code == 200
-        data = res_get.json()
-        assert "domain" in data
-        assert "url" in data
-        assert data["url"].startswith("https://")
+    cache_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "app", "jitsi_domain.json")
+    original_cache = None
+    if os.path.exists(cache_path):
+        try:
+            with open(cache_path, "r", encoding="utf-8") as f:
+                original_cache = f.read()
+        except Exception:
+            pass
 
-        # 2. Update domain as localhost
-        new_tunnel = "https://fresh-dynamic-tunnel-123.trycloudflare.com"
-        res_post = await client.post(
-            "/api/system/jitsi-domain",
-            json={"domain": new_tunnel}
-        )
-        assert res_post.status_code == 200
-        post_data = res_post.json()
-        assert post_data["domain"] == "fresh-dynamic-tunnel-123.trycloudflare.com"
-        assert post_data["url"] == "https://fresh-dynamic-tunnel-123.trycloudflare.com"
-        assert post_data["source"] == "tunnel_watchdog"
+    try:
+        transport = httpx.ASGITransport(app=app)
+        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+            # 1. Initial GET should return a domain (either cached or default fallback)
+            res_get = await client.get("/api/system/jitsi-domain")
+            assert res_get.status_code == 200
+            data = res_get.json()
+            assert "domain" in data
+            assert "url" in data
+            assert data["url"].startswith("https://")
 
-        # 3. Subsequent GET returns the newly updated domain
-        res_get2 = await client.get("/api/system/jitsi-domain")
-        assert res_get2.status_code == 200
-        assert res_get2.json()["domain"] == "fresh-dynamic-tunnel-123.trycloudflare.com"
+            # 2. Update domain as localhost
+            new_tunnel = "https://fresh-dynamic-tunnel-123.trycloudflare.com"
+            res_post = await client.post(
+                "/api/system/jitsi-domain",
+                json={"domain": new_tunnel}
+            )
+            assert res_post.status_code == 200
+            post_data = res_post.json()
+            assert post_data["domain"] == "fresh-dynamic-tunnel-123.trycloudflare.com"
+            assert post_data["url"] == "https://fresh-dynamic-tunnel-123.trycloudflare.com"
+            assert post_data["source"] == "tunnel_watchdog"
+
+            # 3. Subsequent GET returns the newly updated domain
+            res_get2 = await client.get("/api/system/jitsi-domain")
+            assert res_get2.status_code == 200
+            assert res_get2.json()["domain"] == "fresh-dynamic-tunnel-123.trycloudflare.com"
+    finally:
+        try:
+            if original_cache is not None:
+                with open(cache_path, "w", encoding="utf-8") as f:
+                    f.write(original_cache)
+            elif os.path.exists(cache_path):
+                os.remove(cache_path)
+        except Exception:
+            pass

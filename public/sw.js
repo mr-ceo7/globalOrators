@@ -43,8 +43,8 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
   if (!request.url.startsWith(self.location.origin)) return;
 
-  // Never intercept auth API calls — they must always hit the live server
-  if (request.url.includes('/api/auth/')) return;
+  // Never intercept API calls — they must always hit the live server directly
+  if (request.url.includes('/api/')) return;
 
   // Handle SPA navigation requests
   if (request.mode === 'navigate') {
@@ -73,7 +73,7 @@ self.addEventListener('fetch', (event) => {
         }
         return networkResponse;
       }).catch(() => {
-        return cachedResponse;
+        return cachedResponse || new Response('', { status: 408 });
       });
 
       return cachedResponse || fetchPromise;
