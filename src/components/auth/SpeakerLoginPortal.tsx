@@ -188,14 +188,14 @@ export const SpeakerLoginPortal: React.FC = () => {
             </div>
           </div>
         ) : (
-          <div className="w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl shadow-black/80 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-2xl p-5 sm:p-8 shadow-2xl shadow-black/80 backdrop-blur-sm overflow-hidden">
             {/* Header Greeting & Title */}
             <div className="text-center mb-6">
               <div className="text-xs font-serif italic text-[#C89630] mb-2 tracking-wide">
                 Welcome, Speaker
               </div>
               <h1 className="text-2xl sm:text-3xl font-serif font-bold text-white tracking-tight">
-                {step === 'email' ? 'Access Your Protocol' : 'Verify Identity'}
+                {step === 'email' ? 'Orators App' : 'Verify Identity'}
               </h1>
               <p className="mt-2 text-xs text-slate-400 font-sans leading-relaxed">
                 {step === 'email'

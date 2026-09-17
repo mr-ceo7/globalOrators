@@ -157,7 +157,7 @@ describe('Speaker Login & Portal Integration Tests', () => {
       </AppProvider>
     );
 
-    expect(screen.getByText('Access Your Protocol')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Orators App' })).toBeInTheDocument();
     expect(screen.getByText('Orators App Re-Entry')).toBeInTheDocument();
 
     const input = screen.getByPlaceholderText(/kassimmusa322@gmail\.com/i);
@@ -348,7 +348,7 @@ describe('Speaker Login & Portal Integration Tests', () => {
     // Verifies NO "Guest Speaker" is rendered, instead SpeakerLoginPortal is rendered
     expect(screen.queryByText(/Guest Speaker/i)).not.toBeInTheDocument();
     expect(screen.getByText(/Welcome, Speaker/i)).toBeInTheDocument();
-    expect(screen.getByText('Access Your Protocol')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Orators App' })).toBeInTheDocument();
     expect(screen.getByLabelText(/Speaker Email/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Send Login Passcode/i })).toBeInTheDocument();
   });

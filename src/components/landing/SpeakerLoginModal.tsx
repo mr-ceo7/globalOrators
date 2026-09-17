@@ -154,7 +154,7 @@ export const SpeakerLoginModal: React.FC<SpeakerLoginModalProps> = ({
       />
 
       {/* Modal Container */}
-      <div className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl shadow-black/80 z-10">
+      <div className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-8 shadow-2xl shadow-black/80 z-10 overflow-hidden">
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -173,7 +173,7 @@ export const SpeakerLoginModal: React.FC<SpeakerLoginModalProps> = ({
             id="speaker-login-title"
             className="text-xl sm:text-2xl font-serif font-black tracking-tight text-white"
           >
-            {step === 'email' ? 'Access Your Protocol' : 'Verify Identity'}
+            {step === 'email' ? 'Orators App' : 'Verify Identity'}
           </h2>
           <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
             {step === 'email'

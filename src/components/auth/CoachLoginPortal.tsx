@@ -187,7 +187,7 @@ export const CoachLoginPortal: React.FC = () => {
 
       {/* Main Authentication Card */}
       <main className="flex-1 flex items-center justify-center px-4 py-8 sm:py-12">
-        <div className="w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl shadow-black/80 backdrop-blur-sm">
+        <div className="w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-2xl p-5 sm:p-8 shadow-2xl shadow-black/80 backdrop-blur-sm overflow-hidden">
           {/* Header Greeting & Title */}
           <div className="text-center mb-6">
             <div className="text-xs font-serif italic text-[#C89630] mb-2 tracking-wide">
