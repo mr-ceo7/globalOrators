@@ -15,7 +15,11 @@ import {
   Phone, 
   Mail, 
   Target,
-  UserPlus
+  UserPlus,
+  Ban,
+  RefreshCw,
+  Trash2,
+  UserX
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { Client } from '../../types';
@@ -42,13 +46,17 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({ client, 
     fetchCoaches,
     reassignClientCoach,
     addAdjudicationNote,
-    showToast
+    showToast,
+    deleteClient,
+    suspendClient,
+    reactivateClient
   } = useApp();
 
   const [activeTab, setActiveModalTab] = useState<'overview' | 'health' | 'notes' | 'adjudication' | 'program' | 'metrics'>('overview');
   const [newNoteText, setNewNoteText] = useState('');
   const [selectedProgramToAssign, setSelectedProgramToAssign] = useState<string>(client.currentProgramId || '');
   const [editStatus, setEditStatus] = useState(client.status);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   // Coach Reassignment State
   const [isReassignOpen, setIsReassignOpen] = useState(false);
@@ -277,6 +285,64 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({ client, 
                 <TrendingUp className="h-3.5 w-3.5" />
                 <span>Metrics</span>
               </button>
+
+              {/* Management Actions */}
+              <div className="flex items-center gap-1.5 ml-auto">
+                {client.status === 'Suspended' ? (
+                  <button
+                    onClick={async () => { await reactivateClient(client.id); onClose(); }}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 text-xs font-bold border border-emerald-500/30 transition-colors"
+                    title="Reactivate speaker"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5" />
+                    <span>Reactivate</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={async () => { await suspendClient(client.id); onClose(); }}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 text-xs font-bold border border-amber-500/30 transition-colors"
+                    title="Suspend speaker"
+                  >
+                    <Ban className="h-3.5 w-3.5" />
+                    <span>Suspend</span>
+                  </button>
+                )}
+                {client.coachId && (
+                  <button
+                    onClick={async () => { await reassignClientCoach(client.id, '', 'Released to intake pool'); onClose(); }}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 text-sky-400 text-xs font-bold border border-sky-500/30 transition-colors"
+                    title="Release to intake pool"
+                  >
+                    <UserX className="h-3.5 w-3.5" />
+                    <span>Release</span>
+                  </button>
+                )}
+                {confirmDelete ? (
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={async () => { setConfirmDelete(false); await deleteClient(client.id); onClose(); }}
+                      className="px-3 py-2 rounded-xl bg-red-500 hover:bg-red-400 text-white text-xs font-bold transition-colors"
+                    >
+                      Confirm Delete
+                    </button>
+                    <button
+                      onClick={() => setConfirmDelete(false)}
+                      className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setConfirmDelete(true)}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold border border-red-500/20 transition-colors"
+                    title="Delete speaker permanently"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    <span>Delete</span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 

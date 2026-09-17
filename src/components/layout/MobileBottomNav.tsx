@@ -211,7 +211,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             <span className={`text-[10px] font-medium tracking-tight mt-0.5 ${
               activeTab === 'messenger' ? 'text-emerald-400 font-semibold' : 'text-slate-400'
             }`}>
-              Chat
+              Messenger
             </span>
           </button>
         </div>

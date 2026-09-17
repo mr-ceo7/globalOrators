@@ -32,6 +32,7 @@ import {
   coachesApi,
   clearAuthSession,
 } from '../services/apiClient';
+import { startEventStream } from '../services/sseClient';
 
 export type NavigationTab =
   | 'dashboard'
@@ -74,6 +75,9 @@ interface AppContextType {
   // Actions
   addClient: (client: Omit<Client, 'id' | 'workoutsCompleted' | 'totalWorkoutsAssigned' | 'complianceRate' | 'lastActive'>) => void;
   updateClient: (id: string, updates: Partial<Client>) => void;
+  deleteClient: (id: string) => Promise<boolean>;
+  suspendClient: (id: string) => Promise<boolean>;
+  reactivateClient: (id: string) => Promise<boolean>;
   addCoachNote: (clientId: string, note: string) => void;
   addExercise: (exercise: Omit<Exercise, 'id'>) => void;
   saveProgram: (program: TrainingProgram) => void;
@@ -661,6 +665,46 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     refreshFromBackend();
   }, [refreshFromBackend]);
 
+  // Real-Time Server-Sent Events (SSE) Stream Connection
+  useEffect(() => {
+    const token = localStorage.getItem('globalorators_token') || localStorage.getItem('nubianfit_token');
+    if (!token) return;
+
+    const disconnect = startEventStream({
+      token,
+      onNewMessage: (incomingMsg) => {
+        setMessages(prev => {
+          if (prev.some(m => m.id === incomingMsg.id)) return prev;
+          return [...prev, incomingMsg];
+        });
+        if (incomingMsg.sender === 'client' && currentCoachUser) {
+          showToast(`New message from speaker: ${incomingMsg.text.slice(0, 40)}`);
+        } else if (incomingMsg.sender === 'coach' && activeSpeakerProfile) {
+          showToast(`Coach feedback: ${incomingMsg.text.slice(0, 40)}`);
+        }
+      },
+      onRosterUpdated: () => {
+        refreshFromBackend();
+      },
+      onClientUpdated: (data) => {
+        if (data.clientId) {
+          setClients(prev => prev.map(c => c.id === data.clientId ? { 
+            ...c, 
+            status: (data.status as any) || c.status, 
+            coachId: data.coachId !== undefined ? data.coachId : c.coachId 
+          } : c));
+        }
+      },
+      onActivity: (activity) => {
+        setActivityFeed(prev => [activity, ...prev]);
+      }
+    });
+
+    return () => {
+      disconnect();
+    };
+  }, [currentCoachUser, activeSpeakerProfile, showToast, refreshFromBackend]);
+
   const logout = useCallback(() => {
     clearAuthSession();
     setActiveSpeakerProfile(null);
@@ -774,6 +818,60 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setClients(prev => prev.map(c => c.id === id ? originalClient : c));
       }
       showToast('Failed to update speaker on server. Reverting changes.');
+    }
+  };
+
+  const deleteClient = async (id: string): Promise<boolean> => {
+    const originalClient = clients.find(c => c.id === id);
+    setClients(prev => prev.filter(c => c.id !== id));
+
+    try {
+      await clientsApi.delete(id);
+      showToast('Speaker removed from roster.');
+      return true;
+    } catch (err) {
+      console.warn('Backend sync failed for deleteClient:', err);
+      if (originalClient) {
+        setClients(prev => [...prev, originalClient]);
+      }
+      showToast('Failed to remove speaker. Reverting.');
+      return false;
+    }
+  };
+
+  const suspendClient = async (id: string): Promise<boolean> => {
+    const originalClient = clients.find(c => c.id === id);
+    setClients(prev => prev.map(c => c.id === id ? { ...c, status: 'Suspended' as any } : c));
+
+    try {
+      await clientsApi.update(id, { status: 'Suspended' as any });
+      showToast('Speaker suspended.');
+      return true;
+    } catch (err) {
+      console.warn('Backend sync failed for suspendClient:', err);
+      if (originalClient) {
+        setClients(prev => prev.map(c => c.id === id ? originalClient : c));
+      }
+      showToast('Failed to suspend speaker. Reverting.');
+      return false;
+    }
+  };
+
+  const reactivateClient = async (id: string): Promise<boolean> => {
+    const originalClient = clients.find(c => c.id === id);
+    setClients(prev => prev.map(c => c.id === id ? { ...c, status: 'Active' as any } : c));
+
+    try {
+      await clientsApi.update(id, { status: 'Active' as any });
+      showToast('Speaker reactivated.');
+      return true;
+    } catch (err) {
+      console.warn('Backend sync failed for reactivateClient:', err);
+      if (originalClient) {
+        setClients(prev => prev.map(c => c.id === id ? originalClient : c));
+      }
+      showToast('Failed to reactivate speaker. Reverting.');
+      return false;
     }
   };
 
@@ -1605,7 +1703,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         loginCoach,
         registerCoach,
         addCoach,
-        logout
+        logout,
+        deleteClient,
+        suspendClient,
+        reactivateClient
       }}
     >
       {children}

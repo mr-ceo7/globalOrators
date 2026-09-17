@@ -18,6 +18,7 @@ from app.models.client import Client
 from app.models.user import User
 from app.schemas.message import ChatMessageCreate, ChatMessageResponse
 from app.services.email import send_direct_message_email
+from app.services.events import sse_manager
 
 logger = logging.getLogger("globalorators.messages")
 router = APIRouter(prefix="/messages", tags=["Messages"])
@@ -117,6 +118,27 @@ async def send_message(
     db.add(new_msg)
     await db.commit()
     await db.refresh(new_msg)
+
+    # Dispatch real-time SSE event
+    try:
+        asyncio.create_task(
+            sse_manager.broadcast(
+                event="new_message",
+                data={
+                    "id": new_msg.id,
+                    "clientId": new_msg.client_id,
+                    "coachId": new_msg.coach_id,
+                    "sender": new_msg.sender,
+                    "text": new_msg.text,
+                    "timestamp": new_msg.timestamp,
+                    "attachment": new_msg.attachment
+                },
+                target_client_id=new_msg.client_id,
+                target_coach_id=coach_id
+            )
+        )
+    except Exception as sse_err:
+        logger.warning(f"Failed to trigger SSE broadcast for message: {sse_err}")
 
     # Dispatch direct message email notification
     try:

@@ -19,6 +19,7 @@ from app.routers.coaches import router as coaches_router
 from app.routers.journals import router as journals_router
 from app.routers.simulations import router as simulations_router
 from app.routers.recordings import router as recordings_router
+from app.routers.events import router as events_router
 
 __all__ = [
     "auth_router",
@@ -38,5 +39,6 @@ __all__ = [
     "journals_router",
     "simulations_router",
     "recordings_router",
+    "events_router",
 ]
 

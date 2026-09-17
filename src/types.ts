@@ -1,4 +1,4 @@
-export type ClientStatus = 'Active' | 'Inactive' | 'Onboarding' | 'Needs Check-in' | 'Needs Review';
+export type ClientStatus = 'Active' | 'Inactive' | 'Onboarding' | 'Needs Check-in' | 'Needs Review' | 'Suspended';
 
 export type BranchType = 'Academy' | 'Foundation';
 

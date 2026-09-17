@@ -189,7 +189,8 @@ describe('ClientRoster UI Optimization and Standout Claim Button', () => {
       expect(screen.getByText('Geoffrey Anyona')).toBeInTheDocument();
     });
 
-    const claimBtn = screen.getAllByRole('button', { name: /Claim Speaker/i })[0];
+    const claimBtn = document.getElementById('claim-speaker-client-1')!;
+    expect(claimBtn).toBeInTheDocument();
 
     fireEvent.click(claimBtn);
 
@@ -202,7 +203,7 @@ describe('ClientRoster UI Optimization and Standout Claim Button', () => {
     });
   });
 
-  test('renders standout Claim button in Table View mode for unassigned speakers', async () => {
+  test('renders standout Claim button in Table View mode for unassigned speakers and includes Faculty Coach column', async () => {
     render(
       <AppProvider>
         <ClientRoster
@@ -225,6 +226,40 @@ describe('ClientRoster UI Optimization and Standout Claim Button', () => {
     await waitFor(() => {
       const claimTableButtons = screen.getAllByRole('button', { name: /Claim/i });
       expect(claimTableButtons.length).toBeGreaterThanOrEqual(2);
+      expect(screen.getByRole('columnheader', { name: /Faculty Coach/i })).toBeInTheDocument();
     });
+  });
+
+  test('renders sorting controls and allows sorting speakers by name, coach, and status', async () => {
+    render(
+      <AppProvider>
+        <ClientRoster
+          isAddModalOpen={false}
+          onCloseAddModal={vi.fn()}
+          onOpenAddModal={vi.fn()}
+        />
+      </AppProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Geoffrey Anyona')).toBeInTheDocument();
+    });
+
+    // Check sort controls exist
+    const sortSelect = document.getElementById('roster-sort-by-select') as HTMLSelectElement;
+    expect(sortSelect).toBeInTheDocument();
+    expect(sortSelect.value).toBe('name');
+
+    const sortDirBtn = document.getElementById('roster-sort-dir-toggle-btn')!;
+    expect(sortDirBtn).toBeInTheDocument();
+    expect(sortDirBtn.textContent).toContain('ASC');
+
+    // Toggle sort direction
+    fireEvent.click(sortDirBtn);
+    expect(sortDirBtn.textContent).toContain('DESC');
+
+    // Change sort field to coach
+    fireEvent.change(sortSelect, { target: { value: 'coach' } });
+    expect(sortSelect.value).toBe('coach');
   });
 });

@@ -16,7 +16,13 @@ import {
   X, 
   Target,
   Link2,
-  UserPlus
+  UserPlus,
+  MoreVertical,
+  Ban,
+  RefreshCw,
+  Trash2,
+  UserX,
+  ArrowUpDown
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { Client, ClientStatus, SpeakingGoal, ExperienceLevel } from '../../types';
@@ -34,7 +40,11 @@ export const ClientRoster: React.FC<{
     setSelectedClientId, 
     setActiveTab,
     reassignClientCoach,
-    showToast
+    showToast,
+    deleteClient,
+    suspendClient,
+    reactivateClient,
+    coaches
   } = useApp();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -44,6 +54,8 @@ export const ClientRoster: React.FC<{
   const [selectedIntakeFilter, setSelectedIntakeFilter] = useState<'all' | 'assigned' | 'unassigned'>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [viewingClientProfile, setViewingClientProfile] = useState<Client | null>(null);
+  const [actionMenuOpenId, setActionMenuOpenId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const currentUser = useMemo(() => {
     try {
@@ -79,6 +91,31 @@ export const ClientRoster: React.FC<{
   const [formDietary, setFormDietary] = useState('Debate Society & Policy Focus');
 
   const [isSaving, setIsSaving] = useState(false);
+  const [sortBy, setSortBy] = useState<'name' | 'status' | 'coach' | 'lastActive' | 'fluency' | 'pace'>('name');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [sortMenuOpen, setSortMenuOpen] = useState(false);
+
+  const handleSort = (field: 'name' | 'status' | 'coach' | 'lastActive' | 'fluency' | 'pace') => {
+    if (sortBy === field) {
+      setSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortDir('asc');
+    }
+  };
+
+  const isHeadCoach = useMemo(() => {
+    if (!currentUser) return false;
+    return currentUser.email?.toLowerCase() === 'kassimmusa322@gmail.com' || currentUser.id === 'coach-1';
+  }, [currentUser]);
+
+  const getCoachName = useMemo(() => {
+    const map = new Map(coaches.map(c => [c.id, c.name]));
+    return (coachId?: string) => {
+      if (!coachId) return 'Unassigned';
+      return map.get(coachId) || 'Unknown Coach';
+    };
+  }, [coaches]);
 
   // Filter clients
   const filteredClients = clients.filter(c => {
@@ -96,6 +133,24 @@ export const ClientRoster: React.FC<{
       selectedIntakeFilter === 'unassigned' ? !c.coachId :
       Boolean(c.coachId);
     return matchesSearch && matchesStatus && matchesGoal && matchesBranch && matchesIntake;
+  }).sort((a, b) => {
+    const dir = sortDir === 'asc' ? 1 : -1;
+    switch (sortBy) {
+      case 'name':
+        return dir * (a.name || '').localeCompare(b.name || '');
+      case 'status':
+        return dir * (a.status || '').localeCompare(b.status || '');
+      case 'coach':
+        return dir * getCoachName(a.coachId).localeCompare(getCoachName(b.coachId));
+      case 'lastActive':
+        return dir * (a.lastActive || '').localeCompare(b.lastActive || '');
+      case 'fluency':
+        return dir * ((a.complianceRate || 0) - (b.complianceRate || 0));
+      case 'pace':
+        return dir * ((a.currentWeightKg || 0) - (b.currentWeightKg || 0));
+      default:
+        return 0;
+    }
   });
 
 
@@ -178,6 +233,12 @@ export const ClientRoster: React.FC<{
             Inactive
           </span>
         );
+      case 'Suspended':
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono font-bold tracking-wider uppercase bg-red-500/15 text-red-400 border border-red-500/30">
+            Suspended
+          </span>
+        );
       default:
         return (
           <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono font-bold tracking-wider uppercase bg-sky-500/15 text-sky-300 border border-sky-500/30">
@@ -208,13 +269,13 @@ export const ClientRoster: React.FC<{
               const coachId = currentUser?.id || 'coach-1';
               const link = `${window.location.origin}/apply?ref=${encodeURIComponent(coachId)}`;
               navigator.clipboard?.writeText(link);
-              showToast('Coach referral link copied to clipboard.');
+              showToast('Speaker invite link copied to clipboard.');
             }}
             className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-850 text-slate-300 hover:text-white font-mono text-xs transition-all cursor-pointer"
-            title="Copy your personal speaker intake link"
+            title="Copy speaker invite link"
           >
             <Link2 className="h-4 w-4 text-[#C89630]" />
-            <span>Copy Referral Link</span>
+            <span>Invite Speaker</span>
           </button>
 
           <button
@@ -288,7 +349,7 @@ export const ClientRoster: React.FC<{
 
         {/* Status Filter Tabs */}
         <div className="flex flex-wrap items-center gap-1.5">
-          {['All', 'Active', 'Needs Check-in', 'Onboarding', 'Inactive'].map((status) => (
+          {['All', 'Active', 'Needs Check-in', 'Onboarding', 'Suspended', 'Inactive'].map((status) => (
             <button
               key={status}
               onClick={() => setSelectedStatusFilter(status)}
@@ -303,22 +364,57 @@ export const ClientRoster: React.FC<{
           ))}
         </div>
 
-        {/* View mode toggle */}
-        <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 self-end md:self-auto">
-          <button
-            onClick={() => setViewMode('table')}
-            className={`p-1.5 rounded-lg text-xs ${viewMode === 'table' ? 'bg-slate-800 text-emerald-400' : 'text-slate-400 hover:text-white'}`}
-            title="Table View"
-          >
-            <List className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => setViewMode('grid')}
-            className={`p-1.5 rounded-lg text-xs ${viewMode === 'grid' ? 'bg-slate-800 text-emerald-400' : 'text-slate-400 hover:text-white'}`}
-            title="Grid View"
-          >
-            <LayoutGrid className="h-4 w-4" />
-          </button>
+        {/* Sort Controls and View Mode Toggle */}
+        <div className="flex flex-wrap items-center gap-2 self-end md:self-auto">
+          {/* Sort Controls */}
+          <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
+            <div className="flex items-center gap-1 pl-2 pr-0.5 text-slate-400">
+              <ArrowUpDown className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+              <span className="text-[10px] font-mono tracking-wider uppercase hidden sm:inline text-slate-400 font-semibold">Sort</span>
+            </div>
+
+            <select
+              id="roster-sort-by-select"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="bg-slate-900 text-slate-200 text-xs font-mono rounded-lg px-2 py-1 border border-slate-700/80 focus:outline-hidden focus:border-emerald-500 cursor-pointer"
+              aria-label="Sort speakers by"
+            >
+              <option value="name">Name (A-Z)</option>
+              <option value="status">Status</option>
+              <option value="coach">Faculty Coach</option>
+              <option value="fluency">Fluency</option>
+              <option value="pace">Speaking Pace</option>
+              <option value="lastActive">Last Active</option>
+            </select>
+
+            <button
+              id="roster-sort-dir-toggle-btn"
+              onClick={() => setSortDir(prev => prev === 'asc' ? 'desc' : 'asc')}
+              className="px-2 py-1 rounded-lg text-[10px] font-mono font-bold bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800 border border-slate-700/80 transition-colors cursor-pointer"
+              title={`Sort Direction: ${sortDir === 'asc' ? 'Ascending' : 'Descending'}`}
+            >
+              {sortDir === 'asc' ? 'ASC ↑' : 'DESC ↓'}
+            </button>
+          </div>
+
+          {/* View mode toggle */}
+          <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+            <button
+              onClick={() => setViewMode('table')}
+              className={`p-1.5 rounded-lg text-xs ${viewMode === 'table' ? 'bg-slate-800 text-emerald-400' : 'text-slate-400 hover:text-white'}`}
+              title="Table View"
+            >
+              <List className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-1.5 rounded-lg text-xs ${viewMode === 'grid' ? 'bg-slate-800 text-emerald-400' : 'text-slate-400 hover:text-white'}`}
+              title="Grid View"
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -329,19 +425,55 @@ export const ClientRoster: React.FC<{
             <table className="w-full text-left text-xs text-slate-300">
               <thead className="bg-slate-950/80 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800">
                 <tr>
-                  <th className="py-3.5 px-4">Speaker</th>
-                  <th className="py-3.5 px-4">Status</th>
+                  <th className="py-3.5 px-4 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('name')}>
+                    <div className="flex items-center gap-1">
+                      <span>Speaker</span>
+                      {sortBy === 'name' && (
+                        <span className="text-emerald-400 text-[10px] font-mono">{sortDir === 'asc' ? '↑' : '↓'}</span>
+                      )}
+                    </div>
+                  </th>
+                  <th className="py-3.5 px-4 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('status')}>
+                    <div className="flex items-center gap-1">
+                      <span>Status</span>
+                      {sortBy === 'status' && (
+                        <span className="text-emerald-400 text-[10px] font-mono">{sortDir === 'asc' ? '↑' : '↓'}</span>
+                      )}
+                    </div>
+                  </th>
                   <th className="py-3.5 px-4">Focus & Curriculum</th>
-                  <th className="py-3.5 px-4">Speaking Pace</th>
-                  <th className="py-3.5 px-4">Fluency</th>
+                  <th className="py-3.5 px-4 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('pace')}>
+                    <div className="flex items-center gap-1">
+                      <span>Speaking Pace</span>
+                      {sortBy === 'pace' && (
+                        <span className="text-emerald-400 text-[10px] font-mono">{sortDir === 'asc' ? '↑' : '↓'}</span>
+                      )}
+                    </div>
+                  </th>
+                  <th className="py-3.5 px-4 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('fluency')}>
+                    <div className="flex items-center gap-1">
+                      <span>Fluency</span>
+                      {sortBy === 'fluency' && (
+                        <span className="text-emerald-400 text-[10px] font-mono">{sortDir === 'asc' ? '↑' : '↓'}</span>
+                      )}
+                    </div>
+                  </th>
                   <th className="py-3.5 px-4">Focus Areas</th>
+                  <th className="py-3.5 px-4 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('coach')}>
+                    <div className="flex items-center gap-1">
+                      <span>Faculty Coach</span>
+                      {sortBy === 'coach' && (
+                        <span className="text-emerald-400 text-[10px] font-mono">{sortDir === 'asc' ? '↑' : '↓'}</span>
+                      )}
+                    </div>
+                  </th>
                   <th className="py-3.5 px-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
                 {filteredClients.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-8 text-center text-slate-400">
+                    <td colSpan={8} className="py-8 text-center text-slate-400">
                       No speakers found matching the filters.
                     </td>
                   </tr>
@@ -446,6 +578,19 @@ export const ClientRoster: React.FC<{
                           )}
                         </td>
 
+                        {/* Faculty Coach */}
+                        <td className="py-3.5 px-4 font-mono text-xs">
+                          {client.coachId ? (
+                            <span className="text-slate-300 font-medium">
+                              {getCoachName(client.coachId)}
+                            </span>
+                          ) : (
+                            <span className="text-amber-400/90 italic text-[11px]">
+                              Unassigned
+                            </span>
+                          )}
+                        </td>
+
                         {/* Actions */}
                         <td className="py-3.5 px-4 text-right" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center justify-end gap-1.5">
@@ -490,6 +635,71 @@ export const ClientRoster: React.FC<{
                             >
                               Profile
                             </button>
+
+                            {/* Management dropdown */}
+                            <div className="relative">
+                              <button
+                                onClick={() => setActionMenuOpenId(actionMenuOpenId === client.id ? null : client.id)}
+                                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                                title="Manage speaker"
+                              >
+                                <MoreVertical className="h-4 w-4" />
+                              </button>
+                              {actionMenuOpenId === client.id && (
+                                <div className="absolute right-0 top-full mt-1 z-50 w-48 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl shadow-black/40 py-1 text-left">
+                                  {client.status === 'Suspended' ? (
+                                    <button
+                                      onClick={async () => { setActionMenuOpenId(null); await reactivateClient(client.id); }}
+                                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-emerald-400 hover:bg-slate-800 transition-colors"
+                                    >
+                                      <RefreshCw className="h-3.5 w-3.5" /> Reactivate Speaker
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={async () => { setActionMenuOpenId(null); await suspendClient(client.id); }}
+                                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-amber-400 hover:bg-slate-800 transition-colors"
+                                    >
+                                      <Ban className="h-3.5 w-3.5" /> Suspend Speaker
+                                    </button>
+                                  )}
+                                  {client.coachId && (
+                                    <button
+                                      onClick={async () => { setActionMenuOpenId(null); await reassignClientCoach(client.id, '', 'Released to intake pool'); }}
+                                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-sky-400 hover:bg-slate-800 transition-colors"
+                                    >
+                                      <UserX className="h-3.5 w-3.5" /> Release to Pool
+                                    </button>
+                                  )}
+                                  <div className="border-t border-slate-800 my-1" />
+                                  {confirmDeleteId === client.id ? (
+                                    <div className="px-3 py-2 space-y-2">
+                                      <p className="text-[11px] text-red-400 font-bold">Permanently remove this speaker?</p>
+                                      <div className="flex items-center gap-2">
+                                        <button
+                                          onClick={async () => { setConfirmDeleteId(null); setActionMenuOpenId(null); await deleteClient(client.id); }}
+                                          className="px-2.5 py-1 rounded-lg bg-red-500 hover:bg-red-400 text-white text-xs font-bold transition-colors"
+                                        >
+                                          Confirm
+                                        </button>
+                                        <button
+                                          onClick={() => setConfirmDeleteId(null)}
+                                          className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-colors"
+                                        >
+                                          Cancel
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <button
+                                      onClick={() => setConfirmDeleteId(client.id)}
+                                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-slate-800 transition-colors"
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" /> Delete Speaker
+                                    </button>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </td>
                       </tr>
@@ -538,7 +748,11 @@ export const ClientRoster: React.FC<{
                         <span className="text-[10px] font-mono tracking-wider uppercase px-2 py-0.5 rounded-md border border-emerald-500/40 text-emerald-300 bg-emerald-950/40 font-semibold">
                           My Roster
                         </span>
-                      ) : null}
+                      ) : (
+                        <span className="text-[10px] font-mono tracking-wider uppercase px-2 py-0.5 rounded-md border border-slate-700 text-slate-300 bg-slate-800/80 font-semibold" title={`Assigned Coach: ${getCoachName(client.coachId)}`}>
+                          Coach: {getCoachName(client.coachId)}
+                        </span>
+                      )}
                     </div>
 
                     <div>
@@ -609,6 +823,19 @@ export const ClientRoster: React.FC<{
                       {client.currentProgramName || 'Not assigned'}
                     </span>
                   </div>
+
+                  {/* Faculty Coach row */}
+                  {!isUnassigned && (
+                    <div className="mt-2 text-xs text-slate-300 flex items-center justify-between gap-2">
+                      <span className="text-slate-400 font-mono text-[11px] shrink-0">Faculty Coach:</span>
+                      <span 
+                        className={`font-mono text-xs font-semibold truncate max-w-[200px] ${isMySpeaker ? 'text-emerald-400' : 'text-slate-300'}`}
+                        title={getCoachName(client.coachId)}
+                      >
+                        {getCoachName(client.coachId)}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Card Action Footer */}
@@ -652,6 +879,71 @@ export const ClientRoster: React.FC<{
                         View Profile <ChevronRight className="h-3.5 w-3.5" />
                       </span>
                     )}
+
+                    {/* Management menu (grid) */}
+                    <div className="relative" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={() => setActionMenuOpenId(actionMenuOpenId === client.id ? null : client.id)}
+                        className="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-colors"
+                        title="Manage speaker"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </button>
+                      {actionMenuOpenId === client.id && (
+                        <div className="absolute right-0 bottom-full mb-1 z-50 w-48 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl shadow-black/40 py-1 text-left">
+                          {client.status === 'Suspended' ? (
+                            <button
+                              onClick={async () => { setActionMenuOpenId(null); await reactivateClient(client.id); }}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-xs text-emerald-400 hover:bg-slate-800 transition-colors"
+                            >
+                              <RefreshCw className="h-3.5 w-3.5" /> Reactivate Speaker
+                            </button>
+                          ) : (
+                            <button
+                              onClick={async () => { setActionMenuOpenId(null); await suspendClient(client.id); }}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-xs text-amber-400 hover:bg-slate-800 transition-colors"
+                            >
+                              <Ban className="h-3.5 w-3.5" /> Suspend Speaker
+                            </button>
+                          )}
+                          {client.coachId && (
+                            <button
+                              onClick={async () => { setActionMenuOpenId(null); await reassignClientCoach(client.id, '', 'Released to intake pool'); }}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-xs text-sky-400 hover:bg-slate-800 transition-colors"
+                            >
+                              <UserX className="h-3.5 w-3.5" /> Release to Pool
+                            </button>
+                          )}
+                          <div className="border-t border-slate-800 my-1" />
+                          {confirmDeleteId === client.id ? (
+                            <div className="px-3 py-2 space-y-2">
+                              <p className="text-[11px] text-red-400 font-bold">Permanently remove?</p>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={async () => { setConfirmDeleteId(null); setActionMenuOpenId(null); await deleteClient(client.id); }}
+                                  className="px-2.5 py-1 rounded-lg bg-red-500 hover:bg-red-400 text-white text-xs font-bold transition-colors"
+                                >
+                                  Confirm
+                                </button>
+                                <button
+                                  onClick={() => setConfirmDeleteId(null)}
+                                  className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-colors"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setConfirmDeleteId(client.id)}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-slate-800 transition-colors"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" /> Delete Speaker
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

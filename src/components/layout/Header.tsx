@@ -78,7 +78,7 @@ export const Header: React.FC<HeaderProps> = ({
       case 'exercises': return 'Drill & Speech Library';
       case 'calendar': return 'Session Schedule';
       case 'progress': return 'Speech Analytics';
-      case 'messenger': return 'Speaker Messenger';
+      case 'messenger': return 'Messenger';
       default: return 'Global Orators';
     }
   };

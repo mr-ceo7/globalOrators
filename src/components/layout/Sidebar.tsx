@@ -53,7 +53,7 @@ export const Sidebar: React.FC = () => {
     { id: 'exercises', label: 'Drill & Speech Library', icon: BookOpen },
     { id: 'calendar', label: 'Session Schedule', icon: CalendarDays, badge: todayPendingCount > 0 ? todayPendingCount : undefined, badgeColor: 'bg-emerald-500' },
     { id: 'progress', label: 'Speech Analytics', icon: TrendingUp },
-    { id: 'messenger', label: '1-on-1 Messenger', icon: MessageSquare, badge: unreadCount > 0 ? unreadCount : undefined, badgeColor: 'bg-cyan-500' }
+    { id: 'messenger', label: 'Messenger', icon: MessageSquare, badge: unreadCount > 0 ? unreadCount : undefined, badgeColor: 'bg-cyan-500' }
   ];
 
   return (

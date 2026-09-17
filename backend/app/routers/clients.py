@@ -26,6 +26,7 @@ from app.schemas.client import (
 )
 from app.rate_limiter import rate_limit
 from app.services.email import send_welcome_protocol_email, send_coach_new_speaker_email
+from app.services.events import sse_manager
 
 logger = logging.getLogger("globalorators.clients")
 router = APIRouter(prefix="/clients", tags=["Clients"])
@@ -58,7 +59,7 @@ async def list_clients(
                 query = query.where(Client.coach_id == current_user.id)
         else:
             if is_default_coach:
-                query = query.where(or_(Client.coach_id == current_user.id, Client.coach_id.is_(None)))
+                pass  # Head coach sees ALL speakers across all coaches
             else:
                 query = query.where(Client.coach_id == current_user.id)
     else:
@@ -398,6 +399,23 @@ async def create_client(
     await db.commit()
     await db.refresh(new_client)
 
+    # Dispatch real-time SSE event
+    try:
+        asyncio.create_task(
+            sse_manager.broadcast(
+                event="roster_updated",
+                data={
+                    "action": "created",
+                    "clientId": new_client.id,
+                    "name": new_client.name,
+                    "coachId": new_client.coach_id,
+                    "status": new_client.status
+                }
+            )
+        )
+    except Exception as sse_err:
+        logger.warning(f"SSE broadcast failed on client creation: {sse_err}")
+
     # Dispatch onboarding briefing to speaker and alert to coach
     await _dispatch_onboarding_emails(new_client, new_client.onboarding_survey or {}, db)
 
@@ -460,6 +478,25 @@ async def update_client(
         
     await db.commit()
     await db.refresh(client)
+
+    try:
+        asyncio.create_task(
+            sse_manager.broadcast(
+                event="client_updated",
+                data={
+                    "action": "updated",
+                    "clientId": client.id,
+                    "status": client.status,
+                    "coachId": client.coach_id,
+                    "name": client.name
+                },
+                target_client_id=client.id,
+                target_coach_id=client.coach_id
+            )
+        )
+    except Exception as sse_err:
+        logger.warning(f"SSE broadcast failed on client update: {sse_err}")
+
     return client
 
 
@@ -561,6 +598,23 @@ async def reassign_client_coach(
 
     await db.commit()
     await db.refresh(client)
+
+    try:
+        asyncio.create_task(
+            sse_manager.broadcast(
+                event="roster_updated",
+                data={
+                    "action": "reassigned",
+                    "clientId": client.id,
+                    "coachId": client.coach_id,
+                    "coachName": target_coach.full_name,
+                    "name": client.name
+                }
+            )
+        )
+    except Exception as sse_err:
+        logger.warning(f"SSE broadcast failed on coach reassignment: {sse_err}")
+
     return client
 
 
@@ -640,5 +694,19 @@ async def delete_client(
 
     await db.delete(client)
     await db.commit()
+
+    try:
+        asyncio.create_task(
+            sse_manager.broadcast(
+                event="roster_updated",
+                data={
+                    "action": "deleted",
+                    "clientId": client_id
+                }
+            )
+        )
+    except Exception as sse_err:
+        logger.warning(f"SSE broadcast failed on client deletion: {sse_err}")
+
     return {"message": "Client deleted successfully", "id": client_id}
 

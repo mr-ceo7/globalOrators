@@ -1935,3 +1935,49 @@ async def test_pending_onboarding_speaker_transitions_to_active_on_survey_comple
         assert me_after.json()["goal"] == "Executive & Board Pitching"
 
 
+@pytest.mark.asyncio
+async def test_sse_events_streaming_and_broadcasting():
+    """Verify Server-Sent Events (SSE) authentication barriers, formatting, and real-time broadcasting."""
+    from app.services.events import sse_manager
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        # 1. Unauthenticated connection is rejected with 401
+        res_unauth = await client.get("/api/events/stream")
+        assert res_unauth.status_code == 401
+        assert "Authentication token required" in res_unauth.text
+
+        # 2. Invalid token is rejected with 401
+        res_invalid = await client.get("/api/events/stream?token=invalid.jwt.token")
+        assert res_invalid.status_code == 401
+        assert "Invalid or expired token" in res_invalid.text
+
+        # 3. Test SSE subscriber connection and message formatting
+        test_user_id = "test-coach-sse"
+        queue = await sse_manager.subscribe(user_id=test_user_id, role="coach")
+        try:
+            # Broadcast targeted event
+            test_payload = {"id": "msg-realtime-1", "text": "Hello Orators", "clientId": "client-alpha"}
+            await sse_manager.broadcast(
+                event="new_message",
+                data=test_payload,
+                target_user_id=test_user_id
+            )
+
+            # Receive formatted SSE chunk
+            raw_chunk = queue.get_nowait()
+            assert "event: new_message" in raw_chunk
+            assert "Hello Orators" in raw_chunk
+            assert "client-alpha" in raw_chunk
+
+            # Test format_sse helper
+            custom_chunk = sse_manager.format_sse("roster_updated", {"action": "reassigned"}, event_id="evt-100")
+            assert "id: evt-100" in custom_chunk
+            assert "event: roster_updated" in custom_chunk
+            assert '"action": "reassigned"' in custom_chunk
+        finally:
+            await sse_manager.unsubscribe(user_id=test_user_id, queue=queue)
+            assert test_user_id not in sse_manager._subscribers
+
+
+
+
