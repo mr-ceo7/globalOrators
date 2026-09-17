@@ -133,7 +133,7 @@ describe('Global Orators Landing Page & Features Tests', () => {
     expect(screen.getByText('Daily Drill Studio')).toBeInTheDocument();
     expect(screen.getByText('Catharsis & Voice Vault')).toBeInTheDocument();
     expect(screen.getByText('Daily Orator Rituals')).toBeInTheDocument();
-    expect(screen.getByText('Coach Qassim (2-Way)')).toBeInTheDocument();
+    expect(screen.getByText('Faculty Coach (2-Way)')).toBeInTheDocument();
 
     // Switch to Catharsis tab
     const catharsisTab = screen.getByText('Catharsis & Voice Vault');

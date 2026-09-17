@@ -151,10 +151,31 @@ export const ClientPortal: React.FC = () => {
     return coaches.find(c => c.id === pairedClient.coachId) || null;
   }, [coaches, pairedClient?.coachId]);
 
-  const isAssignedHeadCoach = !assignedCoach || assignedCoach.id === 'coach-1' || assignedCoach.email?.toLowerCase() === 'kassimmusa322@gmail.com' || assignedCoach.email?.toLowerCase() === 'coach@globalorators.com';
-  const assignedCoachName = assignedCoach?.name || (isAssignedHeadCoach ? 'Head Coach Qassim' : 'Faculty Coach');
-  const assignedCoachTitle = isAssignedHeadCoach ? 'Head Speech & Debate Coach' : 'Faculty Coach';
-  const assignedCoachInitials = assignedCoachName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || (isAssignedHeadCoach ? 'HQ' : 'FC');
+  const isAssignedHeadCoach = Boolean(
+    assignedCoach && (
+      assignedCoach.id === 'coach-1' ||
+      assignedCoach.email?.toLowerCase() === 'kassimmusa322@gmail.com' ||
+      assignedCoach.email?.toLowerCase() === 'coach@globalorators.com'
+    )
+  );
+  const assignedCoachName = assignedCoach?.name || (pairedClient?.coachId ? 'Faculty Coach' : 'Faculty Coaching Desk');
+  const assignedCoachTitle = isAssignedHeadCoach
+    ? 'Head Speech & Debate Coach'
+    : (assignedCoach ? (assignedCoach.title || 'Faculty Coach') : 'Global Orators Faculty Desk');
+  const assignedCoachInitials = assignedCoach
+    ? (assignedCoachName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'FC')
+    : 'FD';
+
+  const coachSidebarLabel = useMemo(() => {
+    if (assignedCoach) {
+      if (isAssignedHeadCoach) {
+        return 'Coach Qassim (2-Way)';
+      }
+      const cleanName = assignedCoach.name.replace(/^(Head\s+Coach|Faculty\s+Coach)\s+/i, 'Coach ');
+      return `${cleanName} (2-Way)`;
+    }
+    return 'Faculty Coach (2-Way)';
+  }, [assignedCoach, isAssignedHeadCoach]);
 
   const execProgram = useMemo(() => {
     if (!pairedClient?.currentProgramId) return null;
@@ -162,7 +183,10 @@ export const ClientPortal: React.FC = () => {
   }, [programs, pairedClient?.currentProgramId]);
 
   const isAcademy = profile.branch === 'Academy';
-  const curriculum = useMemo(() => resolveSpeakerCurriculum(profile, execProgram), [profile, execProgram]);
+  const curriculum = useMemo(
+    () => resolveSpeakerCurriculum(profile, execProgram, assignedCoach?.name),
+    [profile, execProgram, assignedCoach?.name]
+  );
 
 
   // True if speaker is on an Executive Public Speaking / Boardroom Pitching track
@@ -710,6 +734,7 @@ export const ClientPortal: React.FC = () => {
         profile={profile}
         isExecutive={isExecutive}
         isAcademy={isAcademy}
+        coachLabel={coachSidebarLabel}
         roadmapSessionsCount={roadmapSessions.length}
         habitsRemainingCount={habitsRemainingCount}
         unreadMessagesCount={0}
@@ -762,9 +787,9 @@ export const ClientPortal: React.FC = () => {
 
             <button
               onClick={() => setSpeakerTab('coach')}
-              aria-label="Direct message thread with Coach Qassim"
+              aria-label={`Direct message thread with ${assignedCoachName}`}
               className="min-h-[38px] flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:text-white hover:border-slate-700 text-xs font-mono transition-colors cursor-pointer"
-              title="Direct message thread with Coach Qassim"
+              title={`Direct message thread with ${assignedCoachName}`}
             >
               <MessageSquare className="w-3.5 h-3.5 text-[#C89630]" />
               <span className="hidden sm:inline">Coach Thread</span>
@@ -1399,7 +1424,7 @@ export const ClientPortal: React.FC = () => {
                     Executive Speech & Pitch Vault
                   </h2>
                   <p className="text-xs sm:text-sm text-slate-300 mt-1 leading-relaxed">
-                    Log and review simulated investor presentations, boardroom defenses, shareholder addresses, and keynote drafts. Calibrate your Bottom Line Upfront (BLUF) delivery and tactical pause execution with Coach Qassim.
+                    Log and review simulated investor presentations, boardroom defenses, shareholder addresses, and keynote drafts. Calibrate your Bottom Line Upfront (BLUF) delivery and tactical pause execution with {assignedCoachName}.
                   </p>
                 </div>
 
@@ -2040,10 +2065,21 @@ export const ClientPortal: React.FC = () => {
           </div>
         )}
 
-        {/* TAB 6: Coach Qassim 2-Way Chat */}
+        {/* TAB 6: Coach 2-Way Chat */}
         {speakerTab === 'coach' && (
           <div className="space-y-4 animate-fadeIn">
             <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-5 sm:p-6 flex flex-col h-[520px]">
+              {!assignedCoach && (
+                <div className="bg-slate-950/80 border border-amber-500/30 rounded-2xl p-3.5 mb-3 text-left flex items-start gap-3">
+                  <AlertTriangle className="w-4 h-4 text-[#C89630] shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="text-[11px] font-bold text-amber-300 uppercase tracking-wider font-mono">Faculty Triage & Allocation</h4>
+                    <p className="text-xs text-slate-300 mt-0.5 leading-relaxed">
+                      A faculty coach is not yet assigned to your account. Your inquiries and practice submissions route directly to Head Coach Qassim and the Global Orators Faculty Desk.
+                    </p>
+                  </div>
+                </div>
+              )}
               <div className="flex items-center justify-between pb-4 border-b border-slate-800">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center font-bold text-slate-950 text-sm">
@@ -2114,8 +2150,8 @@ export const ClientPortal: React.FC = () => {
                   onChange={(e) => setClientMessageInput(e.target.value)}
                   placeholder={
                     isExecutive
-                      ? "Ask Coach Qassim about your pitch deck, boardroom presentation, or pacing..."
-                      : "Ask Coach Qassim about your speech, pacing, or catharsis..."
+                      ? `Ask ${assignedCoach ? assignedCoach.name : 'the Faculty Coaching Desk'} about your pitch deck, boardroom presentation, or pacing...`
+                      : `Ask ${assignedCoach ? assignedCoach.name : 'the Faculty Coaching Desk'} about your speech, pacing, or catharsis...`
                   }
                   className="flex-1 h-10 px-4 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:border-emerald-500 focus:outline-hidden"
                 />

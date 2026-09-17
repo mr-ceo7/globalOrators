@@ -27,6 +27,7 @@ interface SpeakerSidebarProps {
   roadmapSessionsCount?: number;
   habitsRemainingCount?: number;
   unreadMessagesCount?: number;
+  coachLabel?: string;
   onResetOnboarding: () => void;
   onSignOut: () => void;
   onOpenLiveChamber: () => void;
@@ -44,6 +45,7 @@ export const SpeakerSidebar: React.FC<SpeakerSidebarProps> = ({
   roadmapSessionsCount = 0,
   habitsRemainingCount = 0,
   unreadMessagesCount = 0,
+  coachLabel,
   onResetOnboarding,
   onSignOut,
   onOpenLiveChamber,
@@ -88,7 +90,7 @@ export const SpeakerSidebar: React.FC<SpeakerSidebarProps> = ({
     },
     {
       id: 'coach' as SpeakerTabType,
-      label: 'Coach Qassim (2-Way)',
+      label: coachLabel || 'Coach Consultation (2-Way)',
       icon: MessageSquare,
       badge: unreadMessagesCount > 0 ? unreadMessagesCount : undefined,
       badgeColor: 'bg-[#C89630] text-slate-950'
