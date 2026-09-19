@@ -7,6 +7,7 @@ import { BranchCards } from '../components/landing/BranchCards';
 import { ChampionshipsSection } from '../components/landing/ChampionshipsSection';
 import { SpeakerSpotlight } from '../components/landing/SpeakerSpotlight';
 import { TestimonialsSection } from '../components/landing/TestimonialsSection';
+import { ContactSection } from '../components/landing/ContactSection';
 import { SEOHead } from '../components/common/SEOHead';
 
 interface HomePageProps {
@@ -74,6 +75,9 @@ export const HomePage: React.FC<HomePageProps> = ({
         onStartOnboarding={onStartOnboarding}
         onOpenPartner={onOpenPartner}
       />
+
+      {/* 9. Direct Faculty Inquiries & Platform Governance */}
+      <ContactSection id="contact" />
     </div>
   );
 };

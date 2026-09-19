@@ -10,6 +10,7 @@ import { FoundationPage } from '../../pages/FoundationPage';
 import { EscapismPage } from '../../pages/EscapismPage';
 import { TournamentsPage } from '../../pages/TournamentsPage';
 import { TestimonialsPage } from '../../pages/TestimonialsPage';
+import { ContactPage } from '../../pages/ContactPage';
 
 export const LandingPage: React.FC = () => {
   const { currentPath, navigate, setCurrentPortal } = useApp();
@@ -76,6 +77,15 @@ export const LandingPage: React.FC = () => {
       case '/testimonials':
         return (
           <TestimonialsPage 
+            onStartOnboarding={handleStartOnboarding} 
+            onOpenPartner={handleOpenPartner} 
+            onNavigate={navigate} 
+          />
+        );
+      case '/contact':
+      case '/contact-us':
+        return (
+          <ContactPage 
             onStartOnboarding={handleStartOnboarding} 
             onOpenPartner={handleOpenPartner} 
             onNavigate={navigate} 

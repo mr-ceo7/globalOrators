@@ -123,6 +123,19 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
                     Testimonials
                   </a>
                 </li>
+                <li>
+                  <a 
+                    href="/contact" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate('/contact');
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }} 
+                    className="inline-flex items-center min-h-[24px] py-1 hover:text-slate-100 transition-colors"
+                  >
+                    Contact
+                  </a>
+                </li>
               </ul>
             </div>
 
@@ -201,7 +214,20 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
                   </button>
                 </li>
                 <li>
-                  <a href="mailto:director@globalorators.org" className="inline-flex items-center min-h-[24px] py-1 hover:text-slate-100 transition-colors">
+                  <a 
+                    href="/contact" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate('/contact');
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }} 
+                    className="inline-flex items-center min-h-[24px] py-1 hover:text-slate-100 transition-colors"
+                  >
+                    Faculty Dispatch Form
+                  </a>
+                </li>
+                <li>
+                  <a href="mailto:director@globaloratorsproject.com" className="inline-flex items-center min-h-[24px] py-1 hover:text-slate-100 transition-colors">
                     Contact Governance
                   </a>
                 </li>

@@ -32,6 +32,7 @@ const NavigationTester: React.FC = () => {
       <button onClick={() => navigate('/escapism')}>Go to Escapism</button>
       <button onClick={() => navigate('/tournaments')}>Go to Tournaments</button>
       <button onClick={() => navigate('/testimonials')}>Go to Testimonials</button>
+      <button onClick={() => navigate('/contact')}>Go to Contact</button>
       <button onClick={() => navigate('/')}>Go to Home</button>
       <LandingPage />
     </div>
@@ -251,5 +252,25 @@ describe('Global Orators Dedicated Routing & SEO Tests', () => {
 
     expect(screen.getByTestId('path-val')).toHaveTextContent('/apply');
     expect(screen.getByTestId('portal-val')).toHaveTextContent('onboarding');
+  });
+
+  test('should navigate to /contact and render Contact faculty page with form controls', async () => {
+    render(
+      <AppProvider>
+        <NavigationTester />
+      </AppProvider>
+    );
+
+    const contactBtn = screen.getByText('Go to Contact');
+    await act(async () => {
+      fireEvent.click(contactBtn);
+    });
+
+    expect(screen.getByTestId('current-path')).toHaveTextContent('/contact');
+    expect(screen.getByRole('heading', { level: 2, name: /Contact Global Orators Faculty/i })).toBeInTheDocument();
+    expect(screen.getByText(/Official Correspondence Channels/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Full Name/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Email Address/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Transmit Faculty Dispatch/i })).toBeInTheDocument();
   });
 });

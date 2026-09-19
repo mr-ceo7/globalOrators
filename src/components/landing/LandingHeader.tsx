@@ -106,6 +106,13 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
           >
             Testimonials
           </a>
+          <a 
+            href="/contact" 
+            onClick={(e) => { e.preventDefault(); navigate('/contact'); }}
+            className={`transition-colors cursor-pointer ${currentPath === '/contact' ? 'text-slate-100 font-bold border-b-2 border-[#C89630] pb-0.5' : 'text-slate-400 hover:text-slate-100'}`}
+          >
+            Contact
+          </a>
         </nav>
 
         {/* Right Action Controls */}
@@ -315,6 +322,17 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
               className={`px-3 py-2 rounded-lg font-semibold transition-colors ${currentPath === '/testimonials' ? 'text-[#C89630] bg-slate-900/70' : 'text-slate-200 hover:bg-slate-900 hover:text-[#C89630]'}`}
             >
               Testimonials
+            </a>
+            <a 
+              href="/contact" 
+              onClick={(e) => {
+                e.preventDefault();
+                setMobileMenuOpen(false);
+                navigate('/contact');
+              }}
+              className={`px-3 py-2 rounded-lg font-semibold transition-colors ${currentPath === '/contact' ? 'text-[#C89630] bg-slate-900/70' : 'text-slate-200 hover:bg-slate-900 hover:text-[#C89630]'}`}
+            >
+              Contact
             </a>
           </div>
 
