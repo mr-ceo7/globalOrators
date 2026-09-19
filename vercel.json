@@ -55,8 +55,8 @@
   ],
   "rewrites": [
     {
-      "source": "/api/:path*",
-      "destination": "https://unfenestral-scratchily-lester.ngrok-free.dev/api/:path*"
+      "source": "/api/((?!webhooks/).*)",
+      "destination": "https://unfenestral-scratchily-lester.ngrok-free.dev/api/$1"
     },
     {
       "source": "/((?!assets/|images/|audio/|favicon\\.ico|icon\\.svg|icon\\.png|logo.*|manifest\\.json|robots\\.txt|sitemap\\.xml|sw\\.js).*)",

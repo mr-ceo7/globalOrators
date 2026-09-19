@@ -2334,3 +2334,161 @@ async def test_email_deliverability_and_antispam_compliance():
         assert called_kwargs["headers"]["Authorization"] == "Bearer re_test_key_12345"
         assert called_kwargs["json"]["from"] == "Global Orators <auth@globaloratorsproject.com>"
         assert called_kwargs["json"]["to"] == ["speaker@example.com"]
+
+
+@pytest.mark.asyncio
+async def test_inbound_email_svix_signature_verification():
+    """Verify cryptographic Svix HMAC-SHA256 signature verification logic."""
+    from app.services.inbound_forwarder import verify_svix_signature
+    import hmac
+    import base64
+    import hashlib
+
+    mock_raw_key = b"mock_synthetic_secret_bytes_32b"
+    mock_b64 = base64.b64encode(mock_raw_key).decode("utf-8")
+    secret = f"whsec_{mock_b64}"
+    msg_id = "msg_test_001"
+    timestamp = "1789812400"
+    body_bytes = b'{"type":"email.received","data":{"email_id":"test-inbound-1"}}'
+
+    # Compute valid signature
+    clean_secret = secret[6:]
+    key = base64.b64decode(clean_secret)
+    to_sign = f"{msg_id}.{timestamp}.".encode("utf-8") + body_bytes
+    expected_sig = base64.b64encode(hmac.new(key, to_sign, hashlib.sha256).digest()).decode("utf-8")
+    valid_header = f"v1,{expected_sig}"
+
+    # 1. Valid signature passes
+    assert verify_svix_signature(secret, msg_id, timestamp, body_bytes, valid_header) is True
+
+    # 2. Tampered signature fails
+    assert verify_svix_signature(secret, msg_id, timestamp, body_bytes, "v1,tampered_signature==") is False
+
+    # 3. Missing headers fail
+    assert verify_svix_signature(secret, None, timestamp, body_bytes, valid_header) is False
+    assert verify_svix_signature(secret, msg_id, None, body_bytes, valid_header) is False
+    assert verify_svix_signature(secret, msg_id, timestamp, body_bytes, None) is False
+
+    # 4. Empty secret bypasses in local dev mode
+    assert verify_svix_signature("", msg_id, timestamp, body_bytes, valid_header) is True
+
+
+@pytest.mark.asyncio
+async def test_inbound_forwarder_lifecycle_and_idempotency():
+    """
+    Test that fetch_and_forward_inbound_email:
+    - fetches from Resend receiving API
+    - dispatches forward to FORWARDING_EMAIL
+    - saves InboundEmail to database
+    - idempotently skips duplicate dispatches
+    """
+    from unittest.mock import patch, MagicMock
+    from app.database import AsyncSessionLocal
+    from app.services.inbound_forwarder import fetch_and_forward_inbound_email
+    from app.models.inbound_email import InboundEmail
+
+    email_id = f"test-inbound-email-uuid-{int(time.time() * 1000)}"
+
+    mock_email_data = {
+        "id": email_id,
+        "from": "applicant@cambridge.edu",
+        "to": ["admissions@globaloratorsproject.com"],
+        "subject": "Inquiry regarding Debate Fellowship",
+        "html": "<p>I would like to apply for the East Africa debaters track.</p>",
+        "text": "I would like to apply for the East Africa debaters track.",
+        "created_at": "2026-09-19T10:00:00.000Z"
+    }
+
+    async with AsyncSessionLocal() as session:
+        with patch("app.config.settings.RESEND_API_KEY", "re_mock_test_key"), \
+             patch("app.config.settings.FORWARDING_EMAIL", "kassimmusa322@gmail.com"), \
+             patch("httpx.AsyncClient.get") as mock_get, \
+             patch("httpx.AsyncClient.post") as mock_post:
+
+            mock_get.return_value = MagicMock(status_code=200, json=lambda: mock_email_data, text="")
+            mock_post.return_value = MagicMock(status_code=200, json=lambda: {"id": "fwd_dispatch_123"}, text="")
+
+            # 1. First execution: should fetch, forward, and save to DB
+            result = await fetch_and_forward_inbound_email(email_id, session)
+            assert result["status"] == "forwarded"
+            assert result["forwarded_to"] == "kassimmusa322@gmail.com"
+            assert result["dispatch_id"] == "fwd_dispatch_123"
+
+            mock_get.assert_called_once()
+            mock_post.assert_called_once()
+            post_kwargs = mock_post.call_args[1]["json"]
+            assert post_kwargs["to"] == ["kassimmusa322@gmail.com"]
+            assert post_kwargs["reply_to"] == "applicant@cambridge.edu"
+            assert "Debate Fellowship" in post_kwargs["subject"]
+
+            # Verify DB entry
+            saved = await session.get(InboundEmail, email_id)
+            assert saved is not None
+            assert saved.from_address == "applicant@cambridge.edu"
+            assert saved.status == "forwarded"
+
+            # 2. Second execution with same email_id: must be idempotent and skip
+            mock_get.reset_mock()
+            mock_post.reset_mock()
+            second_result = await fetch_and_forward_inbound_email(email_id, session)
+            assert second_result["status"] == "already_forwarded"
+            mock_get.assert_not_called()
+            mock_post.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_resend_webhook_endpoint():
+    """Test POST /api/webhooks/resend and administrative inquiry list."""
+    from unittest.mock import patch, ANY
+
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        # Login as coach
+        login_res = await client.post(
+            "/api/auth/login",
+            json={
+                "email": settings.DEFAULT_COACH_EMAIL,
+                "password": settings.DEFAULT_COACH_PASSWORD
+            }
+        )
+        token = login_res.json()["access_token"]
+        coach_auth_headers = {"Authorization": f"Bearer {token}"}
+
+        with patch("app.routers.webhooks.fetch_and_forward_inbound_email") as mock_forward:
+            mock_forward.return_value = {"status": "forwarded", "email_id": "test-hook-1"}
+
+            # 1. Valid email.received webhook payload
+            payload = {
+                "type": "email.received",
+                "data": {
+                    "email_id": "test-hook-1",
+                    "from": "user@example.com",
+                    "to": ["director@globaloratorsproject.com"],
+                    "subject": "Partnership Proposal"
+                }
+            }
+            res = await client.post("/api/webhooks/resend", json=payload)
+            assert res.status_code == 200
+            data = res.json()
+            assert data["status"] == "ok"
+            assert data["event"] == "email.received"
+            mock_forward.assert_called_once_with(email_id="test-hook-1", db=ANY)
+
+            # 2. Non-inbound event is acknowledged gracefully
+            other_event = {"type": "email.delivered", "data": {"id": "out-123"}}
+            res_delivered = await client.post("/api/webhooks/resend", json=other_event)
+            assert res_delivered.status_code == 200
+            assert res_delivered.json()["status"] == "acknowledged"
+
+            # 3. Malformed JSON returns 400
+            res_bad = await client.post(
+                "/api/webhooks/resend",
+                content=b"not-json",
+                headers={"Content-Type": "application/json"}
+            )
+            assert res_bad.status_code == 400
+
+            # 4. Coach can inspect inbound emails list
+            list_res = await client.get("/api/webhooks/resend/inbound-emails", headers=coach_auth_headers)
+            assert list_res.status_code == 200
+            assert isinstance(list_res.json(), list)

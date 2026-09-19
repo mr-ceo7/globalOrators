@@ -18,6 +18,7 @@ from app.models.otp import EmailOTP
 from app.models.journal import JournalEntry
 from app.models.simulation import SimulationEntry
 from app.models.recording import AudioRecording
+from app.models.inbound_email import InboundEmail
 
 __all__ = [
     "User",
@@ -36,4 +37,5 @@ __all__ = [
     "JournalEntry",
     "SimulationEntry",
     "AudioRecording",
+    "InboundEmail",
 ]
