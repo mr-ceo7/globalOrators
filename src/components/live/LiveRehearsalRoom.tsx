@@ -20,7 +20,8 @@ import {
   Users, 
   Server, 
   ShieldCheck, 
-  AlertCircle 
+  AlertCircle,
+  Settings 
 } from 'lucide-react';
 import { fetchLiveJitsiDomain } from '../../services/jitsiDiscovery';
 
@@ -32,6 +33,7 @@ export interface LiveRehearsalRoomProps {
   speakerId?: string;
   userRole: 'coach' | 'speaker';
   branch?: 'Academy' | 'Foundation';
+  initialEntered?: boolean;
   onSaveFeedback?: (feedback: {
     wpm: number;
     score: number;
@@ -50,6 +52,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
   speakerId,
   userRole,
   branch = 'Academy',
+  initialEntered = false,
   onSaveFeedback
 }) => {
   // Rehearsal Mode Workflow: Rehearse, Evaluate, Debrief
@@ -105,6 +108,18 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
   const cleanSpeakerId = (speakerId || 'rehearsal').replace(/[^a-zA-Z0-9]/g, '');
   const safeRoomId = `GlobalOrators-${cleanSpeakerName}-${cleanSpeakerId}`;
 
+  // Chamber Welcome Screen State
+  const [hasEnteredChamber, setHasEnteredChamber] = useState<boolean>(initialEntered);
+  const [roomInput, setRoomInput] = useState<string>(safeRoomId);
+
+  // Sync landing screen state on open
+  useEffect(() => {
+    if (isOpen) {
+      setHasEnteredChamber(initialEntered);
+      setRoomInput(safeRoomId);
+    }
+  }, [isOpen, safeRoomId, initialEntered]);
+
   // Jitsi URL for Self-Hosted Instance
   const currentStoredUser = (() => {
     try {
@@ -117,7 +132,8 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
   const isHeadCoach = currentStoredUser?.id === 'coach-1' || currentStoredUser?.email?.toLowerCase() === 'kassimmusa322@gmail.com' || currentStoredUser?.email?.toLowerCase() === 'coach@globalorators.com';
   const coachLabel = currentStoredUser?.full_name || (isHeadCoach ? 'Head Coach Qassim' : 'Faculty Coach');
   const displayName = userRole === 'coach' ? coachLabel : speakerName;
-  const selfHostedMeetingUrl = `https://${jitsiDomain}/${safeRoomId}#config.prejoinConfig.enabled=false&config.prejoinPageEnabled=false&config.defaultLanguage="en"&config.disableDeepLinking=true&userInfo.displayName=${encodeURIComponent(displayName)}&interfaceConfig.SHOW_JITSI_WATERMARK=false&interfaceConfig.SHOW_WATERMARK_FOR_GUESTS=false&interfaceConfig.SHOW_BRAND_WATERMARK=false&interfaceConfig.SHOW_POWERED_BY=false&interfaceConfig.SHOW_CHROME_EXTENSION_BANNER=false`;
+  const effectiveRoomId = (roomInput.trim() || safeRoomId).replace(/[^a-zA-Z0-9_-]/g, '');
+  const selfHostedMeetingUrl = `https://${jitsiDomain}/${effectiveRoomId}#config.prejoinConfig.enabled=false&config.prejoinPageEnabled=false&config.defaultLanguage="en"&config.disableDeepLinking=true&userInfo.displayName=${encodeURIComponent(displayName)}&interfaceConfig.SHOW_JITSI_WATERMARK=false&interfaceConfig.SHOW_WATERMARK_FOR_GUESTS=false&interfaceConfig.SHOW_BRAND_WATERMARK=false&interfaceConfig.SHOW_POWERED_BY=false&interfaceConfig.SHOW_CHROME_EXTENSION_BANNER=false`;
 
   // Security Context Check (Mobile WebRTC strictly requires HTTPS or localhost)
   const isInsecureContext = typeof window !== 'undefined' && !window.isSecureContext && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
@@ -819,6 +835,14 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
                     <ExternalLink className="w-3.5 h-3.5" />
                     <span className="hidden sm:inline">Launch Fullscreen</span>
                   </a>
+                  {hasEnteredChamber && (
+                    <button
+                      onClick={() => setHasEnteredChamber(false)}
+                      className="text-xs text-[#C89630] hover:text-[#e0ab44] underline"
+                    >
+                      Chamber Screen
+                    </button>
+                  )}
                   <button
                     onClick={() => setStudioMode('native')}
                     className="text-xs text-slate-400 hover:text-slate-200 underline"
@@ -851,14 +875,77 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
                 </div>
               )}
 
-              <div className="flex-1 rounded-2xl bg-slate-900/80 border border-slate-800 overflow-hidden shadow-2xl relative">
-                <iframe
-                  title={`Live Meeting: ${roomTitle}`}
-                  src={selfHostedMeetingUrl}
-                  allow="camera *; microphone *; display-capture *; autoplay *; clipboard-write *; screen-wake-lock *; fullscreen *; speaker-selection *; compute-pressure *"
-                  className="w-full h-full border-0"
-                />
-              </div>
+              {!hasEnteredChamber ? (
+                <div className="flex-1 flex flex-col items-center justify-between p-4 sm:p-8 relative overflow-hidden rounded-2xl border border-slate-800 bg-[#070a11] shadow-2xl">
+                  {/* Space Earth Hero Card matching Chamber Welcome Page */}
+                  <div 
+                    className="w-full max-w-2xl relative rounded-2xl overflow-hidden border border-slate-800/80 shadow-2xl flex flex-col items-center justify-center p-6 sm:p-12 min-h-[360px] sm:min-h-[420px] bg-cover bg-center my-auto"
+                    style={{
+                      backgroundImage: `radial-gradient(ellipse at 50% 30%, rgba(7, 10, 17, 0.45) 0%, rgba(7, 10, 17, 0.95) 100%), url('/images/welcome-background.png')`
+                    }}
+                  >
+                    {/* Settings Gear Icon in top-right corner of card */}
+                    <div 
+                      className="absolute top-4 right-4 text-slate-400 bg-slate-900/80 p-2 rounded-lg border border-slate-700/60 shadow-md pointer-events-none"
+                      aria-hidden="true"
+                    >
+                      <Settings className="w-5 h-5 text-slate-300" />
+                    </div>
+
+                    {/* Editorial Chamber Title */}
+                    <h1 className="text-2xl sm:text-4xl font-serif font-bold text-white tracking-tight text-center mb-2.5 drop-shadow-md">
+                      Global Orators Chamber
+                    </h1>
+
+                    {/* Gold Tagline: SPEAK INSPIRE CONNECT CHANGE THE WORLD. */}
+                    <p className="text-[11px] sm:text-[13px] font-mono tracking-[0.14em] text-[#C89630] font-semibold uppercase text-center mb-8 drop-shadow-sm">
+                      SPEAK INSPIRE CONNECT CHANGE THE WORLD.
+                    </p>
+
+                    {/* Room Input & Enter Chamber Form */}
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        setHasEnteredChamber(true);
+                      }}
+                      className="w-full max-w-md flex flex-col sm:flex-row items-stretch rounded-lg shadow-2xl overflow-hidden border border-slate-700/60 bg-white"
+                    >
+                      <input
+                        id="chamber-room-input"
+                        aria-label="Meeting name input"
+                        type="text"
+                        value={roomInput}
+                        onChange={(e) => setRoomInput(e.target.value)}
+                        placeholder="Enter room name"
+                        autoFocus
+                        className="flex-1 px-4 py-3.5 text-sm font-sans font-medium text-slate-900 placeholder-slate-400 bg-white focus:outline-none min-w-0"
+                      />
+                      <button
+                        type="submit"
+                        className="bg-[#C89630] hover:bg-[#d9a53b] text-slate-950 font-bold px-6 py-3.5 text-sm transition-all duration-150 cursor-pointer shrink-0 border-t sm:border-t-0 sm:border-l border-amber-600/30 flex items-center justify-center gap-2 active:scale-98"
+                      >
+                        Enter Chamber
+                      </button>
+                    </form>
+                  </div>
+
+                  {/* Powered By Galvaniy Technologies Footer */}
+                  <div className="mt-4 sm:mt-6 text-center">
+                    <p className="text-[11px] font-mono tracking-[0.2em] text-slate-500 uppercase font-semibold">
+                      POWERED BY GALVANIY TECHNOLOGIES
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex-1 rounded-2xl bg-slate-900/80 border border-slate-800 overflow-hidden shadow-2xl relative">
+                  <iframe
+                    title={`Live Meeting: ${roomTitle}`}
+                    src={selfHostedMeetingUrl}
+                    allow="camera *; microphone *; display-capture *; autoplay *; clipboard-write *; screen-wake-lock *; fullscreen *; speaker-selection *; compute-pressure *"
+                    className="w-full h-full border-0"
+                  />
+                </div>
+              )}
             </div>
           )}
 

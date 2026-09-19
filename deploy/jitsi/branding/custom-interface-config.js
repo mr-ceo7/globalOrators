@@ -5,7 +5,7 @@
  */
 
 var interfaceConfig = {
-    APP_NAME: 'Global Orators Debate Chamber',
+    APP_NAME: 'Global Orators Chamber',
     NATIVE_APP_NAME: 'Global Orators',
     PROVIDER_NAME: 'Global Orators Academy',
 

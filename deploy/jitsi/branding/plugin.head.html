@@ -39,16 +39,32 @@
     background: radial-gradient(ellipse at 50% 0%, #151d2e 0%, #070a11 85%) !important;
   }
   .header-text-title {
+    font-size: 0 !important;
+    line-height: 0 !important;
+  }
+  .header-text-title::after {
+    content: "Global Orators Chamber" !important;
+    font-size: 2.25rem !important;
+    line-height: 2.5rem !important;
     font-family: Georgia, Cambria, "Times New Roman", Times, serif !important;
     color: #f8fafc !important;
     letter-spacing: -0.02em !important;
+    font-weight: 700 !important;
+    display: block !important;
   }
   .header-text-subtitle {
+    font-size: 0 !important;
+    line-height: 0 !important;
+  }
+  .header-text-subtitle::after {
+    content: "SPEAK INSPIRE CONNECT CHANGE THE WORLD." !important;
     color: #c89630 !important;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-    font-size: 14px !important;
-    letter-spacing: 0.05em !important;
+    font-size: 13px !important;
+    letter-spacing: 0.12em !important;
     text-transform: uppercase !important;
+    font-weight: 600 !important;
+    display: block !important;
   }
   .welcome-page-button {
     background-color: #c89630 !important;
@@ -271,3 +287,50 @@
     background-color: #d9a53b !important;
   }
 </style>
+
+<script>
+  (function() {
+    function getQueryOrHashRoom() {
+      try {
+        var params = new URLSearchParams(window.location.search);
+        var r = params.get('room');
+        if (!r && window.location.hash) {
+          var hashStr = window.location.hash.replace(/^#/, '');
+          if (hashStr.indexOf('room=') !== -1) {
+            var hp = new URLSearchParams(hashStr);
+            r = hp.get('room');
+          }
+        }
+        return r;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function autofillChamberInput() {
+      var room = getQueryOrHashRoom();
+      if (!room) return;
+      var input = document.getElementById('enter_room_field') || document.querySelector('.enter-room-input');
+      if (input && input.value !== room) {
+        var nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value');
+        if (nativeSetter && nativeSetter.set) {
+          nativeSetter.set.call(input, room);
+        } else {
+          input.value = room;
+        }
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', autofillChamberInput);
+    var obs = new MutationObserver(autofillChamberInput);
+    if (document.body) {
+      obs.observe(document.body, { childList: true, subtree: true });
+    } else {
+      document.addEventListener('DOMContentLoaded', function() {
+        if (document.body) obs.observe(document.body, { childList: true, subtree: true });
+      });
+    }
+  })();
+</script>

@@ -4,7 +4,7 @@ import React from 'react';
 import { LiveRehearsalRoom } from '../components/live/LiveRehearsalRoom';
 
 describe('LiveRehearsalRoom Dual Engine Tests', () => {
-  test('should render room title, speaker details, and self-hosted Jitsi chamber pointing to configured domain', () => {
+  test('should render Chamber Welcome Screen first with autofilled room input and enter live meeting on click', () => {
     const handleClose = vi.fn();
     const handleSave = vi.fn();
 
@@ -26,7 +26,22 @@ describe('LiveRehearsalRoom Dual Engine Tests', () => {
     expect(screen.getByText('Coaching Rehearsal with Obed Imbusi')).toBeInTheDocument();
     expect(screen.getByText('Live Studio')).toBeInTheDocument();
 
-    // Verify self-hosted Jitsi iframe rendered with custom domain
+    // 1. Chamber Welcome Screen appears first
+    expect(screen.getByText('Global Orators Chamber')).toBeInTheDocument();
+    expect(screen.getByText('SPEAK INSPIRE CONNECT CHANGE THE WORLD.')).toBeInTheDocument();
+    expect(screen.getByText('POWERED BY GALVANIY TECHNOLOGIES')).toBeInTheDocument();
+
+    // 2. Input box is autofilled with safeRoomId
+    const roomInput = screen.getByLabelText('Meeting name input') as HTMLInputElement;
+    expect(roomInput).toBeInTheDocument();
+    expect(roomInput.value).toBe('GlobalOrators-ObedImbusi-client101');
+
+    // 3. User clicks Enter Chamber button
+    const enterBtn = screen.getByRole('button', { name: /Enter Chamber/i });
+    expect(enterBtn).toBeInTheDocument();
+    fireEvent.click(enterBtn);
+
+    // 4. Live Jitsi meeting iframe is now rendered
     const expectedDomain = (import.meta as any).env?.VITE_JITSI_DOMAIN || 'meet.globalorators.com';
     const iframe = screen.getByTitle('Live Meeting: PAUDC Grand Finals Prep');
     expect(iframe).toBeInTheDocument();
@@ -49,6 +64,34 @@ describe('LiveRehearsalRoom Dual Engine Tests', () => {
     expect(screen.getByText(/Protected Period/i)).toBeInTheDocument();
   });
 
+  test('should allow custom room name editing on Chamber Welcome Screen before entering', () => {
+    render(
+      <LiveRehearsalRoom
+        isOpen={true}
+        onClose={vi.fn()}
+        roomTitle="Executive Pitch Rehearsal"
+        speakerName="Sarah Jenkins"
+        speakerId="exec-1"
+        userRole="speaker"
+        branch="Academy"
+      />
+    );
+
+    const roomInput = screen.getByLabelText('Meeting name input') as HTMLInputElement;
+    expect(roomInput.value).toBe('GlobalOrators-SarahJenkins-exec1');
+
+    // Modify room name
+    fireEvent.change(roomInput, { target: { value: 'Custom-Chamber-Room-42' } });
+    expect(roomInput.value).toBe('Custom-Chamber-Room-42');
+
+    // Enter Chamber
+    const enterBtn = screen.getByRole('button', { name: /Enter Chamber/i });
+    fireEvent.click(enterBtn);
+
+    const iframe = screen.getByTitle('Live Meeting: Executive Pitch Rehearsal');
+    expect(iframe).toHaveAttribute('src', expect.stringContaining('Custom-Chamber-Room-42'));
+  });
+
   test('should switch from Self-Hosted Jitsi to Native P2P Studio mode seamlessly', () => {
     render(
       <LiveRehearsalRoom
@@ -59,10 +102,11 @@ describe('LiveRehearsalRoom Dual Engine Tests', () => {
         speakerId="client-101"
         userRole="coach"
         branch="Academy"
+        initialEntered={true}
       />
     );
 
-    // Initially in Jitsi mode
+    // Initially entered in Jitsi mode
     expect(screen.getByTitle('Live Meeting: PAUDC Grand Finals Prep')).toBeInTheDocument();
 
     // Switch to Native P2P Studio
