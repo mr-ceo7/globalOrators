@@ -258,4 +258,27 @@ describe('SpeakerMessenger Component', () => {
       expect(screen.getByText(/presentation rebuttal/i)).toBeInTheDocument();
     });
   });
+
+  test('correctly shows offline status when assigned coach is not in onlineUserIds', async () => {
+    const offlineCoachProps = {
+      ...mockProps,
+      assignedCoach: {
+        id: 'coach-8afc482c',
+        name: 'claude2',
+        title: 'Faculty Speech & Debate Coach',
+        email: '2claudeformee@gmail.com'
+      }
+    };
+
+    render(
+      <AppProvider>
+        <SpeakerMessenger {...offlineCoachProps} />
+      </AppProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('claude2')).toBeInTheDocument();
+      expect(screen.getByText(/OFFLINE • DIRECT FACULTY THREAD/i)).toBeInTheDocument();
+    });
+  });
 });

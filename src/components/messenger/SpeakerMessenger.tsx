@@ -119,9 +119,13 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
   // Online Presence: Check if assigned coach user ID or faculty is online via SSE
   const isCoachOnline = useMemo(() => {
     if (!onlineUserIds || onlineUserIds.length === 0) return false;
-    if (assignedCoach?.id && onlineUserIds.includes(assignedCoach.id)) return true;
-    if (assignedCoach?.email && onlineUserIds.includes(assignedCoach.email)) return true;
-    // Also check if any coach account is online
+    // If a specific coach is assigned, check ONLY if that coach's ID or email is online
+    if (assignedCoach?.id || assignedCoach?.email) {
+      const matchId = Boolean(assignedCoach?.id && onlineUserIds.includes(assignedCoach.id));
+      const matchEmail = Boolean(assignedCoach?.email && onlineUserIds.includes(assignedCoach.email));
+      return matchId || matchEmail;
+    }
+    // Only if unassigned / generic triage desk, check if Head Coach or faculty coach is online
     return onlineUserIds.some(id => id.includes('coach') || id === 'coach-1');
   }, [onlineUserIds, assignedCoach]);
 
