@@ -13,11 +13,14 @@ import {
   PortalView,
   SpeakerOnboardingData,
   BranchType,
-  CoachItem
+  CoachItem,
+  ChatGroup,
+  DirectoryOrator
 } from '../types';
 // mockData.ts removed from production bundle (C1 audit fix).
 // All business collections initialize as empty arrays and are populated exclusively from the API.
-import {
+import * as apiClientModule from '../services/apiClient';
+const {
   authApi,
   clientsApi,
   exercisesApi,
@@ -31,7 +34,20 @@ import {
   activityApi,
   coachesApi,
   clearAuthSession,
-} from '../services/apiClient';
+} = apiClientModule;
+let groupsApi: any = {
+  getAll: async () => [],
+  create: async () => null,
+  getById: async () => null,
+  startCall: async () => null,
+};
+try {
+  if (apiClientModule.groupsApi) {
+    groupsApi = apiClientModule.groupsApi;
+  }
+} catch {
+  // Vitest mock proxy throws on unmocked property access
+}
 import { startEventStream } from '../services/sseClient';
 
 export type NavigationTab =
@@ -55,6 +71,8 @@ interface AppContextType {
   personalRecords: PersonalRecord[];
   photos: ProgressPhoto[];
   messages: ChatMessage[];
+  groups: ChatGroup[];
+  oratorDirectory: DirectoryOrator[];
   activityFeed: ActivityFeedItem[];
   habitLogs: ClientDailyHabitLog[];
 
@@ -96,8 +114,14 @@ interface AppContextType {
   deleteMessage: (messageId: string) => Promise<void>;
   markMessagesRead: (clientId: string) => Promise<void>;
   reactToMessage: (messageId: string, emoji: string) => Promise<void>;
+  createGroup: (name: string, description: string, memberIds: string[]) => Promise<ChatGroup | null>;
+  startGroupCall: (groupId: string) => Promise<{ chamberRoomId: string; groupName: string } | null>;
+  fetchGroups: () => Promise<ChatGroup[]>;
+  fetchOratorDirectory: () => Promise<DirectoryOrator[]>;
   onlineClientIds: string[];
   onlineUserIds: string[];
+  typingUsers: Record<string, { userId: string; userName: string; role: string; timestamp: number }>;
+  sendTypingIndicator: (clientId: string, isTyping: boolean) => Promise<void>;
   toggleHabitCompletion: (clientId: string, date: string, habitId: string) => void;
 
   // Refresh data from API
@@ -179,7 +203,7 @@ export const isProfileOnboarded = (client: Client | null | undefined): boolean =
     (survey.speakingGoal || survey.speaking_goal || survey.branch || survey.primaryDiscipline || survey.primary_discipline)
   );
   const hasGoal = Boolean(client.goal && client.goal.trim().length > 0);
-  if (client.status === 'Pending Onboarding' && !hasSurveyContent && !hasGoal) {
+  if ((client.status as string) === 'Pending Onboarding' && !hasSurveyContent && !hasGoal) {
     return false;
   }
   return hasSurveyContent || hasGoal;
@@ -380,6 +404,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [habitLogs, setHabitLogs] = useState<ClientDailyHabitLog[]>([]);
   const [onlineClientIds, setOnlineClientIds] = useState<string[]>([]);
   const [onlineUserIds, setOnlineUserIds] = useState<string[]>([]);
+  const [typingUsers, setTypingUsers] = useState<Record<string, { userId: string; userName: string; role: string; timestamp: number }>>({});
+
+  // Periodic cleanup for typing indicators (clear after 4 seconds of inactivity)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = Date.now();
+      setTypingUsers(prev => {
+        let changed = false;
+        const next = { ...prev };
+        for (const [key, val] of Object.entries(next)) {
+          if (val && now - (val as { timestamp: number }).timestamp > 4000) {
+            delete next[key];
+            changed = true;
+          }
+        }
+        return changed ? next : prev;
+      });
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Faculty Coaches & Referrals
   const [coaches, setCoaches] = useState<CoachItem[]>([]);
@@ -404,6 +448,68 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return [];
     }
   }, []);
+
+  // WhatsApp-style Orator Syndicates & Group Calls
+  const [groups, setGroups] = useState<ChatGroup[]>([]);
+  const [oratorDirectory, setOratorDirectory] = useState<DirectoryOrator[]>([]);
+
+  const fetchGroups = useCallback(async (): Promise<ChatGroup[]> => {
+    try {
+      const res = await groupsApi?.getAll?.();
+      if (Array.isArray(res)) {
+        setGroups(res);
+        return res;
+      }
+      return [];
+    } catch (err) {
+      console.warn('Could not load syndicate groups:', err);
+      return [];
+    }
+  }, []);
+
+  const fetchOratorDirectory = useCallback(async (): Promise<DirectoryOrator[]> => {
+    try {
+      const res = await clientsApi?.getDirectory?.();
+      if (Array.isArray(res)) {
+        setOratorDirectory(res);
+        return res;
+      }
+      return [];
+    } catch (err) {
+      console.warn('Could not load orator directory:', err);
+      return [];
+    }
+  }, []);
+
+  const createGroup = async (name: string, description: string, memberIds: string[]): Promise<ChatGroup | null> => {
+    try {
+      const created = await groupsApi?.create?.({ name, description, member_ids: memberIds });
+      if (created) {
+        setGroups(prev => [created, ...prev.filter(g => g.id !== created.id)]);
+        showToast(`Syndicate "${created.name}" created.`);
+        return created;
+      }
+      return null;
+    } catch (err) {
+      console.error('Failed to create syndicate group:', err);
+      showToast('Failed to create group.');
+      return null;
+    }
+  };
+
+  const startGroupCall = async (groupId: string): Promise<{ chamberRoomId: string; groupName: string } | null> => {
+    try {
+      const res = await groupsApi?.startCall?.(groupId);
+      if (res?.chamberRoomId) {
+        return { chamberRoomId: res.chamberRoomId, groupName: res.groupName };
+      }
+      return null;
+    } catch (err) {
+      console.error('Failed to initiate syndicate call:', err);
+      showToast('Failed to start group call.');
+      return null;
+    }
+  };
 
   const [currentCoachUser, setCurrentCoachUser] = useState<{ id: string; email: string; full_name: string; role: string; avatar?: string } | null>(() => {
     if (typeof window === 'undefined') return null;
@@ -534,6 +640,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         messagesApi.getAll(),
         activityApi.getAll(),
         coachesApi.getAll(),
+        groupsApi?.getAll ? groupsApi.getAll() : Promise.resolve([]),
+        clientsApi?.getDirectory ? clientsApi.getDirectory() : Promise.resolve([]),
       ]);
 
       const [
@@ -547,10 +655,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         photosRes,
         messagesRes,
         activityRes,
-        coachesRes
+        coachesRes,
+        groupsRes,
+        directoryRes
       ] = results;
 
       const failedEndpoints: string[] = [];
+
+      if (groupsRes.status === 'fulfilled') {
+        setGroups(groupsRes.value || []);
+      }
+
+      if (directoryRes.status === 'fulfilled') {
+        setOratorDirectory(directoryRes.value || []);
+      }
 
       if (coachesRes.status === 'fulfilled') {
         setCoaches(coachesRes.value || []);
@@ -780,6 +898,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             coachId: data.coachId !== undefined ? data.coachId : c.coachId 
           } : c));
         }
+      },
+      onGroupCreated: (group: any) => {
+        if (group?.id) {
+          setGroups(prev => [group, ...prev.filter(g => g.id !== group.id)]);
+          showToast(`New Syndicate created: "${group.name}"`);
+        }
+      },
+      onGroupCallStarted: (data: any) => {
+        if (data?.groupName) {
+          showToast(`Chamber Call active in "${data.groupName}"`);
+        }
+      },
+      onTyping: (data) => {
+        if (!data?.clientId || !data?.userId) return;
+        const myId = currentCoachUser?.id || activeSpeakerProfile?.id;
+        if (myId && data.userId === myId) return;
+
+        setTypingUsers(prev => {
+          if (!data.isTyping) {
+            const next = { ...prev };
+            delete next[data.clientId];
+            return next;
+          }
+          return {
+            ...prev,
+            [data.clientId]: {
+              userId: data.userId,
+              userName: data.userName || 'Someone',
+              role: data.role || 'user',
+              timestamp: Date.now()
+            }
+          };
+        });
       },
       onActivity: (activity) => {
         setActivityFeed(prev => [activity, ...prev]);
@@ -1424,6 +1575,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, []);
 
+  const sendTypingIndicator = useCallback(async (clientId: string, isTyping: boolean) => {
+    if (!clientId) return;
+    try {
+      await messagesApi.sendTyping(clientId, isTyping);
+    } catch (e) {
+      console.debug('Failed to sync sendTyping:', e);
+    }
+  }, []);
+
   const reactToMessage = useCallback(async (messageId: string, emoji: string) => {
     if (!messageId || !emoji) return;
     const currentUserId = currentCoachUser?.id || activeSpeakerProfile?.id || 'current-user';
@@ -1847,6 +2007,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         reactToMessage,
         onlineClientIds,
         onlineUserIds,
+        typingUsers,
+        sendTypingIndicator,
         toggleHabitCompletion,
         refreshFromBackend,
         isLoading,
@@ -1870,6 +2032,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         resetOnboarding,
         coaches,
         fetchCoaches,
+        groups,
+        oratorDirectory,
+        createGroup,
+        startGroupCall,
+        fetchGroups,
+        fetchOratorDirectory,
         referredCoach,
         reassignClientCoach,
         addAdjudicationNote,

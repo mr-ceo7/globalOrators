@@ -19,6 +19,7 @@ from app.models.journal import JournalEntry
 from app.models.simulation import SimulationEntry
 from app.models.recording import AudioRecording
 from app.models.inbound_email import InboundEmail
+from app.models.group import ChatGroup
 
 __all__ = [
     "User",
@@ -31,6 +32,7 @@ __all__ = [
     "ClientDailyHabitLog",
     "ProgressPhoto",
     "ChatMessage",
+    "ChatGroup",
     "ActivityFeedItem",
     "Inquiry",
     "EmailOTP",

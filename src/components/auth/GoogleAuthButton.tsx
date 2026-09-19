@@ -86,7 +86,7 @@ export const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
             onError={() =>
               onError?.('Google Authentication Failed. Ensure origin is authorized in Google Cloud Console.')
             }
-            text={text}
+            text={text as 'signin_with' | 'signup_with' | 'continue_with' | 'signin'}
             theme="filled_black"
             shape="rectangular"
             size="large"

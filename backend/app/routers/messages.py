@@ -16,11 +16,13 @@ from app.dependencies import get_db, get_current_user
 from app.models.message import ChatMessage
 from app.models.client import Client
 from app.models.user import User
+from app.models.group import ChatGroup
 from app.schemas.message import (
     ChatMessageCreate, 
     ChatMessageResponse, 
     MarkReadRequest, 
-    MessageReactRequest
+    MessageReactRequest,
+    TypingIndicatorRequest
 )
 from app.services.events import sse_manager
 from app.services.notifications import message_debouncer
@@ -35,43 +37,76 @@ async def list_messages(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """List chat messages with coach isolation and speaker authorization."""
+    """List chat messages with coach isolation, speaker authorization, and syndicate group support."""
     query = select(ChatMessage)
     
-    if current_user.role == "coach":
-        is_default_coach = (
+    is_head_coach = (
+        current_user.role == "coach" and (
             current_user.email.lower() == settings.DEFAULT_COACH_EMAIL.lower() 
             or current_user.id == "coach-1"
         )
-        if client_id:
-            # Check client belongs to coach
+    )
+
+    if client_id:
+        if client_id.startswith("group-"):
+            # Syndicate group chat
+            g_res = await db.execute(select(ChatGroup).where(ChatGroup.id == client_id))
+            group = g_res.scalar_one_or_none()
+            if not group:
+                raise HTTPException(status_code=404, detail="Group not found")
+            c_res = await db.execute(select(Client.id).where(Client.email.ilike(current_user.email)))
+            user_ids = {current_user.id, current_user.email.lower()} | set(c_res.scalars().all())
+            g_members = set(group.member_ids or [])
+            if not is_head_coach and group.created_by != current_user.id and g_members.isdisjoint(user_ids):
+                raise HTTPException(status_code=403, detail="Access denied to this syndicate thread")
+            query = query.where(ChatMessage.client_id == client_id)
+        elif current_user.role == "coach":
+            # Coach querying client or peer
             c_res = await db.execute(select(Client).where(Client.id == client_id))
             client = c_res.scalar_one_or_none()
-            if not is_default_coach and client and client.coach_id != current_user.id:
+            if not is_head_coach and client and client.coach_id != current_user.id:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Access denied: speaker messages belong to another coach"
                 )
             query = query.where(ChatMessage.client_id == client_id)
         else:
-            if is_default_coach:
-                query = query.where(or_(ChatMessage.coach_id == current_user.id, ChatMessage.coach_id.is_(None)))
-            else:
-                query = query.where(ChatMessage.coach_id == current_user.id)
-    else:
-        # Speaker
-        c_res = await db.execute(select(Client).where(Client.email.ilike(current_user.email)))
-        speaker_clients = c_res.scalars().all()
-        speaker_ids = [c.id for c in speaker_clients]
-        if client_id:
-            if client_id not in speaker_ids:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Access denied to other orator message threads"
-                )
+            # Speaker querying
             query = query.where(ChatMessage.client_id == client_id)
+    else:
+        if is_head_coach:
+            pass  # Head coach can oversee all messages
+        elif current_user.role == "coach":
+            g_res = await db.execute(select(ChatGroup))
+            all_groups = g_res.scalars().all()
+            my_group_ids = [g.id for g in all_groups if current_user.id in (g.member_ids or []) or g.created_by == current_user.id]
+            query = query.where(
+                or_(
+                    ChatMessage.coach_id == current_user.id, 
+                    ChatMessage.client_id.in_(my_group_ids),
+                    ChatMessage.client_id.like(f"%{current_user.id}%")
+                )
+            )
         else:
-            query = query.where(ChatMessage.client_id.in_(speaker_ids))
+            c_res = await db.execute(select(Client).where(Client.email.ilike(current_user.email)))
+            speaker_clients = c_res.scalars().all()
+            speaker_ids = [c.id for c in speaker_clients]
+            g_res = await db.execute(select(ChatGroup))
+            all_groups = g_res.scalars().all()
+            user_ids = {current_user.id, current_user.email.lower()} | set(speaker_ids)
+            my_group_ids = [g.id for g in all_groups if not set(g.member_ids or []).isdisjoint(user_ids) or g.created_by == current_user.id]
+            
+            peer_conditions = [ChatMessage.client_id.like(f"%{current_user.id}%")]
+            for sid in speaker_ids:
+                peer_conditions.append(ChatMessage.client_id.like(f"%{sid}%"))
+
+            query = query.where(
+                or_(
+                    ChatMessage.client_id.in_(speaker_ids), 
+                    ChatMessage.client_id.in_(my_group_ids),
+                    *peer_conditions
+                )
+            )
             
     result = await db.execute(query.order_by(ChatMessage.id.asc()))
     return result.scalars().all()
@@ -83,33 +118,46 @@ async def send_message(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Send a new message with coach isolation."""
-    c_res = await db.execute(select(Client).where(Client.id == msg_in.client_id))
-    client = c_res.scalar_one_or_none()
-    
-    coach_id = None
-    if current_user.role == "coach":
-        is_default_coach = (
+    """Send a new message with coach isolation, syndicate group routing, and sender attribution."""
+    is_head_coach = (
+        current_user.role == "coach" and (
             current_user.email.lower() == settings.DEFAULT_COACH_EMAIL.lower() 
             or current_user.id == "coach-1"
         )
-        if client and not is_default_coach and client.coach_id != current_user.id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied: cannot message speakers of another coach"
-            )
-        coach_id = current_user.id
+    )
+    
+    coach_id = current_user.id if current_user.role == "coach" else None
+    
+    if msg_in.client_id.startswith("group-"):
+        # Syndicate group message
+        g_res = await db.execute(select(ChatGroup).where(ChatGroup.id == msg_in.client_id))
+        group = g_res.scalar_one_or_none()
+        if not group:
+            raise HTTPException(status_code=404, detail="Group not found")
+        c_res = await db.execute(select(Client.id).where(Client.email.ilike(current_user.email)))
+        user_ids = {current_user.id, current_user.email.lower()} | set(c_res.scalars().all())
+        g_members = set(group.member_ids or [])
+        if not is_head_coach and group.created_by != current_user.id and g_members.isdisjoint(user_ids):
+            raise HTTPException(status_code=403, detail="Access denied: you are not a member of this syndicate")
+    elif msg_in.client_id.startswith("peer-") or msg_in.client_id.startswith("direct-"):
+        # Peer conversation thread
+        pass
     else:
-        if client and client.email and client.email.lower() != current_user.email.lower():
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied to send messages for other speakers"
-            )
-        coach_id = client.coach_id if client else None
+        # Standard client thread
+        c_res = await db.execute(select(Client).where(Client.id == msg_in.client_id))
+        client = c_res.scalar_one_or_none()
+        if current_user.role == "coach":
+            if client and not is_head_coach and client.coach_id != current_user.id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Access denied: cannot message speakers of another coach"
+                )
+            coach_id = current_user.id
+        else:
+            coach_id = client.coach_id if client else None
         
     now_str = datetime.now().strftime("%I:%M %p")
     if msg_in.client_msg_id and msg_in.client_msg_id.strip():
-        # Idempotency check: if message with this clientMsgId already exists, return it
         c_exist = await db.execute(select(ChatMessage).where(ChatMessage.id == msg_in.client_msg_id.strip()))
         existing_msg = c_exist.scalar_one_or_none()
         if existing_msg:
@@ -118,6 +166,17 @@ async def send_message(
     else:
         msg_id = f"msg-{int(time.time() * 1000)}"
     
+    # Enrich attachment with sender attribution for groups and multi-party threads
+    attachment_dict = dict(msg_in.attachment or {})
+    if "senderName" not in attachment_dict:
+        attachment_dict["senderName"] = current_user.full_name
+    if "senderAvatar" not in attachment_dict:
+        attachment_dict["senderAvatar"] = current_user.avatar or ""
+    if "senderRole" not in attachment_dict:
+        attachment_dict["senderRole"] = current_user.role
+    if "senderId" not in attachment_dict:
+        attachment_dict["senderId"] = current_user.id
+
     new_msg = ChatMessage(
         id=msg_id,
         coach_id=coach_id,
@@ -126,7 +185,7 @@ async def send_message(
         text=msg_in.text,
         timestamp=now_str,
         is_read=False,
-        attachment=msg_in.attachment
+        attachment=attachment_dict
     )
     db.add(new_msg)
     await db.commit()
@@ -148,8 +207,8 @@ async def send_message(
                     "isRead": new_msg.is_read,
                     "attachment": new_msg.attachment
                 },
-                target_client_id=new_msg.client_id,
-                target_coach_id=coach_id
+                target_client_id=None if (new_msg.client_id.startswith("group-") or new_msg.client_id.startswith("peer-")) else new_msg.client_id,
+                target_coach_id=None if (new_msg.client_id.startswith("group-") or new_msg.client_id.startswith("peer-")) else coach_id
             )
         )
     except Exception as sse_err:
@@ -205,21 +264,40 @@ async def mark_messages_read(
     current_user: User = Depends(get_current_user)
 ):
     """Mark incoming messages in a thread as read and broadcast SSE read receipt."""
-    other_sender = "client" if current_user.role == "coach" else "coach"
-    await db.execute(
-        update(ChatMessage)
-        .where(
+    # Find all unread messages in this thread
+    res = await db.execute(
+        select(ChatMessage).where(
             ChatMessage.client_id == body.client_id,
-            ChatMessage.sender == other_sender,
             ChatMessage.is_read == False
         )
-        .values(is_read=True)
     )
-    await db.commit()
+    unread_msgs = res.scalars().all()
+    
+    updated_any = False
+    for msg in unread_msgs:
+        att = msg.attachment or {}
+        sender_id = att.get("senderId")
+        # Do not mark own messages as read by self
+        if sender_id and sender_id == current_user.id:
+            continue
+        if not sender_id:
+            if current_user.role == "coach" and msg.sender == "coach":
+                continue
+            if current_user.role != "coach" and msg.sender == "client":
+                continue
+        msg.is_read = True
+        updated_any = True
+        
+    if updated_any:
+        await db.commit()
 
+    is_group_or_peer = body.client_id.startswith("group-") or body.client_id.startswith("peer-")
     c_res = await db.execute(select(Client).where(Client.id == body.client_id))
     client = c_res.scalar_one_or_none()
     coach_id = client.coach_id if client else None
+
+    target_c_id = None if is_group_or_peer else body.client_id
+    target_co_id = None if is_group_or_peer else coach_id
 
     # Broadcast real-time read event
     try:
@@ -231,14 +309,50 @@ async def mark_messages_read(
                     "readerRole": current_user.role,
                     "readerId": current_user.id
                 },
-                target_client_id=body.client_id,
-                target_coach_id=coach_id
+                target_client_id=target_c_id,
+                target_coach_id=target_co_id
             )
         )
     except Exception as e:
         logger.debug(f"Failed to broadcast messages_read: {e}")
 
     return {"status": "ok", "clientId": body.client_id}
+
+
+@router.post("/typing")
+async def broadcast_typing(
+    body: TypingIndicatorRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Broadcast an ephemeral typing status over SSE to thread participants."""
+    is_group_or_peer = body.client_id.startswith("group-") or body.client_id.startswith("peer-")
+    c_res = await db.execute(select(Client).where(Client.id == body.client_id))
+    client = c_res.scalar_one_or_none()
+    coach_id = client.coach_id if client else None
+
+    target_c_id = None if is_group_or_peer else body.client_id
+    target_co_id = None if is_group_or_peer else coach_id
+
+    try:
+        asyncio.create_task(
+            sse_manager.broadcast(
+                event="typing",
+                data={
+                    "clientId": body.client_id,
+                    "userId": current_user.id,
+                    "userName": current_user.full_name,
+                    "role": current_user.role,
+                    "isTyping": body.is_typing
+                },
+                target_client_id=target_c_id,
+                target_coach_id=target_co_id
+            )
+        )
+    except Exception as e:
+        logger.debug(f"Failed to broadcast typing event: {e}")
+
+    return {"status": "ok", "clientId": body.client_id, "isTyping": body.is_typing}
 
 
 @router.patch("/{message_id}/react", response_model=ChatMessageResponse)

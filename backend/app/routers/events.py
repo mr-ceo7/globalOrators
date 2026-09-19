@@ -69,10 +69,12 @@ async def sse_event_stream(
     client_id: Optional[str] = None
     if user.role != "coach":
         async with AsyncSessionLocal() as session:
-            c_res = await session.execute(select(Client).where(Client.email.ilike(user.email)))
+            c_res = await session.execute(select(Client).where((Client.email.ilike(user.email)) | (Client.id == user.id)))
             client = c_res.scalar_one_or_none()
             if client:
                 client_id = client.id
+            else:
+                client_id = user.id
 
     queue = await sse_manager.subscribe(
         user_id=user.id,

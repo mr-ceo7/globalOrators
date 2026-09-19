@@ -48,6 +48,45 @@ vi.mock('../services/apiClient', () => ({
       track: 'executive',
       currentProgramName: 'Master Orator Protocol',
       assignedCoachId: 'coach-1'
+    }),
+    getDirectory: vi.fn().mockResolvedValue([
+      {
+        id: 'client-2',
+        name: 'Sarah Kimani',
+        email: 'sarah@example.com',
+        track: 'executive',
+        branch: 'Executive',
+        status: 'Active',
+        current_program: 'Master Orator Protocol'
+      }
+    ])
+  },
+  groupsApi: {
+    getAll: vi.fn().mockResolvedValue([
+      {
+        id: 'group-1',
+        name: 'Davos Syndicate',
+        description: 'Executive keynote sparring',
+        created_by: 'client-1',
+        member_ids: ['client-1', 'client-2', 'coach-1'],
+        chamber_room_id: 'chamber-davos-1',
+        created_at: '2026-09-19T10:00:00Z',
+        updated_at: '2026-09-19T10:00:00Z'
+      }
+    ]),
+    create: vi.fn().mockImplementation(async (payload) => ({
+      id: 'group-new',
+      name: payload.name,
+      description: payload.description,
+      created_by: 'client-1',
+      member_ids: payload.member_ids,
+      chamber_room_id: 'chamber-new-1',
+      created_at: '2026-09-19T10:00:00Z',
+      updated_at: '2026-09-19T10:00:00Z'
+    })),
+    startCall: vi.fn().mockResolvedValue({
+      chamberRoomId: 'chamber-davos-1',
+      groupName: 'Davos Syndicate'
     })
   },
   coachesApi: {
@@ -141,6 +180,20 @@ vi.mock('../services/apiClient', () => ({
         text: 'Check your posture on the podium.',
         timestamp: '09:20 AM',
         isRead: true
+      },
+      {
+        id: 'msg-5',
+        clientId: 'group-1',
+        sender: 'coach',
+        text: 'Live Rehearsal Chamber Session Initiated for Davos Syndicate.',
+        timestamp: '09:30 AM',
+        isRead: true,
+        messageType: 'group_call',
+        attachment: {
+          type: 'group_call',
+          chamberRoomId: 'chamber-davos-1',
+          callerName: 'Head Coach Qassim'
+        }
       }
     ]),
     send: vi.fn().mockResolvedValue({
@@ -350,5 +403,67 @@ describe('SpeakerMessenger Component', () => {
     // Message from claude2 shows claude2 attribution and title
     expect(screen.getByText('Check your posture on the podium.')).toBeInTheDocument();
     expect(screen.getByTitle(/claude2 \(Faculty Coach\)/i)).toBeInTheDocument();
+  });
+
+  test('renders syndicate group in roster, allows switching, and displays interactive chamber call card', async () => {
+    render(
+      <AppProvider>
+        <SpeakerMessenger {...mockProps} />
+      </AppProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Davos Syndicate')).toBeInTheDocument();
+    });
+
+    // Switch to Davos Syndicate group thread
+    fireEvent.click(screen.getByText('Davos Syndicate'));
+
+    await waitFor(() => {
+      // Header switches to group mode
+      expect(screen.getByText(/ORATOR SYNDICATE/i)).toBeInTheDocument();
+      expect(screen.getByText(/3 MEMBERS · ENCRYPTED SYNDICATE/i)).toBeInTheDocument();
+      // Interactive Join Live Chamber button is rendered
+      expect(screen.getByText(/Join Live Chamber/i)).toBeInTheDocument();
+      expect(screen.getByText(/Live Rehearsal Chamber Active/i)).toBeInTheDocument();
+    });
+
+    // Click "Join Live Chamber"
+    fireEvent.click(screen.getByText(/Join Live Chamber/i));
+  });
+
+  test('allows creating a new orator syndicate group with selected participants', async () => {
+    render(
+      <AppProvider>
+        <SpeakerMessenger {...mockProps} />
+      </AppProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('New Group')).toBeInTheDocument();
+    });
+
+    // Open creation modal
+    fireEvent.click(screen.getByText('New Group'));
+
+    expect(screen.getByText('Establish Orator Syndicate')).toBeInTheDocument();
+
+    const nameInput = screen.getByPlaceholderText(/e.g. Boardroom Pitch Syndicate/i);
+    fireEvent.change(nameInput, { target: { value: 'Oxford Union Spar Syndicate' } });
+
+    // Select member claude2
+    await waitFor(() => {
+      expect(screen.getAllByText('claude2').length).toBeGreaterThan(0);
+    });
+    const claude2Option = screen.getAllByText('claude2')[0];
+    fireEvent.click(claude2Option);
+
+    // Submit group creation
+    const submitBtn = screen.getByRole('button', { name: /Establish Syndicate/i });
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(screen.queryByText('Establish Orator Syndicate')).not.toBeInTheDocument();
+    });
   });
 });

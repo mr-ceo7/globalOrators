@@ -45,3 +45,8 @@ class MarkReadRequest(CamelModel):
 class MessageReactRequest(CamelModel):
     emoji: str
 
+
+class TypingIndicatorRequest(CamelModel):
+    client_id: str
+    is_typing: bool
+

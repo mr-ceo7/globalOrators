@@ -14,7 +14,9 @@ import {
   ChatMessage,
   ActivityFeedItem,
   ClientDailyHabitLog,
-  CoachItem
+  CoachItem,
+  ChatGroup,
+  DirectoryOrator
 } from '../types';
 
 
@@ -283,8 +285,19 @@ export const clientsApi = {
     api.patch<Client>(`/clients/${id}/reassign-coach`, { coachId, reason }),
   addAdjudicationNote: (id: string, note: string, rubricCategory?: string, rating?: number) =>
     api.post<Client>(`/clients/${id}/adjudication-notes`, { note, rubricCategory, rating }),
+  getDirectory: () => api.get<DirectoryOrator[]>('/clients/directory'),
   addNote: (id: string, note: string) => api.post<Client>(`/clients/${id}/notes`, { note }),
   delete: (id: string) => api.delete<{ message: string; id: string }>(`/clients/${id}`),
+};
+
+// Orator Syndicate Groups & Live Group Calls Endpoints
+export const groupsApi = {
+  getAll: () => api.get<ChatGroup[]>('/groups'),
+  getById: (id: string) => api.get<ChatGroup>(`/groups/${id}`),
+  create: (data: { name: string; description?: string; member_ids: string[] }) =>
+    api.post<ChatGroup>('/groups', data),
+  startCall: (groupId: string) =>
+    api.post<{ chamberRoomId: string; groupName: string; message: string; callMessageId: string }>(`/groups/${groupId}/call`, {}),
 };
 
 // Coaches Faculty Directory Endpoints
@@ -366,6 +379,8 @@ export const messagesApi = {
     api.delete<{ status: string; messageId: string }>(`/messages/${messageId}`),
   markRead: (clientId: string) =>
     api.post<{ status: string; clientId: string }>('/messages/mark-read', { clientId }),
+  sendTyping: (clientId: string, isTyping: boolean) =>
+    api.post<{ status: string; clientId: string; isTyping: boolean }>('/messages/typing', { clientId, isTyping }),
   react: (messageId: string, emoji: string) =>
     api.patch<ChatMessage>(`/messages/${messageId}/react`, { emoji }),
   getPresence: () =>

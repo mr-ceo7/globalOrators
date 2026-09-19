@@ -34,6 +34,7 @@ export interface LiveRehearsalRoomProps {
   userRole: 'coach' | 'speaker';
   branch?: 'Academy' | 'Foundation';
   initialEntered?: boolean;
+  customRoomId?: string;
   onSaveFeedback?: (feedback: {
     wpm: number;
     score: number;
@@ -53,6 +54,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
   userRole,
   branch = 'Academy',
   initialEntered = false,
+  customRoomId,
   onSaveFeedback
 }) => {
   // Rehearsal Mode Workflow: Rehearse, Evaluate, Debrief
@@ -106,7 +108,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
   // Room Identifier: unique, stable room string for this speaker
   const cleanSpeakerName = (speakerName || 'Speaker').replace(/[^a-zA-Z0-9]/g, '');
   const cleanSpeakerId = (speakerId || 'rehearsal').replace(/[^a-zA-Z0-9]/g, '');
-  const safeRoomId = `GlobalOrators-${cleanSpeakerName}-${cleanSpeakerId}`;
+  const safeRoomId = customRoomId || `GlobalOrators-${cleanSpeakerName}-${cleanSpeakerId}`;
 
   // Chamber Welcome Screen State
   const [hasEnteredChamber, setHasEnteredChamber] = useState<boolean>(initialEntered);

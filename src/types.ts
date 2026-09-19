@@ -376,3 +376,30 @@ export interface ActivityFeedItem {
     compliance?: number;
   };
 }
+
+export interface ChatGroup {
+  id: string;
+  name: string;
+  description: string;
+  created_by: string;
+  member_ids: string[];
+  chamber_room_id: string;
+  created_at: string;
+  last_message?: {
+    text?: string;
+    sender?: string;
+    timestamp?: string;
+    attachment?: any;
+  } | null;
+}
+
+export interface DirectoryOrator {
+  id: string;
+  name: string;
+  avatar: string;
+  goal: string;
+  experienceLevel: string;
+  status: string;
+  isMe?: boolean;
+}
+

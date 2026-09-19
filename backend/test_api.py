@@ -2492,3 +2492,144 @@ async def test_resend_webhook_endpoint():
             list_res = await client.get("/api/webhooks/resend/inbound-emails", headers=coach_auth_headers)
             assert list_res.status_code == 200
             assert isinstance(list_res.json(), list)
+
+
+@pytest.mark.asyncio
+async def test_chat_groups_and_calls_and_directory():
+    """Verify group syndicate creation, group video call chamber, and orator directory."""
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        # 1. Login as coach
+        login_res = await client.post(
+            "/api/auth/login",
+            json={
+                "email": settings.DEFAULT_COACH_EMAIL,
+                "password": settings.DEFAULT_COACH_PASSWORD
+            }
+        )
+        assert login_res.status_code == 200
+        coach_token = login_res.json()["access_token"]
+        headers = {"Authorization": f"Bearer {coach_token}"}
+
+        # 2. Orator directory accessible
+        dir_res = await client.get("/api/clients/directory", headers=headers)
+        assert dir_res.status_code == 200
+        directory = dir_res.json()
+        assert isinstance(directory, list)
+
+        # 3. Create a WhatsApp-style group
+        group_payload = {
+            "name": "Oxford Union Debate Syndicate",
+            "description": "Championship debate preparations and rebuttals",
+            "member_ids": ["client-71a15047", "coach-1"]
+        }
+        create_res = await client.post("/api/groups", json=group_payload, headers=headers)
+        assert create_res.status_code == 201
+        group_data = create_res.json()
+        assert group_data["name"] == "Oxford Union Debate Syndicate"
+        assert group_data["chamber_room_id"].startswith("chamber-group-")
+        group_id = group_data["id"]
+
+        # 4. List groups
+        list_res = await client.get("/api/groups", headers=headers)
+        assert list_res.status_code == 200
+        groups = list_res.json()
+        assert any(g["id"] == group_id for g in groups)
+
+        # 5. Send message to group
+        msg_payload = {
+            "clientId": group_id,
+            "sender": "coach",
+            "text": "Welcome to our Oxford Union debate syndicate session.",
+            "attachment": {"type": "text"}
+        }
+        msg_res = await client.post("/api/messages", json=msg_payload, headers=headers)
+        assert msg_res.status_code == 201
+        msg_data = msg_res.json()
+        assert msg_data["clientId"] == group_id
+        assert msg_data["text"] == "Welcome to our Oxford Union debate syndicate session."
+
+        # 6. List messages for group
+        group_msgs_res = await client.get(f"/api/messages?clientId={group_id}", headers=headers)
+        assert group_msgs_res.status_code == 200
+        group_msgs = group_msgs_res.json()
+        assert len(group_msgs) >= 2  # welcome message + sent message
+
+        # 7. Start Live Group Chamber call
+        call_res = await client.post(f"/api/groups/{group_id}/call", headers=headers)
+        assert call_res.status_code == 200
+        call_data = call_res.json()
+        assert "chamberRoomId" in call_data
+        assert call_data["chamberRoomId"] == group_data["chamber_room_id"]
+        assert call_data["message"] == "Group chamber call active"
+
+
+@pytest.mark.asyncio
+async def test_mark_messages_read_and_typing_indicators():
+    """Verify mark-read updates unread messages for peer/groups/clients and typing indicator broadcasts."""
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        login_res = await client.post(
+            "/api/auth/login",
+            json={
+                "email": settings.DEFAULT_COACH_EMAIL,
+                "password": settings.DEFAULT_COACH_PASSWORD
+            }
+        )
+        assert login_res.status_code == 200
+        token = login_res.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+        
+        # 1. Create a test group
+        grp_res = await client.post(
+            "/api/groups",
+            json={
+                "name": "Syndicate Read Test Group",
+                "member_ids": ["client-71a15047", "coach-1"]
+            },
+            headers=headers
+        )
+        assert grp_res.status_code == 201
+        test_group_id = grp_res.json()["id"]
+
+        # 2. Send message to group from another sender
+        send_res = await client.post(
+            "/api/messages",
+            json={
+                "clientId": test_group_id,
+                "sender": "client",
+                "text": "Hello fellow orator syndicate",
+                "attachment": {"type": "text", "senderId": "other-orator-123"}
+            },
+            headers=headers
+        )
+        assert send_res.status_code == 201
+        
+        # 2. Mark messages as read by current user
+        read_res = await client.post(
+            "/api/messages/mark-read",
+            json={"clientId": test_group_id},
+            headers=headers
+        )
+        assert read_res.status_code == 200
+        assert read_res.json()["status"] == "ok"
+        
+        # 3. Verify message is now marked read
+        list_res = await client.get(f"/api/messages?clientId={test_group_id}", headers=headers)
+        assert list_res.status_code == 200
+        msgs = list_res.json()
+        target_msg = next((m for m in msgs if m["text"] == "Hello fellow orator syndicate"), None)
+        assert target_msg is not None
+        assert target_msg["isRead"] is True
+        
+        # 4. Broadcast typing status
+        typing_res = await client.post(
+            "/api/messages/typing",
+            json={"clientId": test_group_id, "isTyping": True},
+            headers=headers
+        )
+        assert typing_res.status_code == 200
+        assert typing_res.json()["isTyping"] is True
+        assert typing_res.json()["status"] == "ok"
+
+

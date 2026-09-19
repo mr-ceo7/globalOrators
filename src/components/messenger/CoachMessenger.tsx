@@ -24,7 +24,9 @@ import {
   ArrowLeft,
   Volume2,
   Sparkles,
-  PhoneCall
+  PhoneCall,
+  Radio,
+  Users
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { ChatMessage, Client } from '../../types';
@@ -49,10 +51,14 @@ export const CoachMessenger: React.FC = () => {
     addCoachNote,
     addMetricEntry,
     currentCoachUser,
-    coaches
+    coaches,
+    groups = [],
+    typingUsers = {},
+    sendTypingIndicator
   } = useApp();
 
   const [isLiveRoomOpen, setIsLiveRoomOpen] = useState(false);
+  const [customChamberRoomId, setCustomChamberRoomId] = useState<string | undefined>(undefined);
   const [inputMessage, setInputMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [isPlayingAudio, setIsPlayingAudio] = useState<string | null>(null);
@@ -78,6 +84,7 @@ export const CoachMessenger: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const typingDebounceTimeoutRef = useRef<any>(null);
 
   // Active client conversation
   const activeClient = clients.find(c => c.id === selectedClientId) || clients[0];
@@ -149,11 +156,39 @@ export const CoachMessenger: React.FC = () => {
     "Pacing check: let's slow down the opening hook to ~135 WPM for maximum gravitas."
   ];
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setInputMessage(val);
+    if (!activeClient?.id || !sendTypingIndicator) return;
+
+    if (val.trim()) {
+      sendTypingIndicator(activeClient.id, true);
+      if (typingDebounceTimeoutRef.current) {
+        clearTimeout(typingDebounceTimeoutRef.current);
+      }
+      typingDebounceTimeoutRef.current = setTimeout(() => {
+        sendTypingIndicator(activeClient.id, false);
+      }, 3000);
+    } else {
+      if (typingDebounceTimeoutRef.current) {
+        clearTimeout(typingDebounceTimeoutRef.current);
+      }
+      sendTypingIndicator(activeClient.id, false);
+    }
+  };
+
   // Send standard text or quoted reply
   const handleSendText = async (textToSend?: string) => {
     if (isSending) return;
     const text = (textToSend || inputMessage).trim();
     if (!text || !activeClient) return;
+
+    if (typingDebounceTimeoutRef.current) {
+      clearTimeout(typingDebounceTimeoutRef.current);
+    }
+    if (sendTypingIndicator && activeClient?.id) {
+      sendTypingIndicator(activeClient.id, false);
+    }
 
     setIsSending(true);
     setInputMessage('');
@@ -549,9 +584,15 @@ export const CoachMessenger: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex items-center justify-between mt-0.5">
-                    <p className="text-[11px] text-slate-400 truncate max-w-[160px]">
-                      {lastMsg ? lastMsg.text || (lastMsg as any).content : `Goal: ${client.goal}`}
-                    </p>
+                    {typingUsers?.[client.id] ? (
+                      <p className="text-[11px] text-cyan-400 font-mono italic animate-pulse">
+                        typing...
+                      </p>
+                    ) : (
+                      <p className="text-[11px] text-slate-400 truncate max-w-[160px]">
+                        {lastMsg ? lastMsg.text || (lastMsg as any).content : `Goal: ${client.goal}`}
+                      </p>
+                    )}
                     {unreadCount > 0 && (
                       <span className="h-4 min-w-[16px] px-1 rounded-full bg-emerald-500 text-slate-950 font-bold text-[9px] flex items-center justify-center shrink-0">
                         {unreadCount}
@@ -880,6 +921,37 @@ export const CoachMessenger: React.FC = () => {
                         </div>
                       )}
 
+                      {/* Interactive Group Chamber Call Card */}
+                      {(msg.messageType === 'group_call' || msg.attachment?.type === 'group_call' || msg.attachmentData?.type === 'group_call') && (
+                        <div className="p-3 my-1 rounded-2xl bg-cyan-950/60 border border-cyan-500/40 text-left space-y-2">
+                          <div className="flex items-center gap-2">
+                            <div className="h-8 w-8 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
+                              <Radio className="w-4 h-4 animate-pulse" />
+                            </div>
+                            <div>
+                              <div className="font-bold text-xs text-white">Live Rehearsal Chamber Active</div>
+                              <div className="text-[10px] font-mono text-cyan-300">
+                                {(msg.attachment?.chamberRoomId || msg.attachmentData?.chamberRoomId) ? `Room: ${msg.attachment?.chamberRoomId || msg.attachmentData?.chamberRoomId}` : 'Syndicate Call'}
+                              </div>
+                            </div>
+                          </div>
+                          <p className="text-[11px] text-slate-300">
+                            {msg.text || (msg as any).content || 'A group rehearsal chamber is live.'}
+                          </p>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCustomChamberRoomId(msg.attachment?.chamberRoomId || msg.attachmentData?.chamberRoomId || 'syndicate-room');
+                              setIsLiveRoomOpen(true);
+                            }}
+                            className="w-full py-2 px-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-sm"
+                          >
+                            <Video className="w-3.5 h-3.5" />
+                            <span>Join Live Chamber</span>
+                          </button>
+                        </div>
+                      )}
+
                       {/* Document File Attachment Card */}
                       {msg.attachment?.fileName && (
                         <div className="mt-2 p-2.5 rounded-xl bg-black/40 border border-slate-700 flex items-center gap-3">
@@ -989,6 +1061,19 @@ export const CoachMessenger: React.FC = () => {
                 </div>
               );
             })}
+            {/* Real-time Typing Indicator */}
+            {activeClient?.id && typingUsers?.[activeClient.id] && (
+              <div className="flex items-center gap-2 p-2 px-3 rounded-xl bg-slate-950/80 border border-slate-800 max-w-fit animate-fadeIn">
+                <div className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
+                <span className="text-[10px] font-mono tracking-widest text-slate-400 uppercase">
+                  {activeClient.name || 'Orator'} is composing...
+                </span>
+              </div>
+            )}
             <div ref={messagesEndRef} />
           </div>
 
@@ -1116,7 +1201,12 @@ export const CoachMessenger: React.FC = () => {
                   type="text"
                   placeholder={`Message ${activeClient.name}...`}
                   value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
+                  onChange={handleInputChange}
+                  onBlur={() => {
+                    if (sendTypingIndicator && activeClient?.id) {
+                      sendTypingIndicator(activeClient.id, false);
+                    }
+                  }}
                   className="flex-1 h-10 px-4 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-400 focus:outline-hidden focus:border-emerald-500"
                 />
 
@@ -1145,12 +1235,16 @@ export const CoachMessenger: React.FC = () => {
           {/* Embedded Live Rehearsal Studio Modal */}
           <LiveRehearsalRoom
             isOpen={isLiveRoomOpen}
-            onClose={() => setIsLiveRoomOpen(false)}
+            onClose={() => {
+              setIsLiveRoomOpen(false);
+              setCustomChamberRoomId(undefined);
+            }}
             roomTitle={`Live Rehearsal: ${activeClient.name}`}
             speakerName={activeClient.name}
             speakerId={activeClient.id}
             userRole="coach"
             branch={activeClient.branch || 'Academy'}
+            customRoomId={customChamberRoomId}
             onSaveFeedback={({ wpm, score, notes, durationSeconds }) => {
               const durMin = Math.max(1, Math.round(durationSeconds / 60));
               addCoachNote(activeClient.id, `Live Rehearsal (${durMin} min, ${wpm} WPM, Score: ${score}/10): ${notes}`);

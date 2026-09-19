@@ -152,6 +152,47 @@ async def get_my_client_profile(
     return resp
 
 
+@router.get("/directory")
+async def get_orator_directory(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Public directory of enrolled orators across the Global Orators network.
+    Accessible to all authenticated speakers and faculty coaches to facilitate peer messaging and syndicate formation.
+    """
+    result = await db.execute(select(Client).where(Client.status != "Suspended"))
+    clients = result.scalars().all()
+    
+    emails_to_lookup = {c.email.lower() for c in clients if (not c.avatar or c.avatar == "") and c.email}
+    avatar_by_email = {}
+    if emails_to_lookup:
+        user_res = await db.execute(
+            select(User.email, User.avatar).where(
+                (User.avatar != "") & (User.avatar.is_not(None))
+            )
+        )
+        for u_email, u_avatar in user_res.all():
+            if u_avatar and u_email and u_email.lower() in emails_to_lookup:
+                avatar_by_email[u_email.lower()] = u_avatar
+                
+    directory = []
+    for c in clients:
+        avatar = c.avatar
+        if (not avatar or avatar == "") and c.email and c.email.lower() in avatar_by_email:
+            avatar = avatar_by_email[c.email.lower()]
+        directory.append({
+            "id": c.id,
+            "name": c.name,
+            "avatar": avatar or "",
+            "goal": c.goal or "Master Orator",
+            "experienceLevel": c.experience_level or "Advanced",
+            "status": c.status,
+            "isMe": c.email.lower() == current_user.email.lower() if c.email else False
+        })
+    return directory
+
+
 @router.get("/lookup", include_in_schema=False)
 async def extinguished_speaker_lookup():
     """Explicitly extinguished legacy lookup route to prevent public enumeration."""

@@ -17,6 +17,9 @@ export interface SSEOptions {
   onPresence?: (data: { userId: string; clientId?: string; role?: string; status: 'online' | 'offline' }) => void;
   onClientUpdated?: (data: { action: string; clientId: string; status?: string; coachId?: string; name?: string }) => void;
   onRosterUpdated?: (data: { action: string; clientId?: string; coachId?: string; coachName?: string; name?: string; status?: string }) => void;
+  onGroupCreated?: (group: any) => void;
+  onGroupCallStarted?: (data: any) => void;
+  onTyping?: (data: { clientId: string; userId: string; userName: string; role: string; isTyping: boolean }) => void;
   onActivity?: (activity: ActivityFeedItem) => void;
   onError?: (err: Event) => void;
 }
@@ -117,6 +120,33 @@ export class SSEClient {
           this.options.onRosterUpdated?.(data);
         } catch (err) {
           console.warn('[SSE] Failed to parse roster_updated:', err);
+        }
+      });
+
+      this.eventSource.addEventListener('group_created', (e: MessageEvent) => {
+        try {
+          const group = JSON.parse(e.data);
+          this.options.onGroupCreated?.(group);
+        } catch (err) {
+          console.warn('[SSE] Failed to parse group_created:', err);
+        }
+      });
+
+      this.eventSource.addEventListener('group_call_started', (e: MessageEvent) => {
+        try {
+          const data = JSON.parse(e.data);
+          this.options.onGroupCallStarted?.(data);
+        } catch (err) {
+          console.warn('[SSE] Failed to parse group_call_started:', err);
+        }
+      });
+
+      this.eventSource.addEventListener('typing', (e: MessageEvent) => {
+        try {
+          const data = JSON.parse(e.data);
+          this.options.onTyping?.(data);
+        } catch (err) {
+          console.warn('[SSE] Failed to parse typing:', err);
         }
       });
 
