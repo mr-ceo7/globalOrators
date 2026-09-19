@@ -50,6 +50,7 @@ describe('LiveRehearsalRoom Dual Engine Tests', () => {
     expect(iframe).toBeInTheDocument();
     expect(iframe).toHaveAttribute('src', expect.stringContaining(expectedDomain));
     expect(iframe).toHaveAttribute('src', expect.stringContaining('GlobalOrators-ObedImbusi-client101'));
+    expect(iframe).toHaveAttribute('src', expect.stringContaining('config.prejoinConfig.enabled=true'));
     expect(iframe).toHaveAttribute('src', expect.stringContaining('SHOW_JITSI_WATERMARK=false'));
     expect(iframe).toHaveAttribute('allow', expect.stringContaining('camera *; microphone *; display-capture *; autoplay *; clipboard-write *; screen-wake-lock *; fullscreen *; speaker-selection *; compute-pressure *'));
 

@@ -133,7 +133,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
   const coachLabel = currentStoredUser?.full_name || (isHeadCoach ? 'Head Coach Qassim' : 'Faculty Coach');
   const displayName = userRole === 'coach' ? coachLabel : speakerName;
   const effectiveRoomId = (roomInput.trim() || safeRoomId).replace(/[^a-zA-Z0-9_-]/g, '');
-  const selfHostedMeetingUrl = `https://${jitsiDomain}/${effectiveRoomId}#config.prejoinConfig.enabled=false&config.prejoinPageEnabled=false&config.defaultLanguage="en"&config.disableDeepLinking=true&userInfo.displayName=${encodeURIComponent(displayName)}&interfaceConfig.SHOW_JITSI_WATERMARK=false&interfaceConfig.SHOW_WATERMARK_FOR_GUESTS=false&interfaceConfig.SHOW_BRAND_WATERMARK=false&interfaceConfig.SHOW_POWERED_BY=false&interfaceConfig.SHOW_CHROME_EXTENSION_BANNER=false`;
+  const selfHostedMeetingUrl = `https://${jitsiDomain}/${effectiveRoomId}#config.prejoinConfig.enabled=true&config.prejoinPageEnabled=true&config.defaultLanguage="en"&config.disableDeepLinking=true&userInfo.displayName=${encodeURIComponent(displayName)}&interfaceConfig.SHOW_JITSI_WATERMARK=false&interfaceConfig.SHOW_WATERMARK_FOR_GUESTS=false&interfaceConfig.SHOW_BRAND_WATERMARK=false&interfaceConfig.SHOW_POWERED_BY=false&interfaceConfig.SHOW_CHROME_EXTENSION_BANNER=false`;
 
   // Security Context Check (Mobile WebRTC strictly requires HTTPS or localhost)
   const isInsecureContext = typeof window !== 'undefined' && !window.isSecureContext && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
