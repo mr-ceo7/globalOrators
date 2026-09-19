@@ -58,6 +58,13 @@ vi.mock('../services/apiClient', () => ({
         email: 'kassimmusa322@gmail.com',
         title: 'Master Rhetoric & Parliamentary Coach',
         status: 'Active'
+      },
+      {
+        id: 'coach-8afc482c',
+        name: 'claude2',
+        email: '2claudeformee@gmail.com',
+        title: 'Faculty Speech & Debate Coach',
+        status: 'Active'
       }
     ])
   },
@@ -87,6 +94,7 @@ vi.mock('../services/apiClient', () => ({
       {
         id: 'msg-1',
         clientId: 'client-1',
+        coachId: 'coach-1',
         sender: 'coach',
         text: 'Welcome Geoffrey. Let us refine your board presentation rebuttal.',
         timestamp: '09:00 AM',
@@ -107,6 +115,32 @@ vi.mock('../services/apiClient', () => ({
           durationSeconds: 18,
           waveform: [14, 28, 18, 32, 16, 24, 36, 20]
         }
+      },
+      {
+        id: 'msg-3',
+        clientId: 'client-1',
+        coachId: 'coach-1',
+        sender: 'coach',
+        text: '🎙️ Voice critique on opening rebuttal hook (0:12)',
+        timestamp: '09:15 AM',
+        isRead: true,
+        messageType: 'audio',
+        attachment: {
+          type: 'voice',
+          title: 'Voice Critique (0:12)',
+          duration: '0:12',
+          durationSeconds: 12,
+          waveform: [14, 28, 18, 32, 16, 24, 36, 20]
+        }
+      },
+      {
+        id: 'msg-4',
+        clientId: 'client-1',
+        coachId: 'coach-8afc482c',
+        sender: 'coach',
+        text: 'Check your posture on the podium.',
+        timestamp: '09:20 AM',
+        isRead: true
       }
     ]),
     send: vi.fn().mockResolvedValue({
@@ -172,7 +206,7 @@ describe('SpeakerMessenger Component', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('Head Coach Qassim')).toBeInTheDocument();
+      expect(screen.getAllByText('Head Coach Qassim').length).toBeGreaterThan(0);
       expect(screen.getByText(/ONLINE • SSE ACTIVE/i)).toBeInTheDocument();
     });
 
@@ -180,8 +214,8 @@ describe('SpeakerMessenger Component', () => {
     expect(screen.getByText(/Welcome Geoffrey/i)).toBeInTheDocument();
 
     // Voice note rendered with waveform container and speed toggle
-    expect(screen.getByTitle(/Play Voice Memo/i)).toBeInTheDocument();
-    expect(screen.getByText('1x')).toBeInTheDocument();
+    expect(screen.getAllByTitle(/Play Voice Memo/i)[0]).toBeInTheDocument();
+    expect(screen.getAllByText('1x').length).toBeGreaterThan(0);
     expect(screen.getByText('0:18')).toBeInTheDocument();
   });
 
@@ -193,18 +227,18 @@ describe('SpeakerMessenger Component', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('1x')).toBeInTheDocument();
+      expect(screen.getAllByText('1x').length).toBeGreaterThan(0);
     });
 
-    const speedBtn = screen.getByTitle(/Toggle Playback Speed/i);
+    const speedBtn = screen.getAllByTitle(/Toggle Playback Speed/i)[0];
     fireEvent.click(speedBtn);
-    expect(screen.getByText('1.5x')).toBeInTheDocument();
+    expect(screen.getAllByText('1.5x').length).toBeGreaterThan(0);
 
     fireEvent.click(speedBtn);
-    expect(screen.getByText('2x')).toBeInTheDocument();
+    expect(screen.getAllByText('2x').length).toBeGreaterThan(0);
 
     fireEvent.click(speedBtn);
-    expect(screen.getByText('1x')).toBeInTheDocument();
+    expect(screen.getAllByText('1x').length).toBeGreaterThan(0);
   });
 
   test('allows typing and sending a text message with quick cues', async () => {
@@ -280,5 +314,41 @@ describe('SpeakerMessenger Component', () => {
       expect(screen.getByText('claude2')).toBeInTheDocument();
       expect(screen.getByText(/OFFLINE • DIRECT FACULTY THREAD/i)).toBeInTheDocument();
     });
+  });
+
+  test('accurately attributes voice note and critique to Head Coach Qassim even when assigned coach is claude2', async () => {
+    const claude2Props = {
+      ...mockProps,
+      assignedCoach: {
+        id: 'coach-8afc482c',
+        name: 'claude2',
+        title: 'Faculty Speech & Debate Coach',
+        email: '2claudeformee@gmail.com'
+      }
+    };
+
+    render(
+      <AppProvider>
+        <SpeakerMessenger {...claude2Props} />
+      </AppProvider>
+    );
+
+    await waitFor(() => {
+      // Header shows assigned coach claude2
+      expect(screen.getByText('claude2')).toBeInTheDocument();
+    });
+
+    // Voice critique from coach-1 shows Head Coach Qassim attribution and Faculty Head badge
+    await waitFor(() => {
+      expect(screen.getAllByText('Head Coach Qassim').length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/Faculty Head/i).length).toBeGreaterThan(0);
+    });
+
+    // Avatar for Head Coach message has HQ initials and title
+    expect(screen.getAllByTitle(/Head Coach Qassim \(Faculty Head\)/i)[0]).toBeInTheDocument();
+
+    // Message from claude2 shows claude2 attribution and title
+    expect(screen.getByText('Check your posture on the podium.')).toBeInTheDocument();
+    expect(screen.getByTitle(/claude2 \(Faculty Coach\)/i)).toBeInTheDocument();
   });
 });

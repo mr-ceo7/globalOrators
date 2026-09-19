@@ -117,10 +117,22 @@ def _dispatch_smtp_email_sync(recipient_email: str, subject: str, text_body: str
         return False
 
 
+def _format_coach_title(name: str) -> str:
+    """Format coach name cleanly without awkward duplicated titles (e.g. Coach Head Coach Qassim)."""
+    cleaned = (name or "").strip()
+    if not cleaned:
+        return "Coach"
+    lower = cleaned.lower()
+    if lower.startswith("head coach") or lower.startswith("coach") or lower.startswith("master coach"):
+        return cleaned
+    return f"Coach {cleaned}"
+
+
 def _wrap_editorial_html(kicker: str, headline: str, lead_text: str, content_html: str, action_url: Optional[str] = None, action_label: Optional[str] = None) -> str:
     """
     Render an authoritative editorial email document adhering strictly to
     Anti-AI Slop standards (commanding serif display, gold accents, hairline dividers, micro-mono labels).
+    Includes the official Global Orators emblem logo and masthead.
     """
     safe_action_url = _sanitize_public_url(action_url) if action_url else None
     action_button_html = ""
@@ -138,6 +150,8 @@ def _wrap_editorial_html(kicker: str, headline: str, lead_text: str, content_htm
         </div>
         """
 
+    logo_url = f"{settings.APP_URL.rstrip('/')}/logo-icon.png"
+
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -154,6 +168,26 @@ def _wrap_editorial_html(kicker: str, headline: str, lead_text: str, content_htm
   <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 560px; background-color: #10141d; border: 1px solid #1e293b; border-radius: 16px; overflow: hidden; padding: 40px 32px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.55);">
     <tr>
       <td>
+        <!-- Brand Masthead Header with Official Emblem Logo -->
+        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 24px;">
+          <tr>
+            <td style="vertical-align: middle; width: 44px; padding-right: 14px;">
+              <img src="{logo_url}" alt="Global Orators" width="44" height="44" style="display: block; width: 44px; height: 44px; border-radius: 10px; border: 1px solid rgba(200, 150, 48, 0.35); background-color: #080a0e;" />
+            </td>
+            <td style="vertical-align: middle;">
+              <div style="font-family: Georgia, Cambria, 'Times New Roman', serif; font-size: 17px; font-weight: 800; color: #ffffff; letter-spacing: -0.01em; line-height: 1.2;">
+                Global Orators
+              </div>
+              <div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 9px; letter-spacing: 0.16em; color: #c89630; text-transform: uppercase; margin-top: 2px;">
+                Forensics · Rhetoric · Voice Sovereignty
+              </div>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Architectural hairline divider -->
+        <div style="border-top: 1px solid #1e293b; margin-bottom: 24px;"></div>
+
         <!-- Kicker -->
         <div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 11px; letter-spacing: 0.18em; color: #c89630; text-transform: uppercase; margin-bottom: 10px; font-weight: 700;">
           {kicker}
@@ -181,6 +215,9 @@ def _wrap_editorial_html(kicker: str, headline: str, lead_text: str, content_htm
         <!-- Editorial Dispatch Footer with Deliverability Compliance -->
         <table border="0" cellpadding="0" cellspacing="0" width="100%">
           <tr>
+            <td style="vertical-align: top; width: 28px; padding-right: 12px;">
+              <img src="{logo_url}" alt="" width="24" height="24" style="display: block; width: 24px; height: 24px; border-radius: 6px; opacity: 0.75;" />
+            </td>
             <td style="font-size: 11px; line-height: 1.6; color: #64748b; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
               <strong style="color: #94a3b8;">Global Orators Project</strong> · Forensics, Rhetoric & Voice Sovereignty<br>
               Official Transactional Notification · Nairobi, Kenya<br>
@@ -192,8 +229,7 @@ def _wrap_editorial_html(kicker: str, headline: str, lead_text: str, content_htm
     </tr>
   </table>
 </body>
-</html>
-"""
+</html>"""
 
 
 # ---------------------------------------------------------------------------

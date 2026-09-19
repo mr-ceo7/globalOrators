@@ -47,7 +47,8 @@ export const CoachMessenger: React.FC = () => {
     setActiveTab,
     addCoachNote,
     addMetricEntry,
-    currentCoachUser
+    currentCoachUser,
+    coaches
   } = useApp();
 
   const [isLiveRoomOpen, setIsLiveRoomOpen] = useState(false);
@@ -692,6 +693,25 @@ export const CoachMessenger: React.FC = () => {
               const reactions = msg.attachment?.reactions || [];
               const replyTo = msg.attachment?.replyTo;
 
+              const msgCoach = isCoach ? (
+                (msg.coachId && coaches.find(c => c.id === msg.coachId)) ||
+                (msg.coachId === 'coach-1' || msg.coachId === 'coach-test-admin' ? { id: 'coach-1', name: 'Head Coach Qassim', role: 'Head Coach' } : null) ||
+                (currentCoachUser?.id === msg.coachId ? currentCoachUser : null) ||
+                currentCoachUser ||
+                { id: 'coach-1', name: 'Head Coach Qassim', role: 'Head Coach' }
+              ) : null;
+              const isHeadCoachSender = Boolean(
+                msgCoach && (
+                  msgCoach.id === 'coach-1' ||
+                  msgCoach.id === 'coach-test-admin' ||
+                  msgCoach.email?.toLowerCase() === 'kassimmusa322@gmail.com' ||
+                  msgCoach.email?.toLowerCase() === 'coach@globalorators.com' ||
+                  msgCoach.name?.toLowerCase().includes('head coach')
+                )
+              );
+              const msgCoachName = msgCoach?.name || 'Head Coach Qassim';
+              const coachInitials = isHeadCoachSender ? 'HQ' : (msgCoachName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'FC');
+
               return (
                 <div
                   key={msg.id}
@@ -742,8 +762,15 @@ export const CoachMessenger: React.FC = () => {
 
                   {/* Avatar Icon */}
                   {isCoach ? (
-                    <div className="h-7 w-7 rounded-xl bg-emerald-950 border border-emerald-500/40 flex items-center justify-center font-bold text-emerald-400 text-[10px] shrink-0 self-end">
-                      HQ
+                    <div 
+                      className={`h-7 w-7 rounded-xl flex items-center justify-center font-bold text-[10px] shrink-0 self-end border transition-colors ${
+                        isHeadCoachSender
+                          ? 'bg-[#C89630]/20 border-[#C89630]/70 text-[#C89630] shadow-sm'
+                          : 'bg-emerald-950 border border-emerald-500/40 text-emerald-400'
+                      }`}
+                      title={`${msgCoachName} (${isHeadCoachSender ? 'Faculty Head' : 'Faculty Coach'})`}
+                    >
+                      {coachInitials}
                     </div>
                   ) : activeClient.avatar ? (
                     <img
@@ -766,22 +793,48 @@ export const CoachMessenger: React.FC = () => {
                         ? 'bg-emerald-950/80 border border-emerald-500/40 text-slate-100 rounded-br-xs'
                         : 'bg-slate-900 border border-slate-800 text-slate-100 rounded-bl-xs'
                     }`}>
-                      {/* Quoted Message Card (WhatsApp Quote-Reply Preview) */}
-                      {replyTo && (
-                        <div 
-                          onClick={() => scrollToMessage(replyTo.id)}
-                          className={`mb-2 p-2 rounded-xl text-[11px] border-l-4 cursor-pointer transition-colors ${
-                            isCoach 
-                              ? 'bg-black/30 border-emerald-400 text-slate-200 hover:bg-black/40' 
-                              : 'bg-slate-950/70 border-slate-600 text-slate-300 hover:bg-slate-950'
-                          }`}
-                        >
-                          <div className="font-bold text-[10px] text-emerald-400">
-                            {replyTo.senderName || (replyTo.sender === 'coach' ? 'Faculty Coach' : activeClient.name)}
-                          </div>
-                          <p className="truncate line-clamp-1 opacity-80 mt-0.5">{replyTo.text}</p>
+                      {/* Faculty Author Attribution Header */}
+                      {isCoach && (
+                        <div className="flex items-center gap-1.5 mb-2 pb-1 border-b border-emerald-500/20">
+                          <span className={`text-[11px] font-semibold tracking-tight ${
+                            isHeadCoachSender ? 'text-[#C89630]' : 'text-emerald-300'
+                          }`}>
+                            {msgCoachName}
+                          </span>
+                          <span className={`text-[9px] font-mono tracking-wider uppercase px-1.5 py-0.5 rounded border ${
+                            isHeadCoachSender
+                              ? 'bg-[#C89630]/15 text-[#C89630] border-[#C89630]/30'
+                              : 'bg-emerald-950/60 text-emerald-400 border-emerald-500/30'
+                          }`}>
+                            {isHeadCoachSender ? 'Faculty Head' : 'Faculty Coach'}
+                          </span>
                         </div>
                       )}
+
+                      {/* Quoted Message Card (WhatsApp Quote-Reply Preview) */}
+                      {replyTo && (() => {
+                        const replyCoach = replyTo.sender === 'coach' ? (
+                          (replyTo.coachId && coaches.find(c => c.id === replyTo.coachId)) ||
+                          (replyTo.coachId === 'coach-1' ? { name: 'Head Coach Qassim' } : null) ||
+                          currentCoachUser
+                        ) : null;
+                        const replyAuthor = replyTo.senderName || (replyTo.sender === 'coach' ? (replyCoach?.name || 'Faculty Coach') : activeClient.name);
+                        return (
+                          <div 
+                            onClick={() => scrollToMessage(replyTo.id)}
+                            className={`mb-2 p-2 rounded-xl text-[11px] border-l-4 cursor-pointer transition-colors ${
+                              isCoach 
+                                ? 'bg-black/30 border-emerald-400 text-slate-200 hover:bg-black/40' 
+                                : 'bg-slate-950/70 border-slate-600 text-slate-300 hover:bg-slate-950'
+                            }`}
+                          >
+                            <div className="font-bold text-[10px] text-emerald-400">
+                              {replyAuthor}
+                            </div>
+                            <p className="truncate line-clamp-1 opacity-80 mt-0.5">{replyTo.text}</p>
+                          </div>
+                        );
+                      })()}
 
                       {/* Message Text Content */}
                       {(!isVoiceNote(msg) || (msg.text && !msg.text.startsWith('🎙️') && !msg.text.includes('Voice critique') && !msg.text.includes('Voice Rehearsal'))) && (

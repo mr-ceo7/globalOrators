@@ -111,10 +111,70 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
     return msg.attachment?.audioUrl || msg.attachment?.url || msg.attachmentData?.audioUrl || msg.attachmentData?.url || null;
   };
 
+  // Helper: check if coach is Head Coach Qassim
+  const isHeadCoachUser = (coach?: any, coachId?: string) => {
+    const id = coach?.id || coachId;
+    const email = coach?.email?.toLowerCase();
+    const name = coach?.name?.toLowerCase();
+    return Boolean(
+      id === 'coach-1' ||
+      id === 'coach-test-admin' ||
+      id?.includes('head') ||
+      email === 'kassimmusa322@gmail.com' ||
+      email === 'coach@globalorators.com' ||
+      name?.includes('head coach')
+    );
+  };
+
+  // Helper: resolve author coach entity for any message
+  const resolveMsgCoach = (msgCoachId?: string) => {
+    if (!msgCoachId) {
+      return assignedCoach || { 
+        id: 'coach-1', 
+        name: 'Head Coach Qassim', 
+        title: 'Head Speech & Debate Coach',
+        email: 'kassimmusa322@gmail.com',
+        role: 'Head Coach'
+      };
+    }
+    const matched = coaches.find(c => c.id === msgCoachId);
+    if (matched) return matched;
+    if (isHeadCoachUser(null, msgCoachId)) {
+      return { 
+        id: msgCoachId, 
+        name: 'Head Coach Qassim', 
+        title: 'Head Speech & Debate Coach',
+        email: 'kassimmusa322@gmail.com',
+        role: 'Head Coach'
+      };
+    }
+    if (assignedCoach?.id === msgCoachId) return assignedCoach;
+    return { 
+      id: msgCoachId, 
+      name: 'Faculty Coach', 
+      title: 'Faculty Speech & Debate Coach', 
+      role: 'coach' 
+    };
+  };
+
+  // Helper: format initials for coach
+  const getCoachInitials = (coach: any) => {
+    if (isHeadCoachUser(coach)) return 'HQ';
+    const name = coach?.name || '';
+    const clean = name.trim();
+    const parts = clean.split(/\s+/);
+    if (parts.length > 1) {
+      return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+    }
+    return clean.slice(0, 2).toUpperCase() || 'FC';
+  };
+
   // Coach Information
   const coachName = assignedCoach?.name || 'Head Coach Qassim';
   const coachTitle = assignedCoach?.title || 'Faculty Speech & Debate Coach';
-  const coachInitials = coachName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'HQ';
+  const coachInitials = isHeadCoachUser(assignedCoach) 
+    ? 'HQ' 
+    : (coachName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'HQ');
 
   // Online Presence: Check if assigned coach user ID or faculty is online via SSE
   const isCoachOnline = useMemo(() => {
@@ -377,12 +437,18 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
 
     let attachmentData: any = undefined;
     if (replyingToMessage) {
+      const replyingCoach = replyingToMessage.sender !== 'client' 
+        ? resolveMsgCoach(replyingToMessage.coachId) 
+        : null;
       attachmentData = {
         replyTo: {
           id: replyingToMessage.id,
+          coachId: replyingToMessage.coachId,
           text: replyingToMessage.text,
           sender: replyingToMessage.sender,
-          senderName: replyingToMessage.sender === 'client' ? profile.fullName : coachName
+          senderName: replyingToMessage.sender === 'client' 
+            ? (profile.fullName || 'Speaker') 
+            : (replyingCoach?.name || coachName)
         }
       };
     }
@@ -634,6 +700,12 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
             const reactions = msg.attachment?.reactions || [];
             const replyTo = msg.attachment?.replyTo;
 
+            // Resolve message coach attribution for incoming coach messages
+            const msgCoach = !isSpeaker ? resolveMsgCoach(msg.coachId) : null;
+            const isHeadCoachSender = !isSpeaker && isHeadCoachUser(msgCoach, msg.coachId);
+            const msgCoachName = msgCoach?.name || 'Head Coach Qassim';
+            const msgCoachInitials = isHeadCoachSender ? 'HQ' : getCoachInitials(msgCoach);
+
             return (
               <div
                 key={msg.id}
@@ -694,8 +766,15 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
                     {(profile.fullName || 'Speaker').slice(0, 2).toUpperCase()}
                   </div>
                 ) : (
-                  <div className="h-7 w-7 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-slate-200 text-[10px] shrink-0 self-end">
-                    {coachInitials}
+                  <div 
+                    className={`h-7 w-7 rounded-xl flex items-center justify-center font-bold text-[10px] shrink-0 self-end border transition-colors ${
+                      isHeadCoachSender
+                        ? 'bg-[#C89630]/20 border-[#C89630]/70 text-[#C89630] shadow-sm'
+                        : 'bg-slate-800 border-slate-700 text-slate-200'
+                    }`}
+                    title={`${msgCoachName} (${isHeadCoachSender ? 'Faculty Head' : 'Faculty Coach'})`}
+                  >
+                    {msgCoachInitials}
                   </div>
                 )}
 
@@ -710,22 +789,48 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
                         : 'bg-emerald-950/80 border border-emerald-500/50 text-slate-100 rounded-br-xs'
                       : 'bg-slate-900 border border-slate-800 text-slate-100 rounded-bl-xs'
                   }`}>
-                    {/* Quoted Message Card (WhatsApp Quote-Reply Preview) */}
-                    {replyTo && (
-                      <div 
-                        onClick={() => scrollToMessage(replyTo.id)}
-                        className={`mb-2 p-2 rounded-xl text-[11px] border-l-4 cursor-pointer transition-colors ${
-                          isSpeaker 
-                            ? 'bg-black/30 border-[#C89630] text-slate-200 hover:bg-black/40' 
-                            : 'bg-slate-950/70 border-slate-600 text-slate-300 hover:bg-slate-950'
-                        }`}
-                      >
-                        <div className="font-bold text-[10px] text-amber-400">
-                          {replyTo.senderName || (replyTo.sender === 'client' ? profile.fullName : coachName)}
-                        </div>
-                        <p className="truncate line-clamp-1 opacity-80 mt-0.5">{replyTo.text}</p>
+                    {/* Faculty Author Attribution Header */}
+                    {!isSpeaker && (
+                      <div className="flex items-center gap-1.5 mb-2 pb-1.5 border-b border-slate-800">
+                        <span className={`text-[11px] font-semibold tracking-tight ${
+                          isHeadCoachSender ? 'text-[#C89630]' : 'text-slate-300'
+                        }`}>
+                          {msgCoachName}
+                        </span>
+                        <span className={`text-[9px] font-mono tracking-wider uppercase px-1.5 py-0.5 rounded border ${
+                          isHeadCoachSender
+                            ? 'bg-[#C89630]/15 text-[#C89630] border-[#C89630]/30'
+                            : 'bg-slate-800 text-slate-400 border-slate-700'
+                        }`}>
+                          {isHeadCoachSender ? 'Faculty Head' : (msgCoach?.id === assignedCoach?.id ? 'Assigned Coach' : 'Faculty Coach')}
+                        </span>
                       </div>
                     )}
+
+                    {/* Quoted Message Card (WhatsApp Quote-Reply Preview) */}
+                    {replyTo && (() => {
+                      const replyCoach = replyTo.sender !== 'client' ? resolveMsgCoach(replyTo.coachId) : null;
+                      const replySenderName = replyTo.senderName || (
+                        replyTo.sender === 'client' 
+                          ? (profile.fullName || 'Speaker') 
+                          : (replyCoach?.name || coachName)
+                      );
+                      return (
+                        <div 
+                          onClick={() => scrollToMessage(replyTo.id)}
+                          className={`mb-2 p-2 rounded-xl text-[11px] border-l-4 cursor-pointer transition-colors ${
+                            isSpeaker 
+                              ? 'bg-black/30 border-[#C89630] text-slate-200 hover:bg-black/40' 
+                              : 'bg-slate-950/70 border-slate-600 text-slate-300 hover:bg-slate-950'
+                          }`}
+                        >
+                          <div className="font-bold text-[10px] text-amber-400">
+                            {replySenderName}
+                          </div>
+                          <p className="truncate line-clamp-1 opacity-80 mt-0.5">{replyTo.text}</p>
+                        </div>
+                      );
+                    })()}
 
                     {/* Message Text Content */}
                     {(!isVoiceNote(msg) || (msg.text && !msg.text.startsWith('🎙️') && !msg.text.includes('Voice Rehearsal') && !msg.text.includes('Voice critique'))) && (
@@ -926,24 +1031,32 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
         )}
 
         {/* Quoted Reply Banner */}
-        {replyingToMessage && (
-          <div className="mb-2 p-2.5 rounded-xl bg-slate-900 border-l-4 border-amber-500 flex items-center justify-between gap-2 animate-in fade-in">
-            <div className="min-w-0 flex-1">
-              <div className="font-bold text-[10px] text-amber-400">
-                Replying to {replyingToMessage.sender === 'client' ? 'Yourself' : coachName}
+        {replyingToMessage && (() => {
+          const replyingCoach = replyingToMessage.sender !== 'client' 
+            ? resolveMsgCoach(replyingToMessage.coachId) 
+            : null;
+          const replyingAuthor = replyingToMessage.sender === 'client' 
+            ? 'Yourself' 
+            : (replyingCoach?.name || coachName);
+          return (
+            <div className="mb-2 p-2.5 rounded-xl bg-slate-900 border-l-4 border-amber-500 flex items-center justify-between gap-2 animate-in fade-in">
+              <div className="min-w-0 flex-1">
+                <div className="font-bold text-[10px] text-amber-400">
+                  Replying to {replyingAuthor}
+                </div>
+                <div className="text-[11px] text-slate-300 truncate">
+                  {replyingToMessage.text || (replyingToMessage as any).content}
+                </div>
               </div>
-              <div className="text-[11px] text-slate-300 truncate">
-                {replyingToMessage.text || (replyingToMessage as any).content}
-              </div>
+              <button
+                onClick={() => setReplyingToMessage(null)}
+                className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
             </div>
-            <button
-              onClick={() => setReplyingToMessage(null)}
-              className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Live Audio Recording Toolbar OR Standard Input */}
         {isRecordingAudio ? (

@@ -350,6 +350,7 @@ export interface ChatAttachment {
 export interface ChatMessage {
   id: string;
   clientId: string;
+  coachId?: string;
   sender: 'coach' | 'client';
   text: string;
   timestamp: string;
