@@ -114,7 +114,12 @@ export const CoachManager: React.FC = () => {
       if (ok) {
         setSelectedSpeakerId(null);
         setTargetCoachId('');
+        showToast('Speaker successfully allocated.');
+      } else {
+        showToast('Failed to allocate speaker.');
       }
+    } catch {
+      showToast('Error connecting to allocation service.');
     } finally {
       setIsReassigning(false);
     }
@@ -254,8 +259,27 @@ export const CoachManager: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredCoaches.map(coach => {
+        {filteredCoaches.length === 0 ? (
+          <div className="p-10 text-center rounded-2xl bg-slate-900 border border-slate-800">
+            <Users className="w-10 h-10 text-slate-600 mx-auto mb-3" />
+            <h3 className="text-sm font-semibold text-white">No faculty coaches found</h3>
+            <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto">
+              {searchTerm 
+                ? `No faculty coaches match "${searchTerm}". Clear your search query to see all coaches.` 
+                : 'No coaches are currently registered in the faculty directory.'}
+            </p>
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="mt-3 px-3 py-1 rounded-lg bg-slate-800 text-xs font-mono text-[#C89630] border border-slate-700 hover:bg-slate-700 cursor-pointer"
+              >
+                Clear Search
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredCoaches.map(coach => {
             const coachSpeakers = clients.filter(c => c.coachId === coach.id);
 
             return (
@@ -329,7 +353,8 @@ export const CoachManager: React.FC = () => {
               </div>
             );
           })}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Add Faculty Coach Modal */}

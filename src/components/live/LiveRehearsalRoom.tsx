@@ -366,7 +366,13 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
           );
         }
       } catch (err: any) {
-        setMediaError('Microphone/Camera permission prompt closed or unattached. Studio remains operational.');
+        if (err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError') {
+          setMediaError('Camera and microphone access was blocked. Please enable device permissions in your browser settings.');
+        } else if (err?.name === 'NotFoundError' || err?.name === 'DevicesNotFoundError') {
+          setMediaError('No camera or microphone hardware found on this device.');
+        } else {
+          setMediaError('Microphone/Camera permission prompt closed or unattached. Studio remains operational.');
+        }
       }
     };
 

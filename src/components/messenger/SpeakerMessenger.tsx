@@ -48,6 +48,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
   const { 
     messages, 
     sendMessage,
+    deleteMessage,
     markMessagesRead,
     reactToMessage,
     onlineUserIds,
@@ -55,6 +56,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
   } = useApp();
 
   const [inputMessage, setInputMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
   const [isPlayingAudio, setIsPlayingAudio] = useState<string | null>(null);
   const [playbackProgress, setPlaybackProgress] = useState<number>(0);
   const [audioSpeed, setAudioSpeed] = useState<1 | 1.5 | 2>(1);
@@ -359,9 +361,15 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
   };
 
   // Text message send
-  const handleSendText = (textToSend?: string) => {
+  const handleSendText = async (textToSend?: string) => {
+    if (isSending) return;
     const text = (textToSend || inputMessage).trim();
     if (!text || !pairedClient?.id) return;
+
+    setIsSending(true);
+    setInputMessage('');
+    setReplyingToMessage(null);
+    setShowAttachmentMenu(false);
 
     let attachmentData: any = undefined;
     if (replyingToMessage) {
@@ -375,16 +383,17 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
       };
     }
 
-    sendMessage({
-      clientId: pairedClient.id,
-      sender: 'client',
-      text,
-      content: text,
-      attachmentData
-    });
-
-    setInputMessage('');
-    setReplyingToMessage(null);
+    try {
+      await sendMessage({
+        clientId: pairedClient.id,
+        sender: 'client',
+        text,
+        content: text,
+        attachmentData
+      });
+    } finally {
+      setIsSending(false);
+    }
   };
 
   // Attach a saved drill recording
@@ -653,6 +662,21 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
                     >
                       <Reply className="w-3 h-3" />
                     </button>
+
+                    {/* Delete Message Button */}
+                    {isSpeaker && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteMessage(msg.id);
+                          setActiveReactionMenuId(null);
+                        }}
+                        className="h-6 w-6 rounded-full hover:bg-rose-950/80 text-slate-400 hover:text-rose-400 flex items-center justify-center transition-transform hover:scale-110 cursor-pointer ml-0.5"
+                        title="Delete Message"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    )}
                   </div>
                 )}
 
@@ -673,7 +697,9 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
 
                 <div className={`space-y-1 ${isSpeaker ? 'items-end' : 'items-start'} max-w-full`}>
                   {/* Message Bubble */}
-                  <div className={`relative px-4 py-3 rounded-2xl shadow-sm ${
+                  <div 
+                    onClick={() => setActiveReactionMenuId(activeReactionMenuId === msg.id ? null : msg.id)}
+                    className={`relative px-4 py-3 rounded-2xl shadow-sm cursor-pointer ${
                     isSpeaker
                       ? isExecutive
                         ? 'bg-[#C89630]/25 border border-[#C89630]/60 text-slate-100 rounded-br-xs'
@@ -981,13 +1007,14 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
             {inputMessage.trim() ? (
               <button
                 type="submit"
+                disabled={isSending}
                 className={`h-10 px-4 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer text-slate-950 transition-all ${
                   isExecutive
                     ? 'bg-[#C89630] hover:bg-[#d6a543] shadow-[#C89630]/20'
                     : 'bg-emerald-500 hover:bg-emerald-400 shadow-emerald-500/20'
-                }`}
+                } ${isSending ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                <span>Send</span>
+                <span>{isSending ? 'Sending...' : 'Send'}</span>
                 <Send className="w-3.5 h-3.5" />
               </button>
             ) : (

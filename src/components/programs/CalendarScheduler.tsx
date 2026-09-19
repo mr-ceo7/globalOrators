@@ -25,17 +25,18 @@ export const CalendarScheduler: React.FC = () => {
     setActiveTab
   } = useApp();
 
+  const todayDateStr = React.useMemo(() => new Date().toISOString().split('T')[0], []);
   const [selectedClientFilter, setSelectedClientFilter] = useState<string>('All');
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 7, 16)); // August 2026
+  const [currentDate, setCurrentDate] = useState(() => new Date());
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [mobileViewMode, setMobileViewMode] = useState<'list' | 'grid'>('list');
-  const [selectedDate, setSelectedDate] = useState('2026-08-16');
+  const [selectedDate, setSelectedDate] = useState(todayDateStr);
   
   // Schedule Modal form state
   const [schedClientId, setSchedClientId] = useState(clients[0]?.id || '');
   const [schedProgramId, setSchedProgramId] = useState(programs[0]?.id || '');
   const [schedWorkoutTitle, setSchedWorkoutTitle] = useState('Day 1: Constructive Arguments & Delivery');
-  const [schedDate, setSchedDate] = useState('2026-08-16');
+  const [schedDate, setSchedDate] = useState(todayDateStr);
   const [schedTime, setSchedTime] = useState('09:00 AM');
 
   // Days in month calculation
@@ -204,7 +205,7 @@ export const CalendarScheduler: React.FC = () => {
             const dayNum = i + 1;
             const dayDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
             const dayWorkouts = filteredWorkouts.filter(w => w.date === dayDateStr);
-            const isToday = dayDateStr === '2026-08-16';
+            const isToday = dayDateStr === todayDateStr;
 
             return (
               <div
@@ -289,7 +290,7 @@ export const CalendarScheduler: React.FC = () => {
             const dayDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
             const dayWorkouts = filteredWorkouts.filter(w => w.date === dayDateStr);
             const isSelected = dayDateStr === selectedDate;
-            const isToday = dayDateStr === '2026-08-16';
+            const isToday = dayDateStr === todayDateStr;
 
             // Dots counts
             const completedCount = dayWorkouts.filter(w => w.status === 'Completed').length;

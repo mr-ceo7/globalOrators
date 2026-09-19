@@ -93,6 +93,7 @@ interface AppContextType {
     text?: string,
     attachment?: ChatMessage['attachment']
   ) => void;
+  deleteMessage: (messageId: string) => Promise<void>;
   markMessagesRead: (clientId: string) => Promise<void>;
   reactToMessage: (messageId: string, emoji: string) => Promise<void>;
   onlineClientIds: string[];
@@ -686,15 +687,52 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const disconnect = startEventStream({
       token,
-      onNewMessage: (incomingMsg) => {
+      onNewMessage: (incomingMsg: any) => {
         setMessages(prev => {
-          if (prev.some(m => m.id === incomingMsg.id)) return prev;
+          // 1. Exact match by message ID -> update in place
+          const exactIndex = prev.findIndex(m => m.id === incomingMsg.id);
+          if (exactIndex !== -1) {
+            const copy = [...prev];
+            copy[exactIndex] = { ...prev[exactIndex], ...incomingMsg, isRead: prev[exactIndex].isRead || incomingMsg.isRead };
+            return copy;
+          }
+
+          // 2. ClientMsgId match -> replaces pending optimistic message
+          if (incomingMsg.clientMsgId) {
+            const clientMsgIndex = prev.findIndex(m => m.id === incomingMsg.clientMsgId);
+            if (clientMsgIndex !== -1) {
+              const copy = [...prev];
+              copy[clientMsgIndex] = { ...incomingMsg, isRead: prev[clientMsgIndex].isRead || incomingMsg.isRead };
+              return copy;
+            }
+          }
+
+          // 3. Heuristic deduplication for self-sent messages:
+          // If the incoming message has identical text, sender, and clientId as a pending message, replace it
+          const heuristicIndex = prev.findIndex(m =>
+            m.clientId === incomingMsg.clientId &&
+            m.sender === incomingMsg.sender &&
+            m.text === incomingMsg.text &&
+            (m.id.startsWith('msg-') || m.id.startsWith('temp-'))
+          );
+          if (heuristicIndex !== -1 && incomingMsg.sender === (currentCoachUser ? 'coach' : 'client')) {
+            const copy = [...prev];
+            copy[heuristicIndex] = { ...incomingMsg, isRead: prev[heuristicIndex].isRead || incomingMsg.isRead };
+            return copy;
+          }
+
           return [...prev, incomingMsg];
         });
+
         if (incomingMsg.sender === 'client' && currentCoachUser) {
           showToast(`New message from speaker: ${incomingMsg.text.slice(0, 40)}`);
         } else if (incomingMsg.sender === 'coach' && activeSpeakerProfile) {
           showToast(`Coach feedback: ${incomingMsg.text.slice(0, 40)}`);
+        }
+      },
+      onMessageDeleted: (data) => {
+        if (data.messageId) {
+          setMessages(prev => prev.filter(m => m.id !== data.messageId));
         }
       },
       onMessagesRead: (data) => {
@@ -1310,7 +1348,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
     if (!text) return;
 
-    const tempId = `msg-${Date.now()}`;
+    const tempId = (typeof target === 'object' && target !== null && (target as any).id) 
+      ? (target as any).id 
+      : `msg-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     const newMsg: ChatMessage = {
@@ -1319,16 +1359,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       sender,
       text,
       timestamp: nowTime,
-      isRead: true,
+      isRead: false,
       attachment,
       messageType: (typeof target === 'object' && target !== null ? target.messageType : undefined) || (attachment?.type === 'voice' ? 'audio' : undefined),
       attachmentData: attachment
     };
 
-    setMessages(prev => [...prev, newMsg]);
+    setMessages(prev => {
+      if (prev.some(m => m.id === tempId)) return prev;
+      return [...prev, newMsg];
+    });
 
     try {
-      await messagesApi.send(clientId, text, attachment, sender);
+      const created = await messagesApi.send(clientId, text, attachment, sender, tempId);
+      if (created?.id) {
+        setMessages(prev => {
+          // If created.id was already inserted by real-time SSE
+          const hasCreatedId = prev.some(m => m.id === created.id);
+          if (hasCreatedId) {
+            if (created.id !== tempId) {
+              return prev.filter(m => m.id !== tempId);
+            }
+            return prev;
+          }
+          // Replace tempId with created
+          return prev.map(m => m.id === tempId ? { ...created, isRead: m.isRead } : m);
+        });
+      }
       if (sender === 'coach') {
         showToast('Message sent to speaker.');
       } else {
@@ -1340,6 +1397,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       showToast('Failed to deliver message. Server could not be reached.');
     }
   };
+
+  const deleteMessage = useCallback(async (messageId: string) => {
+    if (!messageId) return;
+    const msgToDelete = messages.find(m => m.id === messageId);
+    setMessages(prev => prev.filter(m => m.id !== messageId));
+    try {
+      await messagesApi.delete(messageId);
+      showToast('Message deleted.');
+    } catch (err) {
+      console.error('Failed to delete message on backend:', err);
+      if (msgToDelete) {
+        setMessages(prev => [...prev, msgToDelete]);
+      }
+      showToast('Unable to delete message from server.');
+    }
+  }, [messages, showToast]);
 
   const markMessagesRead = useCallback(async (clientId: string) => {
     if (!clientId) return;
@@ -1769,6 +1842,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addPersonalRecord,
         addProgressPhoto,
         sendMessage,
+        deleteMessage,
         markMessagesRead,
         reactToMessage,
         onlineClientIds,

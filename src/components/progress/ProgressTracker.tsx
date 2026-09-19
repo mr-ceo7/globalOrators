@@ -47,7 +47,7 @@ export const ProgressTracker: React.FC = () => {
   const clientPhotos = photos.filter(p => p.clientId === activeClient?.id);
 
   // Today's habit log
-  const todayStr = '2026-08-16';
+  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
   const todayHabits = habitLogs.find(l => l.clientId === activeClient?.id && l.date === todayStr)?.habits || [
     { habitId: 'h-1', title: 'Vocal Hydration (Warm Lemon Water)', completed: true, currentValue: '2.5', targetValue: '2.5', unit: 'Liters' },
     { habitId: 'h-2', title: 'Diaphragmatic Breathwork', completed: true, currentValue: '15', targetValue: '15', unit: 'Minutes' },
@@ -66,7 +66,7 @@ export const ProgressTracker: React.FC = () => {
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
 
   // New Metric Form State
-  const [formDate, setFormDate] = useState('2026-08-16');
+  const [formDate, setFormDate] = useState(todayStr);
   const [formWeight, setFormWeight] = useState(activeClient?.currentWeightKg || 140);
   const [formBodyFat, setFormBodyFat] = useState(activeClient?.bodyFatPercentage || 88);
   const [formChest, setFormChest] = useState(4); // Filler words / min

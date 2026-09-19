@@ -30,10 +30,12 @@ class ChatMessageCreate(CamelModel):
     sender: str = "coach"
     text: str = ""
     attachment: Optional[Dict[str, Any]] = None
+    client_msg_id: Optional[str] = None
 
 
 class ChatMessageResponse(ChatMessageBase):
     id: str
+    client_msg_id: Optional[str] = None
 
 
 class MarkReadRequest(CamelModel):

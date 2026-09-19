@@ -1652,7 +1652,7 @@ export const ClientPortal: React.FC = () => {
                     Executive Oratory Syllabus · Dynamic Roadmap
                   </div>
                   <h2 className="text-xl sm:text-2xl font-serif font-black tracking-tight text-white">
-                    {execProgram.title}
+                    {execProgram?.title || curriculum.title || 'Executive Oratory Protocol'}
                   </h2>
                   <p className="text-xs text-slate-400 mt-1 max-w-2xl leading-relaxed">
                     A rigorous 4-week, 8-session executive protocol. Live 1-on-1 consultations scheduled twice weekly on <span className="text-slate-200 font-semibold">Tuesdays & Thursdays (90 minutes each)</span>.

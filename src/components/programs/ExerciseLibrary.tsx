@@ -183,8 +183,28 @@ export const ExerciseLibrary: React.FC<{
       </div>
 
       {/* Speech Drills Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {filteredExercises.map((exercise) => (
+      {filteredExercises.length === 0 ? (
+        <div className="p-12 text-center rounded-2xl bg-slate-900/60 border border-slate-800">
+          <BookOpen className="h-10 w-10 text-slate-600 mx-auto mb-3" />
+          <h3 className="text-sm font-semibold text-white">No drills match your filter criteria</h3>
+          <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+            Try adjusting your search query, selecting &ldquo;All&rdquo; skills, or reset your filters to view drills in the catalog.
+          </p>
+          <button
+            onClick={() => {
+              setSearchTerm('');
+              setSelectedMuscle('All');
+              setSelectedEquipment('All');
+              setSelectedDifficulty('All');
+            }}
+            className="mt-4 px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-mono text-emerald-400 border border-slate-700 transition-colors cursor-pointer"
+          >
+            Reset Filters
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {filteredExercises.map((exercise) => (
           <div
             key={exercise.id}
             onClick={() => setViewingExercise(exercise)}
@@ -246,7 +266,8 @@ export const ExerciseLibrary: React.FC<{
             </div>
           </div>
         ))}
-      </div>
+        </div>
+      )}
 
       {/* Exercise Detail Modal */}
       {viewingExercise && (

@@ -108,7 +108,15 @@ async def send_message(
         coach_id = client.coach_id if client else None
         
     now_str = datetime.now().strftime("%I:%M %p")
-    msg_id = f"msg-{int(time.time() * 1000)}"
+    if msg_in.client_msg_id and msg_in.client_msg_id.strip():
+        # Idempotency check: if message with this clientMsgId already exists, return it
+        c_exist = await db.execute(select(ChatMessage).where(ChatMessage.id == msg_in.client_msg_id.strip()))
+        existing_msg = c_exist.scalar_one_or_none()
+        if existing_msg:
+            return existing_msg
+        msg_id = msg_in.client_msg_id.strip()
+    else:
+        msg_id = f"msg-{int(time.time() * 1000)}"
     
     new_msg = ChatMessage(
         id=msg_id,
@@ -131,6 +139,7 @@ async def send_message(
                 event="new_message",
                 data={
                     "id": new_msg.id,
+                    "clientMsgId": msg_in.client_msg_id or new_msg.id,
                     "clientId": new_msg.client_id,
                     "coachId": new_msg.coach_id,
                     "sender": new_msg.sender,
@@ -208,6 +217,10 @@ async def mark_messages_read(
     )
     await db.commit()
 
+    c_res = await db.execute(select(Client).where(Client.id == body.client_id))
+    client = c_res.scalar_one_or_none()
+    coach_id = client.coach_id if client else None
+
     # Broadcast real-time read event
     try:
         asyncio.create_task(
@@ -218,7 +231,8 @@ async def mark_messages_read(
                     "readerRole": current_user.role,
                     "readerId": current_user.id
                 },
-                target_client_id=body.client_id
+                target_client_id=body.client_id,
+                target_coach_id=coach_id
             )
         )
     except Exception as e:
@@ -282,6 +296,46 @@ async def react_to_message(
         logger.debug(f"Failed to broadcast message_reaction: {e}")
 
     return msg
+
+
+@router.delete("/{message_id}")
+async def delete_message(
+    message_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Delete a chat message and broadcast real-time deletion event."""
+    res = await db.execute(select(ChatMessage).where(ChatMessage.id == message_id))
+    msg = res.scalar_one_or_none()
+    if not msg:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Message not found")
+
+    # Author or coach can delete
+    if current_user.role != "coach" and msg.sender != "client":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cannot delete other users' messages")
+
+    client_id = msg.client_id
+    coach_id = msg.coach_id
+    await db.delete(msg)
+    await db.commit()
+
+    # Broadcast deletion via SSE
+    try:
+        asyncio.create_task(
+            sse_manager.broadcast(
+                event="message_deleted",
+                data={
+                    "messageId": message_id,
+                    "clientId": client_id
+                },
+                target_client_id=client_id,
+                target_coach_id=coach_id
+            )
+        )
+    except Exception as e:
+        logger.debug(f"Failed to broadcast message_deleted: {e}")
+
+    return {"status": "ok", "messageId": message_id}
 
 
 @router.get("/presence")

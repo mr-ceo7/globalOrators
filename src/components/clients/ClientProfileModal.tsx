@@ -141,6 +141,9 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({ client, 
               <img 
                 src={client.avatar} 
                 alt={client.name} 
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(client.name)}&background=047857&color=fff`;
+                }}
                 className="h-16 w-16 rounded-2xl object-cover border-2 border-emerald-500/40 shadow-lg"
               />
               <div>
@@ -708,7 +711,14 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({ client, 
                       <div className="flex items-center justify-between gap-2 flex-wrap">
                         <div className="flex items-center gap-2">
                           {entry.coachAvatar ? (
-                            <img src={entry.coachAvatar} alt={entry.coachName} className="h-6 w-6 rounded-full object-cover" />
+                            <img 
+                              src={entry.coachAvatar} 
+                              alt={entry.coachName} 
+                              className="h-6 w-6 rounded-full object-cover" 
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(entry.coachName || 'Coach')}&background=1e293b&color=cbd5e1`;
+                              }}
+                            />
                           ) : (
                             <div className="h-6 w-6 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px] font-mono font-bold text-slate-300">
                               {entry.coachName?.slice(0, 2).toUpperCase() || 'AD'}

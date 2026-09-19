@@ -40,6 +40,7 @@ export const CoachMessenger: React.FC = () => {
     setSelectedClientId, 
     messages, 
     sendMessage,
+    deleteMessage,
     markMessagesRead,
     reactToMessage,
     onlineClientIds,
@@ -51,6 +52,7 @@ export const CoachMessenger: React.FC = () => {
 
   const [isLiveRoomOpen, setIsLiveRoomOpen] = useState(false);
   const [inputMessage, setInputMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
   const [isPlayingAudio, setIsPlayingAudio] = useState<string | null>(null);
   const [audioSpeed, setAudioSpeed] = useState<1 | 1.5 | 2>(1);
   const [searchTerm, setSearchTerm] = useState('');
@@ -146,9 +148,15 @@ export const CoachMessenger: React.FC = () => {
   ];
 
   // Send standard text or quoted reply
-  const handleSendText = (textToSend?: string) => {
-    const text = textToSend || inputMessage;
-    if (!text.trim() || !activeClient) return;
+  const handleSendText = async (textToSend?: string) => {
+    if (isSending) return;
+    const text = (textToSend || inputMessage).trim();
+    if (!text || !activeClient) return;
+
+    setIsSending(true);
+    setInputMessage('');
+    setReplyingToMessage(null);
+    setShowAttachmentMenu(false);
 
     const attachmentPayload: any = replyingToMessage ? {
       type: 'text_with_quote',
@@ -161,19 +169,29 @@ export const CoachMessenger: React.FC = () => {
       }
     } : undefined;
 
-    sendMessage({
-      clientId: activeClient.id,
-      sender: 'coach',
-      messageType: 'text',
-      content: text.trim(),
-      text: text.trim(),
-      attachmentData: attachmentPayload
-    }, text.trim(), attachmentPayload);
-
-    setInputMessage('');
-    setReplyingToMessage(null);
-    setShowAttachmentMenu(false);
+    try {
+      await sendMessage({
+        clientId: activeClient.id,
+        sender: 'coach',
+        messageType: 'text',
+        content: text,
+        text: text,
+        attachmentData: attachmentPayload
+      });
+    } finally {
+      setIsSending(false);
+    }
   };
+
+  // Reset audio playback on client change
+  useEffect(() => {
+    if (audioPlayerRef.current) {
+      audioPlayerRef.current.pause();
+    }
+    clearInterval(playbackTimerRef.current);
+    setIsPlayingAudio(null);
+    setPlaybackProgress(0);
+  }, [selectedClientId]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -706,6 +724,19 @@ export const CoachMessenger: React.FC = () => {
                       >
                         <Reply className="w-3 h-3" />
                       </button>
+
+                      {/* Delete Message Button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteMessage(msg.id);
+                          setActiveReactionMenuId(null);
+                        }}
+                        className="h-6 w-6 rounded-full hover:bg-rose-950/80 text-slate-400 hover:text-rose-400 flex items-center justify-center transition-transform hover:scale-110 cursor-pointer ml-0.5"
+                        title="Delete Message"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
                     </div>
                   )}
 
@@ -728,7 +759,9 @@ export const CoachMessenger: React.FC = () => {
 
                   <div className={`space-y-1 ${isCoach ? 'items-end' : 'items-start'} max-w-full`}>
                     {/* WhatsApp Message Bubble */}
-                    <div className={`relative px-4 py-3 rounded-2xl shadow-sm ${
+                    <div 
+                      onClick={() => setActiveReactionMenuId(activeReactionMenuId === msg.id ? null : msg.id)}
+                      className={`relative px-4 py-3 rounded-2xl shadow-sm cursor-pointer ${
                       isCoach 
                         ? 'bg-emerald-950/80 border border-emerald-500/40 text-emerald-50 rounded-br-xs'
                         : 'bg-slate-900 border border-slate-800 text-slate-100 rounded-bl-xs'
@@ -1049,10 +1082,10 @@ export const CoachMessenger: React.FC = () => {
 
                 <button
                   type="submit"
-                  disabled={!inputMessage.trim()}
+                  disabled={!inputMessage.trim() || isSending}
                   className="h-10 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md transition-all cursor-pointer"
                 >
-                  <span>Send</span>
+                  <span>{isSending ? 'Sending...' : 'Send'}</span>
                   <Send className="h-3.5 w-3.5" />
                 </button>
               </form>

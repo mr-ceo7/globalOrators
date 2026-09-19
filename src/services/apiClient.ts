@@ -360,8 +360,10 @@ export const photosApi = {
 // Chat Messages Endpoints
 export const messagesApi = {
   getAll: (params?: { clientId?: string }) => api.get<ChatMessage[]>('/messages', params),
-  send: (clientId: string, text: string, attachment?: any, sender: 'coach' | 'client' = 'coach') =>
-    api.post<ChatMessage>('/messages', { clientId, sender, text, attachment }),
+  send: (clientId: string, text: string, attachment?: any, sender: 'coach' | 'client' = 'coach', clientMsgId?: string) =>
+    api.post<ChatMessage>('/messages', { clientId, sender, text, attachment, clientMsgId }),
+  delete: (messageId: string) =>
+    api.delete<{ status: string; messageId: string }>(`/messages/${messageId}`),
   markRead: (clientId: string) =>
     api.post<{ status: string; clientId: string }>('/messages/mark-read', { clientId }),
   react: (messageId: string, emoji: string) =>

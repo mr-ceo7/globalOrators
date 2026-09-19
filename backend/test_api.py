@@ -15,6 +15,7 @@ os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///{_test_db_path}"
 import pytest
 import httpx
 import uuid
+import time
 from app.config import settings
 settings.TESTING = True
 from app.main import app
@@ -2129,6 +2130,43 @@ async def test_message_debouncer_and_whatsapp_features():
         )
         assert mark_read_res.status_code == 200
         assert mark_read_res.json()["status"] == "ok"
+
+        # 8. Test client_msg_id idempotency / deduplication
+        test_client_msg_id = f"msg-dedup-test-{int(time.time())}"
+        send_idemp_1 = await client.post(
+            "/api/messages",
+            json={
+                "clientId": c_id,
+                "sender": "coach",
+                "text": "Idempotent delivery check",
+                "clientMsgId": test_client_msg_id
+            },
+            headers=coach_headers
+        )
+        assert send_idemp_1.status_code == 201
+        assert send_idemp_1.json()["id"] == test_client_msg_id
+
+        # Sending same clientMsgId again returns existing message without duplicate row
+        send_idemp_2 = await client.post(
+            "/api/messages",
+            json={
+                "clientId": c_id,
+                "sender": "coach",
+                "text": "Idempotent delivery check",
+                "clientMsgId": test_client_msg_id
+            },
+            headers=coach_headers
+        )
+        assert send_idemp_2.status_code in (200, 201)
+        assert send_idemp_2.json()["id"] == test_client_msg_id
+
+        # 9. Test Delete Message endpoint
+        delete_res = await client.delete(
+            f"/api/messages/{test_client_msg_id}",
+            headers=coach_headers
+        )
+        assert delete_res.status_code == 200
+        assert delete_res.json()["status"] == "ok"
 
 
 @pytest.mark.asyncio
