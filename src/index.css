@@ -109,9 +109,9 @@
   --color-slate-900: var(--app-card);
   --color-slate-950: var(--app-bg);
 
-  --color-emerald-50: var(--app-accent-light);
-  --color-emerald-100: var(--app-accent-light);
-  --color-emerald-200: var(--app-accent-light);
+  --color-emerald-50: var(--app-fg);
+  --color-emerald-100: var(--app-fg);
+  --color-emerald-200: var(--app-fg-secondary);
   --color-emerald-300: var(--app-accent);
   --color-emerald-400: var(--app-accent);
   --color-emerald-500: var(--app-accent);

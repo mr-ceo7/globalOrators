@@ -703,7 +703,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
                     isSpeaker
                       ? isExecutive
                         ? 'bg-[#C89630]/25 border border-[#C89630]/60 text-slate-100 rounded-br-xs'
-                        : 'bg-emerald-950/80 border border-emerald-500/50 text-emerald-50 rounded-br-xs'
+                        : 'bg-emerald-950/80 border border-emerald-500/50 text-slate-100 rounded-br-xs'
                       : 'bg-slate-900 border border-slate-800 text-slate-100 rounded-bl-xs'
                   }`}>
                     {/* Quoted Message Card (WhatsApp Quote-Reply Preview) */}
@@ -725,7 +725,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
 
                     {/* Message Text Content */}
                     {(!isVoiceNote(msg) || (msg.text && !msg.text.startsWith('🎙️') && !msg.text.includes('Voice Rehearsal') && !msg.text.includes('Voice critique'))) && (
-                      <p className="leading-relaxed text-xs break-words">{msg.text || (msg as any).content}</p>
+                      <p className="leading-relaxed text-xs break-words text-slate-100 font-medium">{msg.text || (msg as any).content}</p>
                     )}
 
                     {/* Document File Attachment Card */}

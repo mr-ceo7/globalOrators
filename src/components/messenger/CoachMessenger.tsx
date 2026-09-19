@@ -763,7 +763,7 @@ export const CoachMessenger: React.FC = () => {
                       onClick={() => setActiveReactionMenuId(activeReactionMenuId === msg.id ? null : msg.id)}
                       className={`relative px-4 py-3 rounded-2xl shadow-sm cursor-pointer ${
                       isCoach 
-                        ? 'bg-emerald-950/80 border border-emerald-500/40 text-emerald-50 rounded-br-xs'
+                        ? 'bg-emerald-950/80 border border-emerald-500/40 text-slate-100 rounded-br-xs'
                         : 'bg-slate-900 border border-slate-800 text-slate-100 rounded-bl-xs'
                     }`}>
                       {/* Quoted Message Card (WhatsApp Quote-Reply Preview) */}
@@ -772,7 +772,7 @@ export const CoachMessenger: React.FC = () => {
                           onClick={() => scrollToMessage(replyTo.id)}
                           className={`mb-2 p-2 rounded-xl text-[11px] border-l-4 cursor-pointer transition-colors ${
                             isCoach 
-                              ? 'bg-emerald-900/40 border-emerald-400 text-emerald-100 hover:bg-emerald-900/60' 
+                              ? 'bg-black/30 border-emerald-400 text-slate-200 hover:bg-black/40' 
                               : 'bg-slate-950/70 border-slate-600 text-slate-300 hover:bg-slate-950'
                           }`}
                         >
@@ -785,7 +785,7 @@ export const CoachMessenger: React.FC = () => {
 
                       {/* Message Text Content */}
                       {(!isVoiceNote(msg) || (msg.text && !msg.text.startsWith('🎙️') && !msg.text.includes('Voice critique') && !msg.text.includes('Voice Rehearsal'))) && (
-                        <p className="leading-relaxed text-xs break-words">{msg.text || (msg as any).content}</p>
+                        <p className="leading-relaxed text-xs break-words text-slate-100 font-medium">{msg.text || (msg as any).content}</p>
                       )}
 
                       {/* Workout Assignment Card Attachment */}
