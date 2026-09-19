@@ -102,7 +102,7 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5173",
     ]
 
-    APP_URL: str = os.getenv("APP_URL", "http://localhost:3000")
+    APP_URL: str = os.getenv("APP_URL", "https://globaloratorsproject.com")
 
     model_config = SettingsConfigDict(
         env_file=(os.path.join(_backend_dir, ".env"), ".env"),

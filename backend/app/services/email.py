@@ -14,6 +14,8 @@ import ssl
 import smtplib
 import asyncio
 import logging
+import email.utils
+from urllib.parse import urlparse
 from typing import Optional
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -23,9 +25,28 @@ from app.config import settings
 logger = logging.getLogger("globalorators.email")
 
 
+def _sanitize_public_url(url: Optional[str]) -> str:
+    """
+    Ensure all outbound links use the canonical production HTTPS domain.
+    Rewrites any localhost/127.0.0.1 references to https://globaloratorsproject.com
+    to protect domain reputation and prevent anti-phishing/spam false positives.
+    """
+    fallback_domain = "https://globaloratorsproject.com"
+    if not url:
+        return fallback_domain
+    clean = url.strip()
+    if clean.startswith("http://localhost") or clean.startswith("http://127.0.0.1"):
+        parsed = urlparse(clean)
+        path = parsed.path or ""
+        if parsed.query:
+            path += f"?{parsed.query}"
+        return f"{fallback_domain}{path}"
+    return clean
+
+
 def _dispatch_smtp_email_sync(recipient_email: str, subject: str, text_body: str, html_body: str) -> bool:
     """
-    Transmit an email via authenticated SMTP with TLS/SSL encryption.
+    Transmit an email via authenticated SMTP with TLS/SSL encryption and full RFC 5322 anti-spam headers.
     Gracefully logs and suppresses errors in testing/development environments.
     """
     if settings.TESTING:
@@ -38,10 +59,17 @@ def _dispatch_smtp_email_sync(recipient_email: str, subject: str, text_body: str
         )
         return False
 
+    from_domain = settings.FROM_EMAIL.split("@")[-1] if "@" in settings.FROM_EMAIL else "globaloratorsproject.com"
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
     msg["From"] = f"Global Orators <{settings.FROM_EMAIL}>"
     msg["To"] = recipient_email
+    msg["Reply-To"] = f"Global Orators Support <{settings.FROM_EMAIL}>"
+    msg["Date"] = email.utils.formatdate(localtime=True)
+    msg["Message-ID"] = email.utils.make_msgid(domain=from_domain)
+    msg["Auto-Submitted"] = "auto-generated"
+    msg["X-Auto-Response-Suppress"] = "All"
+    msg["List-Unsubscribe"] = f"<mailto:{settings.FROM_EMAIL}?subject=unsubscribe>"
 
     msg.attach(MIMEText(text_body, "plain", "utf-8"))
     msg.attach(MIMEText(html_body, "html", "utf-8"))
@@ -70,17 +98,18 @@ def _wrap_editorial_html(kicker: str, headline: str, lead_text: str, content_htm
     Render an authoritative editorial email document adhering strictly to
     Anti-AI Slop standards (commanding serif display, gold accents, hairline dividers, micro-mono labels).
     """
+    safe_action_url = _sanitize_public_url(action_url) if action_url else None
     action_button_html = ""
-    if action_url and action_label:
+    if safe_action_url and action_label:
         action_button_html = f"""
         <div style="text-align: center; margin: 32px 0 24px 0;">
-          <a href="{action_url}" style="background-color: #c89630; color: #080a0e; font-family: Georgia, Cambria, 'Times New Roman', serif; font-size: 15px; font-weight: 800; padding: 15px 34px; text-decoration: none; border-radius: 10px; display: inline-block; letter-spacing: 0.02em; box-shadow: 0 4px 14px rgba(200, 150, 48, 0.35);">
+          <a href="{safe_action_url}" style="background-color: #c89630; color: #080a0e; font-family: Georgia, Cambria, 'Times New Roman', serif; font-size: 15px; font-weight: 800; padding: 15px 34px; text-decoration: none; border-radius: 10px; display: inline-block; letter-spacing: 0.02em; box-shadow: 0 4px 14px rgba(200, 150, 48, 0.35);">
             {action_label} &rarr;
           </a>
         </div>
         <div style="text-align: center; margin-bottom: 24px;">
           <span style="font-size: 11px; color: #64748b; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
-            Direct link: <a href="{action_url}" style="color: #c89630; word-break: break-all;">{action_url}</a>
+            Direct link: <a href="{safe_action_url}" style="color: #c89630; word-break: break-all;">{safe_action_url}</a>
           </span>
         </div>
         """
@@ -93,6 +122,11 @@ def _wrap_editorial_html(kicker: str, headline: str, lead_text: str, content_htm
   <title>{headline}</title>
 </head>
 <body style="margin: 0; padding: 40px 16px; background-color: #080a0e; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #f8fafc;">
+  <!-- Preheader preview text for inbox display -->
+  <div style="display: none; max-height: 0px; overflow: hidden; font-size: 1px; line-height: 1px; color: #fff; opacity: 0; mso-hide: all;">
+    {lead_text[:120]}
+  </div>
+
   <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 560px; background-color: #10141d; border: 1px solid #1e293b; border-radius: 16px; overflow: hidden; padding: 40px 32px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.55);">
     <tr>
       <td>
@@ -120,12 +154,13 @@ def _wrap_editorial_html(kicker: str, headline: str, lead_text: str, content_htm
         <!-- Architectural hairline divider -->
         <div style="border-top: 1px solid #1e293b; margin: 28px 0 20px 0;"></div>
 
-        <!-- Editorial Dispatch Footer -->
+        <!-- Editorial Dispatch Footer with Deliverability Compliance -->
         <table border="0" cellpadding="0" cellspacing="0" width="100%">
           <tr>
             <td style="font-size: 11px; line-height: 1.6; color: #64748b; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
               <strong style="color: #94a3b8;">Global Orators Project</strong> · Forensics, Rhetoric & Voice Sovereignty<br>
-              This is an automated dispatch sent to registered platform participants.
+              Official Transactional Notification · Nairobi, Kenya<br>
+              Sent to registered platform participants. To update notification preferences, reply directly to this email.
             </td>
           </tr>
         </table>
@@ -143,11 +178,12 @@ def _wrap_editorial_html(kicker: str, headline: str, lead_text: str, content_htm
 
 def send_otp_email_sync(recipient_email: str, otp_code: str, magic_link_url: Optional[str] = None) -> bool:
     """Transmit a 1-click magic login link and single-use verification passcode."""
+    safe_magic_link = _sanitize_public_url(magic_link_url) if magic_link_url else None
     magic_link_section_text = f"""1-CLICK MAGIC LOGIN LINK:
 Click the link below to enter your Orators App workspace instantly:
-{magic_link_url}
+{safe_magic_link}
 
-""" if magic_link_url else ""
+""" if safe_magic_link else ""
 
     text_body = f"""GLOBAL ORATORS · SPEAKER PROTOCOL ACCESS
 Authentication Passcode & Magic Login Link
@@ -176,8 +212,8 @@ If you did not request this link, you can safely disregard this message.
         headline="Authentication & Magic Login",
         lead_text="Click the button below to instantly access your speaker workspace, or enter the single-use verification passcode in your open browser window.",
         content_html=otp_block_html,
-        action_url=magic_link_url,
-        action_label="Enter Orators App (1-Click Login)" if magic_link_url else None
+        action_url=safe_magic_link,
+        action_label="Enter Orators App (1-Click Login)" if safe_magic_link else None
     )
 
     return _dispatch_smtp_email_sync(
@@ -221,7 +257,7 @@ def send_welcome_protocol_email_sync(
         "vulnerability-without-apology, and discovering the healing power of your authentic voice. Enter your portal to begin your first reflection."
     )
 
-    portal_url = magic_link_url or f"{settings.APP_URL}/speaker"
+    portal_url = _sanitize_public_url(magic_link_url or f"{settings.APP_URL}/speaker")
 
     text_body = f"""GLOBAL ORATORS · PROTOCOL FORMULATION BRIEFING
 Your Personalized Orator Training Protocol is Formulated
@@ -358,7 +394,7 @@ def send_coach_new_speaker_email_sync(
     institution: str = ""
 ) -> bool:
     """Alert coach when a new orator completes intake and joins their roster."""
-    coach_portal_url = f"{settings.APP_URL}/coach"
+    coach_portal_url = _sanitize_public_url(f"{settings.APP_URL}/coach")
 
     text_body = f"""GLOBAL ORATORS · FACULTY DISPATCH: NEW ORATOR ENROLLED
 Coach {coach_name}, an orator has completed onboarding and formulated their initial diagnostic protocol.
@@ -469,7 +505,7 @@ def send_drill_submission_email_sync(
     notes: Optional[str] = None
 ) -> bool:
     """Alert coach that a speaker has recorded and submitted a drill for adjudication."""
-    coach_portal_url = f"{settings.APP_URL}/coach"
+    coach_portal_url = _sanitize_public_url(f"{settings.APP_URL}/coach")
 
     duration_str = ""
     if duration_seconds and duration_seconds > 0:
@@ -560,7 +596,7 @@ def send_coach_feedback_email_sync(
     rating: Optional[int] = None
 ) -> bool:
     """Alert speaker when their coach has reviewed and adjudicated their rehearsal."""
-    speaker_portal_url = f"{settings.APP_URL}/speaker"
+    speaker_portal_url = _sanitize_public_url(f"{settings.APP_URL}/speaker")
 
     rating_str = f"{rating}/5" if rating else "Evaluated"
 
@@ -657,7 +693,7 @@ def send_direct_message_email_sync(
 ) -> bool:
     """Notify user of a new direct communication in the platform."""
     default_url = f"{settings.APP_URL}/coach" if sender_role.lower() == "speaker" else f"{settings.APP_URL}/speaker"
-    target_url = thread_url or default_url
+    target_url = _sanitize_public_url(thread_url or default_url)
 
     clean_snippet = message_snippet[:280] + ("..." if len(message_snippet) > 280 else "")
 
@@ -738,7 +774,7 @@ def send_inquiry_notification_email_sync(
     message: str
 ) -> bool:
     """Alert faculty coaches of new school, grant, or institutional inquiries."""
-    coach_portal_url = f"{settings.APP_URL}/coach"
+    coach_portal_url = _sanitize_public_url(f"{settings.APP_URL}/coach")
 
     text_body = f"""GLOBAL ORATORS · INTAKE INQUIRY DISPATCH
 A new institutional partnership inquiry has been submitted.

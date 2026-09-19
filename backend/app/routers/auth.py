@@ -374,7 +374,7 @@ async def send_otp(req: SendOtpRequest, request: Request, db: AsyncSession = Dep
     await db.commit()
 
     # Determine base origin for magic link
-    base_url = (req.redirect_url or request.headers.get("origin") or "http://localhost:3000").rstrip("/")
+    base_url = (req.redirect_url or request.headers.get("origin") or settings.APP_URL).rstrip("/")
     magic_link_url = f"{base_url}/speaker?magic_token={magic_token}&email={email_clean}"
 
     # Dispatch email via threadpool without blocking asyncio loop

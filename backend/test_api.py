@@ -2217,3 +2217,95 @@ async def test_system_jitsi_domain_endpoints():
                 os.remove(cache_path)
         except Exception:
             pass
+
+
+@pytest.mark.asyncio
+async def test_email_deliverability_and_antispam_compliance():
+    """
+    Verify strict RFC 5322 compliance, header alignment, preheader generation,
+    and automatic sanitization of localhost links to prevent spam/phishing classification.
+    """
+    from app.services.email import (
+        _sanitize_public_url,
+        _wrap_editorial_html,
+        _dispatch_smtp_email_sync,
+        send_direct_message_email_sync,
+        send_otp_email_sync
+    )
+    from unittest.mock import patch, MagicMock
+
+    # 1. Verify URL sanitization rewrites localhost/127.0.0.1 and preserves HTTPS
+    assert _sanitize_public_url("http://localhost:3000/speaker") == "https://globaloratorsproject.com/speaker"
+    assert _sanitize_public_url("http://127.0.0.1:5173/coach?tab=inquiries") == "https://globaloratorsproject.com/coach?tab=inquiries"
+    assert _sanitize_public_url("https://globaloratorsproject.com/speaker") == "https://globaloratorsproject.com/speaker"
+    assert _sanitize_public_url("https://app.globaloratorsproject.com/coach") == "https://app.globaloratorsproject.com/coach"
+    assert _sanitize_public_url(None) == "https://globaloratorsproject.com"
+    assert _sanitize_public_url("") == "https://globaloratorsproject.com"
+
+    # 2. Verify editorial HTML wrapper includes preheader and deliverability footer
+    html = _wrap_editorial_html(
+        kicker="Global Orators · Verification",
+        headline="Authentication Passcode",
+        lead_text="Your single-use passcode for authentication.",
+        content_html="<div>Code: 123456</div>",
+        action_url="http://localhost:3000/speaker",
+        action_label="Enter Portal"
+    )
+    # Ensure localhost is sanitized in both action button href and direct link text
+    assert "http://localhost:3000" not in html
+    assert "https://globaloratorsproject.com/speaker" in html
+    # Preheader preview text present
+    assert "Your single-use passcode" in html
+    # Deliverability compliance footer present
+    assert "Official Transactional Notification" in html
+
+    # 3. Verify RFC 5322 compliance headers constructed during dispatch
+    captured_messages = []
+
+    def mock_send_message(msg):
+        captured_messages.append(msg)
+        return True
+
+    mock_smtp_instance = MagicMock()
+    mock_smtp_instance.send_message = mock_send_message
+    mock_smtp_instance.__enter__.return_value = mock_smtp_instance
+
+    with patch("app.config.settings.TESTING", False), \
+         patch("app.config.settings.SMTP_USERNAME", "globaloratorsproject@gmail.com"), \
+         patch("app.config.settings.SMTP_PASSWORD", "testpass"), \
+         patch("app.config.settings.FROM_EMAIL", "globaloratorsproject@gmail.com"), \
+         patch("smtplib.SMTP_SSL", return_value=mock_smtp_instance):
+
+        # Dispatch direct message with localhost thread URL
+        success = send_direct_message_email_sync(
+            recipient_email="test.speaker@example.com",
+            recipient_name="Test Speaker",
+            sender_name="Head Coach Qassim",
+            sender_role="Coach",
+            message_snippet="Review your opening rhetorical delivery.",
+            thread_url="http://localhost:3000/speaker"
+        )
+        assert success is True
+        assert len(captured_messages) == 1
+
+        sent_msg = captured_messages[0]
+        # Check required RFC 5322 headers
+        assert "Date" in sent_msg
+        assert "Message-ID" in sent_msg
+        assert sent_msg["Message-ID"].endswith("@gmail.com>")
+        assert sent_msg["From"] == "Global Orators <globaloratorsproject@gmail.com>"
+        assert sent_msg["To"] == "test.speaker@example.com"
+        assert sent_msg["Reply-To"] == "Global Orators Support <globaloratorsproject@gmail.com>"
+        assert sent_msg["Auto-Submitted"] == "auto-generated"
+        assert sent_msg["X-Auto-Response-Suppress"] == "All"
+        assert sent_msg["List-Unsubscribe"] == "<mailto:globaloratorsproject@gmail.com?subject=unsubscribe>"
+
+        # Check decoded payload parts for zero localhost references
+        parts = [part.get_payload(decode=True).decode("utf-8") for part in sent_msg.get_payload()]
+        assert len(parts) == 2  # plain text and HTML
+        plain_text_part, html_part = parts[0], parts[1]
+
+        assert "http://localhost:3000" not in plain_text_part
+        assert "https://globaloratorsproject.com/speaker" in plain_text_part
+        assert "http://localhost:3000" not in html_part
+        assert "https://globaloratorsproject.com/speaker" in html_part
