@@ -876,39 +876,38 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
               )}
 
               {!hasEnteredChamber ? (
-                <div className="flex-1 flex flex-col items-center justify-between p-4 sm:p-8 relative overflow-hidden rounded-2xl border border-slate-800 bg-[#070a11] shadow-2xl">
-                  {/* Space Earth Hero Card matching Chamber Welcome Page */}
-                  <div 
-                    className="w-full max-w-2xl relative rounded-2xl overflow-hidden border border-slate-800/80 shadow-2xl flex flex-col items-center justify-center p-6 sm:p-12 min-h-[360px] sm:min-h-[420px] bg-cover bg-center my-auto"
-                    style={{
-                      backgroundImage: `radial-gradient(ellipse at 50% 30%, rgba(7, 10, 17, 0.45) 0%, rgba(7, 10, 17, 0.95) 100%), url('/images/welcome-background.png')`
-                    }}
-                  >
-                    {/* Settings Gear Icon in top-right corner of card */}
+                <div 
+                  className="flex-1 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl relative flex flex-col justify-between p-6 sm:p-10 bg-cover bg-center"
+                  style={{
+                    backgroundImage: `radial-gradient(ellipse at 50% 35%, rgba(7, 10, 17, 0.2) 0%, rgba(7, 10, 17, 0.8) 80%, #070a11 100%), url('/images/welcome-background.png')`
+                  }}
+                >
+                  {/* Settings Gear Icon in top-right corner */}
+                  <div className="flex justify-end w-full">
                     <div 
-                      className="absolute top-4 right-4 text-slate-400 bg-slate-900/80 p-2 rounded-lg border border-slate-700/60 shadow-md pointer-events-none"
+                      className="text-slate-400 bg-slate-900/80 p-2.5 rounded-xl border border-slate-700/60 shadow-lg backdrop-blur-xs pointer-events-none"
                       aria-hidden="true"
                     >
                       <Settings className="w-5 h-5 text-slate-300" />
                     </div>
+                  </div>
 
-                    {/* Editorial Chamber Title */}
-                    <h1 className="text-2xl sm:text-4xl font-serif font-bold text-white tracking-tight text-center mb-2.5 drop-shadow-md">
+                  {/* Centered Chamber Content: Title, Tagline, Input + Button Form */}
+                  <div className="flex flex-col items-center justify-center max-w-xl mx-auto w-full my-auto text-center px-2">
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-white tracking-tight drop-shadow-md mb-2 sm:mb-3">
                       Global Orators Chamber
                     </h1>
 
-                    {/* Gold Tagline: SPEAK INSPIRE CONNECT CHANGE THE WORLD. */}
-                    <p className="text-[11px] sm:text-[13px] font-mono tracking-[0.14em] text-[#C89630] font-semibold uppercase text-center mb-8 drop-shadow-sm">
+                    <p className="text-xs sm:text-sm font-mono tracking-[0.14em] text-[#C89630] font-semibold uppercase drop-shadow-sm mb-7 sm:mb-8">
                       SPEAK INSPIRE CONNECT CHANGE THE WORLD.
                     </p>
 
-                    {/* Room Input & Enter Chamber Form */}
                     <form
                       onSubmit={(e) => {
                         e.preventDefault();
                         setHasEnteredChamber(true);
                       }}
-                      className="w-full max-w-md flex flex-col sm:flex-row items-stretch rounded-lg shadow-2xl overflow-hidden border border-slate-700/60 bg-white"
+                      className="w-full flex items-stretch rounded-lg shadow-2xl overflow-hidden bg-white border border-slate-600/30"
                     >
                       <input
                         id="chamber-room-input"
@@ -918,22 +917,28 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
                         onChange={(e) => setRoomInput(e.target.value)}
                         placeholder="Enter room name"
                         autoFocus
-                        className="flex-1 px-4 py-3.5 text-sm font-sans font-medium text-slate-900 placeholder-slate-400 bg-white focus:outline-none min-w-0"
+                        className="flex-1 px-4 py-3.5 text-sm sm:text-base font-sans font-medium text-slate-900 placeholder-slate-400 bg-white focus:outline-none min-w-0"
                       />
                       <button
                         type="submit"
-                        className="bg-[#C89630] hover:bg-[#d9a53b] text-slate-950 font-bold px-6 py-3.5 text-sm transition-all duration-150 cursor-pointer shrink-0 border-t sm:border-t-0 sm:border-l border-amber-600/30 flex items-center justify-center gap-2 active:scale-98"
+                        className="bg-[#C89630] hover:bg-[#d9a53b] text-slate-950 font-bold px-6 sm:px-8 py-3.5 text-sm sm:text-base transition-colors shrink-0 whitespace-nowrap cursor-pointer active:scale-98"
                       >
                         Enter Chamber
                       </button>
                     </form>
                   </div>
 
-                  {/* Powered By Galvaniy Technologies Footer */}
-                  <div className="mt-4 sm:mt-6 text-center">
-                    <p className="text-[11px] font-mono tracking-[0.2em] text-slate-500 uppercase font-semibold">
+                  {/* Hyperlinked Footer */}
+                  <div className="w-full text-center pt-4">
+                    <a
+                      href="https://galvaniytechnologies.xn--jhb4c.com/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[11px] font-mono tracking-[0.2em] text-slate-500 hover:text-[#C89630] transition-colors uppercase font-semibold inline-block"
+                      title="Galvaniy Technologies"
+                    >
                       POWERED BY GALVANIY TECHNOLOGIES
-                    </p>
+                    </a>
                   </div>
                 </div>
               ) : (

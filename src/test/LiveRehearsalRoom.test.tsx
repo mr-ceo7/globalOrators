@@ -29,7 +29,10 @@ describe('LiveRehearsalRoom Dual Engine Tests', () => {
     // 1. Chamber Welcome Screen appears first
     expect(screen.getByText('Global Orators Chamber')).toBeInTheDocument();
     expect(screen.getByText('SPEAK INSPIRE CONNECT CHANGE THE WORLD.')).toBeInTheDocument();
-    expect(screen.getByText('POWERED BY GALVANIY TECHNOLOGIES')).toBeInTheDocument();
+    const poweredByLink = screen.getByRole('link', { name: /POWERED BY GALVANIY TECHNOLOGIES/i });
+    expect(poweredByLink).toBeInTheDocument();
+    expect(poweredByLink).toHaveAttribute('href', 'https://galvaniytechnologies.xn--jhb4c.com/');
+    expect(poweredByLink).toHaveAttribute('target', '_blank');
 
     // 2. Input box is autofilled with safeRoomId
     const roomInput = screen.getByLabelText('Meeting name input') as HTMLInputElement;
