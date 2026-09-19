@@ -454,9 +454,10 @@ def send_coach_new_speaker_email_sync(
 ) -> bool:
     """Alert coach when a new orator completes intake and joins their roster."""
     coach_portal_url = _sanitize_public_url(f"{settings.APP_URL}/coach")
+    greeting_coach = _format_coach_title(coach_name)
 
     text_body = f"""GLOBAL ORATORS · FACULTY DISPATCH: NEW ORATOR ENROLLED
-Coach {coach_name}, an orator has completed onboarding and formulated their initial diagnostic protocol.
+{greeting_coach}, an orator has completed onboarding and formulated their initial diagnostic protocol.
 
 NEW SPEAKER DOSSIER:
 - Name: {speaker_name}
@@ -509,7 +510,7 @@ Review the speaker's diagnostic profile in Coach OS:
     html_body = _wrap_editorial_html(
         kicker="Global Orators · Faculty Dispatch",
         headline="New Orator Intake Enrolled",
-        lead_text=f"Coach {coach_name}, an orator has completed onboarding and formulated their initial diagnostic protocol.",
+        lead_text=f"{greeting_coach}, an orator has completed onboarding and formulated their initial diagnostic protocol.",
         content_html=content_html,
         action_url=coach_portal_url,
         action_label="Review Speaker Dossier in Coach OS"
@@ -565,6 +566,7 @@ def send_drill_submission_email_sync(
 ) -> bool:
     """Alert coach that a speaker has recorded and submitted a drill for adjudication."""
     coach_portal_url = _sanitize_public_url(f"{settings.APP_URL}/coach")
+    greeting_coach = _format_coach_title(coach_name)
 
     duration_str = ""
     if duration_seconds and duration_seconds > 0:
@@ -573,7 +575,7 @@ def send_drill_submission_email_sync(
         duration_str = f"{minutes}m {secs:02d}s" if minutes else f"{secs}s"
 
     text_body = f"""GLOBAL ORATORS · DRILL SUBMISSION DISPATCH
-Coach {coach_name}, orator {speaker_name} has submitted a rehearsal session for faculty adjudication.
+{greeting_coach}, orator {speaker_name} has submitted a rehearsal session for faculty adjudication.
 
 SUBMISSION DETAILS:
 - Speaker: {speaker_name}
@@ -608,7 +610,7 @@ Open Coach OS to listen to the recording and submit evaluation feedback:
     html_body = _wrap_editorial_html(
         kicker="Global Orators · Drill Submission Dispatch",
         headline="Rehearsal Submission Received",
-        lead_text=f"Coach {coach_name}, orator {speaker_name} has submitted a rehearsal session for faculty adjudication.",
+        lead_text=f"{greeting_coach}, orator {speaker_name} has submitted a rehearsal session for faculty adjudication.",
         content_html=content_html,
         action_url=coach_portal_url,
         action_label="Adjudicate in Coach OS"
@@ -656,15 +658,16 @@ def send_coach_feedback_email_sync(
 ) -> bool:
     """Alert speaker when their coach has reviewed and adjudicated their rehearsal."""
     speaker_portal_url = _sanitize_public_url(f"{settings.APP_URL}/speaker")
+    greeting_coach = _format_coach_title(coach_name)
 
     rating_str = f"{rating}/5" if rating else "Evaluated"
 
     text_body = f"""GLOBAL ORATORS · FACULTY ADJUDICATION DISPATCH
-{speaker_name}, your coach {coach_name} has published feedback on your rehearsal.
+{speaker_name}, {greeting_coach} has published feedback on your rehearsal.
 
 EVALUATION DETAILS:
 - Drill: {drill_title}
-- Adjudicator: Coach {coach_name}
+- Adjudicator: {greeting_coach}
 - Rating: {rating_str}
 
 COACH CRITIQUE & NOTES:
@@ -685,7 +688,7 @@ Enter your speaker workspace to review full notes, practice recommendations, and
         {drill_title}
       </div>
       <div style="font-size: 12px; color: #94a3b8;">
-        Adjudicated by <strong style="color: #ffffff;">Coach {coach_name}</strong>
+        Adjudicated by <strong style="color: #ffffff;">{greeting_coach}</strong>
       </div>
       {rating_badge}
 
