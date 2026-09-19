@@ -27,6 +27,7 @@ import {
 import { useApp } from '../../context/AppContext';
 import { Client, ClientStatus, SpeakingGoal, ExperienceLevel } from '../../types';
 import { ClientProfileModal } from './ClientProfileModal';
+import { OratorAvatar } from '../common/OratorAvatar';
 
 export const ClientRoster: React.FC<{
   isAddModalOpen: boolean;
@@ -490,17 +491,11 @@ export const ClientRoster: React.FC<{
                         {/* Speaker Column */}
                         <td className="py-3.5 px-4">
                           <div className="flex items-center gap-3">
-                            {client.avatar ? (
-                              <img 
-                                src={client.avatar} 
-                                alt={client.name} 
-                                className="h-10 w-10 rounded-xl object-cover border border-slate-700 shrink-0" 
-                              />
-                            ) : (
-                              <div className="h-10 w-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-mono font-bold text-slate-200 shrink-0">
-                                {client.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'SP'}
-                              </div>
-                            )}
+                            <OratorAvatar 
+                              src={client.avatar} 
+                              name={client.name} 
+                              className="h-10 w-10 rounded-xl border border-slate-700 shrink-0" 
+                            />
                             <div>
                               <div className="flex items-center gap-2">
                                 <span className="font-bold text-white group-hover:text-emerald-400 transition-colors">
@@ -762,17 +757,11 @@ export const ClientRoster: React.FC<{
 
                   {/* Speaker Info Row: Avatar + Name + Email */}
                   <div className="flex items-center gap-3">
-                    {client.avatar ? (
-                      <img 
-                        src={client.avatar} 
-                        alt={client.name} 
-                        className="h-12 w-12 rounded-xl object-cover border border-slate-700 shrink-0" 
-                      />
-                    ) : (
-                      <div className="h-12 w-12 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-sm font-mono font-bold text-slate-200 shrink-0">
-                        {client.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'SP'}
-                      </div>
-                    )}
+                    <OratorAvatar 
+                      src={client.avatar} 
+                      name={client.name} 
+                      className="h-12 w-12 rounded-xl border border-slate-700 shrink-0 text-sm" 
+                    />
                     <div className="min-w-0 flex-1">
                       <h3 className="font-bold text-white text-base leading-tight group-hover:text-emerald-400 transition-colors truncate">
                         {client.name}

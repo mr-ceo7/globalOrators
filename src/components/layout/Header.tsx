@@ -16,6 +16,7 @@ import {
 
 import { useApp } from '../../context/AppContext';
 import { GlobalOratorsLogo } from '../common/GlobalOratorsLogo';
+import { OratorAvatar } from '../common/OratorAvatar';
 
 
 interface HeaderProps {
@@ -188,7 +189,7 @@ export const Header: React.FC<HeaderProps> = ({
                         }}
                         className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-slate-800 cursor-pointer text-slate-200"
                       >
-                        <img src={c.avatar} alt={c.name} className="h-6 w-6 rounded-full object-cover" />
+                        <OratorAvatar src={c.avatar} name={c.name} className="h-6 w-6 rounded-full text-[9px]" />
                         <div className="flex-1 min-w-0">
                           <div className="font-semibold text-white truncate">{c.name}</div>
                           <div className="text-[10px] text-slate-400">{c.goal} • {c.status}</div>
@@ -430,15 +431,12 @@ export const Header: React.FC<HeaderProps> = ({
                   onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                   className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-800 bg-emerald-950 overflow-hidden active:scale-95 transition-transform"
                 >
-                  {user?.avatar ? (
-                    <img
-                      src={user.avatar}
-                      alt={coachName}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <span className="font-bold text-emerald-400 text-xs">{initials}</span>
-                  )}
+                  <OratorAvatar
+                    src={user?.avatar}
+                    name={coachName}
+                    className="h-full w-full rounded-xl text-xs"
+                    fallbackClassName="bg-emerald-950 text-emerald-400"
+                  />
                 </button>
 
                 {isMobileMenuOpen && (

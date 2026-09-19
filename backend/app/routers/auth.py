@@ -205,6 +205,9 @@ async def _get_or_create_speaker(
             onboarding_survey={}
         )
         db.add(new_client)
+    else:
+        if resolved_avatar and (not matched_client.avatar or matched_client.avatar == ""):
+            matched_client.avatar = resolved_avatar
 
     await db.commit()
     await db.refresh(user)

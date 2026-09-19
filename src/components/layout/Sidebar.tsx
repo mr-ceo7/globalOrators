@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useApp, NavigationTab } from '../../context/AppContext';
 import { GlobalOratorsLogo } from '../common/GlobalOratorsLogo';
+import { OratorAvatar } from '../common/OratorAvatar';
 
 
 export const Sidebar: React.FC = () => {
@@ -173,10 +174,10 @@ export const Sidebar: React.FC = () => {
                   }}
                   className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs hover:bg-slate-800/60 cursor-pointer text-slate-300 hover:text-white transition-colors"
                 >
-                  <img 
+                  <OratorAvatar 
                     src={client.avatar} 
-                    alt={client.name} 
-                    className="h-6 w-6 rounded-full object-cover border border-slate-700" 
+                    name={client.name} 
+                    className="h-6 w-6 rounded-full border border-slate-700 text-[9px]" 
                   />
                   <span className="truncate flex-1 font-medium">{client.name}</span>
                   <span className="text-[10px] text-emerald-400 font-bold">{client.complianceRate}%</span>
@@ -199,17 +200,12 @@ export const Sidebar: React.FC = () => {
             return (
               <>
                 <div className="relative">
-                  {user?.avatar ? (
-                    <img 
-                      src={user.avatar} 
-                      alt={coachName}
-                      className="h-10 w-10 rounded-xl object-cover border-2 border-emerald-500/40"
-                    />
-                  ) : (
-                    <div className="h-10 w-10 rounded-xl bg-emerald-950 border border-emerald-500/40 flex items-center justify-center font-bold text-emerald-400 text-xs">
-                      {initials}
-                    </div>
-                  )}
+                  <OratorAvatar 
+                    src={user?.avatar} 
+                    name={coachName}
+                    className="h-10 w-10 rounded-xl border-2 border-emerald-500/40"
+                    fallbackClassName="bg-emerald-950 text-emerald-400 text-xs"
+                  />
                 </div>
                 
                 {!isCollapsed && (

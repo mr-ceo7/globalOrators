@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { Client } from '../../types';
+import { OratorAvatar } from '../common/OratorAvatar';
 
 interface ClientProfileModalProps {
   client: Client;
@@ -138,13 +139,10 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({ client, 
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <img 
+              <OratorAvatar 
                 src={client.avatar} 
-                alt={client.name} 
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(client.name)}&background=047857&color=fff`;
-                }}
-                className="h-16 w-16 rounded-2xl object-cover border-2 border-emerald-500/40 shadow-lg"
+                name={client.name} 
+                className="h-16 w-16 rounded-2xl border-2 border-emerald-500/40 shadow-lg text-lg" 
               />
               <div>
                 <div className="flex items-center gap-2.5">

@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { MetricEntry, PersonalRecord, ProgressPhoto } from '../../types';
+import { OratorAvatar } from '../common/OratorAvatar';
 
 export const ProgressTracker: React.FC = () => {
   const { 
@@ -208,10 +209,10 @@ export const ProgressTracker: React.FC = () => {
       {activeClient && (
         <div className="p-6 rounded-3xl bg-gradient-to-r from-slate-950 via-slate-900 to-emerald-950/30 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xl">
           <div className="flex items-center gap-4">
-            <img 
+            <OratorAvatar 
               src={activeClient.avatar} 
-              alt={activeClient.name} 
-              className="h-16 w-16 rounded-2xl object-cover border-2 border-emerald-500/40 shadow-lg" 
+              name={activeClient.name} 
+              className="h-16 w-16 rounded-2xl border-2 border-emerald-500/40 shadow-lg text-lg" 
             />
             <div>
               <div className="flex items-center gap-2">

@@ -85,13 +85,35 @@ async def list_clients(
     result = await db.execute(query)
     clients = result.scalars().all()
     
+    # Pre-fetch user avatars for clients that have empty avatar
+    emails_to_lookup = {c.email.lower() for c in clients if (not c.avatar or c.avatar == "") and c.email}
+    avatar_by_email = {}
+    if emails_to_lookup:
+        user_res = await db.execute(
+            select(User.email, User.avatar).where(
+                (User.avatar != "") & (User.avatar.is_not(None))
+            )
+        )
+        for u_email, u_avatar in user_res.all():
+            if u_avatar and u_email and u_email.lower() in emails_to_lookup:
+                avatar_by_email[u_email.lower()] = u_avatar
+
     # Redact sensitive coach notes for non-coach callers without mutating ORM models
+    needs_commit = False
     output = []
     for c in clients:
         c_resp = ClientResponse.model_validate(c)
+        if (not c_resp.avatar or c_resp.avatar == "") and c.email and c.email.lower() in avatar_by_email:
+            resolved_av = avatar_by_email[c.email.lower()]
+            c_resp.avatar = resolved_av
+            c.avatar = resolved_av
+            needs_commit = True
         if current_user.role != "coach":
             c_resp.custom_coach_notes = []
         output.append(c_resp)
+
+    if needs_commit:
+        await db.commit()
     return output
 
 
@@ -119,6 +141,11 @@ async def get_my_client_profile(
         )
 
     resp = ClientResponse.model_validate(client)
+    if (not resp.avatar or resp.avatar == "") and current_user.avatar:
+        resp.avatar = current_user.avatar
+        if not client.avatar:
+            client.avatar = current_user.avatar
+            await db.commit()
     if current_user.role != "coach":
         resp.custom_coach_notes = []
 
@@ -164,6 +191,18 @@ async def get_client(
             )
 
     resp = ClientResponse.model_validate(client)
+    if (not resp.avatar or resp.avatar == "") and client.email:
+        u_res = await db.execute(
+            select(User.avatar).where(
+                (User.email.ilike(client.email)) & (User.avatar != "") & (User.avatar.is_not(None))
+            )
+        )
+        u_avatar = u_res.scalar_one_or_none()
+        if u_avatar:
+            resp.avatar = u_avatar
+            if not client.avatar:
+                client.avatar = u_avatar
+                await db.commit()
     if current_user.role != "coach":
         resp.custom_coach_notes = []
         

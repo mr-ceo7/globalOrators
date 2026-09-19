@@ -29,6 +29,7 @@ import {
 import { useApp } from '../../context/AppContext';
 import { ChatMessage, Client } from '../../types';
 import { LiveRehearsalRoom } from '../live/LiveRehearsalRoom';
+import { OratorAvatar } from '../common/OratorAvatar';
 
 // WhatsApp Standard Quick Reactions
 const WHATSAPP_REACTIONS = ['👍', '🎙️', '🔥', '👏', '💡', '❤️'];
@@ -532,7 +533,7 @@ export const CoachMessenger: React.FC = () => {
                 }`}
               >
                 <div className="relative shrink-0">
-                  <img src={client.avatar} alt={client.name} className="h-10 w-10 rounded-xl object-cover" />
+                  <OratorAvatar src={client.avatar} name={client.name} className="h-10 w-10 rounded-xl" />
                   <span className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-slate-950 ${
                     isOnline ? 'bg-emerald-500' : client.status === 'Active' ? 'bg-emerald-600/70' : 'bg-slate-500'
                   }`} />
@@ -582,10 +583,10 @@ export const CoachMessenger: React.FC = () => {
               </button>
 
               <div className="relative shrink-0">
-                <img 
+                <OratorAvatar 
                   src={activeClient.avatar} 
-                  alt={activeClient.name} 
-                  className="h-10 w-10 rounded-xl object-cover border border-slate-700" 
+                  name={activeClient.name} 
+                  className="h-10 w-10 rounded-xl border border-slate-700" 
                 />
                 <span className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-slate-950 ${
                   isClientOnline ? 'bg-emerald-400' : 'bg-slate-500'
@@ -772,16 +773,12 @@ export const CoachMessenger: React.FC = () => {
                     >
                       {coachInitials}
                     </div>
-                  ) : activeClient.avatar ? (
-                    <img
-                      src={activeClient.avatar}
-                      alt={activeClient.name}
-                      className="h-7 w-7 rounded-xl object-cover shrink-0 self-end"
-                    />
                   ) : (
-                    <div className="h-7 w-7 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-slate-300 text-[10px] shrink-0 self-end">
-                      {activeClient.name.slice(0, 2).toUpperCase()}
-                    </div>
+                    <OratorAvatar
+                      src={activeClient.avatar}
+                      name={activeClient.name}
+                      className="h-7 w-7 rounded-xl text-[10px] shrink-0 self-end"
+                    />
                   )}
 
                   <div className={`space-y-1 ${isCoach ? 'items-end' : 'items-start'} max-w-full`}>
