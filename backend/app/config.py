@@ -88,6 +88,7 @@ class Settings(BaseSettings):
     SMTP_USERNAME: str = os.getenv("SMTP_USERNAME", "")
     SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "")
     FROM_EMAIL: str = os.getenv("FROM_EMAIL", "globaloratorsproject@gmail.com")
+    RESEND_API_KEY: Optional[str] = os.getenv("RESEND_API_KEY", None)
 
     # CORS: Explicit allowed origins (no wildcard with credentials)
     CORS_ORIGINS: List[str] = [

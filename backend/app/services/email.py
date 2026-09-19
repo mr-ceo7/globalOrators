@@ -53,6 +53,33 @@ def _dispatch_smtp_email_sync(recipient_email: str, subject: str, text_body: str
         logger.info(f"[TESTING] Email dispatch simulated: '{subject}' -> {recipient_email}")
         return True
 
+    # 1. Direct Resend REST API Driver (Highest Deliverability Transactional Engine)
+    if settings.RESEND_API_KEY and settings.RESEND_API_KEY.strip():
+        try:
+            import httpx
+            headers = {
+                "Authorization": f"Bearer {settings.RESEND_API_KEY.strip()}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "from": f"Global Orators <{settings.FROM_EMAIL}>",
+                "to": [recipient_email],
+                "subject": subject,
+                "html": html_body,
+                "text": text_body,
+                "reply_to": f"Global Orators Support <{settings.FROM_EMAIL}>"
+            }
+            with httpx.Client(timeout=10.0) as client:
+                res = client.post("https://api.resend.com/emails", headers=headers, json=payload)
+                if res.status_code in (200, 201):
+                    data = res.json()
+                    logger.info(f"[Resend API] Email delivered: '{subject}' -> {recipient_email} (id: {data.get('id')})")
+                    return True
+                else:
+                    logger.error(f"[Resend API] Delivery failed ({res.status_code}): {res.text}. Falling back to SMTP.")
+        except Exception as resend_err:
+            logger.error(f"[Resend API] Connection error: {resend_err}. Falling back to SMTP.")
+
     if not settings.SMTP_USERNAME or not settings.SMTP_PASSWORD:
         logger.warning(
             f"SMTP credentials not configured; skipping email dispatch: '{subject}' -> {recipient_email}"

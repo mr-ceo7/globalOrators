@@ -2307,3 +2307,30 @@ async def test_email_deliverability_and_antispam_compliance():
         assert "https://globaloratorsproject.com/speaker" in plain_text_part
         assert "http://localhost:3000" not in html_part
         assert "https://globaloratorsproject.com/speaker" in html_part
+
+    # 4. Verify Resend REST API driver when RESEND_API_KEY is configured
+    with patch("app.config.settings.TESTING", False), \
+         patch("app.config.settings.RESEND_API_KEY", "re_test_key_12345"), \
+         patch("app.config.settings.FROM_EMAIL", "auth@globaloratorsproject.com"), \
+         patch("httpx.Client.post") as mock_resend_post:
+
+        mock_resend_post.return_value = MagicMock(
+            status_code=200,
+            json=lambda: {"id": "resend_msg_abc123"}
+        )
+
+        resend_success = send_direct_message_email_sync(
+            recipient_email="speaker@example.com",
+            recipient_name="Speaker Alex",
+            sender_name="Head Coach Qassim",
+            sender_role="Coach",
+            message_snippet="Resend delivery test",
+            thread_url="https://globaloratorsproject.com/speaker"
+        )
+        assert resend_success is True
+        mock_resend_post.assert_called_once()
+        called_kwargs = mock_resend_post.call_args[1]
+        assert "https://api.resend.com/emails" in mock_resend_post.call_args[0]
+        assert called_kwargs["headers"]["Authorization"] == "Bearer re_test_key_12345"
+        assert called_kwargs["json"]["from"] == "Global Orators <auth@globaloratorsproject.com>"
+        assert called_kwargs["json"]["to"] == ["speaker@example.com"]
