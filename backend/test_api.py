@@ -2296,9 +2296,7 @@ async def test_email_deliverability_and_antispam_compliance():
         assert sent_msg["From"] == "Global Orators <globaloratorsproject@gmail.com>"
         assert sent_msg["To"] == "test.speaker@example.com"
         assert sent_msg["Reply-To"] == "Global Orators Support <globaloratorsproject@gmail.com>"
-        assert sent_msg["Auto-Submitted"] == "auto-generated"
-        assert sent_msg["X-Auto-Response-Suppress"] == "All"
-        assert sent_msg["List-Unsubscribe"] == "<mailto:globaloratorsproject@gmail.com?subject=unsubscribe>"
+        assert sent_msg["Subject"] == "New message from Head Coach Qassim · Global Orators"
 
         # Check decoded payload parts for zero localhost references
         parts = [part.get_payload(decode=True).decode("utf-8") for part in sent_msg.get_payload()]

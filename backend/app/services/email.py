@@ -67,9 +67,6 @@ def _dispatch_smtp_email_sync(recipient_email: str, subject: str, text_body: str
     msg["Reply-To"] = f"Global Orators Support <{settings.FROM_EMAIL}>"
     msg["Date"] = email.utils.formatdate(localtime=True)
     msg["Message-ID"] = email.utils.make_msgid(domain=from_domain)
-    msg["Auto-Submitted"] = "auto-generated"
-    msg["X-Auto-Response-Suppress"] = "All"
-    msg["List-Unsubscribe"] = f"<mailto:{settings.FROM_EMAIL}?subject=unsubscribe>"
 
     msg.attach(MIMEText(text_body, "plain", "utf-8"))
     msg.attach(MIMEText(html_body, "html", "utf-8"))
@@ -123,7 +120,7 @@ def _wrap_editorial_html(kicker: str, headline: str, lead_text: str, content_htm
 </head>
 <body style="margin: 0; padding: 40px 16px; background-color: #080a0e; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #f8fafc;">
   <!-- Preheader preview text for inbox display -->
-  <div style="display: none; max-height: 0px; overflow: hidden; font-size: 1px; line-height: 1px; color: #fff; opacity: 0; mso-hide: all;">
+  <div style="display: none; max-height: 0px; overflow: hidden; opacity: 0; mso-hide: all;">
     {lead_text[:120]}
   </div>
 
@@ -179,21 +176,20 @@ def _wrap_editorial_html(kicker: str, headline: str, lead_text: str, content_htm
 def send_otp_email_sync(recipient_email: str, otp_code: str, magic_link_url: Optional[str] = None) -> bool:
     """Transmit a 1-click magic login link and single-use verification passcode."""
     safe_magic_link = _sanitize_public_url(magic_link_url) if magic_link_url else None
-    magic_link_section_text = f"""1-CLICK MAGIC LOGIN LINK:
-Click the link below to enter your Orators App workspace instantly:
+    magic_link_section_text = f"""Direct Sign-in Link:
+Click the link below to enter your Orators App workspace:
 {safe_magic_link}
 
 """ if safe_magic_link else ""
 
-    text_body = f"""GLOBAL ORATORS · SPEAKER PROTOCOL ACCESS
-Authentication Passcode & Magic Login Link
+    text_body = f"""Global Orators · Speaker Verification
 
-{magic_link_section_text}YOUR 6-DIGIT PASSCODE:
+Your 6-digit verification passcode is:
 {otp_code}
 
-This passcode and link are valid for 15 minutes.
-Enter this code in your Global Orators portal window or click the 1-click login link to access your training workspace.
-If you did not request this link, you can safely disregard this message.
+{magic_link_section_text}This passcode is valid for 15 minutes.
+Enter this code in your Global Orators portal or click the direct sign-in link above.
+If you did not request this code, you can safely ignore this email.
 """
 
     otp_block_html = f"""
@@ -202,23 +198,23 @@ If you did not request this link, you can safely disregard this message.
         {otp_code}
       </div>
       <div style="font-size: 11px; color: #64748b; margin-top: 8px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; text-transform: uppercase; letter-spacing: 0.08em;">
-        Single-Use Passcode · Valid for 15 minutes
+        Verification Passcode · Valid for 15 minutes
       </div>
     </div>
     """
 
     html_body = _wrap_editorial_html(
         kicker="Global Orators · Speaker Protocol",
-        headline="Authentication & Magic Login",
-        lead_text="Click the button below to instantly access your speaker workspace, or enter the single-use verification passcode in your open browser window.",
+        headline=f"Your Verification Passcode is {otp_code}",
+        lead_text="Use this 6-digit passcode to verify your sign-in, or click the direct button below to enter your workspace.",
         content_html=otp_block_html,
         action_url=safe_magic_link,
-        action_label="Enter Orators App (1-Click Login)" if safe_magic_link else None
+        action_label="Sign in to Orators App" if safe_magic_link else None
     )
 
     return _dispatch_smtp_email_sync(
         recipient_email=recipient_email,
-        subject="Your Global Orators Magic Login Link & Passcode",
+        subject=f"Your Global Orators verification code: {otp_code}",
         text_body=text_body,
         html_body=html_body
     )
@@ -697,13 +693,12 @@ def send_direct_message_email_sync(
 
     clean_snippet = message_snippet[:280] + ("..." if len(message_snippet) > 280 else "")
 
-    text_body = f"""GLOBAL ORATORS · SECURE DISPATCH
-Hello {recipient_name}, you have received a direct message from {sender_name} ({sender_role}).
+    text_body = f"""Global Orators · Direct Message
+Hello {recipient_name}, {sender_name} ({sender_role}) sent you a message:
 
-MESSAGE PREVIEW:
 "{clean_snippet}"
 
-Log in to your workspace to view the full conversation and reply:
+View full conversation:
 {target_url}
 """
 
@@ -725,17 +720,17 @@ Log in to your workspace to view the full conversation and reply:
     """
 
     html_body = _wrap_editorial_html(
-        kicker="Global Orators · Secure Dispatch",
-        headline="New Direct Message Received",
+        kicker="Global Orators · Coaching Workspace",
+        headline=f"New Message from {sender_name}",
         lead_text=f"Hello {recipient_name}, {sender_name} sent you a message.",
         content_html=content_html,
         action_url=target_url,
-        action_label="Open Conversation Thread"
+        action_label="View Message & Reply"
     )
 
     return _dispatch_smtp_email_sync(
         recipient_email=recipient_email,
-        subject=f"Global Orators · New Message from {sender_name}",
+        subject=f"New message from {sender_name} · Global Orators",
         text_body=text_body,
         html_body=html_body
     )
