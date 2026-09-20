@@ -14,7 +14,7 @@ export const BranchCards: React.FC<BranchCardsProps> = ({
     <section id="branches" className="py-14 sm:py-20 px-4 sm:px-8 bg-slate-950 border-b border-slate-800">
       <div className="max-w-6xl mx-auto text-left">
         <div className="mb-10">
-          <div className="text-[10px] font-mono tracking-widest text-[#A06C18] dark:text-[#E3B95C] uppercase font-bold">
+          <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
             Chapter II • The Functional Structure
           </div>
           <h2 className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight mt-1">
@@ -31,22 +31,25 @@ export const BranchCards: React.FC<BranchCardsProps> = ({
           <div id="academy" className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-7 flex flex-col justify-between shadow-lg">
             <div>
               <figure className="rounded-xl overflow-hidden mb-5 border border-slate-800 bg-slate-950/40">
-                <img 
-                  src="/images/obed-deliberation.jpg" 
-                  alt="Obed and debaters in the motion preparation chamber at Global Orators Academy" 
-                  className="w-full h-44 sm:h-52 object-cover object-[center_35%]"
-                  loading="lazy"
-                  decoding="async"
-                  width={600}
-                  height={350}
-                />
+                <picture>
+                  <source srcSet="/images/obed-deliberation.webp" type="image/webp" />
+                  <img 
+                    src="/images/obed-deliberation.jpg" 
+                    alt="Obed and debaters in the motion preparation chamber at Global Orators Academy" 
+                    className="w-full h-44 sm:h-52 object-cover object-[center_35%]"
+                    loading="lazy"
+                    decoding="async"
+                    width={600}
+                    height={350}
+                  />
+                </picture>
                 <figcaption className="px-3.5 py-2 bg-slate-950/80 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono">
                   <span className="text-slate-300 uppercase tracking-wider font-semibold">Motion Deliberation Chamber</span>
-                  <span className="text-[#C89630] uppercase tracking-widest">Competitive Wing</span>
+                  <span className="text-[#7A4B06] dark:text-[#E3B95C] uppercase tracking-widest font-semibold">Competitive Wing</span>
                 </figcaption>
               </figure>
 
-              <div className="text-[10px] font-mono tracking-widest uppercase text-[#A06C18] dark:text-[#E3B95C] font-bold">
+              <div className="text-[10px] font-mono tracking-widest uppercase text-[#7A4B06] dark:text-[#E3B95C] font-bold">
                 Professional Fee & School Accreditations
               </div>
               <h3 className="text-xl sm:text-2xl font-serif font-bold text-slate-100 mt-0.5 mb-2">
@@ -73,7 +76,7 @@ export const BranchCards: React.FC<BranchCardsProps> = ({
                 </div>
                 <div className="flex justify-between text-slate-400">
                   <span>Outcome:</span>
-                  <span className="text-emerald-500 font-semibold">Certified Orator • WUDC/PAUDC Roster</span>
+                  <span className="text-emerald-700 dark:text-emerald-400 font-semibold">Certified Orator • WUDC/PAUDC Roster</span>
                 </div>
               </div>
 
@@ -101,7 +104,7 @@ export const BranchCards: React.FC<BranchCardsProps> = ({
             <div className="pt-3 border-t border-slate-800 flex flex-col sm:flex-row gap-2">
               <button
                 onClick={() => onStartOnboarding('Academy')}
-                className="flex-1 py-2.5 px-4 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-slate-950 font-serif font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-[#C89630] focus-visible:outline-hidden"
+                className="flex-1 py-2.5 px-4 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-[#181B1F] font-serif font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-[#C89630] focus-visible:outline-hidden"
               >
                 <span>Apply to Academy</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -119,22 +122,25 @@ export const BranchCards: React.FC<BranchCardsProps> = ({
           <div id="foundation" className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-7 flex flex-col justify-between shadow-lg">
             <div>
               <figure className="rounded-xl overflow-hidden mb-5 border border-slate-800 bg-slate-950/40">
-                <img 
-                  src="/images/geoffrey-youth-assembly.jpg" 
-                  alt="Geoffrey Anyona and youth scholars in community mentorship assembly" 
-                  className="w-full h-44 sm:h-52 object-cover object-[center_35%]"
-                  loading="lazy"
-                  decoding="async"
-                  width={600}
-                  height={350}
-                />
+                <picture>
+                  <source srcSet="/images/geoffrey-youth-assembly.webp" type="image/webp" />
+                  <img 
+                    src="/images/geoffrey-youth-assembly.jpg" 
+                    alt="Geoffrey Anyona and youth scholars in community mentorship assembly" 
+                    className="w-full h-44 sm:h-52 object-cover object-[center_35%]"
+                    loading="lazy"
+                    decoding="async"
+                    width={600}
+                    height={350}
+                  />
+                </picture>
                 <figcaption className="px-3.5 py-2 bg-slate-950/80 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono">
                   <span className="text-slate-300 uppercase tracking-wider font-semibold">Youth Outreach Assembly</span>
-                  <span className="text-emerald-500 uppercase tracking-widest">100% Grant-Funded</span>
+                  <span className="text-emerald-700 dark:text-emerald-400 uppercase tracking-widest font-semibold">100% Grant-Funded</span>
                 </figcaption>
               </figure>
 
-              <div className="text-[10px] font-mono tracking-widest uppercase text-emerald-500 font-bold">
+              <div className="text-[10px] font-mono tracking-widest uppercase text-emerald-700 dark:text-emerald-400 font-bold">
                 100% Free • Supported by Grants & Donors
               </div>
               <h3 className="text-xl sm:text-2xl font-serif font-bold text-slate-100 mt-0.5 mb-2">
@@ -149,7 +155,7 @@ export const BranchCards: React.FC<BranchCardsProps> = ({
               <div className="mb-4 p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1.5 text-[11px] font-mono">
                 <div className="flex justify-between text-slate-400">
                   <span>Tuition:</span>
-                  <span className="text-emerald-500 font-bold">100% Free (Grant Funded)</span>
+                  <span className="text-emerald-700 dark:text-emerald-400 font-bold">100% Free (Grant Funded)</span>
                 </div>
                 <div className="flex justify-between text-slate-400">
                   <span>Duration:</span>
@@ -161,7 +167,7 @@ export const BranchCards: React.FC<BranchCardsProps> = ({
                 </div>
                 <div className="flex justify-between text-slate-400">
                   <span>Outcome:</span>
-                  <span className="text-emerald-500 font-semibold">Advocacy Voice • Ongoing Circle Access</span>
+                  <span className="text-emerald-700 dark:text-emerald-400 font-semibold">Advocacy Voice • Ongoing Circle Access</span>
                 </div>
               </div>
 

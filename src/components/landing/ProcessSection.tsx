@@ -32,7 +32,7 @@ export const ProcessSection: React.FC = () => {
   return (
     <section className="py-12 sm:py-16 px-4 sm:px-8 max-w-6xl mx-auto text-left border-b border-slate-800">
       <div className="mb-10">
-        <div className="text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold">
+        <div className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
           Methodology & Development Model
         </div>
         <h2 className="text-2xl sm:text-3xl font-serif font-black text-slate-100 tracking-tight mt-1">
@@ -54,7 +54,7 @@ export const ProcessSection: React.FC = () => {
             >
               <div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono font-bold text-[#A06C18] dark:text-[#E3B95C]">
+                  <span className="text-xs font-mono font-bold text-[#7A4B06] dark:text-[#E3B95C]">
                     {step.num}
                   </span>
                   <div className="w-7 h-7 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-center text-slate-300">

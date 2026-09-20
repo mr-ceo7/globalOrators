@@ -116,7 +116,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12">
         {/* Editorial Section Kicker & Header */}
         <div className="max-w-3xl mb-12 sm:mb-16 text-left">
-          <div className="text-[10px] sm:text-xs font-mono tracking-widest uppercase text-[#C89630] font-bold mb-3">
+          <div className="text-[10px] sm:text-xs font-mono tracking-widest uppercase text-[#7A4B06] dark:text-[#E3B95C] font-bold mb-3">
             Direct Faculty Dispatch & Platform Governance
           </div>
           <h2 className="font-serif font-black text-3xl sm:text-4xl lg:text-5xl text-slate-100 tracking-tight leading-tight mb-4">
@@ -385,7 +385,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                       <label htmlFor="contact-message" className="text-xs font-mono uppercase tracking-wider text-slate-300 font-medium">
                         Statement of Intent / Message <span className="text-rose-400">*</span>
                       </label>
-                      <span className="text-[10px] font-mono text-slate-500">
+                      <span className="text-[10px] font-mono text-slate-600 dark:text-slate-400">
                         {message.length}/1500 chars
                       </span>
                     </div>
@@ -416,11 +416,11 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-3.5 bg-[#C89630] hover:bg-[#D9A741] text-slate-950 font-serif font-black text-sm rounded-xl transition-all shadow-lg hover:shadow-xl hover:shadow-[#C89630]/20 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-3.5 bg-[#C89630] hover:bg-[#D9A741] text-[#181B1F] font-serif font-black text-sm rounded-xl transition-all shadow-lg hover:shadow-xl hover:shadow-[#C89630]/20 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     >
                       {loading ? (
                         <>
-                          <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></div>
+                          <div className="w-4 h-4 border-2 border-[#181B1F] border-t-transparent rounded-full animate-spin"></div>
                           <span>Transmitting Dossier...</span>
                         </>
                       ) : (
@@ -430,7 +430,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                         </>
                       )}
                     </button>
-                    <p className="text-[10px] text-slate-500 mt-2">
+                    <p className="text-[10px] text-slate-600 dark:text-slate-400 mt-2">
                       Protected by 256-bit encryption. Your details are reviewed strictly by Global Orators faculty.
                     </p>
                   </div>

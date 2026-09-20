@@ -81,7 +81,7 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({
       {/* Hero Header */}
       <section className="py-10 sm:py-16 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800">
         <div className="max-w-3xl space-y-4">
-          <div className="text-[10px] font-mono tracking-widest text-[#A06C18] dark:text-[#E3B95C] uppercase font-bold">
+          <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
             Competitive & Executive Wing • Professional Fee & Accreditations
           </div>
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-serif font-black text-slate-100 tracking-tight leading-none">
@@ -122,7 +122,7 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({
               />
             </div>
             <figcaption className="px-4 py-3 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-[11px] font-mono uppercase tracking-widest text-slate-400">
-              <span className="text-[#A06C18] dark:text-[#E3B95C] font-semibold">Chamber Point of Information</span>
+              <span className="text-[#7A4B06] dark:text-[#E3B95C] font-semibold">Chamber Point of Information</span>
               <span>Parliamentary Floor Action</span>
             </figcaption>
           </figure>
@@ -159,7 +159,7 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({
           </div>
           <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
             <div className="text-[10px] font-mono uppercase text-slate-400">Tournament Track</div>
-            <div className="text-sm sm:text-base font-serif font-bold text-[#A06C18] dark:text-[#E3B95C] mt-1">WUDC & PAUDC</div>
+            <div className="text-sm sm:text-base font-serif font-bold text-[#7A4B06] dark:text-[#E3B95C] mt-1">WUDC & PAUDC</div>
             <div className="text-[11px] text-slate-400 mt-0.5">Continental delegations</div>
           </div>
           <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
@@ -173,7 +173,7 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({
       {/* 12-Week Curriculum Modules */}
       <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800">
         <div className="mb-10 text-left">
-          <div className="text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold">
+          <div className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
             Curriculum Structure
           </div>
           <h2 className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight mt-1">
@@ -190,7 +190,7 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({
             <div key={mod.num} className="p-5 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col justify-between space-y-4">
               <div>
                 <div className="flex items-center justify-between text-xs font-mono">
-                  <span className="font-bold text-[#A06C18] dark:text-[#E3B95C]">{mod.num}</span>
+                  <span className="font-bold text-[#7A4B06] dark:text-[#E3B95C]">{mod.num}</span>
                   <span className="text-slate-400">{mod.duration}</span>
                 </div>
                 <h3 className="font-serif font-bold text-sm sm:text-base text-slate-100 mt-2 leading-snug">
@@ -209,7 +209,7 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({
       <section className="py-12 sm:py-16 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800 text-left">
         <div className="p-6 sm:p-10 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-6">
           <div className="flex items-center gap-3">
-            <span className="text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold">
+            <span className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
               Scholar in Focus · Academy Debate Fellow
             </span>
             <div className="h-px bg-slate-800 flex-1" />
@@ -260,7 +260,7 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({
                 />
               </div>
               <div className="text-[10px] font-mono text-slate-400 flex items-center justify-between px-1">
-                <span className="text-[#A06C18] dark:text-[#E3B95C] uppercase font-bold">Tournament Floor Presence</span>
+                <span className="text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">Tournament Floor Presence</span>
                 <span>Pan-African Circuit</span>
               </div>
             </div>
@@ -294,7 +294,7 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({
       {/* Conversion CTAs */}
       <section className="py-14 sm:py-20 px-4 sm:px-8 text-center">
         <div className="max-w-2xl mx-auto space-y-4">
-          <div className="text-[10px] font-mono tracking-widest text-[#A06C18] dark:text-[#E3B95C] uppercase font-bold">
+          <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
             Applications Open for 2026 Cohorts
           </div>
           <h2 className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight">

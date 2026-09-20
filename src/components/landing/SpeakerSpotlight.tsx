@@ -11,7 +11,7 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
       <div className="max-w-6xl mx-auto space-y-14 sm:space-y-20">
         {/* Editorial Section Header */}
         <div className="max-w-3xl space-y-2">
-          <div className="text-[10px] font-mono tracking-widest text-[#A06C18] dark:text-[#E3B95C] uppercase font-bold">
+          <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
             Speaker Spotlight • The Living Movement
           </div>
           <h2 className="text-2xl sm:text-4xl lg:text-5xl font-serif font-black text-slate-100 tracking-tight leading-tight">
@@ -27,7 +27,7 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
         {/* ========================================================================= */}
         <div className="space-y-6">
           <div className="flex items-center gap-3">
-            <span className="text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold">
+            <span className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
               Dispatch 01 · Philosophy & Voice
             </span>
             <div className="h-px bg-slate-800 flex-1" />
@@ -37,7 +37,7 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
             {/* Left Column: Imani's Philosophy Card */}
             <div className="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 flex flex-col justify-between space-y-6 shadow-xl">
               <div className="space-y-4">
-                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#C89630]/10 border border-[#C89630]/20 text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold">
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#C89630]/10 border border-[#C89630]/20 text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
                   Philosophy & Rhetoric
                 </div>
 
@@ -55,15 +55,18 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
 
               <div className="pt-4 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <img 
-                    src="/images/hero-orator.jpg" 
-                    alt="Imani, Public Speaker and Orator Fellow" 
-                    className="w-10 h-10 rounded-full object-cover object-top border border-slate-700 shrink-0" 
-                    width={40}
-                    height={40}
-                    loading="lazy"
-                    decoding="async"
-                  />
+                  <picture>
+                    <source srcSet="/images/hero-orator.webp" type="image/webp" />
+                    <img 
+                      src="/images/hero-orator.jpg" 
+                      alt="Imani, Public Speaker and Orator Fellow" 
+                      className="w-10 h-10 rounded-full object-cover object-top border border-slate-700 shrink-0" 
+                      width={40}
+                      height={40}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </picture>
                   <div>
                     <div className="font-serif font-bold text-slate-100 text-sm">Imani</div>
                     <div className="text-[10px] text-slate-400 font-mono">Public Speaker & Philosopher · Orator Fellow</div>
@@ -71,7 +74,7 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
                 </div>
                 <button
                   onClick={() => onStartOnboarding('Academy')}
-                  className="px-4 py-2 rounded-lg bg-[#C89630] hover:bg-[#B37D22] text-slate-950 font-serif font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0"
+                  className="px-4 py-2 rounded-lg bg-[#C89630] hover:bg-[#B37D22] text-[#181B1F] font-serif font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0"
                 >
                   <span>Train With Orators</span>
                   <ArrowRight className="w-3 h-3" />
@@ -84,20 +87,23 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
               {/* Card 1: Debate Preparation (imani-prep.jpg) */}
               <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl flex flex-col justify-between">
                 <div className="h-64 sm:h-72 w-full overflow-hidden bg-slate-950">
-                  <img 
-                    src="/images/imani-prep.jpg" 
-                    alt="Imani studying and drafting philosophical debate arguments in her notebook" 
-                    className="w-full h-full object-cover object-[center_20%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500" 
-                    loading="lazy" 
-                    decoding="async"
-                    width={500}
-                    height={350}
-                  />
+                  <picture>
+                    <source srcSet="/images/imani-prep.webp" type="image/webp" />
+                    <img 
+                      src="/images/imani-prep.jpg" 
+                      alt="Imani studying and drafting philosophical debate arguments in her notebook" 
+                      className="w-full h-full object-cover object-[center_20%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500" 
+                      loading="lazy" 
+                      decoding="async"
+                      width={500}
+                      height={350}
+                    />
+                  </picture>
                 </div>
                 <figcaption className="p-3.5 bg-slate-900 border-t border-slate-800 space-y-1">
-                  <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold">
+                  <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
                     <span>Argument Architecture</span>
-                    <span className="text-slate-500 font-normal">Fahari Session</span>
+                    <span className="text-slate-600 dark:text-slate-400 font-normal">Fahari Session</span>
                   </div>
                   <p className="text-[11px] text-slate-300 leading-snug font-normal">
                     Imani drafting motion points and counter-theses prior to the parliamentary division.
@@ -108,20 +114,23 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
               {/* Card 2: Assembly Circle Dialogue (imani-dialogue.jpg) */}
               <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl flex flex-col justify-between">
                 <div className="h-64 sm:h-72 w-full overflow-hidden bg-slate-950">
-                  <img 
-                    src="/images/imani-dialogue.jpg" 
-                    alt="Imani passionately dialoguing and smiling with fellow debaters during an assembly circle" 
-                    className="w-full h-full object-cover object-[center_25%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500" 
-                    loading="lazy" 
-                    decoding="async"
-                    width={500}
-                    height={350}
-                  />
+                  <picture>
+                    <source srcSet="/images/imani-dialogue.webp" type="image/webp" />
+                    <img 
+                      src="/images/imani-dialogue.jpg" 
+                      alt="Imani passionately dialoguing and smiling with fellow debaters during an assembly circle" 
+                      className="w-full h-full object-cover object-[center_25%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500" 
+                      loading="lazy" 
+                      decoding="async"
+                      width={500}
+                      height={350}
+                    />
+                  </picture>
                 </div>
                 <figcaption className="p-3.5 bg-slate-900 border-t border-slate-800 space-y-1">
-                  <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold">
+                  <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
                     <span>Forensic Dialogue</span>
-                    <span className="text-slate-500 font-normal">Nairobi Circle</span>
+                    <span className="text-slate-600 dark:text-slate-400 font-normal">Nairobi Circle</span>
                   </div>
                   <p className="text-[11px] text-slate-300 leading-snug font-normal">
                     Collaborative peer critique: sharpening rhetoric through respectful interrogation.
@@ -140,7 +149,7 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
         {/* ========================================================================= */}
         <div className="space-y-6">
           <div className="flex items-center gap-3">
-            <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-500 font-bold">
+            <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-700 dark:text-emerald-400 font-bold">
               Dispatch 02 · Law, Forensics & Poetics
             </span>
             <div className="h-px bg-slate-800 flex-1" />
@@ -150,7 +159,7 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
             {/* Left Column: Milo's Philosophy Card */}
             <div className="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 flex flex-col justify-between space-y-6 shadow-xl">
               <div className="space-y-4">
-                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-mono uppercase tracking-widest text-emerald-400 font-bold">
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-mono uppercase tracking-widest text-emerald-700 dark:text-emerald-400 font-bold">
                   Jurisprudence & Debate
                 </div>
 
@@ -168,15 +177,18 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
 
               <div className="pt-4 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <img 
-                    src="/images/milo-podium.jpg" 
-                    alt="Milo Brian, Legal Scholar and Parliamentary Debater" 
-                    className="w-10 h-10 rounded-full object-cover object-top border border-slate-700 shrink-0" 
-                    width={40}
-                    height={40}
-                    loading="lazy"
-                    decoding="async"
-                  />
+                  <picture>
+                    <source srcSet="/images/milo-podium.webp" type="image/webp" />
+                    <img 
+                      src="/images/milo-podium.jpg" 
+                      alt="Milo Brian, Legal Scholar and Parliamentary Debater" 
+                      className="w-10 h-10 rounded-full object-cover object-top border border-slate-700 shrink-0" 
+                      width={40}
+                      height={40}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </picture>
                   <div>
                     <div className="font-serif font-bold text-slate-100 text-sm">Milo Brian</div>
                     <div className="text-[10px] text-slate-400 font-mono">Legal Scholar · Debater & Poet</div>
@@ -184,7 +196,7 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
                 </div>
                 <button
                   onClick={() => onStartOnboarding('Academy')}
-                  className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-serif font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0"
+                  className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-[#FFFFFF] font-serif font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0"
                 >
                   <span>Join Debate Squad</span>
                   <ArrowRight className="w-3 h-3" />
@@ -197,20 +209,23 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
               {/* Card 1: Championship Podium (milo-podium.jpg) */}
               <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl flex flex-col justify-between">
                 <div className="h-64 sm:h-72 w-full overflow-hidden bg-slate-950">
-                  <img 
-                    src="/images/milo-podium.jpg" 
-                    alt="Milo Brian delivering an award-winning speech at the podium with microphone" 
-                    className="w-full h-full object-cover object-[center_15%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500" 
-                    loading="lazy" 
-                    decoding="async"
-                    width={500}
-                    height={350}
-                  />
+                  <picture>
+                    <source srcSet="/images/milo-podium.webp" type="image/webp" />
+                    <img 
+                      src="/images/milo-podium.jpg" 
+                      alt="Milo Brian delivering an award-winning speech at the podium with microphone" 
+                      className="w-full h-full object-cover object-[center_15%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500" 
+                      loading="lazy" 
+                      decoding="async"
+                      width={500}
+                      height={350}
+                    />
+                  </picture>
                 </div>
                 <figcaption className="p-3.5 bg-slate-900 border-t border-slate-800 space-y-1">
-                  <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-emerald-400 font-bold">
+                  <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-emerald-700 dark:text-emerald-400 font-bold">
                     <span>Parliamentary Division</span>
-                    <span className="text-slate-500 font-normal">Tournament Circuit</span>
+                    <span className="text-slate-600 dark:text-slate-400 font-normal">Tournament Circuit</span>
                   </div>
                   <p className="text-[11px] text-slate-300 leading-snug font-normal">
                     Milo commanding the assembly floor with forensic precision, proving that intellect recognizes no artificial bounds.
@@ -221,20 +236,23 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
               {/* Card 2: Poetics & Case Construction (milo-prep.jpg) */}
               <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl flex flex-col justify-between">
                 <div className="h-64 sm:h-72 w-full overflow-hidden bg-slate-950">
-                  <img 
-                    src="/images/milo-prep.jpg" 
-                    alt="Milo Brian reviewing debate frameworks and poetry in front of a green chalkboard" 
-                    className="w-full h-full object-cover object-[center_30%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500" 
-                    loading="lazy" 
-                    decoding="async"
-                    width={500}
-                    height={350}
-                  />
+                  <picture>
+                    <source srcSet="/images/milo-prep.webp" type="image/webp" />
+                    <img 
+                      src="/images/milo-prep.jpg" 
+                      alt="Milo Brian reviewing debate frameworks and poetry in front of a green chalkboard" 
+                      className="w-full h-full object-cover object-[center_30%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500" 
+                      loading="lazy" 
+                      decoding="async"
+                      width={500}
+                      height={350}
+                    />
+                  </picture>
                 </div>
                 <figcaption className="p-3.5 bg-slate-900 border-t border-slate-800 space-y-1">
-                  <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-emerald-400 font-bold">
+                  <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-emerald-700 dark:text-emerald-400 font-bold">
                     <span>Poetics & Jurisprudence</span>
-                    <span className="text-slate-500 font-normal">Assembly Room</span>
+                    <span className="text-slate-600 dark:text-slate-400 font-normal">Assembly Room</span>
                   </div>
                   <p className="text-[11px] text-slate-300 leading-snug font-normal">
                     Analyzing constitutional jurisprudence and rhetorical rhythm: constructing arguments that withstand cross-examination.

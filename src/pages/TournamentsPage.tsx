@@ -82,7 +82,7 @@ export const TournamentsPage: React.FC<TournamentsPageProps> = ({
       {/* Hero Header */}
       <section className="py-10 sm:py-16 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800">
         <div className="max-w-3xl space-y-4">
-          <div className="text-[10px] font-mono tracking-widest text-[#A06C18] dark:text-[#E3B95C] uppercase font-bold">
+          <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
             Chapter III • The Global Arena & Forensic Podiums
           </div>
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-serif font-black text-slate-100 tracking-tight leading-none">
@@ -117,7 +117,7 @@ export const TournamentsPage: React.FC<TournamentsPageProps> = ({
               />
             </div>
             <figcaption className="px-4 py-3 bg-slate-900 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] font-mono uppercase tracking-widest text-slate-400">
-              <span className="text-[#A06C18] dark:text-[#E3B95C] font-semibold">International Adjudication Chamber</span>
+              <span className="text-[#7A4B06] dark:text-[#E3B95C] font-semibold">International Adjudication Chamber</span>
               <span>Continental Flags & Delegations</span>
             </figcaption>
           </figure>
@@ -142,7 +142,7 @@ export const TournamentsPage: React.FC<TournamentsPageProps> = ({
       {/* Major Championships Grid */}
       <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800">
         <div className="mb-10 text-left">
-          <div className="text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold">
+          <div className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
             Podium Track Record
           </div>
           <h2 className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight mt-1">
@@ -152,7 +152,7 @@ export const TournamentsPage: React.FC<TournamentsPageProps> = ({
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 text-left">
           <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-3 shadow-xs">
-            <div className="text-[10px] font-mono text-[#A06C18] dark:text-[#E3B95C] uppercase font-bold tracking-wider">
+            <div className="text-[10px] font-mono text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold tracking-wider">
               WUDC 2026 • Grand Finalists
             </div>
             <h3 className="text-lg font-serif font-bold text-slate-100">
@@ -182,7 +182,7 @@ export const TournamentsPage: React.FC<TournamentsPageProps> = ({
           </div>
 
           <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-3 shadow-xs">
-            <div className="text-[10px] font-mono text-[#A06C18] dark:text-[#E3B95C] uppercase font-bold tracking-wider">
+            <div className="text-[10px] font-mono text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold tracking-wider">
               WorldMUN 2026 • Best Delegation
             </div>
             <h3 className="text-lg font-serif font-bold text-slate-100">
@@ -201,7 +201,7 @@ export const TournamentsPage: React.FC<TournamentsPageProps> = ({
       {/* Debated Motions Archive */}
       <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800">
         <div className="mb-8 text-left">
-          <div className="text-[10px] font-mono tracking-widest text-[#A06C18] dark:text-[#E3B95C] uppercase font-bold">
+          <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
             The Motions • Real British Parliamentary Clashes
           </div>
           <h2 className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight mt-1">
@@ -217,7 +217,7 @@ export const TournamentsPage: React.FC<TournamentsPageProps> = ({
           {motions.map((m, i) => (
             <div key={i} className="p-5 rounded-xl bg-slate-900 border border-slate-800 space-y-2.5 shadow-xs">
               <div className="flex items-center justify-between text-[10px] font-mono">
-                <span className="text-[#A06C18] dark:text-[#E3B95C] font-semibold">{m.tournament}</span>
+                <span className="text-[#7A4B06] dark:text-[#E3B95C] font-semibold">{m.tournament}</span>
                 <span className="text-slate-400">{m.city}</span>
               </div>
               <p className="text-xs sm:text-sm font-serif font-bold text-slate-100 leading-snug">
@@ -235,7 +235,7 @@ export const TournamentsPage: React.FC<TournamentsPageProps> = ({
       {/* Squad Selection Standards */}
       <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-5xl mx-auto border-b border-slate-800">
         <div className="p-6 sm:p-8 rounded-2xl bg-slate-900 border border-slate-800 space-y-4 text-left">
-          <div className="text-xs font-mono text-[#A06C18] dark:text-[#E3B95C] uppercase tracking-widest font-bold">
+          <div className="text-xs font-mono text-[#7A4B06] dark:text-[#E3B95C] uppercase tracking-widest font-bold">
             Squad Tryout Criteria
           </div>
           <h3 className="text-xl sm:text-2xl font-serif font-bold text-slate-100">
@@ -255,7 +255,7 @@ export const TournamentsPage: React.FC<TournamentsPageProps> = ({
       {/* Conversion CTAs */}
       <section className="py-14 sm:py-20 px-4 sm:px-8 text-center">
         <div className="max-w-2xl mx-auto space-y-4">
-          <div className="text-[10px] font-mono tracking-widest text-[#A06C18] dark:text-[#E3B95C] uppercase font-bold">
+          <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
             Selection for 2026 Delegations
           </div>
           <h2 className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight">

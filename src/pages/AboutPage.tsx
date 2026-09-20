@@ -159,12 +159,12 @@ export const AboutPage: React.FC<AboutPageProps> = ({
       {/* Editorial Hero Header */}
       <section className="py-10 sm:py-16 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800">
         <div className="max-w-3xl space-y-4">
-          <div className="text-[10px] font-mono tracking-widest text-[#A06C18] dark:text-[#E3B95C] uppercase font-bold">
+          <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
             Chapter I • Intellectual Genesis & Movement Manifesto
           </div>
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-serif font-black text-slate-100 tracking-tight leading-none">
             Words Shape Nations. <br />
-            <span className="italic font-normal text-[#A06C18] dark:text-[#E3B95C]">
+            <span className="italic font-normal text-[#7A4B06] dark:text-[#E3B95C]">
               Silence Breaks Them.
             </span>
           </h1>
@@ -178,7 +178,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
       <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-5xl mx-auto border-b border-slate-800">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
           <div className="md:col-span-4">
-            <div className="text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold mb-2">
+            <div className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold mb-2">
               The Diagnosis
             </div>
             <h2 className="text-2xl sm:text-3xl font-serif font-bold text-slate-100 tracking-tight leading-snug">
@@ -207,7 +207,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
             loading="lazy" 
           />
           <figcaption className="px-4 py-2.5 bg-slate-900 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] font-mono uppercase tracking-widest text-slate-400">
-            <span className="text-[#A06C18] dark:text-[#E3B95C] font-semibold">Proposition Deliberation · Continental Assembly Forum · Maseru</span>
+            <span className="text-[#7A4B06] dark:text-[#E3B95C] font-semibold">Proposition Deliberation · Continental Assembly Forum · Maseru</span>
             <span>Policy Deconstruction & International Debate</span>
           </figcaption>
         </figure>
@@ -216,7 +216,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
       {/* Chapter 2: The Founder's Conviction & Leadership */}
       <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800 text-left">
         <div className="mb-10 text-left">
-          <div className="text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold">
+          <div className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
             Chapter II • Leadership & Founding Conviction
           </div>
           <h2 className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight mt-1">
@@ -240,7 +240,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
                 />
               </div>
               <figcaption className="p-3 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-slate-400">
-                <span className="text-[#A06C18] dark:text-[#E3B95C] font-bold">Geoffrey Anyona</span>
+                <span className="text-[#7A4B06] dark:text-[#E3B95C] font-bold">Geoffrey Anyona</span>
                 <span>Founder & Forensics Director</span>
               </figcaption>
             </figure>
@@ -264,7 +264,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
           {/* Right Column: Founder's Bio & Conviction */}
           <div className="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 flex flex-col justify-between space-y-6 shadow-xl">
             <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#C89630]/10 border border-[#C89630]/20 text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold">
+              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#C89630]/10 border border-[#C89630]/20 text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
                 Founder's Dispatch
               </div>
 
@@ -300,7 +300,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
                   <div className="text-[10px] text-slate-400 font-mono">Founder · Forensics Director · Writer</div>
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-[10px] font-mono text-[#A06C18] dark:text-[#E3B95C] px-3 py-1.5 rounded-lg bg-[#C89630]/10 border border-[#C89630]/20 font-semibold shrink-0">
+              <div className="flex items-center gap-2 text-[10px] font-mono text-[#7A4B06] dark:text-[#E3B95C] px-3 py-1.5 rounded-lg bg-[#C89630]/10 border border-[#C89630]/20 font-semibold shrink-0">
                 Nairobi • London • Global
               </div>
             </div>
@@ -311,7 +311,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
       {/* Chapter 3: Movement Directorate & Faculty */}
       <section id="team" className="py-12 sm:py-18 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800 text-left">
         <div className="mb-10 text-left">
-          <div className="text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold">
+          <div className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
             Chapter III • Directorate & Movement Faculty
           </div>
           <h2 className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight mt-1">
@@ -385,7 +385,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
       {/* Chapter 4: The Two Sovereign Pillars */}
       <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800">
         <div className="mb-10 text-left">
-          <div className="text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold">
+          <div className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
             Chapter IV • The Structural Architecture
           </div>
           <h2 className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight mt-1">
@@ -403,7 +403,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
               <div className="w-10 h-10 rounded-xl bg-[#C89630]/15 text-[#C89630] flex items-center justify-center">
                 <Compass className="w-5 h-5" />
               </div>
-              <div className="text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold">
+              <div className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
                 Pillar I • Competitive Mastery
               </div>
               <h3 className="text-xl sm:text-2xl font-serif font-bold text-slate-100">
@@ -417,7 +417,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
               <a 
                 href="/academy" 
                 onClick={(e) => { e.preventDefault(); onNavigate('/academy'); }}
-                className="inline-flex items-center gap-1.5 text-xs font-serif font-bold text-[#A06C18] dark:text-[#E3B95C] hover:underline"
+                className="inline-flex items-center gap-1.5 text-xs font-serif font-bold text-[#7A4B06] dark:text-[#E3B95C] hover:underline"
               >
                 <span>Explore Academy Curriculum</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -458,7 +458,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
       {/* Chapter 5: Pan-African Footprint */}
       <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800">
         <div className="mb-8 text-left">
-          <div className="text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold">
+          <div className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
             Chapter V • Regional Hubs
           </div>
           <h2 className="text-2xl sm:text-3xl font-serif font-black text-slate-100 tracking-tight mt-1">
@@ -469,22 +469,22 @@ export const AboutPage: React.FC<AboutPageProps> = ({
         {/* 2-Column Responsive Grid on Mobile / 4-Column on Desktop */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-left">
           <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-1.5">
-            <div className="text-xs font-mono font-bold text-[#A06C18] dark:text-[#E3B95C]">Nairobi, Kenya</div>
+            <div className="text-xs font-mono font-bold text-[#7A4B06] dark:text-[#E3B95C]">Nairobi, Kenya</div>
             <div className="font-serif font-bold text-xs sm:text-sm text-slate-100">Directorate & Head Chamber</div>
             <div className="text-[11px] text-slate-400">East African tournament delegations and shelter circle coordination.</div>
           </div>
           <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-1.5">
-            <div className="text-xs font-mono font-bold text-[#A06C18] dark:text-[#E3B95C]">Johannesburg, SA</div>
+            <div className="text-xs font-mono font-bold text-[#7A4B06] dark:text-[#E3B95C]">Johannesburg, SA</div>
             <div className="font-serif font-bold text-xs sm:text-sm text-slate-100">Southern African Circuit</div>
             <div className="text-[11px] text-slate-400">Parliamentary varsity debaters and constitutional policy forums.</div>
           </div>
           <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-1.5">
-            <div className="text-xs font-mono font-bold text-[#A06C18] dark:text-[#E3B95C]">Dakar, Senegal</div>
+            <div className="text-xs font-mono font-bold text-[#7A4B06] dark:text-[#E3B95C]">Dakar, Senegal</div>
             <div className="font-serif font-bold text-xs sm:text-sm text-slate-100">Francophone Division</div>
             <div className="text-[11px] text-slate-400">West African youth forensic exchange and bilingual debate preparation.</div>
           </div>
           <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-1.5">
-            <div className="text-xs font-mono font-bold text-[#A06C18] dark:text-[#E3B95C]">London & Global</div>
+            <div className="text-xs font-mono font-bold text-[#7A4B06] dark:text-[#E3B95C]">London & Global</div>
             <div className="font-serif font-bold text-xs sm:text-sm text-slate-100">Diaspora Liaison</div>
             <div className="text-[11px] text-slate-400">WUDC championship logistics and international foundation grants.</div>
           </div>
@@ -494,7 +494,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
       {/* Chapter 6: Movement FAQs */}
       <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-4xl mx-auto border-b border-slate-800">
         <div className="mb-8 text-left">
-          <div className="text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold">
+          <div className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
             Chapter VI • Frequently Asked Questions
           </div>
           <h2 className="text-2xl sm:text-3xl font-serif font-black text-slate-100 tracking-tight mt-1">
@@ -535,7 +535,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
       {/* Chapter 5: Conversion Actions */}
       <section className="py-14 sm:py-20 px-4 sm:px-8 text-center">
         <div className="max-w-2xl mx-auto space-y-5">
-          <div className="text-[10px] font-mono tracking-widest text-[#A06C18] dark:text-[#E3B95C] uppercase font-bold">
+          <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
             Applications & Partnerships
           </div>
           <h2 className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight">

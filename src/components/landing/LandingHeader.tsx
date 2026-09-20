@@ -43,7 +43,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
           <GlobalOratorsLogo className="w-8 h-8 sm:w-9 sm:h-9 shrink-0 transition-transform group-hover:scale-105" colorMode="gold" />
           <div>
             <div className="text-sm sm:text-base lg:text-lg font-serif font-black tracking-tight text-slate-100 leading-none">
-              Global <span className="text-[#A06C18] dark:text-[#E3B95C]">Orators</span>
+              Global <span className="text-[#7A4B06] dark:text-[#E3B95C]">Orators</span>
             </div>
             <div className="text-[9px] sm:text-[10px] text-slate-400 tracking-widest font-mono uppercase mt-0.5 whitespace-nowrap">
               speak with impact
@@ -220,7 +220,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
           {/* Primary Action Button (Desktop/Tablet) */}
           <button
             onClick={() => onStartOnboarding()}
-            className="hidden sm:flex px-3.5 sm:px-4 py-1.5 rounded-lg bg-[#C89630] hover:bg-[#B37D22] text-slate-950 font-serif font-bold text-xs shadow-md shadow-[#C89630]/20 items-center gap-1.5 transition-all whitespace-nowrap cursor-pointer focus-visible:ring-2 focus-visible:ring-[#C89630] focus-visible:outline-hidden"
+            className="hidden sm:flex px-3.5 sm:px-4 py-1.5 rounded-lg bg-[#C89630] hover:bg-[#B37D22] text-[#181B1F] font-serif font-bold text-xs shadow-md shadow-[#C89630]/20 items-center gap-1.5 transition-all whitespace-nowrap cursor-pointer focus-visible:ring-2 focus-visible:ring-[#C89630] focus-visible:outline-hidden"
           >
             <span>Apply Now</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -253,7 +253,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
                 navigate('/');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className={`px-3 py-2 rounded-lg font-semibold text-left transition-colors cursor-pointer ${currentPath === '/' ? 'text-[#C89630] bg-slate-900/70' : 'text-slate-200 hover:bg-slate-900 hover:text-[#C89630]'}`}
+              className={`px-3 py-2 rounded-lg font-semibold text-left transition-colors cursor-pointer ${currentPath === '/' ? 'text-[#7A4B06] dark:text-[#E3B95C] bg-slate-900/70' : 'text-slate-200 hover:bg-slate-900 hover:text-[#7A4B06] dark:hover:text-[#E3B95C]'}`}
             >
               Home
             </a>
@@ -264,7 +264,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
                 setMobileMenuOpen(false);
                 navigate('/about');
               }}
-              className={`px-3 py-2 rounded-lg font-semibold transition-colors ${currentPath === '/about' ? 'text-[#C89630] bg-slate-900/70' : 'text-slate-200 hover:bg-slate-900 hover:text-[#C89630]'}`}
+              className={`px-3 py-2 rounded-lg font-semibold transition-colors ${currentPath === '/about' ? 'text-[#7A4B06] dark:text-[#E3B95C] bg-slate-900/70' : 'text-slate-200 hover:bg-slate-900 hover:text-[#7A4B06] dark:hover:text-[#E3B95C]'}`}
             >
               About
             </a>
@@ -275,7 +275,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
                 setMobileMenuOpen(false);
                 navigate('/academy');
               }}
-              className={`px-3 py-2 rounded-lg font-semibold transition-colors ${currentPath === '/academy' ? 'text-[#C89630] bg-slate-900/70' : 'text-slate-200 hover:bg-slate-900 hover:text-[#C89630]'}`}
+              className={`px-3 py-2 rounded-lg font-semibold transition-colors ${currentPath === '/academy' ? 'text-[#7A4B06] dark:text-[#E3B95C] bg-slate-900/70' : 'text-slate-200 hover:bg-slate-900 hover:text-[#7A4B06] dark:hover:text-[#E3B95C]'}`}
             >
               Academy
             </a>
@@ -286,7 +286,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
                 setMobileMenuOpen(false);
                 navigate('/foundation');
               }}
-              className={`px-3 py-2 rounded-lg font-semibold transition-colors ${currentPath === '/foundation' ? 'text-[#C89630] bg-slate-900/70' : 'text-slate-200 hover:bg-slate-900 hover:text-[#C89630]'}`}
+              className={`px-3 py-2 rounded-lg font-semibold transition-colors ${currentPath === '/foundation' ? 'text-[#7A4B06] dark:text-[#E3B95C] bg-slate-900/70' : 'text-slate-200 hover:bg-slate-900 hover:text-[#7A4B06] dark:hover:text-[#E3B95C]'}`}
             >
               Foundation
             </a>
@@ -297,7 +297,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
                 setMobileMenuOpen(false);
                 navigate('/escapism');
               }}
-              className={`px-3 py-2 rounded-lg font-semibold transition-colors ${currentPath === '/escapism' ? 'text-[#C89630] bg-slate-900/70' : 'text-slate-200 hover:bg-slate-900 hover:text-[#C89630]'}`}
+              className={`px-3 py-2 rounded-lg font-semibold transition-colors ${currentPath === '/escapism' ? 'text-[#7A4B06] dark:text-[#E3B95C] bg-slate-900/70' : 'text-slate-200 hover:bg-slate-900 hover:text-[#7A4B06] dark:hover:text-[#E3B95C]'}`}
             >
               Escapism
             </a>
@@ -308,7 +308,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
                 setMobileMenuOpen(false);
                 navigate('/tournaments');
               }}
-              className={`px-3 py-2 rounded-lg font-semibold transition-colors ${currentPath === '/tournaments' ? 'text-[#C89630] bg-slate-900/70' : 'text-slate-200 hover:bg-slate-900 hover:text-[#C89630]'}`}
+              className={`px-3 py-2 rounded-lg font-semibold transition-colors ${currentPath === '/tournaments' ? 'text-[#7A4B06] dark:text-[#E3B95C] bg-slate-900/70' : 'text-slate-200 hover:bg-slate-900 hover:text-[#7A4B06] dark:hover:text-[#E3B95C]'}`}
             >
               Tournaments
             </a>
@@ -319,7 +319,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
                 setMobileMenuOpen(false);
                 navigate('/testimonials');
               }}
-              className={`px-3 py-2 rounded-lg font-semibold transition-colors ${currentPath === '/testimonials' ? 'text-[#C89630] bg-slate-900/70' : 'text-slate-200 hover:bg-slate-900 hover:text-[#C89630]'}`}
+              className={`px-3 py-2 rounded-lg font-semibold transition-colors ${currentPath === '/testimonials' ? 'text-[#7A4B06] dark:text-[#E3B95C] bg-slate-900/70' : 'text-slate-200 hover:bg-slate-900 hover:text-[#7A4B06] dark:hover:text-[#E3B95C]'}`}
             >
               Testimonials
             </a>
@@ -330,7 +330,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
                 setMobileMenuOpen(false);
                 navigate('/contact');
               }}
-              className={`px-3 py-2 rounded-lg font-semibold transition-colors ${currentPath === '/contact' ? 'text-[#C89630] bg-slate-900/70' : 'text-slate-200 hover:bg-slate-900 hover:text-[#C89630]'}`}
+              className={`px-3 py-2 rounded-lg font-semibold transition-colors ${currentPath === '/contact' ? 'text-[#7A4B06] dark:text-[#E3B95C] bg-slate-900/70' : 'text-slate-200 hover:bg-slate-900 hover:text-[#7A4B06] dark:hover:text-[#E3B95C]'}`}
             >
               Contact
             </a>
@@ -344,7 +344,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
                   setMobileMenuOpen(false);
                   onStartOnboarding();
                 }}
-                className="py-2.5 px-3 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-slate-950 font-serif font-bold text-xs shadow-md shadow-[#C89630]/20 flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap"
+                className="py-2.5 px-3 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-[#181B1F] font-serif font-bold text-xs shadow-md shadow-[#C89630]/20 flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap"
               >
                 <span>Apply Now</span>
                 <ArrowRight className="w-3.5 h-3.5" />

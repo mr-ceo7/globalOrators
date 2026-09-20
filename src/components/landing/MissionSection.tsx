@@ -6,7 +6,7 @@ export const MissionSection: React.FC = () => {
   return (
     <section id="mission" className="py-14 sm:py-20 px-4 sm:px-8 max-w-5xl mx-auto border-b border-slate-800">
       <div className="text-left space-y-3 mb-12">
-        <div className="text-[10px] font-mono tracking-widest text-[#A06C18] dark:text-[#E3B95C] uppercase font-bold">
+        <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
           Chapter I • The Diagnosis & The Remedy
         </div>
         <h2 className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight max-w-2xl">
@@ -19,21 +19,24 @@ export const MissionSection: React.FC = () => {
       <div className="p-6 sm:p-7 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-4 mb-10 text-left">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
           <div className="flex items-center gap-3.5">
-            <img 
-              src="/images/geoffrey-founder.jpg" 
-              alt="Geoffrey Anyona, Founder and Forensics Director of The Global Orators Project" 
-              className="w-12 h-12 rounded-full object-cover object-top border-2 border-[#C89630]/40 shrink-0" 
-              width={48}
-              height={48}
-              loading="lazy"
-              decoding="async"
-            />
+            <picture>
+              <source srcSet="/images/geoffrey-founder.webp" type="image/webp" />
+              <img 
+                src="/images/geoffrey-founder.jpg" 
+                alt="Geoffrey Anyona, Founder and Forensics Director of The Global Orators Project" 
+                className="w-12 h-12 rounded-full object-cover object-top border-2 border-[#C89630]/40 shrink-0" 
+                width={48}
+                height={48}
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
             <div>
               <div className="font-serif font-bold text-slate-100 text-sm sm:text-base">Geoffrey Anyona</div>
               <div className="text-[10px] text-slate-400 font-mono">Founder & Forensics Director · The Global Orators Project</div>
             </div>
           </div>
-          <div className="text-[10px] font-mono tracking-widest text-[#A06C18] dark:text-[#E3B95C] uppercase font-bold px-2.5 py-1 rounded-md bg-[#C89630]/10 border border-[#C89630]/20 self-start sm:self-center">
+          <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold px-2.5 py-1 rounded-md bg-[#C89630]/10 border border-[#C89630]/20 self-start sm:self-center">
             The Founding Conviction
           </div>
         </div>
@@ -53,21 +56,24 @@ export const MissionSection: React.FC = () => {
       <div className="p-6 sm:p-7 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-5 mb-10 text-left">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
           <div className="flex items-center gap-3.5">
-            <img
-              src="/images/tyrese-podium.jpg"
-              alt="Tyrese King’ori Nyawira, Co-Founder and Head Debate Coach of The Global Orators Project"
-              className="w-12 h-12 rounded-full object-cover object-[center_15%] border-2 border-[#C89630]/40 shrink-0"
-              width={48}
-              height={48}
-              loading="lazy"
-              decoding="async"
-            />
+            <picture>
+              <source srcSet="/images/tyrese-podium.webp" type="image/webp" />
+              <img
+                src="/images/tyrese-podium.jpg"
+                alt="Tyrese King’ori Nyawira, Co-Founder and Head Debate Coach of The Global Orators Project"
+                className="w-12 h-12 rounded-full object-cover object-[center_15%] border-2 border-[#C89630]/40 shrink-0"
+                width={48}
+                height={48}
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
             <div>
               <div className="font-serif font-bold text-slate-100 text-sm sm:text-base">Tyrese King’ori Nyawira</div>
               <div className="text-[10px] text-slate-400 font-mono">Co-Founder & Head Debate Coach · The Global Orators Project</div>
             </div>
           </div>
-          <div className="text-[10px] font-mono tracking-widest text-[#A06C18] dark:text-[#E3B95C] uppercase font-bold px-2.5 py-1 rounded-md bg-[#C89630]/10 border border-[#C89630]/20 self-start sm:self-center">
+          <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold px-2.5 py-1 rounded-md bg-[#C89630]/10 border border-[#C89630]/20 self-start sm:self-center">
             Co-Founding Conviction
           </div>
         </div>
@@ -91,16 +97,19 @@ export const MissionSection: React.FC = () => {
             {/* Visual 1: Rostrum Command (Tyrese.jpeg) */}
             <figure className="rounded-xl overflow-hidden border border-slate-800 bg-slate-950 flex flex-col justify-between">
               <div className="h-44 sm:h-52 w-full overflow-hidden">
-                <img
-                  src="/images/tyrese-podium.jpg"
-                  alt="Tyrese King’ori Nyawira delivering address at the City of Nairobi rostrum"
-                  className="w-full h-full object-cover object-[center_15%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500"
-                  loading="lazy"
-                  decoding="async"
-                />
+                <picture>
+                  <source srcSet="/images/tyrese-podium.webp" type="image/webp" />
+                  <img
+                    src="/images/tyrese-podium.jpg"
+                    alt="Tyrese King’ori Nyawira delivering address at the City of Nairobi rostrum"
+                    className="w-full h-full object-cover object-[center_15%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </picture>
               </div>
               <figcaption className="p-2 sm:p-2.5 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono">
-                <span className="text-[#A06C18] dark:text-[#E3B95C] font-semibold">Rostrum Address</span>
+                <span className="text-[#7A4B06] dark:text-[#E3B95C] font-semibold">Rostrum Address</span>
                 <span className="text-slate-400">Nairobi</span>
               </figcaption>
             </figure>
@@ -108,13 +117,16 @@ export const MissionSection: React.FC = () => {
             {/* Visual 2: Solo Championship Laureate with Trophy & Medals (tyrese2.jpeg) */}
             <figure className="rounded-xl overflow-hidden border border-slate-800 bg-slate-950 flex flex-col justify-between">
               <div className="h-44 sm:h-52 w-full overflow-hidden">
-                <img
-                  src="/images/tyrese-laureate.jpg"
-                  alt="Tyrese King’ori Nyawira, Championship Laureate holding trophy and gold medals"
-                  className="w-full h-full object-cover object-[center_20%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500"
-                  loading="lazy"
-                  decoding="async"
-                />
+                <picture>
+                  <source srcSet="/images/tyrese-laureate.webp" type="image/webp" />
+                  <img
+                    src="/images/tyrese-laureate.jpg"
+                    alt="Tyrese King’ori Nyawira, Championship Laureate holding trophy and gold medals"
+                    className="w-full h-full object-cover object-[center_20%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </picture>
               </div>
               <figcaption className="p-2 sm:p-2.5 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono">
                 <span className="text-emerald-500 font-semibold">Trophy & Medals</span>
@@ -125,13 +137,16 @@ export const MissionSection: React.FC = () => {
             {/* Visual 3: Championship Delegation Victory (tyrese1.jpeg) */}
             <figure className="col-span-2 sm:col-span-1 rounded-xl overflow-hidden border border-slate-800 bg-slate-950 flex flex-col justify-between">
               <div className="h-44 sm:h-52 w-full overflow-hidden">
-                <img
-                  src="/images/tyrese-delegation.jpg"
-                  alt="Tyrese King’ori Nyawira and debate champions celebrating tournament victory with trophies and medals"
-                  className="w-full h-full object-cover object-center filter contrast-[1.03] hover:scale-102 transition-transform duration-500"
-                  loading="lazy"
-                  decoding="async"
-                />
+                <picture>
+                  <source srcSet="/images/tyrese-delegation.webp" type="image/webp" />
+                  <img
+                    src="/images/tyrese-delegation.jpg"
+                    alt="Tyrese King’ori Nyawira and debate champions celebrating tournament victory with trophies and medals"
+                    className="w-full h-full object-cover object-center filter contrast-[1.03] hover:scale-102 transition-transform duration-500"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </picture>
               </div>
               <figcaption className="p-2 sm:p-2.5 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono">
                 <span className="text-slate-200 font-semibold">Championship Delegation</span>
@@ -146,7 +161,7 @@ export const MissionSection: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 text-left">
         {/* Pillar 1 */}
         <div className="space-y-4 text-xs sm:text-sm text-slate-300 leading-relaxed">
-          <div className="text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold">
+          <div className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
             The First Pillar • Deconditioning & Pan-African Enlightenment
           </div>
           <h3 className="text-xl sm:text-2xl font-serif font-bold text-slate-100">
@@ -165,7 +180,7 @@ export const MissionSection: React.FC = () => {
             />
             <figcaption className="px-3.5 py-2 bg-slate-950/80 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono">
               <span className="text-slate-300 uppercase tracking-wider font-semibold">Founding Inquiry</span>
-              <span className="text-[#C89630] uppercase tracking-widest">Cognitive Sovereignty</span>
+              <span className="text-[#7A4B06] dark:text-[#E3B95C] uppercase tracking-widest font-semibold">Cognitive Sovereignty</span>
             </figcaption>
           </figure>
 
@@ -183,7 +198,7 @@ export const MissionSection: React.FC = () => {
         {/* Pillar 2: Speaking as Escapism & Catharsis */}
         <div id="escapism" className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-7 space-y-4 shadow-xs flex flex-col justify-between">
           <div className="space-y-3.5">
-            <div className="text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold">
+            <div className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
               The Second Pillar • Mental Health & Voice
             </div>
             <h3 className="text-xl sm:text-2xl font-serif font-bold text-slate-100">
@@ -200,7 +215,7 @@ export const MissionSection: React.FC = () => {
             <VoiceDispatchPlayer />
           </div>
 
-          <div className="pt-3 border-t border-slate-800 flex items-center gap-2 text-xs font-serif italic text-[#A06C18] dark:text-[#E3B95C]">
+          <div className="pt-3 border-t border-slate-800 flex items-center gap-2 text-xs font-serif italic text-[#7A4B06] dark:text-[#E3B95C]">
             <Quote className="w-4 h-4 shrink-0" />
             <span>"To speak your truth is not a performance—it is your liberation."</span>
           </div>

@@ -7,7 +7,7 @@
   --brand-laurel: #8A93A0;
   --brand-cream: #FBF6F0;
   --brand-gold: #C89630;
-  --brand-gold-text: #A06C18;
+  --brand-gold-text: #7A4B06;
 
   --app-bg: #FBF6F0;
   --app-card: #FFFFFF;
@@ -17,15 +17,17 @@
   
   --app-fg: #181B1F;
   --app-fg-secondary: #353B45;
-  --app-muted: #5C6573;
-  --app-muted-light: #8E99A8;
+  --app-muted: #475569;
+  --app-muted-light: #526071;
   --app-white: #181B1F; /* Remap white to charcoal text in light mode */
 
   --app-accent: #C89630;
-  --app-accent-hover: #A06C18;
+  --app-accent-hover: #7A4B06;
   --app-accent-light: #FBF2DE;
 
-  --app-amber-text: #B45309;
+  --app-emerald: #065F46;
+
+  --app-amber-text: #92400E;
   --app-amber-bg: #FEF3C7;
 
   --app-cyan: #0891b2;
@@ -70,6 +72,8 @@
   --app-accent-hover: #E3B95C;
   --app-accent-light: #241D0E;
 
+  --app-emerald: #34D399;
+
   --app-amber-text: #FBBF24;
   --app-amber-bg: #78350F;
 
@@ -112,11 +116,11 @@
   --color-emerald-50: var(--app-fg);
   --color-emerald-100: var(--app-fg);
   --color-emerald-200: var(--app-fg-secondary);
-  --color-emerald-300: var(--app-accent);
-  --color-emerald-400: var(--app-accent);
-  --color-emerald-500: var(--app-accent);
-  --color-emerald-600: var(--app-accent-hover);
-  --color-emerald-700: var(--app-accent-hover);
+  --color-emerald-300: var(--app-emerald);
+  --color-emerald-400: var(--app-emerald);
+  --color-emerald-500: var(--app-emerald);
+  --color-emerald-600: var(--app-emerald);
+  --color-emerald-700: var(--app-emerald);
 
   --color-amber-400: var(--app-amber-text);
   --color-amber-500: var(--app-amber-text);

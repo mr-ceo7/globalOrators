@@ -16,7 +16,7 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
       <section id="testimonials" className="py-14 sm:py-20 px-4 sm:px-8 bg-slate-950 border-b border-slate-800 text-left">
         <div className="max-w-5xl mx-auto">
           <div className="mb-8">
-            <div className="text-[10px] font-mono tracking-widest text-[#A06C18] dark:text-[#E3B95C] uppercase font-bold">
+            <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
               Chapter IV • Living Proof & Safeguarding
             </div>
             <h2 className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight mt-1">
@@ -39,17 +39,20 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
 
           {/* Featured Community Storytelling Dispatch */}
           <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl mb-8">
-            <img 
-              src="/images/mentorship-circle.jpg" 
-              alt="African youth mentor coaching children and teenagers in a community storytelling circle in Nairobi" 
-              className="w-full h-56 sm:h-72 md:h-80 object-cover object-[center_35%] filter contrast-[1.05]" 
-              loading="lazy" 
-              decoding="async"
-              width={1000}
-              height={500}
-            />
+            <picture>
+              <source srcSet="/images/mentorship-circle.webp" type="image/webp" />
+              <img 
+                src="/images/mentorship-circle.jpg" 
+                alt="African youth mentor coaching children and teenagers in a community storytelling circle in Nairobi" 
+                className="w-full h-56 sm:h-72 md:h-80 object-cover object-[center_35%] filter contrast-[1.05]" 
+                loading="lazy" 
+                decoding="async"
+                width={1000}
+                height={500}
+              />
+            </picture>
             <figcaption className="px-4 py-2.5 bg-slate-900 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[10px] font-mono uppercase tracking-widest text-slate-400">
-              <span className="text-[#A06C18] dark:text-[#E3B95C] font-semibold">Community Storytelling Circle · Nairobi Shelter Network</span>
+              <span className="text-[#7A4B06] dark:text-[#E3B95C] font-semibold">Community Storytelling Circle · Nairobi Shelter Network</span>
               <span>Informed Consent Documented • Peer Mentorship</span>
             </figcaption>
           </figure>
@@ -61,21 +64,24 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
               </p>
               <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs">
                 <div className="flex items-center gap-3">
-                  <img 
-                    src="/images/hero-orator.jpg" 
-                    alt="Imani, Public Speaker and Orator Fellow" 
-                    className="w-10 h-10 rounded-full object-cover object-top border border-slate-700 shrink-0" 
-                    width={40}
-                    height={40}
-                    loading="lazy"
-                    decoding="async"
-                  />
+                  <picture>
+                    <source srcSet="/images/hero-orator.webp" type="image/webp" />
+                    <img 
+                      src="/images/hero-orator.jpg" 
+                      alt="Imani, Public Speaker and Orator Fellow" 
+                      className="w-10 h-10 rounded-full object-cover object-top border border-slate-700 shrink-0" 
+                      width={40}
+                      height={40}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </picture>
                   <div>
                     <div className="font-serif font-bold text-slate-100">Imani</div>
                     <div className="text-[10px] text-slate-400 font-mono">Public Speaker & Philosopher • Orator Fellow</div>
                   </div>
                 </div>
-                <div className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#C89630]/10 text-[#A06C18] dark:text-[#E3B95C] border border-[#C89630]/20 shrink-0">
+                <div className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#C89630]/10 text-[#7A4B06] dark:text-[#E3B95C] border border-[#C89630]/20 shrink-0">
                   Orator Fellow
                 </div>
               </div>
@@ -87,21 +93,24 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
               </p>
               <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs">
                 <div className="flex items-center gap-3">
-                  <img 
-                    src="/images/milo-podium.jpg" 
-                    alt="Milo Brian, Legal Scholar and Debater" 
-                    className="w-10 h-10 rounded-full object-cover object-top border border-slate-700 shrink-0" 
-                    width={40}
-                    height={40}
-                    loading="lazy"
-                    decoding="async"
-                  />
+                  <picture>
+                    <source srcSet="/images/milo-podium.webp" type="image/webp" />
+                    <img 
+                      src="/images/milo-podium.jpg" 
+                      alt="Milo Brian, Legal Scholar and Debater" 
+                      className="w-10 h-10 rounded-full object-cover object-top border border-slate-700 shrink-0" 
+                      width={40}
+                      height={40}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </picture>
                   <div>
                     <div className="font-serif font-bold text-slate-100">Milo Brian</div>
                     <div className="text-[10px] text-slate-400 font-mono">Legal Scholar, Award-Winning Debater & Poet</div>
                   </div>
                 </div>
-                <div className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 shrink-0">
+                <div className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
                   Academy Scholar
                 </div>
               </div>
@@ -113,7 +122,7 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
       {/* 7. Conversion Section: Specific Operational Actions */}
       <section className="py-14 sm:py-20 px-4 sm:px-8 border-b border-slate-800 text-center">
         <div className="max-w-3xl mx-auto space-y-5">
-          <div className="text-[10px] font-mono tracking-widest text-[#A06C18] dark:text-[#E3B95C] uppercase font-bold">
+          <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
             Applications & Partnerships
           </div>
           <h2 className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight">
@@ -126,7 +135,7 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
             <button
               onClick={() => onStartOnboarding()}
-              className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-slate-950 font-serif font-bold text-xs shadow-xl shadow-[#C89630]/25 flex items-center justify-center gap-2 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[#C89630] focus-visible:outline-hidden"
+              className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-[#181B1F] font-serif font-bold text-xs shadow-xl shadow-[#C89630]/25 flex items-center justify-center gap-2 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[#C89630] focus-visible:outline-hidden"
             >
               <span>Start Your Application</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -141,7 +150,7 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
           </div>
 
           <div className="pt-2 text-[11px] font-mono text-slate-400">
-            Direct Director Governance Inquiries: <a href="mailto:director@globalorators.org" className="text-[#A06C18] dark:text-[#E3B95C] underline hover:text-[#B37D22]">director@globalorators.org</a>
+            Direct Director Governance Inquiries: <a href="mailto:director@globalorators.org" className="text-[#7A4B06] dark:text-[#E3B95C] underline hover:text-[#B37D22]">director@globalorators.org</a>
           </div>
         </div>
       </section>

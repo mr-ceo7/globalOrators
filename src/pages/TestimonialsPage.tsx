@@ -99,7 +99,7 @@ export const TestimonialsPage: React.FC<TestimonialsPageProps> = ({
       {/* Hero Header */}
       <section className="py-10 sm:py-16 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800">
         <div className="max-w-3xl space-y-4">
-          <div className="text-[10px] font-mono tracking-widest text-[#A06C18] dark:text-[#E3B95C] uppercase font-bold">
+          <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
             Chapter IV • Living Proof & Ethical Safeguarding
           </div>
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-serif font-black text-slate-100 tracking-tight leading-none">
@@ -136,7 +136,7 @@ export const TestimonialsPage: React.FC<TestimonialsPageProps> = ({
             loading="lazy" 
           />
           <figcaption className="px-4 py-3 bg-slate-900 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] font-mono uppercase tracking-widest text-slate-400">
-            <span className="text-[#A06C18] dark:text-[#E3B95C] font-semibold">Community Storytelling Circle · Nairobi Shelter Network</span>
+            <span className="text-[#7A4B06] dark:text-[#E3B95C] font-semibold">Community Storytelling Circle · Nairobi Shelter Network</span>
             <span>Documented Consent • Trauma-Informed Peer Mentorship</span>
           </figcaption>
         </figure>
@@ -164,7 +164,7 @@ export const TestimonialsPage: React.FC<TestimonialsPageProps> = ({
                     <div className="text-[10px] text-slate-400 font-mono">{s.role} · {s.location}</div>
                   </div>
                 </div>
-                <div className={`text-[10px] font-mono px-2 py-0.5 rounded shrink-0 ${s.track.includes('Foundation') ? 'bg-[#C89630]/10 text-[#A06C18] dark:text-[#E3B95C] border border-[#C89630]/20' : 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'}`}>
+                <div className={`text-[10px] font-mono px-2 py-0.5 rounded shrink-0 ${s.track.includes('Foundation') ? 'bg-[#C89630]/10 text-[#7A4B06] dark:text-[#E3B95C] border border-[#C89630]/20' : 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'}`}>
                   {s.track}
                 </div>
               </div>
@@ -182,7 +182,7 @@ export const TestimonialsPage: React.FC<TestimonialsPageProps> = ({
             <div className="text-[10px] text-slate-400 mt-0.5">Across 4 African nations</div>
           </div>
           <div className="p-5 rounded-xl bg-slate-900 border border-slate-800">
-            <div className="text-2xl sm:text-3xl font-serif font-black text-[#A06C18] dark:text-[#E3B95C]">48</div>
+            <div className="text-2xl sm:text-3xl font-serif font-black text-[#7A4B06] dark:text-[#E3B95C]">48</div>
             <div className="text-xs font-bold text-slate-200 mt-1">Partner Institutions</div>
             <div className="text-[10px] text-slate-400 mt-0.5">Schools, shelters & councils</div>
           </div>
@@ -202,7 +202,7 @@ export const TestimonialsPage: React.FC<TestimonialsPageProps> = ({
       {/* Conversion Actions */}
       <section className="py-14 sm:py-20 px-4 sm:px-8 text-center">
         <div className="max-w-2xl mx-auto space-y-4">
-          <div className="text-[10px] font-mono tracking-widest text-[#A06C18] dark:text-[#E3B95C] uppercase font-bold">
+          <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
             Applications & Partnerships
           </div>
           <h2 className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight">
@@ -227,7 +227,7 @@ export const TestimonialsPage: React.FC<TestimonialsPageProps> = ({
             </button>
           </div>
           <div className="pt-4 text-[11px] font-mono text-slate-400">
-            Director Governance Inquiries: <a href="mailto:director@globalorators.org" className="text-[#A06C18] dark:text-[#E3B95C] underline">director@globalorators.org</a>
+            Director Governance Inquiries: <a href="mailto:director@globalorators.org" className="text-[#7A4B06] dark:text-[#E3B95C] underline">director@globalorators.org</a>
           </div>
         </div>
       </section>

@@ -78,7 +78,7 @@ export const VoiceDispatchPlayer: React.FC = () => {
       />
 
       <div className="flex items-center justify-between text-[10px] font-mono">
-        <span className="text-[#A06C18] dark:text-[#E3B95C] uppercase tracking-widest font-semibold flex items-center gap-1.5">
+        <span className="text-[#7A4B06] dark:text-[#E3B95C] uppercase tracking-widest font-semibold flex items-center gap-1.5">
           <Volume2 className="w-3.5 h-3.5 text-[#C89630]" />
           Voice Dispatch • Circle 07 (Nairobi)
         </span>
@@ -90,7 +90,7 @@ export const VoiceDispatchPlayer: React.FC = () => {
       <div className="flex items-center gap-3">
         <button
           onClick={togglePlayback}
-          className="w-10 h-10 rounded-full bg-[#C89630] hover:bg-[#B37D22] text-slate-950 font-bold flex items-center justify-center shrink-0 shadow-md shadow-[#C89630]/25 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[#C89630] focus-visible:outline-hidden"
+          className="w-10 h-10 rounded-full bg-[#C89630] hover:bg-[#B37D22] text-[#181B1F] font-bold flex items-center justify-center shrink-0 shadow-md shadow-[#C89630]/25 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[#C89630] focus-visible:outline-hidden"
           aria-label={isPlaying ? 'Pause voice dispatch' : 'Play voice dispatch'}
           title={isPlaying ? 'Pause voice excerpt' : 'Play voice excerpt'}
         >

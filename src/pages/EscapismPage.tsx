@@ -75,7 +75,7 @@ export const EscapismPage: React.FC<EscapismPageProps> = ({
       {/* Hero Header */}
       <section className="py-10 sm:py-16 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800">
         <div className="max-w-3xl space-y-4">
-          <div className="text-[10px] font-mono tracking-widest text-[#A06C18] dark:text-[#E3B95C] uppercase font-bold">
+          <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
             Chapter II • The Physiology of Speech & Mental Health
           </div>
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-serif font-black text-slate-100 tracking-tight leading-none">
@@ -91,7 +91,7 @@ export const EscapismPage: React.FC<EscapismPageProps> = ({
       <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-5xl mx-auto border-b border-slate-800">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
           <div className="md:col-span-4">
-            <div className="text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold mb-2">
+            <div className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold mb-2">
               The Somatic Toll
             </div>
             <h2 className="text-2xl sm:text-3xl font-serif font-bold text-slate-100 tracking-tight leading-snug">
@@ -105,7 +105,7 @@ export const EscapismPage: React.FC<EscapismPageProps> = ({
             <p>
               In many traditional homes, vulnerability was treated as weakness. Young people learned that survival required masking. But silence does not heal—it metastasizes into self-doubt, isolation, and depression.
             </p>
-            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 text-xs font-serif italic text-[#A06C18] dark:text-[#E3B95C]">
+            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 text-xs font-serif italic text-[#7A4B06] dark:text-[#E3B95C]">
               "To speak your truth is not a performance—it is your somatic liberation."
             </div>
           </div>
@@ -115,7 +115,7 @@ export const EscapismPage: React.FC<EscapismPageProps> = ({
       {/* Chapter 2: Interactive Voice Dispatch Player */}
       <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-4xl mx-auto border-b border-slate-800">
         <div className="text-left mb-6">
-          <div className="text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold">
+          <div className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
             Acoustic Evidence
           </div>
           <h2 className="text-2xl sm:text-3xl font-serif font-black text-slate-100 tracking-tight mt-1">
@@ -134,7 +134,7 @@ export const EscapismPage: React.FC<EscapismPageProps> = ({
       {/* Chapter 3: The 4 Therapeutic Vocal Protocols */}
       <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800">
         <div className="mb-10 text-left">
-          <div className="text-[10px] font-mono uppercase tracking-widest text-[#A06C18] dark:text-[#E3B95C] font-bold">
+          <div className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
             Methodology
           </div>
           <h2 className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight mt-1">
@@ -148,7 +148,7 @@ export const EscapismPage: React.FC<EscapismPageProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 text-left">
           {protocols.map((proto) => (
             <div key={proto.num} className="p-5 sm:p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
-              <div className="text-xs font-mono font-bold text-[#A06C18] dark:text-[#E3B95C]">
+              <div className="text-xs font-mono font-bold text-[#7A4B06] dark:text-[#E3B95C]">
                 Protocol {proto.num}
               </div>
               <h3 className="font-serif font-bold text-base sm:text-lg text-slate-100">
@@ -180,7 +180,7 @@ export const EscapismPage: React.FC<EscapismPageProps> = ({
       {/* Conversion Actions */}
       <section className="py-14 sm:py-20 px-4 sm:px-8 text-center">
         <div className="max-w-2xl mx-auto space-y-4">
-          <div className="text-[10px] font-mono tracking-widest text-[#A06C18] dark:text-[#E3B95C] uppercase font-bold">
+          <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
             Join a Supportive Cohort
           </div>
           <h2 className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight">

@@ -21,7 +21,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
             <div className="flex items-center gap-2.5">
               <GlobalOratorsLogo className="w-8 h-8 shrink-0" colorMode="gold" />
               <div className="font-serif font-black text-slate-100 text-sm tracking-tight">
-                Global <span className="text-[#A06C18] dark:text-[#E3B95C]">Orators</span> Project
+                Global <span className="text-[#7A4B06] dark:text-[#E3B95C]">Orators</span> Project
               </div>
             </div>
             <p className="text-[11px] text-slate-400 leading-relaxed max-w-sm">
