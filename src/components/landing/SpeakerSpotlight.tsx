@@ -196,7 +196,7 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
                 </div>
                 <button
                   onClick={() => onStartOnboarding('Academy')}
-                  className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-[#FFFFFF] font-serif font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0"
+                  className="px-4 py-2 rounded-lg bg-[#C89630] hover:bg-[#B37D22] text-[#181B1F] font-serif font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0"
                 >
                   <span>Join Debate Squad</span>
                   <ArrowRight className="w-3 h-3" />

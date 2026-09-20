@@ -84,9 +84,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onStartOnboarding }) =
                 onClick={() => onStartOnboarding('Foundation')}
                 className="px-4 py-2.5 rounded-xl border border-transparent hover:border-slate-800 text-slate-300 hover:text-slate-100 font-serif font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer group focus-visible:ring-2 focus-visible:ring-[#C89630] focus-visible:outline-hidden"
               >
-                <Heart className="w-4 h-4 text-emerald-500 shrink-0" />
+                <Heart className="w-4 h-4 text-[#C89630] shrink-0" />
                 <span>Apply for Fellowship</span>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-500 border border-emerald-500/30">
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#C89630]/15 text-[#7A4B06] dark:text-[#E3B95C] border border-[#C89630]/30 font-bold">
                   Grant Funded
                 </span>
                 <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-100 group-hover:translate-x-1 transition-all" />
@@ -136,7 +136,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onStartOnboarding }) =
               <div className="text-[9px] text-slate-400 font-mono mt-0.5">PAUDC, WUDC & Opens</div>
             </div>
             <div className="p-3.5 sm:p-4 rounded-xl bg-slate-900 border border-slate-800 text-left shadow-xs">
-              <div className="text-2xl sm:text-3xl font-serif font-black text-emerald-500">94%</div>
+              <div className="text-2xl sm:text-3xl font-serif font-black text-[#7A4B06] dark:text-[#E3B95C]">94%</div>
               <div className="text-[11px] text-slate-300 font-semibold mt-0.5">Vocal Breakthrough</div>
               <div className="text-[9px] text-slate-400 font-mono mt-0.5">Cohort self-assessment</div>
             </div>

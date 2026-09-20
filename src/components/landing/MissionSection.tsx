@@ -129,7 +129,7 @@ export const MissionSection: React.FC = () => {
                 </picture>
               </div>
               <figcaption className="p-2 sm:p-2.5 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono">
-                <span className="text-emerald-500 font-semibold">Trophy & Medals</span>
+                <span className="text-[#7A4B06] dark:text-[#E3B95C] font-semibold">Trophy & Medals</span>
                 <span className="text-slate-400">Forensic Laureate</span>
               </figcaption>
             </figure>

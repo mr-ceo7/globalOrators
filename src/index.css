@@ -116,11 +116,11 @@
   --color-emerald-50: var(--app-fg);
   --color-emerald-100: var(--app-fg);
   --color-emerald-200: var(--app-fg-secondary);
-  --color-emerald-300: var(--app-emerald);
-  --color-emerald-400: var(--app-emerald);
-  --color-emerald-500: var(--app-emerald);
-  --color-emerald-600: var(--app-emerald);
-  --color-emerald-700: var(--app-emerald);
+  --color-emerald-300: var(--app-accent);
+  --color-emerald-400: var(--app-accent);
+  --color-emerald-500: var(--app-accent);
+  --color-emerald-600: var(--app-accent-hover);
+  --color-emerald-700: var(--app-accent-hover);
 
   --color-amber-400: var(--app-amber-text);
   --color-amber-500: var(--app-amber-text);
