@@ -205,6 +205,7 @@ vi.mock('../services/apiClient', () => ({
       isRead: false
     }),
     markRead: vi.fn().mockResolvedValue({ status: 'ok', clientId: 'client-1' }),
+    sendTyping: vi.fn().mockResolvedValue({ status: 'ok', clientId: 'client-1', isTyping: true }),
     react: vi.fn().mockResolvedValue({
       id: 'msg-1',
       attachment: {

@@ -23,7 +23,9 @@ vi.mock('../services/apiClient', () => ({
   photosApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },
   messagesApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },
   activityApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },
-  inquiriesApi: { submit: vi.fn().mockResolvedValue({ status: 'success' }) }
+  inquiriesApi: { submit: vi.fn().mockResolvedValue({ status: 'success' }) },
+  coachesApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },
+  groupsApi: { getAll: vi.fn().mockResolvedValue([]), create: vi.fn(), startCall: vi.fn() },
 }));
 
 describe('Global Orators Minimalist Split-View ProgramBuilder', () => {

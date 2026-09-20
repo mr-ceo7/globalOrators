@@ -18,7 +18,9 @@ vi.mock('../services/apiClient', () => ({
   photosApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },
   messagesApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },
   activityApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },
-  inquiriesApi: { submit: vi.fn().mockResolvedValue({ status: 'success' }), list: vi.fn().mockResolvedValue([]) }
+  inquiriesApi: { submit: vi.fn().mockResolvedValue({ status: 'success' }), list: vi.fn().mockResolvedValue([]) },
+  coachesApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },
+  groupsApi: { getAll: vi.fn().mockResolvedValue([]), create: vi.fn(), startCall: vi.fn() },
 }));
 
 const NavigationTester: React.FC = () => {

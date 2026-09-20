@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import {
   Client,
   Exercise,
@@ -405,25 +405,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [onlineClientIds, setOnlineClientIds] = useState<string[]>([]);
   const [onlineUserIds, setOnlineUserIds] = useState<string[]>([]);
   const [typingUsers, setTypingUsers] = useState<Record<string, { userId: string; userName: string; role: string; timestamp: number }>>({});
-
-  // Periodic cleanup for typing indicators (clear after 4 seconds of inactivity)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const now = Date.now();
-      setTypingUsers(prev => {
-        let changed = false;
-        const next = { ...prev };
-        for (const [key, val] of Object.entries(next)) {
-          if (val && now - (val as { timestamp: number }).timestamp > 4000) {
-            delete next[key];
-            changed = true;
-          }
-        }
-        return changed ? next : prev;
-      });
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
+  const typingTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   // Faculty Coaches & Referrals
   const [coaches, setCoaches] = useState<CoachItem[]>([]);
@@ -915,22 +897,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const myId = currentCoachUser?.id || activeSpeakerProfile?.id;
         if (myId && data.userId === myId) return;
 
-        setTypingUsers(prev => {
-          if (!data.isTyping) {
+        if (typingTimeoutsRef.current[data.clientId]) {
+          clearTimeout(typingTimeoutsRef.current[data.clientId]);
+          delete typingTimeoutsRef.current[data.clientId];
+        }
+
+        if (!data.isTyping) {
+          setTypingUsers(prev => {
+            if (!prev[data.clientId]) return prev;
             const next = { ...prev };
             delete next[data.clientId];
             return next;
+          });
+          return;
+        }
+
+        setTypingUsers(prev => ({
+          ...prev,
+          [data.clientId]: {
+            userId: data.userId,
+            userName: data.userName || 'Someone',
+            role: data.role || 'user',
+            timestamp: Date.now()
           }
-          return {
-            ...prev,
-            [data.clientId]: {
-              userId: data.userId,
-              userName: data.userName || 'Someone',
-              role: data.role || 'user',
-              timestamp: Date.now()
-            }
-          };
-        });
+        }));
+
+        typingTimeoutsRef.current[data.clientId] = setTimeout(() => {
+          setTypingUsers(prev => {
+            if (!prev[data.clientId]) return prev;
+            const next = { ...prev };
+            delete next[data.clientId];
+            return next;
+          });
+          delete typingTimeoutsRef.current[data.clientId];
+        }, 4000);
       },
       onActivity: (activity) => {
         setActivityFeed(prev => [activity, ...prev]);
@@ -939,6 +939,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     return () => {
       disconnect();
+      for (const clientId in typingTimeoutsRef.current) {
+        clearTimeout(typingTimeoutsRef.current[clientId]);
+      }
+      typingTimeoutsRef.current = {};
     };
   }, [currentCoachUser, activeSpeakerProfile, showToast, refreshFromBackend]);
 
@@ -1577,10 +1581,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const sendTypingIndicator = useCallback(async (clientId: string, isTyping: boolean) => {
     if (!clientId) return;
-    try {
-      await messagesApi.sendTyping(clientId, isTyping);
-    } catch (e) {
-      console.debug('Failed to sync sendTyping:', e);
+    if (typeof messagesApi?.sendTyping === 'function') {
+      try {
+        await messagesApi.sendTyping(clientId, isTyping);
+      } catch (e) {
+        console.debug('Failed to sync sendTyping:', e);
+      }
     }
   }, []);
 

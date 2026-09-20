@@ -411,7 +411,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
   }, [activeMessages, inChatSearch]);
 
   // Helper to determine destination clientId
-  const getDestinationClientId = useCallback((): string => {
+  const destinationClientId = useMemo((): string => {
     if (activeConversation?.type === 'group') {
       return activeConversation.rawId;
     }
@@ -420,15 +420,18 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
       return `peer-${peerKey}`;
     }
     return pairedClient?.id || 'client-1';
-  }, [activeConversation, pairedClient?.id]);
+  }, [activeConversation?.type, activeConversation?.rawId, pairedClient?.id]);
+
+  const getDestinationClientId = useCallback((): string => {
+    return destinationClientId;
+  }, [destinationClientId]);
 
   // Mark messages as read on view
   useEffect(() => {
-    const destClientId = getDestinationClientId();
-    if (destClientId && markMessagesRead) {
-      markMessagesRead(destClientId);
+    if (destinationClientId && markMessagesRead) {
+      markMessagesRead(destinationClientId);
     }
-  }, [activeConversation?.id, activeMessages.length, markMessagesRead, getDestinationClientId]);
+  }, [destinationClientId, activeMessages.length, markMessagesRead]);
 
   // Auto-scroll to latest message
   useEffect(() => {

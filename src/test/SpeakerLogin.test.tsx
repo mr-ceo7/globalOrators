@@ -141,7 +141,9 @@ vi.mock('../services/apiClient', () => ({
   recordingsApi: { getAll: vi.fn().mockResolvedValue([]), upload: vi.fn().mockResolvedValue({}) },
   journalsApi: { getAll: vi.fn().mockResolvedValue([]), create: vi.fn().mockResolvedValue({}) },
   simulationsApi: { getAll: vi.fn().mockResolvedValue([]), create: vi.fn().mockResolvedValue({}) },
-  vaultApi: { getJournals: vi.fn().mockResolvedValue([]), getExecSimulations: vi.fn().mockResolvedValue([]) }
+  vaultApi: { getJournals: vi.fn().mockResolvedValue([]), getExecSimulations: vi.fn().mockResolvedValue([]) },
+  coachesApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },
+  groupsApi: { getAll: vi.fn().mockResolvedValue([]), create: vi.fn(), startCall: vi.fn() },
 }));
 
 describe('Speaker Login & Portal Integration Tests', () => {

@@ -60,6 +60,8 @@ vi.mock('../services/apiClient', () => ({
     }),
     list: vi.fn().mockResolvedValue([])
   },
+  coachesApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },
+  groupsApi: { getAll: vi.fn().mockResolvedValue([]), create: vi.fn(), startCall: vi.fn() },
 }));
 
 describe('Global Orators Landing Page & Features Tests', () => {
