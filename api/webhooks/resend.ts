@@ -151,7 +151,11 @@ ${origText}
           reply_to: origFrom,
           subject: `[Fwd: ${origTo}] ${origSubject}`,
           html: envelopeHtml,
-          text: envelopeText
+          text: envelopeText,
+          headers: {
+            'List-Unsubscribe': `<mailto:${FROM_EMAIL}?subject=unsubscribe>`,
+            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
+          }
         })
       });
 

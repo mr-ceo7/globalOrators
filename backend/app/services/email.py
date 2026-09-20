@@ -28,18 +28,28 @@ logger = logging.getLogger("globalorators.email")
 def _sanitize_public_url(url: Optional[str]) -> str:
     """
     Ensure all outbound links use the canonical production HTTPS domain.
-    Rewrites any localhost/127.0.0.1 references to https://globaloratorsproject.com
+    Rewrites any localhost/127.0.0.1/0.0.0.0 references to https://globaloratorsproject.com
     to protect domain reputation and prevent anti-phishing/spam false positives.
     """
     fallback_domain = "https://globaloratorsproject.com"
     if not url:
         return fallback_domain
     clean = url.strip()
-    if clean.startswith("http://localhost") or clean.startswith("http://127.0.0.1"):
+    lowered = clean.lower()
+    if (
+        lowered.startswith("http://localhost")
+        or lowered.startswith("https://localhost")
+        or lowered.startswith("http://127.0.0.1")
+        or lowered.startswith("https://127.0.0.1")
+        or lowered.startswith("http://0.0.0.0")
+        or lowered.startswith("https://0.0.0.0")
+    ):
         parsed = urlparse(clean)
         path = parsed.path or ""
         if parsed.query:
             path += f"?{parsed.query}"
+        if parsed.fragment:
+            path += f"#{parsed.fragment}"
         return f"{fallback_domain}{path}"
     return clean
 
@@ -67,7 +77,11 @@ def _dispatch_smtp_email_sync(recipient_email: str, subject: str, text_body: str
                 "subject": subject,
                 "html": html_body,
                 "text": text_body,
-                "reply_to": f"Global Orators Support <{settings.FROM_EMAIL}>"
+                "reply_to": f"Global Orators Support <{settings.FROM_EMAIL}>",
+                "headers": {
+                    "List-Unsubscribe": f"<mailto:{settings.FROM_EMAIL}?subject=unsubscribe>",
+                    "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"
+                }
             }
             with httpx.Client(timeout=10.0) as client:
                 res = client.post("https://api.resend.com/emails", headers=headers, json=payload)
@@ -92,6 +106,8 @@ def _dispatch_smtp_email_sync(recipient_email: str, subject: str, text_body: str
     msg["From"] = f"Global Orators <{settings.FROM_EMAIL}>"
     msg["To"] = recipient_email
     msg["Reply-To"] = f"Global Orators Support <{settings.FROM_EMAIL}>"
+    msg["List-Unsubscribe"] = f"<mailto:{settings.FROM_EMAIL}?subject=unsubscribe>"
+    msg["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click"
     msg["Date"] = email.utils.formatdate(localtime=True)
     msg["Message-ID"] = email.utils.make_msgid(domain=from_domain)
 
@@ -150,7 +166,7 @@ def _wrap_editorial_html(kicker: str, headline: str, lead_text: str, content_htm
         </div>
         """
 
-    logo_url = f"{settings.APP_URL.rstrip('/')}/logo-icon.png"
+    logo_url = f"{_sanitize_public_url(settings.APP_URL).rstrip('/')}/logo-icon.png"
 
     return f"""<!DOCTYPE html>
 <html lang="en">

@@ -2234,9 +2234,11 @@ async def test_email_deliverability_and_antispam_compliance():
     )
     from unittest.mock import patch, MagicMock
 
-    # 1. Verify URL sanitization rewrites localhost/127.0.0.1 and preserves HTTPS
+    # 1. Verify URL sanitization rewrites localhost/127.0.0.1/0.0.0.0 and preserves HTTPS
     assert _sanitize_public_url("http://localhost:3000/speaker") == "https://globaloratorsproject.com/speaker"
     assert _sanitize_public_url("http://127.0.0.1:5173/coach?tab=inquiries") == "https://globaloratorsproject.com/coach?tab=inquiries"
+    assert _sanitize_public_url("http://0.0.0.0:8000/coach#review") == "https://globaloratorsproject.com/coach#review"
+    assert _sanitize_public_url("https://localhost:3000/speaker") == "https://globaloratorsproject.com/speaker"
     assert _sanitize_public_url("https://globaloratorsproject.com/speaker") == "https://globaloratorsproject.com/speaker"
     assert _sanitize_public_url("https://app.globaloratorsproject.com/coach") == "https://app.globaloratorsproject.com/coach"
     assert _sanitize_public_url(None) == "https://globaloratorsproject.com"
@@ -2297,6 +2299,8 @@ async def test_email_deliverability_and_antispam_compliance():
         assert sent_msg["To"] == "test.speaker@example.com"
         assert sent_msg["Reply-To"] == "Global Orators Support <globaloratorsproject@gmail.com>"
         assert sent_msg["Subject"] == "New message from Head Coach Qassim · Global Orators"
+        assert sent_msg["List-Unsubscribe"] == "<mailto:globaloratorsproject@gmail.com?subject=unsubscribe>"
+        assert sent_msg["List-Unsubscribe-Post"] == "List-Unsubscribe=One-Click"
 
         # Check decoded payload parts for zero localhost references
         parts = [part.get_payload(decode=True).decode("utf-8") for part in sent_msg.get_payload()]
@@ -2334,6 +2338,8 @@ async def test_email_deliverability_and_antispam_compliance():
         assert called_kwargs["headers"]["Authorization"] == "Bearer re_test_key_12345"
         assert called_kwargs["json"]["from"] == "Global Orators <auth@globaloratorsproject.com>"
         assert called_kwargs["json"]["to"] == ["speaker@example.com"]
+        assert called_kwargs["json"]["headers"]["List-Unsubscribe"] == "<mailto:auth@globaloratorsproject.com?subject=unsubscribe>"
+        assert called_kwargs["json"]["headers"]["List-Unsubscribe-Post"] == "List-Unsubscribe=One-Click"
 
 
 @pytest.mark.asyncio
@@ -2420,6 +2426,8 @@ async def test_inbound_forwarder_lifecycle_and_idempotency():
             assert post_kwargs["to"] == ["kassimmusa322@gmail.com"]
             assert post_kwargs["reply_to"] == "applicant@cambridge.edu"
             assert "Debate Fellowship" in post_kwargs["subject"]
+            assert post_kwargs["headers"]["List-Unsubscribe"] == f"<mailto:{settings.FROM_EMAIL}?subject=unsubscribe>"
+            assert post_kwargs["headers"]["List-Unsubscribe-Post"] == "List-Unsubscribe=One-Click"
 
             # Verify DB entry
             saved = await session.get(InboundEmail, email_id)

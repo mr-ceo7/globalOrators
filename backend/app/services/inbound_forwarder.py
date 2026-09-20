@@ -177,7 +177,11 @@ async def fetch_and_forward_inbound_email(email_id: str, db: AsyncSession) -> Di
         "reply_to": orig_from,
         "subject": f"[Fwd: {orig_to}] {orig_subject}",
         "html": envelope["html"],
-        "text": envelope["text"]
+        "text": envelope["text"],
+        "headers": {
+            "List-Unsubscribe": f"<mailto:{settings.FROM_EMAIL}?subject=unsubscribe>",
+            "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"
+        }
     }
 
     send_url = "https://api.resend.com/emails"
