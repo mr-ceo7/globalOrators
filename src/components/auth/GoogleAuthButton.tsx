@@ -76,7 +76,7 @@ export const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
     >
       {loading ? (
         <div className="w-full py-2.5 px-4 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 font-sans text-xs flex items-center justify-center gap-2">
-          <Loader2 className="w-4 h-4 animate-spin text-[#C89630]" />
+          <Loader2 className="w-4 h-4 animate-spin text-brand-gold" />
           <span>Verifying Google Identity...</span>
         </div>
       ) : (

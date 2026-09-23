@@ -18,6 +18,8 @@ import {
 import { useApp, NavigationTab } from '../../context/AppContext';
 import { GlobalOratorsLogo } from '../common/GlobalOratorsLogo';
 import { OratorAvatar } from '../common/OratorAvatar';
+import { localDateString } from '../../utils/date';
+import { getStoredUser, isHeadCoach } from '../../utils/roles';
 
 
 export const Sidebar: React.FC = () => {
@@ -33,32 +35,22 @@ export const Sidebar: React.FC = () => {
   const unreadCount = messages.filter(m => m.sender === 'client' && !m.isRead).length;
 
   // Today's pending sessions count
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = localDateString();
   const todayPendingCount = scheduledWorkouts.filter(w => w.date === todayStr && w.status === 'Scheduled').length;
 
-  const currentUser = (() => {
-    try {
-      const stored = localStorage.getItem('globalorators_user') || localStorage.getItem('nubianfit_user');
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
-  })();
-
-  const isHeadCoach = currentUser?.id === 'coach-1' || currentUser?.email?.toLowerCase() === 'kassimmusa322@gmail.com' || currentUser?.email?.toLowerCase() === 'coach@globalorators.com';
-  // Mirrors the backend's require_head_coach (coach-1 or DEFAULT_COACH_EMAIL).
-  const canManageInvoices = currentUser?.id === 'coach-1' || currentUser?.email?.toLowerCase() === 'kassimmusa322@gmail.com';
+  const currentUser = getStoredUser();
+  const headCoach = isHeadCoach(currentUser);
 
   const navItems: { id: NavigationTab; label: string; icon: React.FC<{ className?: string }>; badge?: number; badgeColor?: string }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'clients', label: 'Speakers & Debaters', icon: Users, badge: clients.filter(c => c.status === 'Active').length },
-    ...(isHeadCoach ? [{ id: 'coaches' as NavigationTab, label: 'Faculty Coaches', icon: ShieldCheck, badge: coaches.length }] : []),
+    ...(headCoach ? [{ id: 'coaches' as NavigationTab, label: 'Faculty Coaches', icon: ShieldCheck, badge: coaches.length }] : []),
     { id: 'programs', label: 'Curriculum Builder', icon: ScrollText },
     { id: 'exercises', label: 'Drill & Speech Library', icon: BookOpen },
     { id: 'calendar', label: 'Session Schedule', icon: CalendarDays, badge: todayPendingCount > 0 ? todayPendingCount : undefined, badgeColor: 'bg-emerald-500' },
     { id: 'progress', label: 'Speech Analytics', icon: TrendingUp },
     { id: 'messenger', label: 'Messenger', icon: MessageSquare, badge: unreadCount > 0 ? unreadCount : undefined, badgeColor: 'bg-cyan-500' },
-    ...(canManageInvoices ? [{ id: 'invoices' as NavigationTab, label: 'Invoices & Billing', icon: Receipt }] : [])
+    ...(headCoach ? [{ id: 'invoices' as NavigationTab, label: 'Invoices & Billing', icon: Receipt }] : [])
   ];
 
   return (
@@ -78,7 +70,7 @@ export const Sidebar: React.FC = () => {
               <GlobalOratorsLogo className="w-8 h-8 shrink-0" colorMode="gold" />
               <div className="flex flex-col items-stretch">
                 <span className="font-serif font-black text-[16px] tracking-tight text-slate-100 block leading-none">
-                  Global<span className="text-[#C89630]">Orators</span>
+                  Global<span className="text-brand-gold">Orators</span>
                 </span>
                 <div className="flex justify-between text-[8px] text-slate-400 font-mono tracking-widest uppercase mt-1 w-full leading-none">
                   <span>speak</span>
@@ -86,7 +78,7 @@ export const Sidebar: React.FC = () => {
                   <span>impact</span>
                 </div>
               </div>
-              <span className="text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-md bg-[#C89630]/10 text-[#C89630] border border-[#C89630]/30 leading-none self-start mt-0.5">
+              <span className="text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-md bg-[#C89630]/10 text-brand-gold border border-[#C89630]/30 leading-none self-start mt-0.5">
                 Coach
               </span>
             </div>
@@ -197,9 +189,9 @@ export const Sidebar: React.FC = () => {
         <div className="flex items-center gap-3">
           {(() => {
             const user = currentUser;
-            const coachName = user?.full_name || (isHeadCoach ? 'Head Coach Qassim' : 'Faculty Coach');
-            const coachTitle = isHeadCoach ? 'Head Speech & Debate Coach' : 'Faculty Coach';
-            const initials = coachName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || (isHeadCoach ? 'HQ' : 'FC');
+            const coachName = user?.full_name || (headCoach ? 'Head Coach Qassim' : 'Faculty Coach');
+            const coachTitle = headCoach ? 'Head Speech & Debate Coach' : 'Faculty Coach';
+            const initials = coachName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || (headCoach ? 'HQ' : 'FC');
 
             return (
               <>

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { ScheduledWorkout } from '../../types';
+import { localDateString } from '../../utils/date';
 
 export const CalendarScheduler: React.FC = () => {
   const { 
@@ -25,7 +26,7 @@ export const CalendarScheduler: React.FC = () => {
     setActiveTab
   } = useApp();
 
-  const todayDateStr = React.useMemo(() => new Date().toISOString().split('T')[0], []);
+  const todayDateStr = localDateString();
   const [selectedClientFilter, setSelectedClientFilter] = useState<string>('All');
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);

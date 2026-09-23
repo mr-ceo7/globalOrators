@@ -163,7 +163,7 @@ export const SpeakerLoginPortal: React.FC = () => {
           <GlobalOratorsLogo className="w-8 h-8" colorMode="gold" />
           <div className="flex flex-col">
             <span className="font-serif font-bold text-sm tracking-tight text-white">Global Orators</span>
-            <span className="text-[10px] font-mono tracking-widest text-[#C89630] uppercase">Orators App</span>
+            <span className="text-[10px] font-mono tracking-widest text-brand-gold uppercase">Orators App</span>
           </div>
         </div>
 
@@ -179,7 +179,7 @@ export const SpeakerLoginPortal: React.FC = () => {
             onClick={() => setCurrentPortal('coach_os')}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-800 hover:border-slate-700 bg-slate-900/60 hover:bg-slate-900 text-slate-300 hover:text-white transition-all cursor-pointer"
           >
-            <ShieldCheck className="w-3.5 h-3.5 text-[#C89630]" />
+            <ShieldCheck className="w-3.5 h-3.5 text-brand-gold" />
             <span className="hidden sm:inline">Coach App</span>
           </button>
         </div>
@@ -192,7 +192,7 @@ export const SpeakerLoginPortal: React.FC = () => {
             <GlobalOratorsLogo className="w-12 h-12 mx-auto mb-4 animate-pulse" colorMode="gold" />
             <h2 className="text-2xl font-serif font-bold text-white mb-2">Authenticating Magic Link</h2>
             <p className="text-xs text-slate-400 mb-6">Verifying your cryptographic token and preparing your Orators App workspace...</p>
-            <div className="flex justify-center items-center gap-2 text-xs font-mono text-[#C89630]">
+            <div className="flex justify-center items-center gap-2 text-xs font-mono text-brand-gold">
               <Loader2 className="w-4 h-4 animate-spin" />
               <span>Establishing session...</span>
             </div>
@@ -201,7 +201,7 @@ export const SpeakerLoginPortal: React.FC = () => {
           <div className="w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-2xl p-5 sm:p-8 shadow-2xl shadow-black/80 backdrop-blur-sm overflow-hidden">
             {/* Header Greeting & Title */}
             <div className="text-center mb-6">
-              <div className="text-xs font-serif italic text-[#C89630] mb-2 tracking-wide">
+              <div className="text-xs font-serif italic text-brand-gold mb-2 tracking-wide">
                 Welcome, Speaker
               </div>
               <h1 className="text-2xl sm:text-3xl font-serif font-bold text-white tracking-tight">
@@ -218,7 +218,7 @@ export const SpeakerLoginPortal: React.FC = () => {
           {step === 'otp' && (
             <div className="mb-5 p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 min-w-0">
-                <Mail className="w-4 h-4 text-[#C89630] shrink-0" />
+                <Mail className="w-4 h-4 text-brand-gold shrink-0" />
                 <div className="truncate text-xs font-mono text-slate-200">
                   {email}
                 </div>
@@ -226,7 +226,7 @@ export const SpeakerLoginPortal: React.FC = () => {
               <button
                 type="button"
                 onClick={handleResetToEmail}
-                className="text-[11px] font-mono text-[#C89630] hover:text-[#E3B95C] underline shrink-0 cursor-pointer"
+                className="text-[11px] font-mono text-brand-gold hover:text-[#E3B95C] underline shrink-0 cursor-pointer"
               >
                 Change
               </button>
@@ -260,7 +260,7 @@ export const SpeakerLoginPortal: React.FC = () => {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <Mail className="w-4 h-4 text-[#C89630]" />
+                    <Mail className="w-4 h-4 text-brand-gold" />
                   </div>
                   <input
                     id="speaker-email-input"
@@ -278,7 +278,7 @@ export const SpeakerLoginPortal: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full mt-2 py-3 px-4 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-slate-950 font-serif font-bold text-sm shadow-lg shadow-[#C89630]/20 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full mt-2 py-3 px-4 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-on-gold font-serif font-bold text-sm shadow-lg shadow-[#C89630]/20 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <>
@@ -318,7 +318,7 @@ export const SpeakerLoginPortal: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setCurrentPortal('onboarding')}
-                  className="text-xs text-slate-400 hover:text-[#C89630] transition-colors cursor-pointer"
+                  className="text-xs text-slate-400 hover:text-brand-gold transition-colors cursor-pointer"
                 >
                   New to Global Orators? <span className="underline font-semibold text-slate-300">Apply & Onboard</span>
                 </button>
@@ -336,7 +336,7 @@ export const SpeakerLoginPortal: React.FC = () => {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <KeyRound className="w-4 h-4 text-[#C89630]" />
+                    <KeyRound className="w-4 h-4 text-brand-gold" />
                   </div>
                   <input
                     id="speaker-otp-input"
@@ -357,7 +357,7 @@ export const SpeakerLoginPortal: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading || otpCode.length < 6}
-                className="w-full mt-2 py-3 px-4 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-slate-950 font-serif font-bold text-sm shadow-lg shadow-[#C89630]/20 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full mt-2 py-3 px-4 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-on-gold font-serif font-bold text-sm shadow-lg shadow-[#C89630]/20 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <>
@@ -400,7 +400,7 @@ export const SpeakerLoginPortal: React.FC = () => {
             Faculty coaches and adjudicators should log in via{' '}
             <button
               onClick={() => setCurrentPortal('coach_os')}
-              className="text-[#C89630] hover:text-[#E3B95C] underline font-semibold cursor-pointer"
+              className="text-brand-gold hover:text-[#E3B95C] underline font-semibold cursor-pointer"
             >
               Coach App
             </button>

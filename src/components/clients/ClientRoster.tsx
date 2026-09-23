@@ -28,6 +28,8 @@ import { useApp } from '../../context/AppContext';
 import { Client, ClientStatus, SpeakingGoal, ExperienceLevel } from '../../types';
 import { ClientProfileModal } from './ClientProfileModal';
 import { OratorAvatar } from '../common/OratorAvatar';
+import { localDateString } from '../../utils/date';
+import { isHeadCoach } from '../../utils/roles';
 
 export const ClientRoster: React.FC<{
   isAddModalOpen: boolean;
@@ -105,10 +107,7 @@ export const ClientRoster: React.FC<{
     }
   };
 
-  const isHeadCoach = useMemo(() => {
-    if (!currentUser) return false;
-    return currentUser.email?.toLowerCase() === 'kassimmusa322@gmail.com' || currentUser.id === 'coach-1';
-  }, [currentUser]);
+  const headCoach = useMemo(() => isHeadCoach(currentUser), [currentUser]);
 
   const getCoachName = useMemo(() => {
     const map = new Map(coaches.map(c => [c.id, c.name]));
@@ -174,7 +173,7 @@ export const ClientRoster: React.FC<{
         catharsisScore: formBranch === 'Foundation' ? 90 : 72,
         goal: formGoal,
         experienceLevel: formExperience,
-        startDate: new Date().toISOString().split('T')[0],
+        startDate: localDateString(),
         startingWeightKg: Number(formWeight),
         currentWeightKg: Number(formWeight),
         targetWeightKg: Number(formTargetWeight),
@@ -276,7 +275,7 @@ export const ClientRoster: React.FC<{
             className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-850 text-slate-300 hover:text-white font-mono text-xs transition-all cursor-pointer"
             title="Copy speaker invite link"
           >
-            <Link2 className="h-4 w-4 text-[#C89630]" />
+            <Link2 className="h-4 w-4 text-brand-gold" />
             <span>Invite Speaker</span>
           </button>
 

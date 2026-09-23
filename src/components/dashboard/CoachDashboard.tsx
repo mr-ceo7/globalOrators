@@ -18,6 +18,7 @@ import {
 import { useApp } from '../../context/AppContext';
 import { ScheduledWorkout } from '../../types';
 import { LiveRehearsalRoom } from '../live/LiveRehearsalRoom';
+import { localDateString } from '../../utils/date';
 
 export const CoachDashboard: React.FC<{
   onOpenNewClient?: () => void;
@@ -40,7 +41,7 @@ export const CoachDashboard: React.FC<{
   const handleOpenClient = onOpenAddClientModal || onOpenNewClient;
   const handleOpenProgram = onOpenNewProgram || (() => setActiveTab('programs'));
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = localDateString();
   const [activeMobileSection, setActiveMobileSection] = React.useState<'schedule' | 'activity' | 'watchlist'>('schedule');
 
 
@@ -473,7 +474,7 @@ export const CoachDashboard: React.FC<{
             addCoachNote(liveRoomWorkout.clientId, `Live Rehearsal (${durMin} min, ${wpm} WPM, Score: ${score}/10): ${notes}`);
             addMetricEntry({
               clientId: liveRoomWorkout.clientId,
-              date: new Date().toISOString().split('T')[0],
+              date: localDateString(),
               weightKg: wpm,
               bodyFatPercentage: score * 10,
               notes: `Live Session Rehearsal (${durMin} min): ${notes}`

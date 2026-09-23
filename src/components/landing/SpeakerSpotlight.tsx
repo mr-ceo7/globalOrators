@@ -42,7 +42,7 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
                 </div>
 
                 <blockquote className="space-y-3">
-                  <Quote className="w-8 h-8 text-[#C89630]/40 shrink-0" />
+                  <Quote className="w-8 h-8 text-brand-gold/40 shrink-0" />
                   <p className="font-serif italic text-sm sm:text-base text-slate-100 leading-relaxed">
                     "A public speaker and philosopher passionately enthusiastic about giving a voice to the leaders of tomorrow, believing in the power of structured arguments and eloquent communication to better shape associations amongst future leaders."
                   </p>

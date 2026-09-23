@@ -22,6 +22,7 @@ import {
 import { useApp } from '../../context/AppContext';
 import { MetricEntry, PersonalRecord, ProgressPhoto } from '../../types';
 import { OratorAvatar } from '../common/OratorAvatar';
+import { localDateString } from '../../utils/date';
 
 export const ProgressTracker: React.FC = () => {
   const { 
@@ -48,7 +49,7 @@ export const ProgressTracker: React.FC = () => {
   const clientPhotos = photos.filter(p => p.clientId === activeClient?.id);
 
   // Today's habit log
-  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const todayStr = localDateString();
   const todayHabits = habitLogs.find(l => l.clientId === activeClient?.id && l.date === todayStr)?.habits || [
     { habitId: 'h-1', title: 'Vocal Hydration (Warm Lemon Water)', completed: true, currentValue: '2.5', targetValue: '2.5', unit: 'Liters' },
     { habitId: 'h-2', title: 'Diaphragmatic Breathwork', completed: true, currentValue: '15', targetValue: '15', unit: 'Minutes' },
@@ -114,7 +115,7 @@ export const ProgressTracker: React.FC = () => {
       weightKg: Number(formPrWeight),
       reps: Number(formPrReps),
       estimated1RmKg: est1Rm,
-      date: new Date().toISOString().split('T')[0]
+      date: localDateString()
     });
 
     setIsPrModalOpen(false);
@@ -126,7 +127,7 @@ export const ProgressTracker: React.FC = () => {
 
     addProgressPhoto({
       clientId: activeClient.id,
-      date: new Date().toISOString().split('T')[0],
+      date: localDateString(),
       view: formPhotoView,
       photoUrl: formPhotoUrl,
       weightKg: activeClient.currentWeightKg,

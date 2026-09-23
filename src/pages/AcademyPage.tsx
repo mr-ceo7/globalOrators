@@ -68,7 +68,7 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({
             <a 
               href="/" 
               onClick={(e) => { e.preventDefault(); onNavigate('/'); }}
-              className="hover:text-[#C89630] transition-colors"
+              className="hover:text-brand-gold transition-colors"
             >
               Home
             </a>
@@ -94,7 +94,7 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <button
               onClick={() => onStartOnboarding('Academy')}
-              className="px-6 py-3 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-slate-950 font-serif font-bold text-xs shadow-xl shadow-[#C89630]/25 flex items-center gap-2 transition-all cursor-pointer"
+              className="px-6 py-3 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-on-gold font-serif font-bold text-xs shadow-xl shadow-[#C89630]/25 flex items-center gap-2 transition-all cursor-pointer"
             >
               <span>Apply to Academy</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -218,7 +218,7 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             <div className="lg:col-span-7 space-y-4">
               <blockquote className="space-y-3">
-                <Quote className="w-8 h-8 text-[#C89630]/40 shrink-0" />
+                <Quote className="w-8 h-8 text-brand-gold/40 shrink-0" />
                 <p className="font-serif italic text-sm sm:text-base text-slate-100 leading-relaxed">
                   "An articulate, thoughtful, and highly motivated young leader whose background in debate has strengthened critical thinking, communication, and the ability to engage with complex issues. He demonstrates intellectual curiosity, resilience, and a strong sense of responsibility, consistently approaching challenges with maturity and integrity. He combines analytical reasoning with empathy, enabling him to contribute meaningfully to discussions."
                 </p>
@@ -242,7 +242,7 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({
                 </div>
                 <button
                   onClick={() => onStartOnboarding('Academy')}
-                  className="px-4 py-2 rounded-lg bg-[#C89630] hover:bg-[#B37D22] text-slate-950 font-serif font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shrink-0"
+                  className="px-4 py-2 rounded-lg bg-[#C89630] hover:bg-[#B37D22] text-on-gold font-serif font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shrink-0"
                 >
                   <span>Train With Academy Fellows</span>
                   <ArrowRight className="w-3 h-3" />
@@ -306,7 +306,7 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
               onClick={() => onStartOnboarding('Academy')}
-              className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-slate-950 font-serif font-bold text-xs shadow-xl shadow-[#C89630]/25 flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-on-gold font-serif font-bold text-xs shadow-xl shadow-[#C89630]/25 flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>Submit Academy Application</span>
               <ArrowRight className="w-3.5 h-3.5" />

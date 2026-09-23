@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { sanitizeText } from '../../utils/sanitization';
+import { getStoredUser, isHeadCoach } from '../../utils/roles';
 
 export const CoachManager: React.FC = () => {
   const { 
@@ -30,15 +31,7 @@ export const CoachManager: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const isHeadCoach = (() => {
-    try {
-      const stored = localStorage.getItem('globalorators_user') || localStorage.getItem('nubianfit_user');
-      const u = stored ? JSON.parse(stored) : null;
-      return u?.id === 'coach-1' || u?.email?.toLowerCase() === 'kassimmusa322@gmail.com' || u?.email?.toLowerCase() === 'coach@globalorators.com';
-    } catch {
-      return false;
-    }
-  })();
+  const headCoach = isHeadCoach(getStoredUser());
 
   // Add Coach Modal State
   const [formName, setFormName] = useState('');
@@ -125,11 +118,11 @@ export const CoachManager: React.FC = () => {
     }
   };
 
-  if (!isHeadCoach) {
+  if (!headCoach) {
     return (
       <div className="space-y-6 animate-fadeIn pb-12">
         <div className="rounded-2xl bg-slate-900 border border-slate-800 p-8 text-center max-w-xl mx-auto my-12">
-          <ShieldCheck className="w-12 h-12 text-[#C89630] mx-auto mb-4" />
+          <ShieldCheck className="w-12 h-12 text-brand-gold mx-auto mb-4" />
           <h2 className="text-xl font-serif font-bold text-white mb-2">Master Coach Administration Restricted</h2>
           <p className="text-xs text-slate-400 leading-relaxed">
             Faculty Coach provisioning and global speaker allocation are reserved for the Head Coach & Faculty Director. You can manage your assigned debaters directly from your roster.
@@ -144,7 +137,7 @@ export const CoachManager: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
         <div>
-          <div className="text-[10px] font-mono tracking-widest uppercase text-[#C89630] mb-1">
+          <div className="text-[10px] font-mono tracking-widest uppercase text-brand-gold mb-1">
             Master Coach Administration
           </div>
           <h1 className="text-2xl sm:text-3xl font-serif font-bold text-white tracking-tight">
@@ -157,7 +150,7 @@ export const CoachManager: React.FC = () => {
 
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-slate-950 font-serif font-bold text-xs shadow-md shadow-[#C89630]/20 transition-all cursor-pointer whitespace-nowrap"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-on-gold font-serif font-bold text-xs shadow-md shadow-[#C89630]/20 transition-all cursor-pointer whitespace-nowrap"
         >
           <UserPlus className="w-4 h-4" />
           <span>Add Faculty Coach</span>
@@ -243,7 +236,7 @@ export const CoachManager: React.FC = () => {
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Users className="w-4 h-4 text-[#C89630]" />
+            <Users className="w-4 h-4 text-brand-gold" />
             <h2 className="text-sm sm:text-base font-serif font-bold text-white">Faculty Directory</h2>
           </div>
 
@@ -271,7 +264,7 @@ export const CoachManager: React.FC = () => {
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
-                className="mt-3 px-3 py-1 rounded-lg bg-slate-800 text-xs font-mono text-[#C89630] border border-slate-700 hover:bg-slate-700 cursor-pointer"
+                className="mt-3 px-3 py-1 rounded-lg bg-slate-800 text-xs font-mono text-brand-gold border border-slate-700 hover:bg-slate-700 cursor-pointer"
               >
                 Clear Search
               </button>
@@ -290,7 +283,7 @@ export const CoachManager: React.FC = () => {
                 <div>
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-[#C89630]/20 border border-[#C89630]/40 text-[#C89630] flex items-center justify-center font-serif font-bold text-sm">
+                      <div className="w-10 h-10 rounded-xl bg-[#C89630]/20 border border-[#C89630]/40 text-brand-gold flex items-center justify-center font-serif font-bold text-sm">
                         {coach.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                       </div>
                       <div>
@@ -319,7 +312,7 @@ export const CoachManager: React.FC = () => {
                               setSelectedSpeakerId(spk.id);
                               setTargetCoachId(coach.id);
                             }}
-                            className="text-[#C89630] hover:text-[#E3B95C] text-[10px] font-mono flex items-center gap-1 cursor-pointer"
+                            className="text-brand-gold hover:text-[#E3B95C] text-[10px] font-mono flex items-center gap-1 cursor-pointer"
                             title="Reassign to another coach"
                           >
                             <ArrowRightLeft className="w-2.5 h-2.5" />
@@ -343,7 +336,7 @@ export const CoachManager: React.FC = () => {
                       navigator.clipboard?.writeText(link);
                       showToast(`Referral link for ${coach.name} copied.`);
                     }}
-                    className="text-[#C89630] hover:text-[#E3B95C] text-[10px] font-mono flex items-center gap-1 cursor-pointer transition-colors"
+                    className="text-brand-gold hover:text-[#E3B95C] text-[10px] font-mono flex items-center gap-1 cursor-pointer transition-colors"
                     title={`Copy referral link for ${coach.name}`}
                   >
                     <Copy className="w-3 h-3" />
@@ -363,7 +356,7 @@ export const CoachManager: React.FC = () => {
           <div className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-[#C89630]" />
+                <ShieldCheck className="w-5 h-5 text-brand-gold" />
                 <h3 className="font-serif font-bold text-base text-white">Add Faculty Coach</h3>
               </div>
               <button 
@@ -448,7 +441,7 @@ export const CoachManager: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-slate-950 font-serif font-bold text-xs flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  className="px-4 py-2 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-on-gold font-serif font-bold text-xs flex items-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <>
@@ -513,7 +506,7 @@ export const CoachManager: React.FC = () => {
                 type="button"
                 disabled={isReassigning}
                 onClick={() => handleAssignSpeaker(selectedSpeakerId, targetCoachId)}
-                className="px-4 py-1.5 rounded-lg bg-[#C89630] hover:bg-[#B37D22] text-slate-950 font-serif font-bold text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                className="px-4 py-1.5 rounded-lg bg-[#C89630] hover:bg-[#B37D22] text-on-gold font-serif font-bold text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
                 {isReassigning ? (
                   <>

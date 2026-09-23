@@ -28,6 +28,7 @@ import { ChatMessage, Client, ChatGroup, DirectoryOrator } from '../../types';
 import { RecordingResponse } from '../../services/apiClient';
 import { LiveRehearsalRoom } from '../live/LiveRehearsalRoom';
 import { OratorAvatar } from '../common/OratorAvatar';
+import { formatMessageTime } from '../../utils/date';
 
 const WHATSAPP_REACTIONS = ['👍', '🎙️', '🔥', '👏', '💡', '❤️'];
 
@@ -258,7 +259,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
       isOnline: isCoachOnline,
       unreadCount: unreadPrimaryCount,
       lastMessage: lastPrimaryMsg ? (lastPrimaryMsg.text || (lastPrimaryMsg as any).content || 'Voice critique recorded') : 'Faculty advisory & live chamber consultations',
-      lastTimestamp: lastPrimaryMsg ? (lastPrimaryMsg.timestamp?.split('T')[1]?.substring(0, 5) || lastPrimaryMsg.timestamp) : '09:00 AM'
+      lastTimestamp: lastPrimaryMsg ? (formatMessageTime(lastPrimaryMsg.timestamp)) : '09:00 AM'
     });
 
     // 2. Syndicate Groups
@@ -277,7 +278,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
         badge: 'Syndicate',
         unreadCount,
         lastMessage: lastGMsg ? (lastGMsg.text || (lastGMsg as any).content) : (g.description || 'Active syndicate rehearsal room'),
-        lastTimestamp: lastGMsg ? (lastGMsg.timestamp?.split('T')[1]?.substring(0, 5) || lastGMsg.timestamp) : 'Today',
+        lastTimestamp: lastGMsg ? (formatMessageTime(lastGMsg.timestamp)) : 'Today',
         data: g
       });
     });
@@ -323,7 +324,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
         badge: 'Orator',
         isOnline: Boolean(oratorOnline),
         lastMessage: lastPeerMsg ? (lastPeerMsg.text || (lastPeerMsg as any).content) : (orator.current_program || 'Fellow Orator'),
-        lastTimestamp: lastPeerMsg ? (lastPeerMsg.timestamp?.split('T')[1]?.substring(0, 5) || lastPeerMsg.timestamp) : '',
+        lastTimestamp: lastPeerMsg ? (formatMessageTime(lastPeerMsg.timestamp)) : '',
         data: orator
       });
     });
@@ -970,7 +971,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
                         conv.type === 'group'
                           ? 'bg-cyan-950 border-cyan-500/40 text-cyan-400'
                           : conv.type === 'coach'
-                            ? (conv.badge === 'Head Coach' ? 'bg-[#C89630]/20 border-[#C89630]/60 text-[#C89630]' : 'bg-emerald-950 border-emerald-500/40 text-emerald-400')
+                            ? (conv.badge === 'Head Coach' ? 'bg-[#C89630]/20 border-[#C89630]/60 text-brand-gold' : 'bg-emerald-950 border-emerald-500/40 text-emerald-400')
                             : 'bg-slate-800 border-slate-700 text-slate-300'
                       }`}>
                         {conv.initials}
@@ -1042,7 +1043,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
               ) : activeConversation?.avatar ? (
                 <OratorAvatar src={activeConversation.avatar} name={activeRecipientName} className="h-11 w-11 rounded-2xl" />
               ) : (
-                <div className={`h-11 w-11 rounded-2xl flex items-center justify-center font-bold text-slate-950 text-sm shadow-md border ${
+                <div className={`h-11 w-11 rounded-2xl flex items-center justify-center font-bold text-on-gold text-sm shadow-md border ${
                   isExecutive ? 'bg-[#C89630] border-[#C89630]' : 'bg-emerald-500 border-emerald-400'
                 }`}>
                   {activeConversation?.initials || coachInitials}
@@ -1066,7 +1067,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
                   activeConversation?.type === 'group'
                     ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
                     : isExecutive 
-                      ? 'bg-[#C89630]/10 text-[#C89630] border-[#C89630]/30' 
+                      ? 'bg-[#C89630]/10 text-brand-gold border-[#C89630]/30' 
                       : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
                 }`}>
                   {activeConversation?.type === 'group' 
@@ -1125,7 +1126,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
             ) : (
               <button
                 onClick={onOpenLiveRehearsal}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-slate-950 text-xs font-bold transition-all shadow-md cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-on-gold text-xs font-bold transition-all shadow-md cursor-pointer ${
                   isExecutive 
                     ? 'bg-[#C89630] hover:bg-[#d6a543] shadow-[#C89630]/20' 
                     : 'bg-emerald-500 hover:bg-emerald-400 shadow-emerald-500/20'
@@ -1278,7 +1279,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
                   {isSpeaker ? (
                     <div className={`h-7 w-7 rounded-xl flex items-center justify-center font-bold text-[10px] shrink-0 self-end border ${
                       isExecutive 
-                        ? 'bg-[#C89630]/20 border-[#C89630]/60 text-[#C89630]' 
+                        ? 'bg-[#C89630]/20 border-[#C89630]/60 text-brand-gold' 
                         : 'bg-emerald-950 border-emerald-500/60 text-emerald-400'
                     }`}>
                       {(profile.fullName || 'Speaker').slice(0, 2).toUpperCase()}
@@ -1287,7 +1288,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
                     <div 
                       className={`h-7 w-7 rounded-xl flex items-center justify-center font-bold text-[10px] shrink-0 self-end border transition-colors ${
                         isHeadCoachSender
-                          ? 'bg-[#C89630]/20 border-[#C89630]/70 text-[#C89630] shadow-sm'
+                          ? 'bg-[#C89630]/20 border-[#C89630]/70 text-brand-gold shadow-sm'
                           : 'bg-slate-800 border-slate-700 text-slate-200'
                       }`}
                       title={`${senderDisplayName} (${isHeadCoachSender ? 'Faculty Head' : 'Faculty Coach'})`}
@@ -1311,13 +1312,13 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
                       {!isSpeaker && (
                         <div className="flex items-center gap-1.5 mb-2 pb-1.5 border-b border-slate-800">
                           <span className={`text-[11px] font-semibold tracking-tight ${
-                            isHeadCoachSender ? 'text-[#C89630]' : 'text-slate-300'
+                            isHeadCoachSender ? 'text-brand-gold' : 'text-slate-300'
                           }`}>
                             {senderDisplayName}
                           </span>
                           <span className={`text-[9px] font-mono tracking-wider uppercase px-1.5 py-0.5 rounded border ${
                             isHeadCoachSender
-                              ? 'bg-[#C89630]/15 text-[#C89630] border-[#C89630]/30'
+                              ? 'bg-[#C89630]/15 text-brand-gold border-[#C89630]/30'
                               : 'bg-slate-800 text-slate-400 border-slate-700'
                           }`}>
                             {activeConversation?.type === 'group' || activeConversation?.type === 'orator'
@@ -1413,7 +1414,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
                             <button
                               type="button"
                               onClick={() => handleTogglePlayAudio(msg)}
-                              className={`h-9 w-9 rounded-full flex items-center justify-center shrink-0 transition-transform active:scale-95 cursor-pointer shadow-md text-slate-950 ${
+                              className={`h-9 w-9 rounded-full flex items-center justify-center shrink-0 transition-transform active:scale-95 cursor-pointer shadow-md text-on-gold ${
                                 isExecutive ? 'bg-[#C89630] hover:bg-[#d6a543]' : 'bg-emerald-400 hover:bg-emerald-300'
                               }`}
                               title={isThisPlaying ? 'Pause Voice Memo' : 'Play Voice Memo'}
@@ -1459,7 +1460,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
                                 type="button"
                                 onClick={cycleAudioSpeed}
                                 className={`px-1.5 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-[9px] font-mono border border-slate-700 cursor-pointer transition-colors ${
-                                  isExecutive ? 'text-[#C89630]' : 'text-emerald-400'
+                                  isExecutive ? 'text-brand-gold' : 'text-emerald-400'
                                 }`}
                                 title="Toggle Playback Speed (1x, 1.5x, 2x)"
                               >
@@ -1472,7 +1473,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
 
                       {/* Message Footer: Timestamp & Delivery Status */}
                       <div className="flex items-center justify-end gap-1 mt-1 text-[9px] text-slate-400">
-                        <span>{msg.timestamp?.split('T')[1]?.substring(0, 5) || msg.timestamp || '12:00'}</span>
+                        <span>{formatMessageTime(msg.timestamp)}</span>
                         {isSpeaker && (
                           <CheckCheck 
                             className={`h-3 w-3 ${msg.isRead ? 'text-cyan-400' : 'text-slate-400'}`}
@@ -1527,7 +1528,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
         {/* Quick Rhetoric & Practice Cues Bar for Speakers */}
         <div className="px-4 py-2 bg-slate-950/80 border-t border-slate-800/80 flex items-center gap-2 overflow-x-auto text-[11px] no-scrollbar shrink-0">
           <span className={`text-[10px] font-mono uppercase tracking-widest shrink-0 flex items-center gap-1 ${
-            isExecutive ? 'text-[#C89630]' : 'text-emerald-400'
+            isExecutive ? 'text-brand-gold' : 'text-emerald-400'
           }`}>
             <Zap className="h-3 w-3" />
             SPEAKER CUES:
@@ -1655,7 +1656,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
               <button
                 type="button"
                 onClick={stopAndSendRecording}
-                className={`px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer text-slate-950 ${
+                className={`px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer text-on-gold ${
                   isExecutive ? 'bg-[#C89630] hover:bg-[#d6a543]' : 'bg-emerald-500 hover:bg-emerald-400'
                 }`}
               >
@@ -1697,7 +1698,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
                 <button
                   type="submit"
                   disabled={isSending}
-                  className={`h-10 px-4 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer text-slate-950 transition-all ${
+                  className={`h-10 px-4 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer text-on-gold transition-all ${
                     isExecutive
                       ? 'bg-[#C89630] hover:bg-[#d6a543] shadow-[#C89630]/20'
                       : 'bg-emerald-500 hover:bg-emerald-400 shadow-emerald-500/20'

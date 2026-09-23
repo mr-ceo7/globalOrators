@@ -54,6 +54,7 @@ import { SpeakerSidebar } from './SpeakerSidebar';
 import { GlobalOratorsLogo } from '../common/GlobalOratorsLogo';
 import { journalsApi, simulationsApi, recordingsApi, RecordingResponse } from '../../services/apiClient';
 import { SpeakerMessenger } from '../messenger/SpeakerMessenger';
+import { localDateString, formatMessageTime } from '../../utils/date';
 
 export type SpeakerTabType = 'today' | 'practice' | 'catharsis' | 'schedule' | 'habits' | 'progress' | 'coach';
 
@@ -93,7 +94,7 @@ const AuthenticatedVaultPlayer: React.FC<{ recordingId: string }> = ({ recording
       disabled={isLoading}
       className="px-3 py-1.5 rounded-lg border border-slate-800 hover:border-[#C89630]/60 bg-slate-900 text-[11px] font-mono text-slate-300 hover:text-white transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
     >
-      {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin text-[#C89630]" /> : <Play className="w-3.5 h-3.5 text-[#C89630]" />}
+      {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-gold" /> : <Play className="w-3.5 h-3.5 text-brand-gold" />}
       <span>{isLoading ? 'Decrypting Stream...' : error || 'Play Rehearsal'}</span>
     </button>
   );
@@ -603,7 +604,7 @@ export const ClientPortal: React.FC = () => {
   }, [pairedClient?.id]);
 
   // Daily Habits State in Client Portal using backend via context (stable habit IDs)
-  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const todayStr = localDateString();
   const currentClientHabitLog = useMemo(() => {
     if (!pairedClient?.id) return null;
     return habitLogs.find(l => l.clientId === pairedClient.id && l.date === todayStr);
@@ -648,7 +649,7 @@ export const ClientPortal: React.FC = () => {
         id: m.id,
         sender: m.sender,
         text: m.text,
-        time: m.timestamp?.split('T')[1]?.substring(0, 5) || m.timestamp,
+        time: formatMessageTime(m.timestamp),
         isRead: m.isRead,
         attachment: m.attachment
       }));
@@ -666,7 +667,7 @@ export const ClientPortal: React.FC = () => {
       showToast('No active speaker profile found to record habits.');
       return;
     }
-    const today = new Date().toISOString().split('T')[0];
+    const today = localDateString();
     toggleHabitCompletion(pairedClient.id, today, habitId);
   };
 
@@ -775,7 +776,7 @@ export const ClientPortal: React.FC = () => {
           <div className="flex items-center gap-3 min-w-0">
             <div className="md:hidden flex items-center gap-2">
               <GlobalOratorsLogo className="w-7 h-7 shrink-0" colorMode="gold" />
-              <span className="font-serif font-bold text-sm text-white">Global<span className="text-[#C89630]">Orators</span></span>
+              <span className="font-serif font-bold text-sm text-white">Global<span className="text-brand-gold">Orators</span></span>
             </div>
 
             <div className="hidden md:flex items-center gap-2.5 min-w-0">
@@ -785,9 +786,9 @@ export const ClientPortal: React.FC = () => {
               </span>
               <span className={`text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded border ${
                 isExecutive
-                  ? 'bg-amber-500/10 text-[#C89630] border-[#C89630]/30'
+                  ? 'bg-amber-500/10 text-brand-gold border-[#C89630]/30'
                   : isAcademy
-                    ? 'bg-amber-500/10 text-[#C89630] border-[#C89630]/30'
+                    ? 'bg-amber-500/10 text-brand-gold border-[#C89630]/30'
                     : 'bg-teal-500/10 text-teal-300 border-teal-500/30'
               }`}>
                 {isExecutive ? 'Executive Track' : `${profile.branch} Track`}
@@ -802,7 +803,7 @@ export const ClientPortal: React.FC = () => {
               className="min-h-[38px] hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-200 hover:text-white hover:border-slate-700 text-xs font-mono transition-colors cursor-pointer"
               title="Enter Live Rehearsal Chamber"
             >
-              <Video className="w-3.5 h-3.5 text-[#C89630]" />
+              <Video className="w-3.5 h-3.5 text-brand-gold" />
               <span>Live Chamber</span>
             </button>
 
@@ -812,7 +813,7 @@ export const ClientPortal: React.FC = () => {
               className="min-h-[38px] flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:text-white hover:border-slate-700 text-xs font-mono transition-colors cursor-pointer"
               title={`Direct message thread with ${assignedCoachName}`}
             >
-              <MessageSquare className="w-3.5 h-3.5 text-[#C89630]" />
+              <MessageSquare className="w-3.5 h-3.5 text-brand-gold" />
               <span className="hidden sm:inline">Coach Thread</span>
             </button>
 
@@ -824,7 +825,7 @@ export const ClientPortal: React.FC = () => {
               className="h-9 w-9 flex items-center justify-center rounded-xl border border-slate-800 bg-slate-900 text-slate-400 hover:text-white hover:border-slate-700 transition-colors cursor-pointer"
               title={theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
             >
-              {theme === 'dark' ? <Sun className="w-4 h-4 text-[#C89630]" /> : <Moon className="w-4 h-4 text-slate-300" />}
+              {theme === 'dark' ? <Sun className="w-4 h-4 text-brand-gold" /> : <Moon className="w-4 h-4 text-slate-300" />}
             </button>
 
             {/* Profile & Workspace Menu Dropdown */}
@@ -836,7 +837,7 @@ export const ClientPortal: React.FC = () => {
                 aria-label="Speaker workspace profile and settings menu"
                 className="min-h-[38px] flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-mono transition-colors cursor-pointer"
               >
-                <div className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-xs text-slate-950 ${
+                <div className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-xs text-on-gold ${
                   isExecutive ? 'bg-[#C89630]' : isAcademy ? 'bg-[#C89630]' : 'bg-teal-400'
                 }`}>
                   {profile.fullName ? profile.fullName.charAt(0) : 'S'}
@@ -857,7 +858,7 @@ export const ClientPortal: React.FC = () => {
                   <div className="px-3 py-2.5 border-b border-slate-800/80 mb-1">
                     <div className="font-bold text-white text-sm truncate">{profile.fullName || 'Speaker'}</div>
                     <div className="text-[11px] font-mono text-slate-400 truncate">{profile.email}</div>
-                    <div className="text-[10px] font-mono text-[#C89630] uppercase tracking-wider mt-1">
+                    <div className="text-[10px] font-mono text-brand-gold uppercase tracking-wider mt-1">
                       {isExecutive ? 'Executive Public Speaking Track' : `${profile.branch} Track`}
                     </div>
                   </div>
@@ -922,7 +923,7 @@ export const ClientPortal: React.FC = () => {
             <div className="rounded-3xl p-5 sm:p-6 border bg-slate-900/60 border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl">
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-2">
-                  <span className="text-[10px] font-mono uppercase tracking-widest text-[#C89630] font-bold">
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-brand-gold font-bold">
                     {profile.institution ? `${profile.institution} · ` : ''}{curriculum.syllabusKicker}
                   </span>
                   <span className="hidden xs:inline-block w-px h-3 bg-slate-800" />
@@ -959,7 +960,7 @@ export const ClientPortal: React.FC = () => {
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-3 pt-3 border-t border-slate-800/80 text-[10px] font-mono text-slate-400 uppercase tracking-wider">
                   <span>Discipline: <strong className="text-slate-200 font-semibold">{curriculum.disciplineLabel}</strong></span>
                   <span className="hidden xs:inline-block w-1 h-1 rounded-full bg-slate-700" />
-                  <span>Focus: <strong className="text-[#C89630] font-semibold">{curriculum.focusLabel}</strong></span>
+                  <span>Focus: <strong className="text-brand-gold font-semibold">{curriculum.focusLabel}</strong></span>
                   <span className="hidden xs:inline-block w-1 h-1 rounded-full bg-slate-700" />
                   <span>Tier: <strong className="text-slate-200 font-semibold">{profile.experienceLevel || 'Calibrated'}</strong></span>
                 </div>
@@ -980,7 +981,7 @@ export const ClientPortal: React.FC = () => {
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 <div className="max-w-2xl">
                   <div className="flex items-center gap-3 mb-2.5">
-                    <span className="text-[10px] font-mono uppercase tracking-widest text-[#C89630] font-bold px-2.5 py-0.5 rounded bg-[#C89630]/10 border border-[#C89630]/30">
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-brand-gold font-bold px-2.5 py-0.5 rounded bg-[#C89630]/10 border border-[#C89630]/30">
                       {curriculum.isAssignedByCoach ? "Today's Rehearsal" : "Recommended Rehearsal Preview"}
                     </span>
                     <span className="text-xs font-mono text-slate-400 flex items-center gap-1">
@@ -1004,15 +1005,15 @@ export const ClientPortal: React.FC = () => {
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs text-slate-300">
                       <div className="flex items-start gap-2 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/80">
-                        <CheckCircle2 className="w-4 h-4 text-[#C89630] shrink-0 mt-0.5" />
+                        <CheckCircle2 className="w-4 h-4 text-brand-gold shrink-0 mt-0.5" />
                         <span>{isExecutive ? 'Open with high-conviction BLUF premise without hedging' : 'Establish uncontestable normative framework in 60s'}</span>
                       </div>
                       <div className="flex items-start gap-2 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/80">
-                        <CheckCircle2 className="w-4 h-4 text-[#C89630] shrink-0 mt-0.5" />
+                        <CheckCircle2 className="w-4 h-4 text-brand-gold shrink-0 mt-0.5" />
                         <span>{isExecutive ? 'Structure 3 quantified proof-points with explicit risk mitigations' : 'Anticipate and neutralize deepest opposition comparative'}</span>
                       </div>
                       <div className="flex items-start gap-2 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/80">
-                        <CheckCircle2 className="w-4 h-4 text-[#C89630] shrink-0 mt-0.5" />
+                        <CheckCircle2 className="w-4 h-4 text-brand-gold shrink-0 mt-0.5" />
                         <span>{isExecutive ? 'Deliver conclusive ask within calibrated 135–145 WPM cadence' : 'Synthesize debate round into decisive sovereign impact ballot'}</span>
                       </div>
                     </div>
@@ -1026,7 +1027,7 @@ export const ClientPortal: React.FC = () => {
                       setActiveChamberTitle(isExecutive ? 'Executive Public Speaking Chamber' : 'Live Rehearsal Chamber');
                       setIsLiveRehearsalOpen(true);
                     }}
-                    className="min-h-[44px] px-6 py-3.5 rounded-2xl bg-[#C89630] hover:bg-[#d6a543] text-slate-950 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[#C89630]/25 transition-all cursor-pointer"
+                    className="min-h-[44px] px-6 py-3.5 rounded-2xl bg-[#C89630] hover:bg-[#d6a543] text-on-gold font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[#C89630]/25 transition-all cursor-pointer"
                   >
                     <Video className="w-4 h-4" />
                     <span>Enter Live Chamber</span>
@@ -1036,7 +1037,7 @@ export const ClientPortal: React.FC = () => {
                     onClick={() => setSpeakerTab('practice')}
                     className="min-h-[44px] px-5 py-3 rounded-2xl bg-slate-950 hover:bg-slate-850 text-slate-200 border border-slate-800 text-xs font-mono uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer"
                   >
-                    <Mic className="w-4 h-4 text-[#C89630]" />
+                    <Mic className="w-4 h-4 text-brand-gold" />
                     <span>Solo Rehearsal</span>
                   </button>
 
@@ -1055,7 +1056,7 @@ export const ClientPortal: React.FC = () => {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4">
               <div className="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-3.5 sm:p-4.5 transition-colors hover:border-slate-700/80">
                 <div className="text-[9px] sm:text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold">Pacing</div>
-                <div className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-[#C89630] mt-1 tracking-tight">
+                <div className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-brand-gold mt-1 tracking-tight">
                   {profile.vocalBaselinePace}
                   <span className="font-mono text-[10px] sm:text-xs font-normal text-slate-400 uppercase tracking-wider ml-1">WPM</span>
                 </div>
@@ -1075,12 +1076,12 @@ export const ClientPortal: React.FC = () => {
                   {isExecutive ? 'BLUF Score' : isAcademy ? 'Argumentative Rigor' : 'Catharsis Index'}
                 </div>
                 <div className={`text-xl sm:text-2xl md:text-3xl font-serif font-bold mt-1 tracking-tight ${
-                  isExecutive ? 'text-[#C89630]' : isAcademy ? 'text-emerald-400' : 'text-teal-400'
+                  isExecutive ? 'text-brand-gold' : isAcademy ? 'text-emerald-400' : 'text-teal-400'
                 }`}>
                   {isExecutive ? '—' : `${profile.emotionalOpennessRating * 10}%`}
                 </div>
                 <div className={`text-[10px] font-mono mt-1 ${
-                  isExecutive ? 'text-[#C89630]' : isAcademy ? 'text-emerald-400' : 'text-teal-400'
+                  isExecutive ? 'text-brand-gold' : isAcademy ? 'text-emerald-400' : 'text-teal-400'
                 }`}>
                   {isExecutive ? 'Target Standard' : isAcademy ? 'Target Discipline' : 'Focus Area'}
                 </div>
@@ -1115,7 +1116,7 @@ export const ClientPortal: React.FC = () => {
                     </div>
                     <button
                       onClick={() => setSpeakerTab('coach')}
-                      className="text-[11px] text-[#C89630] hover:underline font-mono"
+                      className="text-[11px] text-brand-gold hover:underline font-mono"
                     >
                       Reply
                     </button>
@@ -1133,7 +1134,7 @@ export const ClientPortal: React.FC = () => {
                     </div>
                     <button
                       onClick={() => setSpeakerTab('coach')}
-                      className="min-h-[36px] px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-mono text-[#C89630] flex items-center gap-1.5 transition-colors cursor-pointer"
+                      className="min-h-[36px] px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-mono text-brand-gold flex items-center gap-1.5 transition-colors cursor-pointer"
                     >
                       <MessageSquare className="w-3.5 h-3.5" />
                       <span>Consult Coach</span>
@@ -1155,7 +1156,7 @@ export const ClientPortal: React.FC = () => {
                 <div>
                   <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
                     <div className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-[#C89630]" />
+                      <CheckCircle2 className="w-4 h-4 text-brand-gold" />
                       <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">Today's Daily Rituals</h3>
                     </div>
                     <span className="text-[10px] font-mono text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
@@ -1181,7 +1182,7 @@ export const ClientPortal: React.FC = () => {
                         >
                           <div className="flex items-center gap-2.5 min-w-0 pr-2">
                             <div className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 ${
-                              habit.completed ? 'bg-[#C89630] border-[#C89630] text-slate-950' : 'border-slate-600'
+                              habit.completed ? 'bg-[#C89630] border-[#C89630] text-on-gold' : 'border-slate-600'
                             }`}>
                               {habit.completed && <CheckCircle2 className="w-3.5 h-3.5" />}
                             </div>
@@ -1200,7 +1201,7 @@ export const ClientPortal: React.FC = () => {
 
                 <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-[11px] font-mono text-slate-400">
                   <span>{activeHabitsList.filter(h => h.completed).length} of {activeHabitsList.length} Completed</span>
-                  <button onClick={() => setSpeakerTab('habits')} className="text-[#C89630] hover:underline flex items-center gap-1">
+                  <button onClick={() => setSpeakerTab('habits')} className="text-brand-gold hover:underline flex items-center gap-1">
                     <span>Full Habit Protocol</span>
                     <ChevronRight className="w-3 h-3" />
                   </button>
@@ -1212,14 +1213,14 @@ export const ClientPortal: React.FC = () => {
             <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-5 sm:p-6">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <span className="text-[10px] font-mono text-[#C89630] uppercase tracking-wider font-semibold">
+                  <span className="text-[10px] font-mono text-brand-gold uppercase tracking-wider font-semibold">
                     Curriculum Progression
                   </span>
                   <h3 className="text-sm font-serif font-bold text-white">Upcoming Rehearsals & Sessions</h3>
                 </div>
                 <button
                   onClick={() => setSpeakerTab('schedule')}
-                  className="text-xs text-[#C89630] hover:underline font-mono flex items-center gap-1"
+                  className="text-xs text-brand-gold hover:underline font-mono flex items-center gap-1"
                 >
                   <span>View Full Syllabus</span>
                   <ChevronRight className="w-3 h-3" />
@@ -1232,7 +1233,7 @@ export const ClientPortal: React.FC = () => {
                     <div key={session.id} className="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex flex-col justify-between">
                       <div>
                         <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 mb-1.5">
-                          <span className="text-[#C89630] font-bold">Session 0{idx + 1}</span>
+                          <span className="text-brand-gold font-bold">Session 0{idx + 1}</span>
                           <span>{session.date}</span>
                         </div>
                         <h4 className="text-xs font-bold text-white mb-1">{session.workoutTitle}</h4>
@@ -1327,7 +1328,7 @@ export const ClientPortal: React.FC = () => {
                   {!isRecording ? (
                     <button
                       onClick={handleStartRecording}
-                      className={`px-6 py-2.5 rounded-xl font-bold text-xs text-slate-950 flex items-center gap-2 shadow-lg transition-all cursor-pointer ${
+                      className={`px-6 py-2.5 rounded-xl font-bold text-xs text-on-gold flex items-center gap-2 shadow-lg transition-all cursor-pointer ${
                         isAcademy ? 'bg-emerald-400 hover:bg-emerald-300' : 'bg-[#C89630] hover:bg-[#d6a543]'
                       }`}
                     >
@@ -1379,7 +1380,7 @@ export const ClientPortal: React.FC = () => {
                         <button
                           onClick={handleRetryUploadRecording}
                           disabled={recordingUploadStatus === 'uploading'}
-                          className="px-4 py-1.5 rounded-lg font-mono text-xs font-bold bg-[#C89630] hover:bg-[#b08328] text-slate-950 flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition"
+                          className="px-4 py-1.5 rounded-lg font-mono text-xs font-bold bg-[#C89630] hover:bg-[#b08328] text-on-gold flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition"
                         >
                           <RefreshCw className="w-3.5 h-3.5" />
                           <span>Retry Upload to Vault</span>
@@ -1400,7 +1401,7 @@ export const ClientPortal: React.FC = () => {
                   <div className="mt-8 pt-6 border-t border-slate-850 text-left">
                     <div className="flex items-center justify-between mb-4">
                       <h4 className="text-xs uppercase font-mono font-bold tracking-widest text-slate-300 flex items-center gap-2">
-                        <Mic className="w-3.5 h-3.5 text-[#C89630]" />
+                        <Mic className="w-3.5 h-3.5 text-brand-gold" />
                         <span>Saved Rehearsal Vault ({persistedRecordings.length})</span>
                       </h4>
                       <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
@@ -1446,7 +1447,7 @@ export const ClientPortal: React.FC = () => {
             {isExecutive ? (
               <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 sm:p-8">
                 <div className="max-w-2xl mb-6">
-                  <span className="text-[10px] uppercase font-bold tracking-widest text-[#C89630] px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20">
+                  <span className="text-[10px] uppercase font-bold tracking-widest text-brand-gold px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20">
                     High-Stakes Rehearsal & Simulation Vault
                   </span>
                   <h2 className="text-xl sm:text-2xl font-serif font-black text-white mt-2">
@@ -1503,14 +1504,14 @@ export const ClientPortal: React.FC = () => {
 
                   <div className="flex items-center justify-between pt-2">
                     <div className="text-[10px] text-slate-500 flex items-center gap-1.5">
-                      <ShieldCheck className="w-3.5 h-3.5 text-[#C89630]" />
+                      <ShieldCheck className="w-3.5 h-3.5 text-brand-gold" />
                       <span>Orator Vault Persistence • Authenticated & Durable</span>
                     </div>
 
                     <button
                       type="submit"
                       disabled={isSavingExec}
-                      className="px-5 py-2 rounded-xl bg-[#C89630] hover:bg-[#d6a543] text-slate-950 font-bold text-xs shadow-md shadow-[#C89630]/20 cursor-pointer disabled:opacity-50"
+                      className="px-5 py-2 rounded-xl bg-[#C89630] hover:bg-[#d6a543] text-on-gold font-bold text-xs shadow-md shadow-[#C89630]/20 cursor-pointer disabled:opacity-50"
                     >
                       {isSavingExec ? 'Saving...' : 'Save Rehearsal Note'}
                     </button>
@@ -1666,7 +1667,7 @@ export const ClientPortal: React.FC = () => {
             <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 sm:p-8">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
                 <div>
-                  <div className="text-[10px] font-mono tracking-widest text-[#C89630] uppercase mb-1">
+                  <div className="text-[10px] font-mono tracking-widest text-brand-gold uppercase mb-1">
                     Executive Oratory Syllabus · Dynamic Roadmap
                   </div>
                   <h2 className="text-xl sm:text-2xl font-serif font-black tracking-tight text-white">
@@ -1681,7 +1682,7 @@ export const ClientPortal: React.FC = () => {
                   <div className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px] font-mono text-slate-300">
                     <span className="text-emerald-400 font-bold">{roadmapSessions.length}</span> Sessions Total
                   </div>
-                  <div className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px] font-mono text-[#C89630]">
+                  <div className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px] font-mono text-brand-gold">
                     90 Min / Session
                   </div>
                 </div>
@@ -1708,7 +1709,7 @@ export const ClientPortal: React.FC = () => {
 
                             <div className="space-y-1.5 flex-1">
                               <div className="flex flex-wrap items-center gap-2">
-                                <span className="text-[10px] font-mono tracking-widest text-[#C89630] uppercase">
+                                <span className="text-[10px] font-mono tracking-widest text-brand-gold uppercase">
                                   Week {weekNum} · Session {idx + 1}
                                 </span>
                                 <span className={`text-[9px] px-2 py-0.5 rounded font-mono uppercase tracking-wider ${
@@ -1731,13 +1732,13 @@ export const ClientPortal: React.FC = () => {
                               {session.objectives && session.objectives.length > 0 && (
                                 <div className="pt-2">
                                   <div className="text-[10px] font-mono tracking-wider text-slate-400 uppercase flex items-center gap-1 mb-1">
-                                    <Target className="w-3 h-3 text-[#C89630]" />
+                                    <Target className="w-3 h-3 text-brand-gold" />
                                     <span>Core Objectives:</span>
                                   </div>
                                   <ul className="space-y-1 text-xs text-slate-300">
                                     {session.objectives.map((obj, oIdx) => (
                                       <li key={oIdx} className="flex items-start gap-2">
-                                        <span className="text-[#C89630] font-bold shrink-0">•</span>
+                                        <span className="text-brand-gold font-bold shrink-0">•</span>
                                         <span className="leading-relaxed">{obj}</span>
                                       </li>
                                     ))}
@@ -1802,7 +1803,7 @@ export const ClientPortal: React.FC = () => {
                                 <div key={phase.id || pIdx} className="p-3 rounded-xl bg-slate-900/60 border border-slate-850 text-xs">
                                   <div className="flex items-center justify-between text-[11px] font-bold text-white mb-1">
                                     <span>{pIdx + 1}. {phase.phaseName}</span>
-                                    <span className="text-[#C89630] font-mono font-normal">{phase.durationMin}m</span>
+                                    <span className="text-brand-gold font-mono font-normal">{phase.durationMin}m</span>
                                   </div>
                                   <p className="text-[11px] text-slate-400 leading-relaxed font-sans">{phase.description}</p>
                                 </div>
@@ -1898,7 +1899,7 @@ export const ClientPortal: React.FC = () => {
             <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 sm:p-8">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
                 <div>
-                  <div className="text-[10px] font-mono tracking-widest text-[#C89630] uppercase mb-1">
+                  <div className="text-[10px] font-mono tracking-widest text-brand-gold uppercase mb-1">
                     Oratorical Trajectory · Longitudinal Speech Analytics
                   </div>
                   <h2 className="text-xl sm:text-2xl font-serif font-black tracking-tight text-white">
@@ -1911,7 +1912,7 @@ export const ClientPortal: React.FC = () => {
 
                 <div className="flex flex-wrap items-center gap-2 shrink-0">
                   <div className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px] font-mono text-slate-300">
-                    Target: <span className="text-[#C89630] font-bold">135–145 WPM</span>
+                    Target: <span className="text-brand-gold font-bold">135–145 WPM</span>
                   </div>
                   <div className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px] font-mono text-slate-300">
                     {roadmapSessions.length} {roadmapSessions.length === 1 ? 'Session' : 'Sessions'} Logged
@@ -2045,7 +2046,7 @@ export const ClientPortal: React.FC = () => {
                     setActiveChamberTitle(isExecutive ? 'Executive Public Speaking Chamber' : 'Live Rehearsal Chamber');
                     setIsLiveRehearsalOpen(true);
                   }}
-                  className="min-h-[44px] px-4 py-2 rounded-xl bg-[#C89630] hover:bg-[#d6a543] text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-colors shadow-md shadow-[#C89630]/20 shrink-0 cursor-pointer"
+                  className="min-h-[44px] px-4 py-2 rounded-xl bg-[#C89630] hover:bg-[#d6a543] text-on-gold font-bold text-xs flex items-center gap-1.5 transition-colors shadow-md shadow-[#C89630]/20 shrink-0 cursor-pointer"
                 >
                   <Video className="w-3.5 h-3.5" />
                   <span>Launch Chamber Rehearsal</span>
@@ -2061,7 +2062,7 @@ export const ClientPortal: React.FC = () => {
                     >
                       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 pb-3 border-b border-slate-900">
                         <div>
-                          <div className="text-[10px] font-mono text-[#C89630] uppercase tracking-wider">
+                          <div className="text-[10px] font-mono text-brand-gold uppercase tracking-wider">
                             {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Recent'} · {item.evaluatorName || 'Faculty Adjudicator'}
                           </div>
                           <h4 className="text-sm font-bold text-white mt-0.5">{item.category}</h4>
@@ -2099,7 +2100,7 @@ export const ClientPortal: React.FC = () => {
           <div className="flex-1 min-h-0 flex flex-col space-y-3 animate-fadeIn">
             {!assignedCoach && (
               <div className="bg-slate-950/80 border border-amber-500/30 rounded-2xl p-3.5 text-left flex items-start gap-3 shrink-0">
-                <AlertTriangle className="w-4 h-4 text-[#C89630] shrink-0 mt-0.5" />
+                <AlertTriangle className="w-4 h-4 text-brand-gold shrink-0 mt-0.5" />
                 <div>
                   <h4 className="text-[11px] font-bold text-amber-300 uppercase tracking-wider font-mono">Faculty Triage & Allocation</h4>
                   <p className="text-xs text-slate-300 mt-0.5 leading-relaxed">

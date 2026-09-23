@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.config import settings
-from app.dependencies import get_db, require_coach
+from app.dependencies import get_db, get_current_user, require_coach
 from app.models.user import User
 from app.schemas.client import CoachDirectoryItem, CreateCoachRequest
 from app.security import get_password_hash
@@ -15,8 +15,11 @@ router = APIRouter(prefix="/coaches", tags=["Coaches"])
 
 
 @router.get("", response_model=List[CoachDirectoryItem])
-async def list_coaches(db: AsyncSession = Depends(get_db)):
-    """List active faculty coaches for referral attribution, panel adjudication, and reassignment."""
+async def list_coaches(
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
+    """List active faculty coaches (signed-in users only: the list includes coach emails)."""
     result = await db.execute(
         select(User).where(User.role == "coach", User.is_active == True).order_by(User.full_name.asc())
     )

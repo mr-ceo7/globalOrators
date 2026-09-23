@@ -1348,7 +1348,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         {activeSpeakerProfile && (
           <div className="mb-6 p-4 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
             <div>
-              <div className="text-[10px] font-mono uppercase tracking-widest text-[#C89630]">
+              <div className="text-[10px] font-mono uppercase tracking-widest text-brand-gold">
                 Active Speaker Calibration
               </div>
               <p className="text-xs text-slate-300 mt-0.5">
@@ -1357,7 +1357,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
             </div>
             <button
               onClick={() => setCurrentPortal('speaker_app')}
-              className="px-3.5 py-2 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-slate-950 font-serif font-bold text-xs transition-colors shrink-0 cursor-pointer shadow-sm"
+              className="px-3.5 py-2 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-on-gold font-serif font-bold text-xs transition-colors shrink-0 cursor-pointer shadow-sm"
             >
               Open Speaker App →
             </button>
@@ -1394,15 +1394,15 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 }`}
               >
                 {branch === 'Academy' && (
-                  <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-[#C89630] text-slate-950 flex items-center justify-center">
+                  <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-[#C89630] text-on-gold flex items-center justify-center">
                     <Check className="w-3 h-3 stroke-[3]" />
                   </div>
                 )}
                 <div>
-                  <div className="w-10 h-10 rounded-xl bg-[#C89630]/15 text-[#C89630] border border-[#C89630]/30 flex items-center justify-center mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#C89630]/15 text-brand-gold border border-[#C89630]/30 flex items-center justify-center mb-3">
                     <GraduationCap className="w-5 h-5" />
                   </div>
-                  <div className="text-[10px] font-mono uppercase font-extrabold tracking-widest text-[#C89630]">
+                  <div className="text-[10px] font-mono uppercase font-extrabold tracking-widest text-brand-gold">
                     Competitive Forensics & Leadership
                   </div>
                   <h3 className="text-base font-serif font-bold text-white mt-1 mb-2">
@@ -1470,7 +1470,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 What breakthrough do you want your voice to manifest?
               </p>
               <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/80 border border-slate-800 text-xs font-mono text-slate-400">
-                <span className={`uppercase font-bold tracking-wider text-[10px] ${branch === 'Academy' ? 'text-[#C89630]' : 'text-emerald-400'}`}>
+                <span className={`uppercase font-bold tracking-wider text-[10px] ${branch === 'Academy' ? 'text-brand-gold' : 'text-emerald-400'}`}>
                   Best for:
                 </span>
                 <span className="text-slate-300 font-medium">
@@ -1534,7 +1534,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                         <div className="text-xs font-bold text-white">{item.title}</div>
                         <div className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">{item.desc}</div>
                         <div className="mt-2.5 pt-2 border-t border-slate-800/80 text-[10px] text-slate-400 font-mono flex items-center gap-1.5">
-                          <span className="text-[#C89630] font-semibold uppercase tracking-wider text-[9px]">Best for:</span>
+                          <span className="text-brand-gold font-semibold uppercase tracking-wider text-[9px]">Best for:</span>
                           <span className="text-slate-300">{item.bestFor}</span>
                         </div>
                       </div>
@@ -1614,7 +1614,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 <div className="flex items-center justify-between">
                   <label 
                     htmlFor="other-description-input"
-                    className="block text-[10px] uppercase font-bold text-[#C89630] font-mono tracking-wider"
+                    className="block text-[10px] uppercase font-bold text-brand-gold font-mono tracking-wider"
                   >
                     Describe What You Are Looking For *
                   </label>
@@ -1673,7 +1673,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
             <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 sm:p-6 space-y-5 shadow-xl">
               {/* SECTION 1: Personal & Academic/Community Identity */}
               <div>
-                <div className="text-[10px] font-mono uppercase font-bold tracking-wider text-[#C89630] mb-3 flex items-center gap-1.5">
+                <div className="text-[10px] font-mono uppercase font-bold tracking-wider text-brand-gold mb-3 flex items-center gap-1.5">
                   <User className="w-3.5 h-3.5" />
                   <span>{activeConfig.identitySectionLabel}</span>
                 </div>
@@ -1884,7 +1884,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                         <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
                           Attributed Coach Referral
                         </span>
-                        <span className="font-mono text-xs text-[#C89630] font-bold">
+                        <span className="font-mono text-xs text-brand-gold font-bold">
                           {referredCoach}
                         </span>
                       </div>
@@ -1913,7 +1913,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
               {/* SECTION 2: Primary Debate & Forensics Format */}
               <div className="pt-4 border-t border-slate-800/80">
                 <div className="flex items-center justify-between mb-2.5">
-                  <label className="text-[10px] font-mono uppercase font-bold tracking-wider text-[#C89630] flex items-center gap-1.5">
+                  <label className="text-[10px] font-mono uppercase font-bold tracking-wider text-brand-gold flex items-center gap-1.5">
                     <Award className="w-3.5 h-3.5" />
                     <span>{activeConfig.formatSectionLabel}</span>
                   </label>
@@ -1936,11 +1936,11 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                       >
                         <div>
                           <div className="flex items-center justify-between gap-1">
-                            <span className="text-[9px] font-mono uppercase font-bold tracking-widest text-[#C89630]">
+                            <span className="text-[9px] font-mono uppercase font-bold tracking-widest text-brand-gold">
                               {fmt.code}
                             </span>
                             {isSelected && (
-                              <Check className="w-3 h-3 text-[#C89630] stroke-[3]" />
+                              <Check className="w-3 h-3 text-brand-gold stroke-[3]" />
                             )}
                           </div>
                           <div className="text-xs font-bold text-white mt-1">{fmt.name}</div>
@@ -1964,11 +1964,11 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                   >
                     <div>
                       <div className="flex items-center justify-between gap-1">
-                        <span className="text-[9px] font-mono uppercase font-bold tracking-widest text-[#C89630]">
+                        <span className="text-[9px] font-mono uppercase font-bold tracking-widest text-brand-gold">
                           CUSTOM
                         </span>
                         {primaryDiscipline === 'Other / Custom Arena' && (
-                          <Check className="w-3 h-3 text-[#C89630] stroke-[3]" />
+                          <Check className="w-3 h-3 text-brand-gold stroke-[3]" />
                         )}
                       </div>
                       <div className="text-xs font-bold text-white mt-1">Other Arena / Format</div>
@@ -1985,7 +1985,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                     <div className="flex items-center justify-between">
                       <label 
                         htmlFor="custom-arena-input"
-                        className="block text-[10px] uppercase font-bold text-[#C89630] font-mono tracking-wider"
+                        className="block text-[10px] uppercase font-bold text-brand-gold font-mono tracking-wider"
                       >
                         Describe What You Are Looking For in Your Arena *
                       </label>
@@ -2028,7 +2028,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
               {/* SECTION 3: Core Forensics Focus / Technical Priority */}
               <div className="pt-4 border-t border-slate-800/80">
                 <div className="flex items-center justify-between mb-2.5">
-                  <label className="text-[10px] font-mono uppercase font-bold tracking-wider text-[#C89630]">
+                  <label className="text-[10px] font-mono uppercase font-bold tracking-wider text-brand-gold">
                     {activeConfig.prioritySectionLabel}
                   </label>
                   <span className="text-[10px] text-slate-400 font-mono">{activeConfig.prioritySectionSub}</span>
@@ -2050,7 +2050,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                       >
                         <div className="text-xs font-bold text-white flex items-center justify-between">
                           <span>{item.label}</span>
-                          {isSelected && <Check className="w-3 h-3 text-[#C89630] stroke-[3] shrink-0 ml-1" />}
+                          {isSelected && <Check className="w-3 h-3 text-brand-gold stroke-[3] shrink-0 ml-1" />}
                         </div>
                         <div className="text-[9px] text-slate-400 mt-0.5">{item.sub}</div>
                       </button>
@@ -2070,7 +2070,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                     <div className="text-xs font-bold text-white flex items-center justify-between">
                       <span>Other Priority / Skill Need</span>
                       {coreFocus === 'Other / Custom Priority' && (
-                        <Check className="w-3 h-3 text-[#C89630] stroke-[3] shrink-0 ml-1" />
+                        <Check className="w-3 h-3 text-brand-gold stroke-[3] shrink-0 ml-1" />
                       )}
                     </div>
                     <div className="text-[9px] text-slate-400 mt-0.5">
@@ -2085,7 +2085,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                     <div className="flex items-center justify-between">
                       <label 
                         htmlFor="custom-priority-input"
-                        className="block text-[10px] uppercase font-bold text-[#C89630] font-mono tracking-wider"
+                        className="block text-[10px] uppercase font-bold text-brand-gold font-mono tracking-wider"
                       >
                         Describe What You Are Looking For in Your Priority *
                       </label>
@@ -2131,7 +2131,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
               <div className="pt-4 border-t border-slate-800/80">
                 <div className="flex justify-between items-center mb-2">
                   <div>
-                    <label className="text-[10px] font-mono uppercase font-bold tracking-wider text-[#C89630] flex items-center gap-1.5">
+                    <label className="text-[10px] font-mono uppercase font-bold tracking-wider text-brand-gold flex items-center gap-1.5">
                       <Volume2 className="w-3.5 h-3.5" />
                       <span>Speaking Cadence & Tempo Target</span>
                     </label>
@@ -2140,7 +2140,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="text-xs font-mono font-bold text-[#C89630] bg-[#C89630]/10 px-2 py-0.5 rounded-md border border-[#C89630]/20">
+                    <span className="text-xs font-mono font-bold text-brand-gold bg-[#C89630]/10 px-2 py-0.5 rounded-md border border-[#C89630]/20">
                       {vocalBaselinePace} WPM
                     </span>
                   </div>
@@ -2162,7 +2162,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                         }`}
                       >
                         <div className="text-[11px] font-bold text-white">{preset.label}</div>
-                        <div className="text-[9px] text-[#C89630] font-mono">{preset.wpm} WPM</div>
+                        <div className="text-[9px] text-brand-gold font-mono">{preset.wpm} WPM</div>
                       </button>
                     );
                   })}
@@ -2217,12 +2217,12 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                   >
                     <div>
                       <div className="flex items-center justify-between gap-1 mb-1.5">
-                        <span className="text-[9px] font-mono uppercase font-bold tracking-widest text-[#C89630]">
+                        <span className="text-[9px] font-mono uppercase font-bold tracking-widest text-brand-gold">
                           {habit.tag}
                         </span>
                         <div
                           className={`w-4 h-4 rounded-md flex items-center justify-center shrink-0 ${
-                            isSelected ? 'bg-[#C89630] text-slate-950' : 'border border-slate-700'
+                            isSelected ? 'bg-[#C89630] text-on-gold' : 'border border-slate-700'
                           }`}
                         >
                           {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
@@ -2254,12 +2254,12 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                   >
                     <div>
                       <div className="flex items-center justify-between gap-1 mb-1.5">
-                        <span className="text-[9px] font-mono uppercase font-bold tracking-widest text-[#C89630]">
+                        <span className="text-[9px] font-mono uppercase font-bold tracking-widest text-brand-gold">
                           BESPOKE • CUSTOM
                         </span>
                         <div
                           className={`w-4 h-4 rounded-md flex items-center justify-center shrink-0 ${
-                            isOtherSelected ? 'bg-[#C89630] text-slate-950' : 'border border-slate-700'
+                            isOtherSelected ? 'bg-[#C89630] text-on-gold' : 'border border-slate-700'
                           }`}
                         >
                           {isOtherSelected && <Check className="w-3 h-3 stroke-[3]" />}
@@ -2354,7 +2354,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                   </div>
                 </div>
 
-                <span className="text-[10px] font-mono font-extrabold uppercase px-3 py-1 rounded-full border border-[#C89630]/30 bg-[#C89630]/15 text-[#C89630]">
+                <span className="text-[10px] font-mono font-extrabold uppercase px-3 py-1 rounded-full border border-[#C89630]/30 bg-[#C89630]/15 text-brand-gold">
                   {branch} Scholar
                 </span>
               </div>
@@ -2369,7 +2369,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 </div>
                 <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-3">
                   <div className="text-[10px] text-slate-400 uppercase font-bold">Primary Format</div>
-                  <div className="text-xs font-semibold text-[#C89630] mt-0.5 truncate">{primaryDiscipline}</div>
+                  <div className="text-xs font-semibold text-brand-gold mt-0.5 truncate">{primaryDiscipline}</div>
                 </div>
                 <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-3">
                   <div className="text-[10px] text-slate-400 uppercase font-bold">Curriculum Focus</div>
@@ -2382,7 +2382,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
               </div>
 
               <div className="bg-[#C89630]/10 border border-[#C89630]/20 rounded-xl p-3.5 text-xs text-slate-300 flex items-start gap-2.5">
-                <GraduationCap className="w-4 h-4 text-[#C89630] shrink-0 mt-0.5" />
+                <GraduationCap className="w-4 h-4 text-brand-gold shrink-0 mt-0.5" />
                 <span>
                   <strong className="text-white">Global Orators Faculty Welcome:</strong>{" "}
                   {missionFocus.includes('Other') && otherDescription.trim()
@@ -2415,7 +2415,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         {currentStep < 5 ? (
           <button
             onClick={handleNext}
-            className="px-6 py-2.5 rounded-xl bg-[#C89630] text-slate-950 font-serif font-bold text-xs hover:bg-[#B37D22] flex items-center gap-2 shadow-lg shadow-[#C89630]/20 ml-auto cursor-pointer"
+            className="px-6 py-2.5 rounded-xl bg-[#C89630] text-on-gold font-serif font-bold text-xs hover:bg-[#B37D22] flex items-center gap-2 shadow-lg shadow-[#C89630]/20 ml-auto cursor-pointer"
           >
             <span>Continue</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -2424,7 +2424,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
           <button
             onClick={handleFinish}
             disabled={isSubmitting}
-            className={`px-6 py-2.5 rounded-xl bg-[#C89630] text-slate-950 font-serif font-bold text-xs hover:bg-[#B37D22] flex items-center gap-2 shadow-xl shadow-[#C89630]/25 ml-auto cursor-pointer transition-opacity ${
+            className={`px-6 py-2.5 rounded-xl bg-[#C89630] text-on-gold font-serif font-bold text-xs hover:bg-[#B37D22] flex items-center gap-2 shadow-xl shadow-[#C89630]/25 ml-auto cursor-pointer transition-opacity ${
               isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
             }`}
           >

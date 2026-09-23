@@ -166,7 +166,7 @@ export const SpeakerLoginModal: React.FC<SpeakerLoginModalProps> = ({
 
         {/* Modal Header */}
         <div className="mb-6">
-          <div className="text-[10px] font-mono tracking-widest text-[#C89630] uppercase mb-1">
+          <div className="text-[10px] font-mono tracking-widest text-brand-gold uppercase mb-1">
             Orators App Re-Entry
           </div>
           <h2
@@ -196,7 +196,7 @@ export const SpeakerLoginModal: React.FC<SpeakerLoginModalProps> = ({
                       onClose();
                       onStartOnboarding();
                     }}
-                    className="text-[#C89630] hover:text-[#E3B95C] underline font-semibold cursor-pointer"
+                    className="text-brand-gold hover:text-[#E3B95C] underline font-semibold cursor-pointer"
                   >
                     Enroll as a new speaker &rarr;
                   </button>
@@ -243,7 +243,7 @@ export const SpeakerLoginModal: React.FC<SpeakerLoginModalProps> = ({
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
-                    <Mail className="w-4 h-4 text-[#C89630]" />
+                    <Mail className="w-4 h-4 text-brand-gold" />
                   </div>
                   <input
                     id="speaker-email-input"
@@ -265,7 +265,7 @@ export const SpeakerLoginModal: React.FC<SpeakerLoginModalProps> = ({
               <button
                 type="submit"
                 disabled={loading || !email.trim()}
-                className="w-full py-3 px-4 rounded-xl bg-[#C89630] hover:bg-[#B37D22] disabled:opacity-50 text-slate-950 font-serif font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-[#C89630]/20 transition-all cursor-pointer disabled:cursor-not-allowed mt-2"
+                className="w-full py-3 px-4 rounded-xl bg-[#C89630] hover:bg-[#B37D22] disabled:opacity-50 text-on-gold font-serif font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-[#C89630]/20 transition-all cursor-pointer disabled:cursor-not-allowed mt-2"
               >
                 {loading ? (
                   <>
@@ -310,7 +310,7 @@ export const SpeakerLoginModal: React.FC<SpeakerLoginModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setStep('email')}
-                  className="text-[11px] text-[#C89630] hover:underline flex items-center gap-1 cursor-pointer"
+                  className="text-[11px] text-brand-gold hover:underline flex items-center gap-1 cursor-pointer"
                 >
                   <ArrowLeft className="w-3 h-3" />
                   <span>Change email</span>
@@ -319,7 +319,7 @@ export const SpeakerLoginModal: React.FC<SpeakerLoginModalProps> = ({
 
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
-                  <KeyRound className="w-4 h-4 text-[#C89630]" />
+                  <KeyRound className="w-4 h-4 text-brand-gold" />
                 </div>
                 <input
                   id="speaker-otp-input"
@@ -344,7 +344,7 @@ export const SpeakerLoginModal: React.FC<SpeakerLoginModalProps> = ({
             <button
               type="submit"
               disabled={loading || otpCode.length < 6}
-              className="w-full py-3 px-4 rounded-xl bg-[#C89630] hover:bg-[#B37D22] disabled:opacity-50 text-slate-950 font-serif font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-[#C89630]/20 transition-all cursor-pointer disabled:cursor-not-allowed mt-2"
+              className="w-full py-3 px-4 rounded-xl bg-[#C89630] hover:bg-[#B37D22] disabled:opacity-50 text-on-gold font-serif font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-[#C89630]/20 transition-all cursor-pointer disabled:cursor-not-allowed mt-2"
             >
               {loading ? (
                 <>
@@ -365,7 +365,7 @@ export const SpeakerLoginModal: React.FC<SpeakerLoginModalProps> = ({
                 type="button"
                 onClick={handleResendCode}
                 disabled={resending}
-                className="text-[#C89630] hover:underline flex items-center gap-1 cursor-pointer font-medium disabled:opacity-50"
+                className="text-brand-gold hover:underline flex items-center gap-1 cursor-pointer font-medium disabled:opacity-50"
               >
                 <RefreshCw className={`w-3 h-3 ${resending ? 'animate-spin' : ''}`} />
                 <span>{resending ? 'Resending...' : 'Resend code'}</span>

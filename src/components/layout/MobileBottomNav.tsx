@@ -10,10 +10,13 @@ import {
   BookOpen, 
   Download,
   UserPlus,
-  Play
+  Play,
+  ShieldCheck
 } from 'lucide-react';
 
 import { useApp, NavigationTab } from '../../context/AppContext';
+import { localDateString } from '../../utils/date';
+import { getStoredUser, isHeadCoach } from '../../utils/roles';
 
 interface MobileBottomNavProps {
   onOpenNewClient: () => void;
@@ -40,7 +43,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   const unreadMessagesCount = messages.filter(m => m.sender === 'client' && !m.isRead).length;
 
   // Today's scheduled workouts count
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = localDateString();
   const todayPendingCount = scheduledWorkouts.filter(w => w.date === todayStr && w.status === 'Scheduled').length;
 
   const triggerHaptic = () => {
@@ -52,6 +55,8 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
       }
     }
   };
+
+  const headCoach = isHeadCoach(getStoredUser());
 
   const handleTabClick = (tab: NavigationTab) => {
     triggerHaptic();
@@ -329,6 +334,25 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                     <span className="text-[11px] text-slate-400">Pacing & milestones</span>
                   </div>
                 </button>
+
+                {/* Faculty Coaches (head coach only) */}
+                {headCoach && (
+                  <button
+                    onClick={() => {
+                      setIsActionSheetOpen(false);
+                      handleTabClick('coaches');
+                    }}
+                    className="p-3.5 rounded-2xl bg-slate-800/50 border border-slate-700/40 flex flex-col items-start gap-2 text-left active:scale-[0.97] transition-transform"
+                  >
+                    <div className="p-2 rounded-xl bg-emerald-900/50 text-emerald-400">
+                      <ShieldCheck className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold text-white block">Faculty Coaches</span>
+                      <span className="text-[11px] text-slate-400">Invite & manage coaches</span>
+                    </div>
+                  </button>
+                )}
 
                 {/* 6. Install PWA Shortcut */}
                 <button

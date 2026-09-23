@@ -1067,8 +1067,11 @@ async def test_coach_referrals_reassignment_and_adjudication():
         import time
         ts = int(time.time() * 1000)
 
-        # 1. Check GET /api/coaches returns coaches directory
-        res_coaches = await client.get("/api/coaches")
+        # 1. GET /api/coaches needs a signed-in user (it lists coach emails)
+        assert (await client.get("/api/coaches")).status_code == 401
+        res_login = await client.post("/api/auth/login", json={"email": settings.DEFAULT_COACH_EMAIL, "password": settings.DEFAULT_COACH_PASSWORD})
+        assert res_login.json()["user"]["is_head_coach"] is True
+        res_coaches = await client.get("/api/coaches", headers={"Authorization": f"Bearer {res_login.json()['access_token']}"})
         assert res_coaches.status_code == 200
         coaches_list = res_coaches.json()
         assert len(coaches_list) >= 1

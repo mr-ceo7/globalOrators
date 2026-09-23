@@ -146,7 +146,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
             <a 
               href="/" 
               onClick={(e) => { e.preventDefault(); onNavigate('/'); }}
-              className="hover:text-[#C89630] transition-colors"
+              className="hover:text-brand-gold transition-colors"
             >
               Home
             </a>
@@ -269,7 +269,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
               </div>
 
               <blockquote className="space-y-3">
-                <Quote className="w-8 h-8 text-[#C89630]/40 shrink-0" />
+                <Quote className="w-8 h-8 text-brand-gold/40 shrink-0" />
                 <p className="font-serif italic text-base sm:text-lg text-slate-100 leading-relaxed">
                   "Geoffrey Anyona is a debater, public speaker, writer and Founder of The Global Orators Project; an initiative built around a simple conviction: a generation that can speak must also learn to think."
                 </p>
@@ -342,7 +342,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-gradient-to-b from-slate-900 to-slate-950 border-b border-slate-800/80">
                       <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-slate-800 border-2 border-[#C89630]/30 flex items-center justify-center shadow-inner group-hover:border-[#C89630] transition-colors">
-                        <span className="font-serif font-black text-lg sm:text-xl text-[#C89630] tracking-wider">
+                        <span className="font-serif font-black text-lg sm:text-xl text-brand-gold tracking-wider">
                           {member.initials}
                         </span>
                       </div>
@@ -351,7 +351,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
                       </span>
                     </div>
                   )}
-                  <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded bg-slate-950/80 backdrop-blur-xs border border-slate-800 text-[9px] font-mono tracking-widest uppercase text-[#C89630] font-bold">
+                  <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded bg-slate-950/80 backdrop-blur-xs border border-slate-800 text-[9px] font-mono tracking-widest uppercase text-brand-gold font-bold">
                     {member.category}
                   </div>
                 </div>
@@ -400,7 +400,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
           {/* Pillar 1 Card */}
           <div className="p-6 sm:p-8 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col justify-between space-y-4">
             <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-[#C89630]/15 text-[#C89630] flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-[#C89630]/15 text-brand-gold flex items-center justify-center">
                 <Compass className="w-5 h-5" />
               </div>
               <div className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
@@ -548,7 +548,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
             <button
               onClick={() => onStartOnboarding('Academy')}
-              className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-slate-950 font-serif font-bold text-xs shadow-xl shadow-[#C89630]/25 flex items-center justify-center gap-2 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[#C89630]"
+              className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-on-gold font-serif font-bold text-xs shadow-xl shadow-[#C89630]/25 flex items-center justify-center gap-2 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[#C89630]"
             >
               <span>Apply to Academy</span>
               <ArrowRight className="w-3.5 h-3.5" />

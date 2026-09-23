@@ -49,6 +49,7 @@ try {
   // Vitest mock proxy throws on unmocked property access
 }
 import { startEventStream } from '../services/sseClient';
+import { localDateString, sortByMessageTime } from '../utils/date';
 
 export type NavigationTab =
   | 'dashboard'
@@ -165,7 +166,7 @@ interface AppContextType {
   referredCoach: string | null;
   reassignClientCoach: (clientId: string, coachId: string, reason?: string) => Promise<boolean>;
   addAdjudicationNote: (clientId: string, note: string, rubricCategory?: string, rating?: number) => Promise<boolean>;
-  currentCoachUser: { id: string; email: string; full_name: string; role: string; avatar?: string } | null;
+  currentCoachUser: { id: string; email: string; full_name: string; role: string; avatar?: string; is_head_coach?: boolean } | null;
   isAuthenticatedCoach: boolean;
   checkCoachEmail: (email: string) => Promise<{ exists: boolean; auth_method: 'password' | 'google' | 'both' | 'none'; role: string | null }>;
   loginCoach: (email: string, password: string) => Promise<{ success: boolean; error?: string; user?: any }>;
@@ -519,7 +520,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const [currentCoachUser, setCurrentCoachUser] = useState<{ id: string; email: string; full_name: string; role: string; avatar?: string } | null>(() => {
+  const [currentCoachUser, setCurrentCoachUser] = useState<{ id: string; email: string; full_name: string; role: string; avatar?: string; is_head_coach?: boolean } | null>(() => {
     if (typeof window === 'undefined') return null;
     try {
       const token = localStorage.getItem('globalorators_token') || localStorage.getItem('nubianfit_token');
@@ -530,7 +531,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (u && u.role === 'coach') return u;
         if (u && u.role === 'speaker') return null;
       }
-      return { id: 'coach-session', email: '', full_name: 'Faculty Coach', role: 'coach', avatar: '', is_active: true };
+      // No cached user: the role is unknown until /auth/me answers, so don't assume a coach.
+      return null;
     } catch {
       return null;
     }
@@ -543,9 +545,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       (() => {
         try {
           const u = localStorage.getItem('globalorators_user') || localStorage.getItem('nubianfit_user');
-          return u ? JSON.parse(u)?.role === 'coach' : true;
+          // Without a cached user we can't know the role yet: wait for /auth/me instead of
+          // assuming a coach (a speaker token would otherwise open the coach screens).
+          return u ? JSON.parse(u)?.role === 'coach' : false;
         } catch {
-          return true;
+          return false;
         }
       })()
     )
@@ -741,7 +745,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
 
       if (messagesRes.status === 'fulfilled') {
-        setMessages(messagesRes.value || []);
+        setMessages(sortByMessageTime(messagesRes.value || []));
       } else {
         console.error('Failed to sync messages from API:', messagesRes.reason);
       }
@@ -1234,10 +1238,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const idx = prev.findIndex(p => p.id === prog.id);
       if (idx >= 0) {
         const next = [...prev];
-        next[idx] = { ...prog, updatedAt: new Date().toISOString().split('T')[0] };
+        next[idx] = { ...prog, updatedAt: localDateString() };
         return next;
       } else {
-        return [{ ...prog, id: prog.id || `prog-${Date.now()}`, createdAt: new Date().toISOString().split('T')[0], updatedAt: new Date().toISOString().split('T')[0] }, ...prev];
+        return [{ ...prog, id: prog.id || `prog-${Date.now()}`, createdAt: localDateString(), updatedAt: localDateString() }, ...prev];
       }
     });
 
@@ -1321,20 +1325,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const completeWorkout = async (workoutId: string, feedback: { clientFeedback?: string; coachFeedback?: string; rating?: number; durationMin?: number }) => {
     const target = scheduledWorkouts.find(w => w.id === workoutId);
     if (!target) return;
+    const alreadyCompleted = target.status === 'Completed';
 
     const updatedWorkout: ScheduledWorkout = {
       ...target,
       status: 'Completed',
       durationMin: feedback.durationMin || target.durationMin || 55,
       rating: feedback.rating || 5,
-      clientFeedback: feedback.clientFeedback || target.clientFeedback || 'Great rehearsal session completed!',
-      coachFeedback: feedback.coachFeedback || target.coachFeedback || 'Excellent delivery and pacing consistency.'
+      // Only record feedback someone actually wrote; never invent it.
+      clientFeedback: feedback.clientFeedback || target.clientFeedback || '',
+      coachFeedback: feedback.coachFeedback || target.coachFeedback || ''
     };
 
     setScheduledWorkouts(prev => prev.map(w => w.id === workoutId ? updatedWorkout : w));
 
     setClients(prev => prev.map(c => {
-      if (c.id === target.clientId) {
+      // Re-saving a completed session must not count it twice.
+      if (c.id === target.clientId && !alreadyCompleted) {
         const completed = c.workoutsCompleted + 1;
         const total = c.totalWorkoutsAssigned || completed;
         const compliance = Math.min(100, Math.round((completed / total) * 100));
@@ -1593,7 +1600,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (err) {
       console.error('Failed to delete message on backend:', err);
       if (msgToDelete) {
-        setMessages(prev => [...prev, msgToDelete]);
+        setMessages(prev => sortByMessageTime([...prev, msgToDelete]));
       }
       showToast('Unable to delete message from server.');
     }
@@ -1960,12 +1967,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [setCurrentPortal, showToast]);
 
   const checkCoachEmail = useCallback(async (email: string): Promise<{ exists: boolean; auth_method: 'password' | 'google' | 'both' | 'none'; role: string | null }> => {
-    try {
-      const res = await authApi.checkEmail(email.trim().toLowerCase());
-      return res;
-    } catch {
-      return { exists: false, auth_method: 'none', role: null };
-    }
+    // Let failures propagate: treating an outage as "email not registered" would send
+    // existing coaches to the sign-up form.
+    return authApi.checkEmail(email.trim().toLowerCase());
   }, []);
 
   const loginCoach = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: string; user?: any }> => {

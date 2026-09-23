@@ -79,7 +79,7 @@ export const VoiceDispatchPlayer: React.FC = () => {
 
       <div className="flex items-center justify-between text-[10px] font-mono">
         <span className="text-[#7A4B06] dark:text-[#E3B95C] uppercase tracking-widest font-semibold flex items-center gap-1.5">
-          <Volume2 className="w-3.5 h-3.5 text-[#C89630]" />
+          <Volume2 className="w-3.5 h-3.5 text-brand-gold" />
           Voice Dispatch • Circle 07 (Nairobi)
         </span>
         <span className="text-slate-400 font-mono">
@@ -123,7 +123,7 @@ export const VoiceDispatchPlayer: React.FC = () => {
 
       {/* Transparent Educational & Safeguarding Disclosure */}
       <div className="flex items-start gap-1.5 text-[9px] font-mono text-slate-400 bg-slate-900/60 p-2 rounded-lg border border-slate-800/60">
-        <ShieldAlert className="w-3.5 h-3.5 text-[#C89630] shrink-0 mt-0.5" />
+        <ShieldAlert className="w-3.5 h-3.5 text-brand-gold shrink-0 mt-0.5" />
         <span>
           <strong className="text-slate-300 font-semibold">Educational Demo Model:</strong> Actual healing circle voice sessions are strictly confidential under child safeguarding protocols. This track demonstrates pacing, pause drills, and vocal resonance.
         </span>

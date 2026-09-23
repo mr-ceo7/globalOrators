@@ -37,6 +37,14 @@
   --app-cyan-light: #E0F7FA;
   --app-cyan-dark: #155E75;
 
+  /* Brand gold as text: darkened on light grounds to keep 4.5:1 contrast */
+  --app-gold-text: #8A5E12;
+
+  /* Error / destructive states (rose & red were designed for dark mode only) */
+  --app-danger-text: #9F1239;
+  --app-danger-bg: #FFE4E6;
+  --app-danger-border: #FDA4AF;
+
   --logo-nubian: var(--app-fg);
   --logo-fit: #C89630;
 
@@ -84,6 +92,12 @@
   --app-cyan-light: #0B2B2E;
   --app-cyan-dark: #06b6d4;
 
+  --app-gold-text: #C89630;
+
+  --app-danger-text: #FDA4AF;
+  --app-danger-bg: #4C0519;
+  --app-danger-border: #9F1239;
+
   --logo-fit: #E3B95C;
 
   --loader-text: #ffffff;
@@ -97,6 +111,9 @@
 
 
 @theme {
+  /* Small-phone breakpoint used by xs: utilities (Tailwind v4 has no xs by default) */
+  --breakpoint-xs: 30rem;
+
   --color-white: var(--app-white);
   --font-logo: "Bruno Ace", sans-serif;
   --color-logo-nubian: var(--logo-nubian);
@@ -140,6 +157,25 @@
 
   --color-teal-400: var(--app-cyan);
   --color-teal-500: var(--app-cyan-dark);
+
+  /* Gold accent text, and the text colour used on gold fills (same in both themes) */
+  --color-brand-gold: var(--app-gold-text);
+  --color-on-gold: #181B1F;
+
+  --color-rose-200: var(--app-danger-text);
+  --color-rose-300: var(--app-danger-text);
+  --color-rose-400: var(--app-danger-text);
+  --color-rose-700: var(--app-danger-border);
+  --color-rose-800: var(--app-danger-border);
+  --color-rose-900: var(--app-danger-bg);
+  --color-rose-950: var(--app-danger-bg);
+  --color-red-200: var(--app-danger-text);
+  --color-red-300: var(--app-danger-text);
+  --color-red-400: var(--app-danger-text);
+  --color-red-700: var(--app-danger-border);
+  --color-red-800: var(--app-danger-border);
+  --color-red-900: var(--app-danger-bg);
+  --color-red-950: var(--app-danger-bg);
 }
 
 

@@ -44,7 +44,7 @@ export const SubdomainSwitcher: React.FC = () => {
         {/* Left: Indicator & Collapse Toggle */}
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5 bg-slate-900 text-slate-300 px-2.5 py-0.5 rounded-md border border-slate-800 font-mono text-[10px] tracking-wide">
-            <span className="text-[#C89630] font-bold uppercase tracking-wider">NETWORK:</span>
+            <span className="text-brand-gold font-bold uppercase tracking-wider">NETWORK:</span>
             <span className="font-semibold text-slate-100">
               {portals.find(p => p.id === currentPortal)?.subdomain || 'globaloratorsproject.com'}
             </span>

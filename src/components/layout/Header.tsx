@@ -17,6 +17,8 @@ import {
 import { useApp } from '../../context/AppContext';
 import { GlobalOratorsLogo } from '../common/GlobalOratorsLogo';
 import { OratorAvatar } from '../common/OratorAvatar';
+import { localDateString } from '../../utils/date';
+import { isHeadCoach } from '../../utils/roles';
 
 
 interface HeaderProps {
@@ -45,7 +47,8 @@ export const Header: React.FC<HeaderProps> = ({
     openWorkoutLogger,
     theme,
     toggleTheme,
-    setCurrentPortal
+    setCurrentPortal,
+    showToast
   } = useApp();
 
 
@@ -86,10 +89,16 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const handleStartTodayWorkout = () => {
-    const todayStr = new Date().toISOString().split('T')[0];
-    const todayWorkout = scheduledWorkouts.find(w => w.date === todayStr && w.status === 'Scheduled') || scheduledWorkouts[0];
-    if (todayWorkout) {
-      openWorkoutLogger(todayWorkout);
+    const todayStr = localDateString();
+    const pending = scheduledWorkouts
+      .filter(w => w.status === 'Scheduled')
+      .sort((a, b) => a.date.localeCompare(b.date));
+    // Today's session first, otherwise the oldest one still waiting to be logged.
+    const workout = pending.find(w => w.date === todayStr) || pending[0];
+    if (workout) {
+      openWorkoutLogger(workout);
+    } else {
+      showToast('No scheduled sessions to log. Schedule one from Session Schedule first.');
     }
   };
 
@@ -116,7 +125,7 @@ export const Header: React.FC<HeaderProps> = ({
           <GlobalOratorsLogo className="w-7 h-7 shrink-0" colorMode="gold" />
           <div className="flex flex-col items-stretch">
             <span className="font-serif font-black text-[14px] tracking-tight text-slate-100 block leading-none">
-              Global<span className="text-[#C89630]">Orators</span>
+              Global<span className="text-brand-gold">Orators</span>
             </span>
             <div className="flex justify-between text-[7px] text-slate-400 font-mono tracking-widest uppercase mt-1 w-full leading-none">
               <span>speak</span>
@@ -420,10 +429,10 @@ export const Header: React.FC<HeaderProps> = ({
                 return null;
               }
             })();
-            const isHeadCoach = user?.id === 'coach-1' || user?.email?.toLowerCase() === 'kassimmusa322@gmail.com' || user?.email?.toLowerCase() === 'coach@globalorators.com';
-            const coachName = user?.full_name || (isHeadCoach ? 'Head Coach Qassim' : 'Faculty Coach');
-            const coachTitle = isHeadCoach ? 'Head Speech & Debate Coach' : 'Faculty Coach';
-            const initials = coachName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || (isHeadCoach ? 'HQ' : 'FC');
+            const headCoach = isHeadCoach(user);
+            const coachName = user?.full_name || (headCoach ? 'Head Coach Qassim' : 'Faculty Coach');
+            const coachTitle = headCoach ? 'Head Speech & Debate Coach' : 'Faculty Coach';
+            const initials = coachName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || (headCoach ? 'HQ' : 'FC');
 
             return (
               <>

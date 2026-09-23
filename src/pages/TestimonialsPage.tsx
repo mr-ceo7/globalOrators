@@ -86,7 +86,7 @@ export const TestimonialsPage: React.FC<TestimonialsPageProps> = ({
             <a 
               href="/" 
               onClick={(e) => { e.preventDefault(); onNavigate('/'); }}
-              className="hover:text-[#C89630] transition-colors"
+              className="hover:text-brand-gold transition-colors"
             >
               Home
             </a>
@@ -214,7 +214,7 @@ export const TestimonialsPage: React.FC<TestimonialsPageProps> = ({
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
               onClick={() => onStartOnboarding()}
-              className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-slate-950 font-serif font-bold text-xs shadow-xl shadow-[#C89630]/25 flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-on-gold font-serif font-bold text-xs shadow-xl shadow-[#C89630]/25 flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>Start Your Application</span>
               <ArrowRight className="w-3.5 h-3.5" />

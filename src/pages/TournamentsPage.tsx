@@ -69,7 +69,7 @@ export const TournamentsPage: React.FC<TournamentsPageProps> = ({
             <a 
               href="/" 
               onClick={(e) => { e.preventDefault(); onNavigate('/'); }}
-              className="hover:text-[#C89630] transition-colors"
+              className="hover:text-brand-gold transition-colors"
             >
               Home
             </a>
@@ -95,7 +95,7 @@ export const TournamentsPage: React.FC<TournamentsPageProps> = ({
           <div className="pt-2">
             <button
               onClick={() => onStartOnboarding('Academy')}
-              className="px-6 py-3 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-slate-950 font-serif font-bold text-xs shadow-xl shadow-[#C89630]/25 flex items-center gap-2 cursor-pointer"
+              className="px-6 py-3 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-on-gold font-serif font-bold text-xs shadow-xl shadow-[#C89630]/25 flex items-center gap-2 cursor-pointer"
             >
               <span>Try Out for Tournament Squad</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -267,7 +267,7 @@ export const TournamentsPage: React.FC<TournamentsPageProps> = ({
           <div className="pt-2 flex justify-center">
             <button
               onClick={() => onStartOnboarding('Academy')}
-              className="px-6 py-3.5 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-slate-950 font-serif font-bold text-xs shadow-xl shadow-[#C89630]/25 flex items-center gap-2 cursor-pointer"
+              className="px-6 py-3.5 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-on-gold font-serif font-bold text-xs shadow-xl shadow-[#C89630]/25 flex items-center gap-2 cursor-pointer"
             >
               <span>Apply for Tournament Squad</span>
               <ArrowRight className="w-3.5 h-3.5" />

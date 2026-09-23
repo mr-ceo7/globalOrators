@@ -55,15 +55,11 @@ class Settings(BaseSettings):
     DEFAULT_COACH_PASSWORD: str = os.getenv("DEFAULT_COACH_PASSWORD", "Coach@123")
     COACH_INVITE_CODE: str = os.getenv("COACH_INVITE_CODE", "globalorators-coach-invite-2026")
 
-    def is_head_coach_email(self, email: Optional[str]) -> bool:
-        if not email:
+    def is_head_coach(self, user_id: Optional[str], email: Optional[str], role: Optional[str] = "coach") -> bool:
+        """The head coach is coach-1 or the DEFAULT_COACH_EMAIL account (same rule as data access)."""
+        if role != "coach":
             return False
-        clean = email.strip().lower()
-        return clean in {
-            self.DEFAULT_COACH_EMAIL.strip().lower(),
-            "kassimmusa322@gmail.com",
-            "coach@globalorators.com",
-        }
+        return user_id == "coach-1" or bool(email) and email.strip().lower() == self.DEFAULT_COACH_EMAIL.strip().lower()
 
     # Durable Storage Configuration (Local Disk or Private S3/Object Storage)
     STORAGE_BACKEND: str = os.getenv("STORAGE_BACKEND", "local")  # "local" or "s3"

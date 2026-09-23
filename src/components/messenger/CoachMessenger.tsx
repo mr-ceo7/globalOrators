@@ -32,6 +32,7 @@ import { useApp } from '../../context/AppContext';
 import { ChatMessage, Client } from '../../types';
 import { LiveRehearsalRoom } from '../live/LiveRehearsalRoom';
 import { OratorAvatar } from '../common/OratorAvatar';
+import { localDateString, formatMessageTime } from '../../utils/date';
 
 // WhatsApp Standard Quick Reactions
 const WHATSAPP_REACTIONS = ['👍', '🎙️', '🔥', '👏', '💡', '❤️'];
@@ -580,7 +581,7 @@ export const CoachMessenger: React.FC = () => {
                       {client.name}
                     </h4>
                     <span className="text-[10px] font-mono text-slate-400">
-                      {lastMsg ? lastMsg.timestamp.split('T')[1]?.substring(0, 5) || lastMsg.timestamp : '10:30'}
+                      {lastMsg ? formatMessageTime(lastMsg.timestamp) : ''}
                     </span>
                   </div>
                   <div className="flex items-center justify-between mt-0.5">
@@ -807,7 +808,7 @@ export const CoachMessenger: React.FC = () => {
                     <div 
                       className={`h-7 w-7 rounded-xl flex items-center justify-center font-bold text-[10px] shrink-0 self-end border transition-colors ${
                         isHeadCoachSender
-                          ? 'bg-[#C89630]/20 border-[#C89630]/70 text-[#C89630] shadow-sm'
+                          ? 'bg-[#C89630]/20 border-[#C89630]/70 text-brand-gold shadow-sm'
                           : 'bg-emerald-950 border border-emerald-500/40 text-emerald-400'
                       }`}
                       title={`${msgCoachName} (${isHeadCoachSender ? 'Faculty Head' : 'Faculty Coach'})`}
@@ -835,13 +836,13 @@ export const CoachMessenger: React.FC = () => {
                       {isCoach && (
                         <div className="flex items-center gap-1.5 mb-2 pb-1 border-b border-emerald-500/20">
                           <span className={`text-[11px] font-semibold tracking-tight ${
-                            isHeadCoachSender ? 'text-[#C89630]' : 'text-emerald-300'
+                            isHeadCoachSender ? 'text-brand-gold' : 'text-emerald-300'
                           }`}>
                             {msgCoachName}
                           </span>
                           <span className={`text-[9px] font-mono tracking-wider uppercase px-1.5 py-0.5 rounded border ${
                             isHeadCoachSender
-                              ? 'bg-[#C89630]/15 text-[#C89630] border-[#C89630]/30'
+                              ? 'bg-[#C89630]/15 text-brand-gold border-[#C89630]/30'
                               : 'bg-emerald-950/60 text-emerald-400 border-emerald-500/30'
                           }`}>
                             {isHeadCoachSender ? 'Faculty Head' : 'Faculty Coach'}
@@ -1031,7 +1032,7 @@ export const CoachMessenger: React.FC = () => {
 
                       {/* Message Footer: Timestamp & WhatsApp Delivery Checkmarks */}
                       <div className="flex items-center justify-end gap-1 mt-1 text-[9px] text-slate-400">
-                        <span>{msg.timestamp?.split('T')[1]?.substring(0, 5) || msg.timestamp || '12:00'}</span>
+                        <span>{formatMessageTime(msg.timestamp)}</span>
                         {isCoach && (
                           <CheckCheck 
                             className={`h-3 w-3 ${msg.isRead ? 'text-cyan-400' : 'text-slate-400'}`}
@@ -1250,7 +1251,7 @@ export const CoachMessenger: React.FC = () => {
               addCoachNote(activeClient.id, `Live Rehearsal (${durMin} min, ${wpm} WPM, Score: ${score}/10): ${notes}`);
               addMetricEntry({
                 clientId: activeClient.id,
-                date: new Date().toISOString().split('T')[0],
+                date: localDateString(),
                 weightKg: wpm,
                 bodyFatPercentage: score * 10,
                 notes: `Live Room Rehearsal (${durMin} min): ${notes}`

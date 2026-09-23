@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { test, expect, apiLogin, openAuthed, snap, recordLayout } from './helpers';
+import { test, expect, HEAD_COACH, apiLogin, openAuthed, snap, recordLayout } from './helpers';
 
 const COACH_TABS = [
   'Dashboard', 'Speakers & Debaters', 'Faculty Coaches', 'Curriculum Builder',
@@ -9,7 +9,8 @@ const COACH_TABS = [
 test.describe('coach OS screens', () => {
   let token = '';
   test.beforeAll(async () => {
-    const r = await apiLogin();
+    // Head coach: Faculty Coaches and Invoices are head-coach-only tabs.
+    const r = await apiLogin(HEAD_COACH.email, HEAD_COACH.password);
     expect(r.status).toBe(200);
     token = r.body.access_token;
   });

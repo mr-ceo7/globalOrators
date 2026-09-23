@@ -125,7 +125,7 @@ export const GlobalOratorsLogo: React.FC<GlobalOratorsLogoProps> = ({
             The
           </span>
           <span className="font-serif font-black text-sm sm:text-base tracking-tight text-slate-100 dark:text-slate-100">
-            GLOBAL <span className="text-[#C89630] dark:text-[#E3B95C]">ORATORS</span>
+            GLOBAL <span className="text-brand-gold dark:text-[#E3B95C]">ORATORS</span>
           </span>
           <span className="text-[8px] font-mono tracking-widest uppercase text-slate-400 opacity-70 mt-0.5">
             Project

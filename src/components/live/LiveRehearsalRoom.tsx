@@ -24,6 +24,7 @@ import {
   Settings 
 } from 'lucide-react';
 import { fetchLiveJitsiDomain } from '../../services/jitsiDiscovery';
+import { isHeadCoach } from '../../utils/roles';
 
 export interface LiveRehearsalRoomProps {
   isOpen: boolean;
@@ -131,8 +132,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
       return null;
     }
   })();
-  const isHeadCoach = currentStoredUser?.id === 'coach-1' || currentStoredUser?.email?.toLowerCase() === 'kassimmusa322@gmail.com' || currentStoredUser?.email?.toLowerCase() === 'coach@globalorators.com';
-  const coachLabel = currentStoredUser?.full_name || (isHeadCoach ? 'Head Coach Qassim' : 'Faculty Coach');
+  const coachLabel = currentStoredUser?.full_name || (isHeadCoach(currentStoredUser) ? 'Head Coach Qassim' : 'Faculty Coach');
   const displayName = userRole === 'coach' ? coachLabel : speakerName;
   const effectiveRoomId = (roomInput.trim() || safeRoomId).replace(/[^a-zA-Z0-9_-]/g, '');
   const selfHostedMeetingUrl = `https://${jitsiDomain}/${effectiveRoomId}#config.prejoinConfig.enabled=true&config.prejoinPageEnabled=true&config.defaultLanguage="en"&config.disableDeepLinking=true&userInfo.displayName=${encodeURIComponent(displayName)}&interfaceConfig.SHOW_JITSI_WATERMARK=false&interfaceConfig.SHOW_WATERMARK_FOR_GUESTS=false&interfaceConfig.SHOW_BRAND_WATERMARK=false&interfaceConfig.SHOW_POWERED_BY=false&interfaceConfig.SHOW_CHROME_EXTENSION_BANNER=false`;
@@ -672,7 +672,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
       {/* Top Architectural Navigation Bar */}
       <header className="h-16 px-4 sm:px-6 bg-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-xl bg-[#C89630]/15 border border-[#C89630]/30 flex items-center justify-center text-[#C89630] shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-[#C89630]/15 border border-[#C89630]/30 flex items-center justify-center text-brand-gold shrink-0">
             <Radio className="w-5 h-5 animate-pulse" />
           </div>
           <div className="truncate">
@@ -680,7 +680,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
               <h2 id="live-room-title" className="text-sm sm:text-base font-serif font-bold text-white tracking-tight truncate">
                 {roomTitle}
               </h2>
-              <span className="hidden sm:inline-flex text-[10px] font-mono tracking-widest uppercase bg-[#C89630]/15 text-[#C89630] px-2 py-0.5 rounded border border-[#C89630]/30">
+              <span className="hidden sm:inline-flex text-[10px] font-mono tracking-widest uppercase bg-[#C89630]/15 text-brand-gold px-2 py-0.5 rounded border border-[#C89630]/30">
                 Live Studio
               </span>
             </div>
@@ -700,7 +700,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
               onClick={() => setStudioMode('jitsi')}
               className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all ${
                 studioMode === 'jitsi'
-                  ? 'bg-[#C89630] text-slate-950 font-bold shadow-sm'
+                  ? 'bg-[#C89630] text-on-gold font-bold shadow-sm'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
               title="Sovereign multi-participant chamber"
@@ -712,7 +712,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
               onClick={() => setStudioMode('native')}
               className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all ${
                 studioMode === 'native'
-                  ? 'bg-[#C89630] text-slate-950 font-bold shadow-sm'
+                  ? 'bg-[#C89630] text-on-gold font-bold shadow-sm'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
               title="Direct 1-on-1 peer-to-peer rehearsal studio with audio diagnostics"
@@ -759,7 +759,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
           }}
           className={`min-h-[44px] py-2 text-xs font-mono uppercase tracking-wider text-center rounded-lg flex items-center justify-center gap-1.5 transition-colors ${
             rehearsalMode === 'rehearse'
-              ? 'bg-[#C89630] text-slate-950 font-bold shadow-sm'
+              ? 'bg-[#C89630] text-on-gold font-bold shadow-sm'
               : 'text-slate-400 hover:text-white'
           }`}
         >
@@ -777,7 +777,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
           }}
           className={`min-h-[44px] py-2 text-xs font-mono uppercase tracking-wider text-center rounded-lg flex items-center justify-center gap-1.5 transition-colors ${
             rehearsalMode === 'evaluate'
-              ? 'bg-[#C89630] text-slate-950 font-bold shadow-sm'
+              ? 'bg-[#C89630] text-on-gold font-bold shadow-sm'
               : 'text-slate-400 hover:text-white'
           }`}
         >
@@ -795,7 +795,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
           }}
           className={`min-h-[44px] py-2 text-xs font-mono uppercase tracking-wider text-center rounded-lg flex items-center justify-center gap-1.5 transition-colors ${
             rehearsalMode === 'debrief'
-              ? 'bg-[#C89630] text-slate-950 font-bold shadow-sm'
+              ? 'bg-[#C89630] text-on-gold font-bold shadow-sm'
               : 'text-slate-400 hover:text-white'
           }`}
         >
@@ -817,9 +817,9 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
             <div className="flex-1 flex flex-col min-h-0">
               <div className="mb-2 px-3 py-1.5 rounded-lg bg-slate-900/90 border border-slate-800 flex items-center justify-between text-xs font-mono text-slate-400">
                 <div className="flex items-center gap-2 truncate">
-                  <Server className="w-3.5 h-3.5 text-[#C89630]" />
+                  <Server className="w-3.5 h-3.5 text-brand-gold" />
                   <span className="text-slate-200 font-medium">Sovereign SFU:</span>
-                  <span className="text-[#C89630]">
+                  <span className="text-brand-gold">
                     {jitsiDomain.includes('trycloudflare') ? 'Private Faculty Node' : jitsiDomain}
                   </span>
                   <span className="hidden sm:inline text-[9px] text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/40 uppercase tracking-wider">
@@ -831,7 +831,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
                     href={selfHostedMeetingUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs text-[#C89630] hover:text-[#e0ab44] transition-colors"
+                    className="inline-flex items-center gap-1 text-xs text-brand-gold hover:text-[#e0ab44] transition-colors"
                     title="Launch directly in fullscreen browser tab (recommended for mobile devices)"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
@@ -840,7 +840,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
                   {hasEnteredChamber && (
                     <button
                       onClick={() => setHasEnteredChamber(false)}
-                      className="text-xs text-[#C89630] hover:text-[#e0ab44] underline"
+                      className="text-xs text-brand-gold hover:text-[#e0ab44] underline"
                     >
                       Chamber Screen
                     </button>
@@ -869,7 +869,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
                     href={selfHostedMeetingUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="shrink-0 px-2.5 py-1 rounded-lg bg-[#C89630] hover:bg-[#d9a53b] text-slate-950 font-medium text-xs flex items-center gap-1.5 transition-colors"
+                    className="shrink-0 px-2.5 py-1 rounded-lg bg-[#C89630] hover:bg-[#d9a53b] text-on-gold font-medium text-xs flex items-center gap-1.5 transition-colors"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
                     <span>Open Secure Chamber</span>
@@ -900,7 +900,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
                       Global Orators Chamber
                     </h1>
 
-                    <p className="text-xs sm:text-sm font-mono tracking-[0.14em] text-[#C89630] font-semibold uppercase drop-shadow-sm mb-7 sm:mb-8">
+                    <p className="text-xs sm:text-sm font-mono tracking-[0.14em] text-brand-gold font-semibold uppercase drop-shadow-sm mb-7 sm:mb-8">
                       SPEAK INSPIRE CONNECT CHANGE THE WORLD.
                     </p>
 
@@ -923,7 +923,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
                       />
                       <button
                         type="submit"
-                        className="bg-[#C89630] hover:bg-[#d9a53b] text-slate-950 font-bold px-6 sm:px-8 py-3.5 text-sm sm:text-base transition-colors shrink-0 whitespace-nowrap cursor-pointer active:scale-98"
+                        className="bg-[#C89630] hover:bg-[#d9a53b] text-on-gold font-bold px-6 sm:px-8 py-3.5 text-sm sm:text-base transition-colors shrink-0 whitespace-nowrap cursor-pointer active:scale-98"
                       >
                         Enter Chamber
                       </button>
@@ -936,7 +936,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
                       href="https://galvaniytechnologies.xn--jhb4c.com/"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[11px] font-mono tracking-[0.2em] text-slate-500 hover:text-[#C89630] transition-colors uppercase font-semibold inline-block"
+                      className="text-[11px] font-mono tracking-[0.2em] text-slate-500 hover:text-brand-gold transition-colors uppercase font-semibold inline-block"
                       title="Galvaniy Technologies"
                     >
                       POWERED BY GALVANIY TECHNOLOGIES
@@ -979,7 +979,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
                   ) : (
                     <div className="p-6 text-center max-w-sm flex flex-col items-center">
                       <div className="w-14 h-14 rounded-2xl bg-slate-800/80 border border-slate-700/80 flex items-center justify-center text-slate-400 mb-4 shadow-inner">
-                        <Users className="w-7 h-7 text-[#C89630]/70" />
+                        <Users className="w-7 h-7 text-brand-gold/70" />
                       </div>
                       <h3 className="text-sm font-semibold text-white mb-1">
                         {userRole === 'coach' ? `Awaiting ${speakerName}` : 'Awaiting Faculty Coach'}
@@ -990,7 +990,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
                           : 'Your coach will connect here directly from Coach App to conduct your live floor review.'}
                       </p>
                       <div className="flex items-center gap-2 text-[11px] font-mono text-slate-300 bg-slate-800/90 px-3 py-1.5 rounded-lg border border-slate-700">
-                        <span className="text-[#C89630] font-bold">ROOM:</span>
+                        <span className="text-brand-gold font-bold">ROOM:</span>
                         <span className="truncate max-w-[170px]">{safeRoomId}</span>
                       </div>
                     </div>
@@ -1025,7 +1025,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
                       <p className="text-xs text-slate-400 font-medium">Camera is Disabled</p>
                       <button
                         onClick={toggleVideo}
-                        className="mt-2 text-[11px] text-[#C89630] hover:underline font-mono"
+                        className="mt-2 text-[11px] text-brand-gold hover:underline font-mono"
                       >
                         Turn Camera On
                       </button>
@@ -1033,14 +1033,14 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
                   )}
 
                   <div className="absolute top-3 left-3 bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded-md border border-slate-800 text-[10px] font-mono uppercase tracking-wider text-slate-200 flex items-center gap-2">
-                    <span className="text-[9px] text-[#C89630] font-bold">LOCAL</span>
+                    <span className="text-[9px] text-brand-gold font-bold">LOCAL</span>
                     <span className="text-slate-700">|</span>
                     <span>{userRole === 'coach' ? 'You (Coach Lead)' : `You (${speakerName})`}</span>
                   </div>
 
                   {/* Vocal Projection VU Meter */}
                   <div className="absolute bottom-3 left-3 right-3 bg-slate-950/85 backdrop-blur-md px-3 py-1.5 rounded-lg border border-slate-800/80 flex items-center gap-2.5 text-slate-300">
-                    <Volume2 className="w-3.5 h-3.5 text-[#C89630] shrink-0" />
+                    <Volume2 className="w-3.5 h-3.5 text-brand-gold shrink-0" />
                     <div className="flex-1 flex flex-col gap-0.5">
                       <div className="flex justify-between text-[9px] font-mono text-slate-400">
                         <span>Vocal Projection</span>
@@ -1096,7 +1096,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
                     onClick={toggleScreenShare}
                     className={`p-2.5 rounded-xl border transition-all flex items-center gap-2 text-xs font-medium ${
                       isScreenSharing 
-                        ? 'bg-[#C89630]/20 border-[#C89630]/60 text-[#C89630]' 
+                        ? 'bg-[#C89630]/20 border-[#C89630]/60 text-brand-gold' 
                         : 'bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700'
                     }`}
                     title="Share debate motion, brief, or slide deck"
@@ -1136,7 +1136,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
               onClick={() => setRehearsalMode('rehearse')}
               className={`min-h-[44px] px-2 py-2 rounded-lg font-semibold transition-all text-center flex items-center justify-center gap-1.5 ${
                 rehearsalMode === 'rehearse'
-                  ? 'bg-[#C89630] text-slate-950 font-bold shadow-sm'
+                  ? 'bg-[#C89630] text-on-gold font-bold shadow-sm'
                   : 'text-slate-400 hover:text-white hover:bg-slate-900'
               }`}
             >
@@ -1151,7 +1151,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
               onClick={() => setRehearsalMode('evaluate')}
               className={`min-h-[44px] px-2 py-2 rounded-lg font-semibold transition-all text-center flex items-center justify-center gap-1.5 ${
                 rehearsalMode === 'evaluate'
-                  ? 'bg-[#C89630] text-slate-950 font-bold shadow-sm'
+                  ? 'bg-[#C89630] text-on-gold font-bold shadow-sm'
                   : 'text-slate-400 hover:text-white hover:bg-slate-900'
               }`}
             >
@@ -1166,7 +1166,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
               onClick={() => setRehearsalMode('debrief')}
               className={`min-h-[44px] px-2 py-2 rounded-lg font-semibold transition-all text-center flex items-center justify-center gap-1.5 ${
                 rehearsalMode === 'debrief'
-                  ? 'bg-[#C89630] text-slate-950 font-bold shadow-sm'
+                  ? 'bg-[#C89630] text-on-gold font-bold shadow-sm'
                   : 'text-slate-400 hover:text-white hover:bg-slate-900'
               }`}
             >
@@ -1186,7 +1186,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
             <section className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-slate-400">
-                  <Clock className="w-3.5 h-3.5 text-[#C89630]" />
+                  <Clock className="w-3.5 h-3.5 text-brand-gold" />
                   <span>Practice Clock</span>
                 </div>
                 <span className="text-[10px] font-mono text-slate-400">
@@ -1287,8 +1287,8 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
                   onClick={() => setIsTimerRunning(!isTimerRunning)}
                   className={`min-h-[44px] flex-1 py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 text-xs font-bold transition-all shadow-md active:scale-95 ${
                     isTimerRunning 
-                      ? 'bg-amber-600 hover:bg-amber-500 text-slate-950' 
-                      : 'bg-[#C89630] hover:bg-[#d6a543] text-slate-950'
+                      ? 'bg-amber-600 hover:bg-amber-500 text-on-gold' 
+                      : 'bg-[#C89630] hover:bg-[#d6a543] text-on-gold'
                   }`}
                 >
                   {isTimerRunning ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current" />}
@@ -1311,20 +1311,20 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
 
             {/* Rehearsal Objectives Card */}
             <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4">
-              <div className="text-[10px] font-mono text-[#C89630] uppercase tracking-wider font-semibold mb-2">
+              <div className="text-[10px] font-mono text-brand-gold uppercase tracking-wider font-semibold mb-2">
                 Session Directives
               </div>
               <ul className="space-y-2 text-xs text-slate-300">
                 <li className="flex items-start gap-2">
-                  <Check className="w-3.5 h-3.5 text-[#C89630] shrink-0 mt-0.5" />
+                  <Check className="w-3.5 h-3.5 text-brand-gold shrink-0 mt-0.5" />
                   <span>Command the opening without filler qualifiers or throat clearing.</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <Check className="w-3.5 h-3.5 text-[#C89630] shrink-0 mt-0.5" />
+                  <Check className="w-3.5 h-3.5 text-brand-gold shrink-0 mt-0.5" />
                   <span>Maintain diaphragmatic breath support at 135–145 WPM cadence.</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <Check className="w-3.5 h-3.5 text-[#C89630] shrink-0 mt-0.5" />
+                  <Check className="w-3.5 h-3.5 text-brand-gold shrink-0 mt-0.5" />
                   <span>Advance to Evaluate tab after final peroration to review coach rubric.</span>
                 </li>
               </ul>
@@ -1341,10 +1341,10 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
             <section className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col gap-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-slate-400">
-                  <FileText className="w-3.5 h-3.5 text-[#C89630]" />
+                  <FileText className="w-3.5 h-3.5 text-brand-gold" />
                   <span>{isExecutiveRoom ? 'Executive Delivery & Poise Rubric' : 'Coach Live Evaluation Rubric'}</span>
                 </div>
-                <span className="text-xs font-mono text-[#C89630] font-bold">
+                <span className="text-xs font-mono text-brand-gold font-bold">
                   {rubricScore}/10 Score
                 </span>
               </div>
@@ -1431,10 +1431,10 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
             <section className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm space-y-4">
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                 <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-slate-400">
-                  <Save className="w-3.5 h-3.5 text-[#C89630]" />
+                  <Save className="w-3.5 h-3.5 text-brand-gold" />
                   <span>Session Debrief & Vault Archive</span>
                 </div>
-                <span className="text-[10px] font-mono text-[#C89630] font-bold">
+                <span className="text-[10px] font-mono text-brand-gold font-bold">
                   {timerPreset - secondsRemaining > 0 ? `${Math.floor((timerPreset - secondsRemaining) / 60)}m ${(timerPreset - secondsRemaining) % 60}s Logged` : 'Ready to Debrief'}
                 </span>
               </div>
@@ -1443,13 +1443,13 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
               <div className="grid grid-cols-2 gap-2">
                 <div className="bg-slate-950 p-3 rounded-xl border border-slate-800/80">
                   <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Evaluation Score</div>
-                  <div className="text-xl font-serif font-bold text-[#C89630] mt-0.5">{rubricScore} / 10</div>
+                  <div className="text-xl font-serif font-bold text-brand-gold mt-0.5">{rubricScore} / 10</div>
                   <div className="text-[10px] font-mono text-emerald-400 mt-0.5">High Composure</div>
                 </div>
                 <div className="bg-slate-950 p-3 rounded-xl border border-slate-800/80">
                   <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Speaking Cadence</div>
                   <div className="text-xl font-serif font-bold text-white mt-0.5">{cadenceWpm} <span className="text-xs font-mono font-normal text-slate-400">WPM</span></div>
-                  <div className="text-[10px] font-mono text-[#C89630] mt-0.5">Controlled Tempo</div>
+                  <div className="text-[10px] font-mono text-brand-gold mt-0.5">Controlled Tempo</div>
                 </div>
               </div>
 
@@ -1465,7 +1465,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
 
               {/* Prescribed Next Action */}
               <div className="bg-[#C89630]/5 border border-[#C89630]/20 rounded-xl p-3.5">
-                <div className="text-[10px] font-mono text-[#C89630] uppercase tracking-wider font-bold mb-1">
+                <div className="text-[10px] font-mono text-brand-gold uppercase tracking-wider font-bold mb-1">
                   Next Immediate Drill
                 </div>
                 <p className="text-xs text-slate-300 leading-relaxed">

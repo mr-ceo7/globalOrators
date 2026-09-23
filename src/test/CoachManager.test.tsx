@@ -12,7 +12,7 @@ vi.mock('../services/apiClient', () => ({
     googleAuth: vi.fn(),
     sendOtp: vi.fn(),
     verifyOtp: vi.fn(),
-    me: vi.fn().mockResolvedValue({ email: 'coach@globalorators.com', role: 'coach' })
+    me: vi.fn().mockResolvedValue({ id: 'coach-1', email: 'coach@globalorators.com', role: 'coach', is_head_coach: true })
   },
   clientsApi: {
     list: vi.fn().mockResolvedValue([
@@ -152,6 +152,7 @@ describe('CoachManager Component Tests', () => {
     localStorage.setItem('globalorators_token', 'mock-coach-token');
     localStorage.setItem('globalorators_user', JSON.stringify({
       id: 'coach-1',
+      is_head_coach: true, // computed by the backend on every user object
       email: 'coach@globalorators.com',
       role: 'coach',
       full_name: 'Arthur Vance'

@@ -3,7 +3,7 @@ Authentication Pydantic Schemas
 """
 
 from typing import Optional
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 
 
 class LoginRequest(BaseModel):
@@ -34,8 +34,16 @@ class UserResponse(BaseModel):
     role: str
     avatar: str
     is_active: bool
+    # Computed server-side so the frontend never hard-codes who the head coach is.
+    is_head_coach: bool = False
 
     model_config = ConfigDict(from_attributes=True)
+
+    @model_validator(mode="after")
+    def _compute_head_coach(self):
+        from app.config import settings
+        self.is_head_coach = settings.is_head_coach(self.id, self.email, self.role)
+        return self
 
 
 class TokenResponse(BaseModel):

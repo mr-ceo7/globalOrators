@@ -42,6 +42,16 @@ export const clearAuthSession = () => {
 };
 
 const SESSION_EXPIRED_MESSAGE = 'Your session has expired. Please sign in again.';
+export const NETWORK_ERROR_MESSAGE = 'Unable to reach the server. Check your connection and try again.';
+
+// fetch() rejects (TypeError: Failed to fetch) when the server can't be reached at all.
+const fetchOrNetworkError = async (url: string, init: RequestInit): Promise<Response> => {
+  try {
+    return await fetch(url, init);
+  } catch {
+    throw new Error(NETWORK_ERROR_MESSAGE);
+  }
+};
 
 // Endpoints where a 401 means "wrong credentials" rather than "session expired".
 const CREDENTIAL_ENDPOINTS = [
@@ -88,7 +98,7 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(url, {
+    const response = await fetchOrNetworkError(url, {
       ...options,
       headers,
     });
@@ -164,7 +174,7 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(url, {
+    const response = await fetchOrNetworkError(url, {
       method: 'POST',
       headers,
       body: formData,
@@ -192,7 +202,7 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(url, { method: 'GET', headers });
+    const response = await fetchOrNetworkError(url, { method: 'GET', headers });
     if (!response.ok) {
       if (response.status === 401) {
         clearAuthSession();

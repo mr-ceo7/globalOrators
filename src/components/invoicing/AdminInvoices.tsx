@@ -220,7 +220,7 @@ export const AdminInvoices: React.FC = () => {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
         <div>
-          <div className="text-[10px] font-mono tracking-widest uppercase text-[#C89630] font-semibold mb-1">
+          <div className="text-[10px] font-mono tracking-widest uppercase text-brand-gold font-semibold mb-1">
             Global Orators · Financial Dispatch
           </div>
           <h1 className="font-serif font-black text-2xl sm:text-3xl text-slate-100">
@@ -250,8 +250,8 @@ export const AdminInvoices: React.FC = () => {
             }}
             className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-md ${
               view === 'create'
-                ? 'bg-[#C89630] text-slate-950 shadow-[#C89630]/20'
-                : 'bg-slate-900 border border-[#C89630]/40 text-[#C89630] hover:bg-[#C89630]/10'
+                ? 'bg-[#C89630] text-on-gold shadow-[#C89630]/20'
+                : 'bg-slate-900 border border-[#C89630]/40 text-brand-gold hover:bg-[#C89630]/10'
             }`}
           >
             <Plus className="w-3.5 h-3.5" />
@@ -306,7 +306,7 @@ export const AdminInvoices: React.FC = () => {
                 <tbody className="divide-y divide-slate-800/60">
                   {invoices.map((inv) => (
                     <tr key={inv.id} className="hover:bg-slate-800/30 transition-colors">
-                      <td className="py-4 px-5 font-mono font-bold text-[#C89630]">
+                      <td className="py-4 px-5 font-mono font-bold text-brand-gold">
                         {inv.invoiceNumber}
                       </td>
                       <td className="py-4 px-5">
@@ -380,7 +380,7 @@ export const AdminInvoices: React.FC = () => {
           <div className="lg:col-span-1">
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
               <div className="flex items-center gap-2 text-slate-200 font-serif font-bold text-base">
-                <Sparkles className="w-4 h-4 text-[#C89630]" />
+                <Sparkles className="w-4 h-4 text-brand-gold" />
                 <span>AI Drafting Assistant</span>
               </div>
               <p className="text-xs text-slate-400 leading-relaxed">
@@ -396,7 +396,7 @@ export const AdminInvoices: React.FC = () => {
                 type="button"
                 onClick={generateWithAI}
                 disabled={isGenerating || !aiPrompt.trim()}
-                className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 border border-[#C89630]/30 text-[#C89630] font-mono text-xs font-bold rounded-xl transition-colors disabled:opacity-50"
+                className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 border border-[#C89630]/30 text-brand-gold font-mono text-xs font-bold rounded-xl transition-colors disabled:opacity-50"
               >
                 {isGenerating ? 'Analyzing prompt...' : 'Populate Invoice Form'}
               </button>
@@ -478,7 +478,7 @@ export const AdminInvoices: React.FC = () => {
                   <button
                     type="button"
                     onClick={addItem}
-                    className="text-xs font-mono font-bold text-[#C89630] hover:text-[#D9A741] inline-flex items-center gap-1"
+                    className="text-xs font-mono font-bold text-brand-gold hover:text-[#D9A741] inline-flex items-center gap-1"
                   >
                     <Plus className="w-3.5 h-3.5" /> Add Line
                   </button>
@@ -563,7 +563,7 @@ export const AdminInvoices: React.FC = () => {
                   </div>
                   <div className="flex justify-between items-center font-mono font-bold text-sm text-slate-100 pt-1">
                     <span>Total:</span>
-                    <span className="text-[#C89630]">KES {totalAmount.toLocaleString()}</span>
+                    <span className="text-brand-gold">KES {totalAmount.toLocaleString()}</span>
                   </div>
                 </div>
               </div>
@@ -572,7 +572,7 @@ export const AdminInvoices: React.FC = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3 bg-[#C89630] hover:bg-[#D9A741] text-slate-950 font-serif font-bold text-sm rounded-xl transition-all shadow-md hover:shadow-lg disabled:opacity-50"
+                  className="w-full py-3 bg-[#C89630] hover:bg-[#D9A741] text-on-gold font-serif font-bold text-sm rounded-xl transition-all shadow-md hover:shadow-lg disabled:opacity-50"
                 >
                   {loading ? 'Registering Invoice...' : 'Generate & Issue Invoice'}
                 </button>
@@ -662,7 +662,7 @@ export const AdminInvoices: React.FC = () => {
                 <button
                   type="button"
                   onClick={addItem}
-                  className="text-xs font-mono font-bold text-[#C89630] hover:text-[#D9A741] inline-flex items-center gap-1"
+                  className="text-xs font-mono font-bold text-brand-gold hover:text-[#D9A741] inline-flex items-center gap-1"
                 >
                   <Plus className="w-3.5 h-3.5" /> Add Line
                 </button>
@@ -743,7 +743,7 @@ export const AdminInvoices: React.FC = () => {
                 </div>
                 <div className="flex justify-between items-center font-mono font-bold text-sm text-slate-100 pt-1">
                   <span>Total:</span>
-                  <span className="text-[#C89630]">KES {totalAmount.toLocaleString()}</span>
+                  <span className="text-brand-gold">KES {totalAmount.toLocaleString()}</span>
                 </div>
               </div>
             </div>
@@ -752,7 +752,7 @@ export const AdminInvoices: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 py-3 bg-[#C89630] hover:bg-[#D9A741] text-slate-950 font-serif font-bold text-sm rounded-xl transition-all shadow-md disabled:opacity-50"
+                className="flex-1 py-3 bg-[#C89630] hover:bg-[#D9A741] text-on-gold font-serif font-bold text-sm rounded-xl transition-all shadow-md disabled:opacity-50"
               >
                 {loading ? 'Saving...' : 'Save Modifications'}
               </button>

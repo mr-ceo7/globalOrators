@@ -77,9 +77,8 @@ export const CoachLoginPortal: React.FC = () => {
         // User is new: proceed directly to account setup
         setStep('register');
       }
-    } catch {
-      // Graceful fallback to password attempt if check endpoint fails
-      setStep('password');
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'Unable to check this email right now. Please try again.');
     } finally {
       setIsCheckingEmail(false);
     }
@@ -172,7 +171,7 @@ export const CoachLoginPortal: React.FC = () => {
           <GlobalOratorsLogo className="w-8 h-8" colorMode="gold" />
           <div className="flex flex-col">
             <span className="font-serif font-bold text-sm tracking-tight text-white">Global Orators</span>
-            <span className="text-[10px] font-mono tracking-widest text-[#C89630] uppercase">Coach App</span>
+            <span className="text-[10px] font-mono tracking-widest text-brand-gold uppercase">Coach App</span>
           </div>
         </div>
 
@@ -188,7 +187,7 @@ export const CoachLoginPortal: React.FC = () => {
             onClick={() => setCurrentPortal('speaker_app')}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-800 hover:border-slate-700 bg-slate-900/60 hover:bg-slate-900 text-slate-300 hover:text-white transition-all cursor-pointer"
           >
-            <Mic className="w-3.5 h-3.5 text-[#C89630]" />
+            <Mic className="w-3.5 h-3.5 text-brand-gold" />
             <span className="hidden sm:inline">Orators App</span>
           </button>
         </div>
@@ -199,7 +198,7 @@ export const CoachLoginPortal: React.FC = () => {
         <div className="w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-2xl p-5 sm:p-8 shadow-2xl shadow-black/80 backdrop-blur-sm overflow-hidden">
           {/* Header Greeting & Title */}
           <div className="text-center mb-6">
-            <div className="text-xs font-serif italic text-[#C89630] mb-2 tracking-wide">
+            <div className="text-xs font-serif italic text-brand-gold mb-2 tracking-wide">
               Welcome, Coach
             </div>
             <h1 className="text-2xl sm:text-3xl font-serif font-bold text-white tracking-tight">
@@ -217,7 +216,7 @@ export const CoachLoginPortal: React.FC = () => {
           {step !== 'email' && (
             <div className="mb-5 p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 min-w-0">
-                <Mail className="w-4 h-4 text-[#C89630] shrink-0" />
+                <Mail className="w-4 h-4 text-brand-gold shrink-0" />
                 <div className="truncate text-xs font-mono text-slate-200">
                   {email}
                 </div>
@@ -225,7 +224,7 @@ export const CoachLoginPortal: React.FC = () => {
               <button
                 type="button"
                 onClick={handleResetToEmail}
-                className="text-[11px] font-mono text-[#C89630] hover:text-[#E3B95C] underline shrink-0 cursor-pointer"
+                className="text-[11px] font-mono text-brand-gold hover:text-[#E3B95C] underline shrink-0 cursor-pointer"
               >
                 Change
               </button>
@@ -257,7 +256,7 @@ export const CoachLoginPortal: React.FC = () => {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <Mail className="w-4 h-4 text-[#C89630]" />
+                    <Mail className="w-4 h-4 text-brand-gold" />
                   </div>
                   <input
                     id="coach-email-input"
@@ -275,7 +274,7 @@ export const CoachLoginPortal: React.FC = () => {
               <button
                 type="submit"
                 disabled={isCheckingEmail}
-                className="w-full mt-2 py-3 px-4 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-slate-950 font-serif font-bold text-sm shadow-lg shadow-[#C89630]/20 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full mt-2 py-3 px-4 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-on-gold font-serif font-bold text-sm shadow-lg shadow-[#C89630]/20 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isCheckingEmail ? (
                   <>
@@ -321,7 +320,7 @@ export const CoachLoginPortal: React.FC = () => {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <Lock className="w-4 h-4 text-[#C89630]" />
+                    <Lock className="w-4 h-4 text-brand-gold" />
                   </div>
                   <input
                     id="coach-password-input"
@@ -339,7 +338,7 @@ export const CoachLoginPortal: React.FC = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full mt-2 py-3 px-4 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-slate-950 font-serif font-bold text-sm shadow-lg shadow-[#C89630]/20 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full mt-2 py-3 px-4 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-on-gold font-serif font-bold text-sm shadow-lg shadow-[#C89630]/20 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
                   <>
@@ -376,7 +375,7 @@ export const CoachLoginPortal: React.FC = () => {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <User className="w-4 h-4 text-[#C89630]" />
+                    <User className="w-4 h-4 text-brand-gold" />
                   </div>
                   <input
                     id="coach-reg-name-input"
@@ -397,7 +396,7 @@ export const CoachLoginPortal: React.FC = () => {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <Lock className="w-4 h-4 text-[#C89630]" />
+                    <Lock className="w-4 h-4 text-brand-gold" />
                   </div>
                   <input
                     id="coach-reg-password-input"
@@ -418,7 +417,7 @@ export const CoachLoginPortal: React.FC = () => {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <KeyRound className="w-4 h-4 text-[#C89630]" />
+                    <KeyRound className="w-4 h-4 text-brand-gold" />
                   </div>
                   <input
                     id="coach-reg-invite-input"
@@ -436,7 +435,7 @@ export const CoachLoginPortal: React.FC = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full mt-2 py-3 px-4 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-slate-950 font-serif font-bold text-sm shadow-lg shadow-[#C89630]/20 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full mt-2 py-3 px-4 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-on-gold font-serif font-bold text-sm shadow-lg shadow-[#C89630]/20 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
                   <>
@@ -503,7 +502,7 @@ export const CoachLoginPortal: React.FC = () => {
             Speakers and debaters should log in through the{' '}
             <button
               onClick={() => setCurrentPortal('speaker_app')}
-              className="text-[#C89630] hover:text-[#E3B95C] underline font-semibold cursor-pointer"
+              className="text-brand-gold hover:text-[#E3B95C] underline font-semibold cursor-pointer"
             >
               Orators App
             </button>

@@ -177,7 +177,7 @@ export const PartnerModal: React.FC<PartnerModalProps> = ({ isOpen, onClose, bra
             <div className="pt-2 flex flex-col sm:flex-row gap-2">
               <button
                 onClick={onClose}
-                className="flex-1 py-2.5 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-slate-950 font-serif font-bold text-xs transition-colors cursor-pointer"
+                className="flex-1 py-2.5 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-on-gold font-serif font-bold text-xs transition-colors cursor-pointer"
               >
                 Done
               </button>
@@ -354,7 +354,7 @@ export const PartnerModal: React.FC<PartnerModalProps> = ({ isOpen, onClose, bra
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 py-2.5 rounded-xl bg-[#C89630] text-slate-950 text-xs font-serif font-bold hover:bg-[#B37D22] flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+                  className="flex-1 py-2.5 rounded-xl bg-[#C89630] text-on-gold text-xs font-serif font-bold hover:bg-[#B37D22] flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
                 >
                   {loading ? (
                     <>

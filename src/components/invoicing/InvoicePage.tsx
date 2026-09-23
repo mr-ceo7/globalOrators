@@ -160,7 +160,7 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
         <div className="text-center space-y-3">
-          <Loader2 className="w-8 h-8 text-[#C89630] animate-spin mx-auto" />
+          <Loader2 className="w-8 h-8 text-brand-gold animate-spin mx-auto" />
           <p className="font-mono text-xs text-slate-400">Loading invoice dossier...</p>
         </div>
       </div>
@@ -202,7 +202,7 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
             </button>
             <button
               onClick={handleDownloadPDF}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#C89630]/30 bg-slate-900 text-[#C89630] hover:bg-[#C89630]/10 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#C89630]/30 bg-slate-900 text-brand-gold hover:bg-[#C89630]/10 transition-colors"
             >
               <Download className="w-3.5 h-3.5" />
               <span>PDF</span>
@@ -231,7 +231,7 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
             </div>
 
             <div className="text-left sm:text-right">
-              <div className="font-serif font-bold text-lg text-[#C89630]">INVOICE</div>
+              <div className="font-serif font-bold text-lg text-brand-gold">INVOICE</div>
               <div className="font-mono text-xs text-slate-400">{invoice.invoiceNumber}</div>
             </div>
           </div>
@@ -268,7 +268,7 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
             {/* Two-Column Billing */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
               <div className="space-y-1">
-                <div className="text-[10px] font-mono tracking-widest uppercase text-[#C89630] font-semibold">
+                <div className="text-[10px] font-mono tracking-widest uppercase text-brand-gold font-semibold">
                   From (Official Payee)
                 </div>
                 <div className="font-serif font-bold text-sm text-slate-100">{GOP_BILLING_CONFIG.legalName}</div>
@@ -280,7 +280,7 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
               </div>
 
               <div className="space-y-1">
-                <div className="text-[10px] font-mono tracking-widest uppercase text-[#C89630] font-semibold">
+                <div className="text-[10px] font-mono tracking-widest uppercase text-brand-gold font-semibold">
                   Billed To
                 </div>
                 <div className="font-serif font-bold text-sm text-slate-100 whitespace-pre-wrap">
@@ -338,7 +338,7 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
                   <tr className="border-t border-slate-800 font-bold text-sm">
                     <td colSpan={2} className="py-3 px-4"></td>
                     <td className="py-3 px-4 text-right text-slate-100">TOTAL:</td>
-                    <td className="py-3 px-4 text-right text-[#C89630]">
+                    <td className="py-3 px-4 text-right text-brand-gold">
                       {invoice.currency} {invoice.total.toLocaleString()}
                     </td>
                   </tr>
@@ -349,7 +349,7 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
             {/* Notes / Terms */}
             {invoice.notes && (
               <div className="p-4 rounded-xl bg-slate-950/50 border border-slate-800 text-xs space-y-1">
-                <div className="text-[10px] font-mono tracking-widest uppercase text-[#C89630] font-semibold">
+                <div className="text-[10px] font-mono tracking-widest uppercase text-brand-gold font-semibold">
                   Notes & Terms
                 </div>
                 <p className="text-slate-300 leading-relaxed font-sans">{invoice.notes}</p>
@@ -391,7 +391,7 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
               ) : (
                 <div className="p-5 sm:p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
                   <div>
-                    <div className="text-[10px] font-mono tracking-widest uppercase text-[#C89630] font-semibold mb-1">
+                    <div className="text-[10px] font-mono tracking-widest uppercase text-brand-gold font-semibold mb-1">
                       Direct Settlement
                     </div>
                     <h3 className="font-serif font-bold text-base text-slate-100">
@@ -410,7 +410,7 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
 
                   {payStep === 'waiting' ? (
                     <div className="p-6 text-center space-y-3">
-                      <Loader2 className="w-8 h-8 text-[#C89630] animate-spin mx-auto" />
+                      <Loader2 className="w-8 h-8 text-brand-gold animate-spin mx-auto" />
                       <div className="font-mono text-xs text-slate-200 font-bold">
                         Awaiting M-Pesa PIN Confirmation...
                       </div>
@@ -433,7 +433,7 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
                       <button
                         onClick={handlePay}
                         disabled={payStep === 'sending' || !phone.trim()}
-                        className="px-6 py-2.5 bg-[#C89630] hover:bg-[#D9A741] text-slate-950 font-serif font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md hover:shadow-lg disabled:opacity-50 inline-flex items-center justify-center gap-2"
+                        className="px-6 py-2.5 bg-[#C89630] hover:bg-[#D9A741] text-on-gold font-serif font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md hover:shadow-lg disabled:opacity-50 inline-flex items-center justify-center gap-2"
                       >
                         {payStep === 'sending' ? (
                           <>

@@ -74,7 +74,7 @@ export const SpeakerSidebar: React.FC<SpeakerSidebarProps> = ({
       label: isExecutive ? 'Executive Syllabus & Roadmap' : 'Syllabus & Roadmap',
       icon: CalendarDays,
       badge: roadmapSessionsCount > 0 ? roadmapSessionsCount : undefined,
-      badgeColor: 'bg-[#C89630] text-slate-950'
+      badgeColor: 'bg-[#C89630] text-on-gold'
     },
     {
       id: 'habits' as SpeakerTabType,
@@ -93,7 +93,7 @@ export const SpeakerSidebar: React.FC<SpeakerSidebarProps> = ({
       label: coachLabel || 'Messenger',
       icon: MessageSquare,
       badge: unreadMessagesCount > 0 ? unreadMessagesCount : undefined,
-      badgeColor: 'bg-[#C89630] text-slate-950'
+      badgeColor: 'bg-[#C89630] text-on-gold'
     }
   ];
 
@@ -126,7 +126,7 @@ export const SpeakerSidebar: React.FC<SpeakerSidebarProps> = ({
               <GlobalOratorsLogo className="w-8 h-8 shrink-0" colorMode="gold" />
               <div className="flex flex-col items-stretch">
                 <span className="font-serif font-black text-[16px] tracking-tight text-slate-100 block leading-none">
-                  Global<span className="text-[#C89630]">Orators</span>
+                  Global<span className="text-brand-gold">Orators</span>
                 </span>
                 <div className="flex justify-between text-[8px] text-slate-400 font-mono tracking-widest uppercase mt-1 w-full leading-none">
                   <span>speak</span>
@@ -134,7 +134,7 @@ export const SpeakerSidebar: React.FC<SpeakerSidebarProps> = ({
                   <span>impact</span>
                 </div>
               </div>
-              <span className="text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-md bg-[#C89630]/10 text-[#C89630] border border-[#C89630]/30 leading-none self-start mt-0.5">
+              <span className="text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-md bg-[#C89630]/10 text-brand-gold border border-[#C89630]/30 leading-none self-start mt-0.5">
                 {trackBadgeLabel}
               </span>
             </div>
@@ -159,10 +159,10 @@ export const SpeakerSidebar: React.FC<SpeakerSidebarProps> = ({
           onClick={onOpenLiveChamber}
           className={`w-full min-h-[40px] rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md ${
             isExecutive
-              ? 'bg-[#C89630] hover:bg-[#d6a543] text-slate-950 shadow-[#C89630]/20'
+              ? 'bg-[#C89630] hover:bg-[#d6a543] text-on-gold shadow-[#C89630]/20'
               : isAcademy
-                ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/20'
-                : 'bg-teal-500 hover:bg-teal-400 text-slate-950 shadow-teal-500/20'
+                ? 'bg-emerald-500 hover:bg-emerald-400 text-on-gold shadow-emerald-500/20'
+                : 'bg-teal-500 hover:bg-teal-400 text-on-gold shadow-teal-500/20'
           }`}
           title="Enter Live Rehearsal Chamber"
         >
@@ -197,7 +197,7 @@ export const SpeakerSidebar: React.FC<SpeakerSidebarProps> = ({
               title={isCollapsed ? item.label : undefined}
             >
               <div className={`flex items-center justify-center shrink-0 ${
-                isActive ? 'text-[#C89630]' : 'text-slate-400 group-hover:text-slate-200'
+                isActive ? 'text-brand-gold' : 'text-slate-400 group-hover:text-slate-200'
               }`}>
                 <Icon className="h-4.5 w-4.5" />
               </div>
@@ -226,7 +226,7 @@ export const SpeakerSidebar: React.FC<SpeakerSidebarProps> = ({
       {/* Bottom Profile & Workspace Controls */}
       <div className="p-3 border-t border-slate-800/80 bg-slate-950/80">
         <div className="flex items-center gap-3 p-2 rounded-xl bg-slate-900/60 border border-slate-800/80">
-          <div className={`h-9 w-9 rounded-xl flex items-center justify-center font-bold text-xs text-slate-950 shrink-0 ${
+          <div className={`h-9 w-9 rounded-xl flex items-center justify-center font-bold text-xs text-on-gold shrink-0 ${
             isExecutive ? 'bg-[#C89630]' : isAcademy ? 'bg-[#C89630]' : 'bg-teal-400'
           }`}>
             {avatarInitial}

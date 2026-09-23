@@ -31,6 +31,7 @@ import {
   Difficulty,
   SessionPhase
 } from '../../types';
+import { localDateString } from '../../utils/date';
 
 // Standard 6-Phase Masterclass breakdown used across Global Orators executive coaching
 const DEFAULT_6_PHASES: SessionPhase[] = [
@@ -99,8 +100,8 @@ export const ProgramBuilder: React.FC<{
         daysPerWeek: 2,
         tags: ['Executive', 'Public Speaking'],
         assignedClientCount: 0,
-        createdAt: new Date().toISOString().split('T')[0],
-        updatedAt: new Date().toISOString().split('T')[0],
+        createdAt: localDateString(),
+        updatedAt: localDateString(),
         days: []
       };
     }
@@ -143,8 +144,8 @@ export const ProgramBuilder: React.FC<{
       daysPerWeek: 2,
       tags: ['Executive', 'Masterclass'],
       assignedClientCount: 0,
-      createdAt: new Date().toISOString().split('T')[0],
-      updatedAt: new Date().toISOString().split('T')[0],
+      createdAt: localDateString(),
+      updatedAt: localDateString(),
       days: [
         {
           id: `session-${Date.now()}-1`,
@@ -379,7 +380,7 @@ export const ProgramBuilder: React.FC<{
       {/* Toast Notification */}
       {saveNotification && (
         <div className="fixed top-14 right-6 z-50 bg-slate-900 border border-[#C89630]/60 text-slate-100 px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-3 animate-in fade-in">
-          <CheckCircle2 className="h-4 w-4 text-[#C89630]" />
+          <CheckCircle2 className="h-4 w-4 text-brand-gold" />
           <span className="text-xs font-semibold">{saveNotification}</span>
         </div>
       )}
@@ -395,7 +396,7 @@ export const ProgramBuilder: React.FC<{
             >
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono tracking-widest uppercase text-[#C89630] font-bold">
+                  <span className="text-[10px] font-mono tracking-widest uppercase text-brand-gold font-bold">
                     CURRICULUM
                   </span>
                   <span className="text-slate-600">·</span>
@@ -404,7 +405,7 @@ export const ProgramBuilder: React.FC<{
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <h2 className="text-lg md:text-xl font-serif font-bold text-white tracking-tight group-hover:text-[#C89630] transition-colors">
+                  <h2 className="text-lg md:text-xl font-serif font-bold text-white tracking-tight group-hover:text-brand-gold transition-colors">
                     {activeProgram.title}
                   </h2>
                   <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors shrink-0" />
@@ -428,7 +429,7 @@ export const ProgramBuilder: React.FC<{
                       onClick={() => handleLoadProgram(p.id)}
                       className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors ${
                         isSelected 
-                          ? 'bg-[#C89630]/15 text-[#C89630] font-bold' 
+                          ? 'bg-[#C89630]/15 text-brand-gold font-bold' 
                           : 'text-slate-300 hover:bg-slate-900 hover:text-white'
                       }`}
                     >
@@ -436,7 +437,7 @@ export const ProgramBuilder: React.FC<{
                         <div className="truncate">{p.title}</div>
                         <div className="text-[10px] text-slate-400 font-mono">{p.goal} · {p.days.length} Sessions</div>
                       </div>
-                      {isSelected && <CheckCircle2 className="w-4 h-4 text-[#C89630] shrink-0" />}
+                      {isSelected && <CheckCircle2 className="w-4 h-4 text-brand-gold shrink-0" />}
                     </button>
                   );
                 })}
@@ -445,7 +446,7 @@ export const ProgramBuilder: React.FC<{
                 <button
                   id="new-program-builder-btn"
                   onClick={handleCreateNewBlankProgram}
-                  className="w-full py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-xs font-semibold text-[#C89630] flex items-center justify-center gap-1.5 transition-colors"
+                  className="w-full py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-xs font-semibold text-brand-gold flex items-center justify-center gap-1.5 transition-colors"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>+ New Blank Curriculum</span>
@@ -473,7 +474,7 @@ export const ProgramBuilder: React.FC<{
             onClick={() => setIsAssignModalOpen(true)}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-medium border border-slate-800 hover:border-[#C89630]/50 transition-colors"
           >
-            <UserCheck className="w-3.5 h-3.5 text-[#C89630]" />
+            <UserCheck className="w-3.5 h-3.5 text-brand-gold" />
             <span>Assign to Speaker</span>
           </button>
 
@@ -482,7 +483,7 @@ export const ProgramBuilder: React.FC<{
             id="save-program-builder-btn"
             onClick={handleSave}
             disabled={isSaving}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#C89630] hover:bg-[#b08428] text-slate-950 font-bold text-xs shadow-sm transition-all disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#C89630] hover:bg-[#b08428] text-on-gold font-bold text-xs shadow-sm transition-all disabled:opacity-50"
           >
             {isSaving ? (
               <>
@@ -504,7 +505,7 @@ export const ProgramBuilder: React.FC<{
         <button
           onClick={() => setMobileView('roadmap')}
           className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-            mobileView === 'roadmap' ? 'bg-[#C89630] text-slate-950' : 'text-slate-400'
+            mobileView === 'roadmap' ? 'bg-[#C89630] text-on-gold' : 'text-slate-400'
           }`}
         >
           Syllabus Roadmap ({activeProgram.days.length})
@@ -512,7 +513,7 @@ export const ProgramBuilder: React.FC<{
         <button
           onClick={() => setMobileView('canvas')}
           className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-            mobileView === 'canvas' ? 'bg-[#C89630] text-slate-950' : 'text-slate-400'
+            mobileView === 'canvas' ? 'bg-[#C89630] text-on-gold' : 'text-slate-400'
           }`}
         >
           Active Session Canvas
@@ -527,7 +528,7 @@ export const ProgramBuilder: React.FC<{
             <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400 font-bold">
               SYLLABUS ROADMAP
             </span>
-            <span className="text-[10px] font-mono text-[#C89630] font-semibold">
+            <span className="text-[10px] font-mono text-brand-gold font-semibold">
               {activeProgram.days.length} SESSIONS
             </span>
           </div>
@@ -552,7 +553,7 @@ export const ProgramBuilder: React.FC<{
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${
-                        isSelected ? 'bg-[#C89630] text-slate-950' : 'bg-slate-800 text-slate-400'
+                        isSelected ? 'bg-[#C89630] text-on-gold' : 'bg-slate-800 text-slate-400'
                       }`}>
                         {String(session.dayNumber || idx + 1).padStart(2, '0')}
                       </span>
@@ -583,7 +584,7 @@ export const ProgramBuilder: React.FC<{
           {/* Add Session CTA */}
           <button
             onClick={handleAddSession}
-            className="w-full py-2.5 px-3 rounded-2xl bg-slate-950 hover:bg-slate-900 border border-dashed border-slate-800 hover:border-[#C89630]/50 text-slate-400 hover:text-[#C89630] text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+            className="w-full py-2.5 px-3 rounded-2xl bg-slate-950 hover:bg-slate-900 border border-dashed border-slate-800 hover:border-[#C89630]/50 text-slate-400 hover:text-brand-gold text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
           >
             <Plus className="w-4 h-4" />
             <span>+ Add Session</span>
@@ -597,7 +598,7 @@ export const ProgramBuilder: React.FC<{
             <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800/80 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono uppercase tracking-widest text-[#C89630] font-bold">
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-brand-gold font-bold">
                     SESSION {String(currentSession.dayNumber || activeSessionIndex + 1).padStart(2, '0')}
                   </span>
                   <span className="text-slate-600">·</span>
@@ -642,7 +643,7 @@ export const ProgramBuilder: React.FC<{
                   value={currentSession.focus}
                   onChange={(e) => updateCurrentSession({ focus: e.target.value })}
                   placeholder="Primary oratorical focus / topic for this session..."
-                  className="w-full bg-transparent border-none outline-none text-xs sm:text-sm text-[#C89630] placeholder-slate-600 p-0 focus:ring-0 font-medium"
+                  className="w-full bg-transparent border-none outline-none text-xs sm:text-sm text-brand-gold placeholder-slate-600 p-0 focus:ring-0 font-medium"
                 />
               </div>
 
@@ -665,7 +666,7 @@ export const ProgramBuilder: React.FC<{
             <div className="space-y-3">
               <div className="flex items-center justify-between px-1">
                 <div className="flex items-center gap-2">
-                  <Mic className="w-4 h-4 text-[#C89630]" />
+                  <Mic className="w-4 h-4 text-brand-gold" />
                   <span className="text-[10px] font-mono uppercase tracking-widest text-slate-300 font-bold">
                     PRACTICAL FLOOR SPEECH DRILLS ({currentSession.exercises?.length || 0})
                   </span>
@@ -673,7 +674,7 @@ export const ProgramBuilder: React.FC<{
                 <button
                   id="open-exercise-picker-btn"
                   onClick={() => setIsDrillPickerOpen(true)}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-xs font-semibold text-[#C89630] border border-slate-800 hover:border-[#C89630]/40 transition-colors"
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-xs font-semibold text-brand-gold border border-slate-800 hover:border-[#C89630]/40 transition-colors"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>+ Add Drill</span>
@@ -686,7 +687,7 @@ export const ProgramBuilder: React.FC<{
                   onClick={() => setIsDrillPickerOpen(true)}
                   className="p-6 rounded-2xl bg-slate-950/40 border border-dashed border-slate-800 hover:border-[#C89630]/40 text-center cursor-pointer transition-colors group"
                 >
-                  <Mic className="w-6 h-6 text-slate-600 group-hover:text-[#C89630] mx-auto mb-2 transition-colors" />
+                  <Mic className="w-6 h-6 text-slate-600 group-hover:text-brand-gold mx-auto mb-2 transition-colors" />
                   <div className="text-xs font-medium text-slate-300">No floor speech drills assigned yet</div>
                   <div className="text-[11px] text-slate-500 mt-0.5">Click to choose from the speech drill library</div>
                 </div>
@@ -704,7 +705,7 @@ export const ProgramBuilder: React.FC<{
                       >
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2.5">
-                            <span className="h-5 w-5 rounded-md bg-[#C89630]/20 text-[#C89630] flex items-center justify-center font-mono text-[10px] font-bold">
+                            <span className="h-5 w-5 rounded-md bg-[#C89630]/20 text-brand-gold flex items-center justify-center font-mono text-[10px] font-bold">
                               {dIdx + 1}
                             </span>
                             <span className="text-xs font-bold text-white">{drill.exerciseName}</span>
@@ -730,7 +731,7 @@ export const ProgramBuilder: React.FC<{
                             </select>
 
                             {/* Cadence Input */}
-                            <div className="flex items-center bg-slate-900 border border-slate-800 rounded-lg px-2 h-7 font-mono text-[11px] text-[#C89630]">
+                            <div className="flex items-center bg-slate-900 border border-slate-800 rounded-lg px-2 h-7 font-mono text-[11px] text-brand-gold">
                               <input
                                 type="number"
                                 step="5"
@@ -789,7 +790,7 @@ export const ProgramBuilder: React.FC<{
             <div className="space-y-3">
               <div className="flex items-center justify-between px-1">
                 <div className="flex items-center gap-2">
-                  <ListChecks className="w-4 h-4 text-[#C89630]" />
+                  <ListChecks className="w-4 h-4 text-brand-gold" />
                   <span className="text-[10px] font-mono uppercase tracking-widest text-slate-300 font-bold">
                     SESSION OBJECTIVES ({currentSession.objectives?.length || 0})
                   </span>
@@ -802,7 +803,7 @@ export const ProgramBuilder: React.FC<{
                     {currentSession.objectives.map((obj, oIdx) => (
                       <div key={oIdx} className="flex items-start justify-between gap-2 text-xs group">
                         <div className="flex items-start gap-2">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-[#C89630] shrink-0 mt-0.5" />
+                          <CheckCircle2 className="w-3.5 h-3.5 text-brand-gold shrink-0 mt-0.5" />
                           <span className="text-slate-200">{obj}</span>
                         </div>
                         <button
@@ -829,7 +830,7 @@ export const ProgramBuilder: React.FC<{
                   {newObjectiveText.trim() && (
                     <button
                       onClick={handleAddObjective}
-                      className="px-2.5 py-1 rounded-lg bg-[#C89630] text-slate-950 font-bold text-xs"
+                      className="px-2.5 py-1 rounded-lg bg-[#C89630] text-on-gold font-bold text-xs"
                     >
                       + Add
                     </button>
@@ -878,7 +879,7 @@ export const ProgramBuilder: React.FC<{
                     <div key={phase.id || pIdx} className="p-2.5 rounded-xl bg-slate-950 border border-slate-900 space-y-1">
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-bold text-white text-[11px] truncate">{phase.phaseName}</span>
-                        <div className="flex items-center font-mono text-[10px] text-[#C89630]">
+                        <div className="flex items-center font-mono text-[10px] text-brand-gold">
                           <input
                             type="number"
                             value={phase.durationMin}
@@ -905,7 +906,7 @@ export const ProgramBuilder: React.FC<{
             {/* Header */}
             <div className="p-4 border-b border-slate-800 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Mic className="h-4 w-4 text-[#C89630]" />
+                <Mic className="h-4 w-4 text-brand-gold" />
                 <h3 className="text-sm font-bold text-white">
                   Add Speech Drill to {currentSession.name.replace(/^Session \d+:\s*/i, '')}
                 </h3>
@@ -938,7 +939,7 @@ export const ProgramBuilder: React.FC<{
                     onClick={() => setPickerCategory(cat)}
                     className={`px-2.5 py-0.5 rounded-lg text-[10px] font-medium whitespace-nowrap transition-colors ${
                       pickerCategory === cat
-                        ? 'bg-[#C89630] text-slate-950 font-bold'
+                        ? 'bg-[#C89630] text-on-gold font-bold'
                         : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800/60'
                     }`}
                   >
@@ -963,17 +964,17 @@ export const ProgramBuilder: React.FC<{
                       className="h-9 w-9 rounded-lg object-cover border border-slate-800 shrink-0" 
                     />
                     <div>
-                      <div className="font-bold text-white group-hover:text-[#C89630] text-xs transition-colors">
+                      <div className="font-bold text-white group-hover:text-brand-gold text-xs transition-colors">
                         {ex.name}
                       </div>
                       <div className="text-[10px] text-slate-400 flex items-center gap-1.5 mt-0.5">
-                        <span className="font-mono text-[#C89630]">{ex.primaryMuscle}</span>
+                        <span className="font-mono text-brand-gold">{ex.primaryMuscle}</span>
                         <span>•</span>
                         <span>{ex.equipment}</span>
                       </div>
                     </div>
                   </div>
-                  <span className="text-xs font-bold text-[#C89630] px-2 py-0.5 rounded bg-[#C89630]/10 border border-[#C89630]/20">
+                  <span className="text-xs font-bold text-brand-gold px-2 py-0.5 rounded bg-[#C89630]/10 border border-[#C89630]/20">
                     + Add
                   </span>
                 </div>
@@ -989,7 +990,7 @@ export const ProgramBuilder: React.FC<{
           <div className="relative w-full max-w-lg rounded-3xl bg-slate-950 border border-slate-800 shadow-2xl p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2">
-                <Sliders className="h-4 w-4 text-[#C89630]" />
+                <Sliders className="h-4 w-4 text-brand-gold" />
                 <h3 className="text-sm font-bold text-white">Curriculum Settings</h3>
               </div>
               <button onClick={() => setIsSettingsOpen(false)} className="text-slate-400 hover:text-white">
@@ -1086,7 +1087,7 @@ export const ProgramBuilder: React.FC<{
               )}
               <button
                 onClick={() => setIsSettingsOpen(false)}
-                className="ml-auto px-4 py-1.5 rounded-xl bg-[#C89630] text-slate-950 font-bold text-xs"
+                className="ml-auto px-4 py-1.5 rounded-xl bg-[#C89630] text-on-gold font-bold text-xs"
               >
                 Done
               </button>
@@ -1101,7 +1102,7 @@ export const ProgramBuilder: React.FC<{
           <div className="relative w-full max-w-md rounded-3xl bg-slate-950 border border-slate-800 shadow-2xl p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2">
-                <UserCheck className="h-5 w-5 text-[#C89630]" />
+                <UserCheck className="h-5 w-5 text-brand-gold" />
                 <h3 className="text-base font-bold text-white">Assign to Speaker</h3>
               </div>
               <button onClick={() => setIsAssignModalOpen(false)} className="text-slate-400 hover:text-white">
@@ -1144,7 +1145,7 @@ export const ProgramBuilder: React.FC<{
                   setSaveNotification('Assigned to speaker successfully.');
                   setTimeout(() => setSaveNotification(null), 3500);
                 }}
-                className="px-5 py-2 rounded-xl bg-[#C89630] hover:bg-[#b08428] text-slate-950 font-bold text-xs shadow-md"
+                className="px-5 py-2 rounded-xl bg-[#C89630] hover:bg-[#b08428] text-on-gold font-bold text-xs shadow-md"
               >
                 Confirm Enrollment
               </button>

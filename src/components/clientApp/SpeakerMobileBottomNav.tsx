@@ -80,7 +80,7 @@ export const SpeakerMobileBottomNav: React.FC<SpeakerMobileBottomNavProps> = ({
           >
             <div className={`relative p-1 rounded-xl transition-colors ${
               speakerTab === 'today'
-                ? isExecutive ? 'text-[#C89630]' : isAcademy ? 'text-emerald-400' : 'text-teal-400'
+                ? isExecutive ? 'text-brand-gold' : isAcademy ? 'text-emerald-400' : 'text-teal-400'
                 : 'text-slate-400'
             }`}>
               <Compass className="w-5 h-5" />
@@ -95,7 +95,7 @@ export const SpeakerMobileBottomNav: React.FC<SpeakerMobileBottomNavProps> = ({
             </div>
             <span className={`text-[10px] font-medium tracking-tight mt-0.5 ${
               speakerTab === 'today'
-                ? isExecutive ? 'text-[#C89630] font-bold' : isAcademy ? 'text-emerald-400 font-bold' : 'text-teal-400 font-bold'
+                ? isExecutive ? 'text-brand-gold font-bold' : isAcademy ? 'text-emerald-400 font-bold' : 'text-teal-400 font-bold'
                 : 'text-slate-400'
             }`}>
               Today
@@ -112,7 +112,7 @@ export const SpeakerMobileBottomNav: React.FC<SpeakerMobileBottomNavProps> = ({
           >
             <div className={`relative p-1 rounded-xl transition-colors ${
               speakerTab === 'practice'
-                ? isExecutive ? 'text-[#C89630]' : isAcademy ? 'text-emerald-400' : 'text-teal-400'
+                ? isExecutive ? 'text-brand-gold' : isAcademy ? 'text-emerald-400' : 'text-teal-400'
                 : 'text-slate-400'
             }`}>
               <Mic className="w-5 h-5" />
@@ -127,7 +127,7 @@ export const SpeakerMobileBottomNav: React.FC<SpeakerMobileBottomNavProps> = ({
             </div>
             <span className={`text-[10px] font-medium tracking-tight mt-0.5 ${
               speakerTab === 'practice'
-                ? isExecutive ? 'text-[#C89630] font-bold' : isAcademy ? 'text-emerald-400 font-bold' : 'text-teal-400 font-bold'
+                ? isExecutive ? 'text-brand-gold font-bold' : isAcademy ? 'text-emerald-400 font-bold' : 'text-teal-400 font-bold'
                 : 'text-slate-400'
             }`}>
               Drills
@@ -143,12 +143,12 @@ export const SpeakerMobileBottomNav: React.FC<SpeakerMobileBottomNavProps> = ({
               onClick={isActionSheetOpen ? () => setIsActionSheetOpen(false) : handleOpenActionSheet}
               className={`w-12 h-12 rounded-full flex items-center justify-center shadow-md border-2 border-slate-950 active:scale-90 transition-all duration-300 focus:outline-hidden ${
                 isActionSheetOpen
-                  ? 'bg-slate-700 text-white rotate-45'
+                  ? 'bg-slate-700 text-on-gold rotate-45'
                   : isExecutive
-                    ? 'bg-[#C89630] hover:bg-[#d6a543] text-slate-950 rotate-0 shadow-[#C89630]/30'
+                    ? 'bg-[#C89630] hover:bg-[#d6a543] text-on-gold rotate-0 shadow-[#C89630]/30'
                     : isAcademy
-                      ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 rotate-0 shadow-emerald-500/30'
-                      : 'bg-teal-500 hover:bg-teal-400 text-slate-950 rotate-0 shadow-teal-500/30'
+                      ? 'bg-emerald-500 hover:bg-emerald-400 text-on-gold rotate-0 shadow-emerald-500/30'
+                      : 'bg-teal-500 hover:bg-teal-400 text-on-gold rotate-0 shadow-teal-500/30'
               }`}
               title="Live Rehearsal Chamber & Shortcuts"
             >
@@ -170,7 +170,7 @@ export const SpeakerMobileBottomNav: React.FC<SpeakerMobileBottomNavProps> = ({
           >
             <div className={`relative p-1 rounded-xl transition-colors ${
               speakerTab === 'habits'
-                ? isExecutive ? 'text-[#C89630]' : isAcademy ? 'text-emerald-400' : 'text-teal-400'
+                ? isExecutive ? 'text-brand-gold' : isAcademy ? 'text-emerald-400' : 'text-teal-400'
                 : 'text-slate-400'
             }`}>
               <CheckCircle2 className="w-5 h-5" />
@@ -185,7 +185,7 @@ export const SpeakerMobileBottomNav: React.FC<SpeakerMobileBottomNavProps> = ({
             </div>
             <span className={`text-[10px] font-medium tracking-tight mt-0.5 ${
               speakerTab === 'habits'
-                ? isExecutive ? 'text-[#C89630] font-bold' : isAcademy ? 'text-emerald-400 font-bold' : 'text-teal-400 font-bold'
+                ? isExecutive ? 'text-brand-gold font-bold' : isAcademy ? 'text-emerald-400 font-bold' : 'text-teal-400 font-bold'
                 : 'text-slate-400'
             }`}>
               Rituals
@@ -202,12 +202,12 @@ export const SpeakerMobileBottomNav: React.FC<SpeakerMobileBottomNavProps> = ({
           >
             <div className={`relative p-1 rounded-xl transition-colors ${
               speakerTab === 'coach'
-                ? isExecutive ? 'text-[#C89630]' : isAcademy ? 'text-emerald-400' : 'text-teal-400'
+                ? isExecutive ? 'text-brand-gold' : isAcademy ? 'text-emerald-400' : 'text-teal-400'
                 : 'text-slate-400'
             }`}>
               <MessageSquare className="w-5 h-5" />
               {unreadCount > 0 && (
-                <span className="absolute -top-0.5 -right-1 px-1.5 py-0.2 text-[9px] font-bold rounded-full bg-[#C89630] text-slate-950 ring-2 ring-slate-950">
+                <span className="absolute -top-0.5 -right-1 px-1.5 py-0.2 text-[9px] font-bold rounded-full bg-[#C89630] text-on-gold ring-2 ring-slate-950">
                   {unreadCount}
                 </span>
               )}
@@ -222,7 +222,7 @@ export const SpeakerMobileBottomNav: React.FC<SpeakerMobileBottomNavProps> = ({
             </div>
             <span className={`text-[10px] font-medium tracking-tight mt-0.5 ${
               speakerTab === 'coach'
-                ? isExecutive ? 'text-[#C89630] font-bold' : isAcademy ? 'text-emerald-400 font-bold' : 'text-teal-400 font-bold'
+                ? isExecutive ? 'text-brand-gold font-bold' : isAcademy ? 'text-emerald-400 font-bold' : 'text-teal-400 font-bold'
                 : 'text-slate-400'
             }`}>
               Messenger
@@ -279,11 +279,11 @@ export const SpeakerMobileBottomNav: React.FC<SpeakerMobileBottomNavProps> = ({
                       : 'bg-emerald-950/60 border-emerald-800/40 text-white'
                   }`}
                 >
-                  <div className={`p-2 rounded-xl ${isExecutive ? 'bg-[#C89630] text-slate-950' : 'bg-emerald-500 text-slate-950'}`}>
+                  <div className={`p-2 rounded-xl ${isExecutive ? 'bg-[#C89630] text-on-gold' : 'bg-emerald-500 text-on-gold'}`}>
                     <Play className="w-4 h-4 fill-slate-950" />
                   </div>
                   <div>
-                    <span className={`text-xs font-bold block ${isExecutive ? 'text-[#C89630]' : 'text-emerald-400'}`}>
+                    <span className={`text-xs font-bold block ${isExecutive ? 'text-brand-gold' : 'text-emerald-400'}`}>
                       Launch Chamber
                     </span>
                     <span className="text-[11px] text-slate-400">Practice clock & live rubric</span>

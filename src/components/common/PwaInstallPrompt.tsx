@@ -89,7 +89,7 @@ export const PwaInstallPrompt: React.FC<PwaInstallPromptProps> = ({ isOpen, onCl
             <GlobalOratorsLogo className="w-10 h-10 shrink-0" colorMode="gold" />
             <div>
               <h3 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
-                Install <span className="font-extrabold text-white tracking-tight">Global <span className="text-[#C89630]">Orators</span></span>
+                Install <span className="font-extrabold text-white tracking-tight">Global <span className="text-brand-gold">Orators</span></span>
                 <span className="text-[9px] uppercase font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold">
                   PWA
                 </span>

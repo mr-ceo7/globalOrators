@@ -139,12 +139,12 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
 
               <div className="space-y-5 text-xs sm:text-sm">
                 <div className="flex items-start gap-3.5">
-                  <div className="w-9 h-9 rounded-lg bg-[#C89630]/10 border border-[#C89630]/30 flex items-center justify-center shrink-0 text-[#C89630]">
+                  <div className="w-9 h-9 rounded-lg bg-[#C89630]/10 border border-[#C89630]/30 flex items-center justify-center shrink-0 text-brand-gold">
                     <Mail className="w-4 h-4" />
                   </div>
                   <div>
                     <div className="text-[10px] font-mono uppercase tracking-widest text-slate-400">Institutional & Strategic</div>
-                    <a href="mailto:director@globaloratorsproject.com" className="font-medium text-slate-100 hover:text-[#C89630] transition-colors">
+                    <a href="mailto:director@globaloratorsproject.com" className="font-medium text-slate-100 hover:text-brand-gold transition-colors">
                       director@globaloratorsproject.com
                     </a>
                   </div>
@@ -188,7 +188,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
 
             {/* Regional Hubs Card */}
             <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6 sm:p-8 space-y-4">
-              <div className="flex items-center gap-2.5 text-[#C89630]">
+              <div className="flex items-center gap-2.5 text-brand-gold">
                 <MapPin className="w-4 h-4" />
                 <h4 className="font-mono text-xs uppercase tracking-wider font-bold text-slate-200">
                   Headquarters & Regional Chapters
@@ -233,7 +233,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     <p className="text-slate-300 text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
                       Your inquiry has been cataloged under reference code:
                     </p>
-                    <div className="font-mono text-sm sm:text-base font-bold text-[#C89630] bg-slate-950 px-4 py-2 rounded-lg border border-slate-800 inline-block">
+                    <div className="font-mono text-sm sm:text-base font-bold text-brand-gold bg-slate-950 px-4 py-2 rounded-lg border border-slate-800 inline-block">
                       {successData.id}
                     </div>
                     <p className="text-slate-400 text-xs max-w-md mx-auto pt-2">

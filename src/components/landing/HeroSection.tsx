@@ -84,7 +84,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onStartOnboarding }) =
                 onClick={() => onStartOnboarding('Foundation')}
                 className="px-4 py-2.5 rounded-xl border border-transparent hover:border-slate-800 text-slate-300 hover:text-slate-100 font-serif font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer group focus-visible:ring-2 focus-visible:ring-[#C89630] focus-visible:outline-hidden"
               >
-                <Heart className="w-4 h-4 text-[#C89630] shrink-0" />
+                <Heart className="w-4 h-4 text-brand-gold shrink-0" />
                 <span>Apply for Fellowship</span>
                 <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#C89630]/15 text-[#7A4B06] dark:text-[#E3B95C] border border-[#C89630]/30 font-bold">
                   Grant Funded

@@ -57,7 +57,7 @@ export const FoundationPage: React.FC<FoundationPageProps> = ({
             <a 
               href="/" 
               onClick={(e) => { e.preventDefault(); onNavigate('/'); }}
-              className="hover:text-[#C89630] transition-colors"
+              className="hover:text-brand-gold transition-colors"
             >
               Home
             </a>
