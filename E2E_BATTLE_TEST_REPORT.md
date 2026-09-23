@@ -64,6 +64,19 @@ The live backend had no `SECRET_KEY`, `ENVIRONMENT` or `COACH_INVITE_CODE` set, 
   - A Paystack **test** key is the hard-coded fallback (`InvoicePage.tsx:117`).
 - **The frontend fixes (C2, H1, H2, H3 UI, H4–H6, H8) need a Vercel deploy** before users see them. The backend is already live.
 
+### Medium and low issues (branch `fix/audit-medium`)
+All medium issues (M1–M11) are fixed. The browser suite passes in full: **117 passing**, 21 skipped because they apply to only one screen size.
+
+| Item | Status |
+|---|---|
+| M1–M11 | Fixed. See commit `82fbe50`. The backend now returns `is_head_coach` on every user; `GET /api/coaches` requires a login. |
+| L1 onboarding | Inline errors instead of `alert()`; typed answers survive a refresh. Foundation stays pre-selected on step 1 (a product choice). |
+| L1 "phone accepts abc" | **False finding.** The field strips letters as you type. |
+| L2 roster | Empty state in grid view; the search box keeps a usable width. |
+| L3 data | No fake phone number; curriculum weeks limited to 1–52 and sessions to 1–7 (form and API). The chart's WPM field is still read from `weight`. |
+| L4 | 404 page; button labels and form labels; larger tap targets; chart values and calendar "+" visible on touch; readable text on gold buttons; cue chips and badge no longer clipped; Save Reflection disabled when empty; in-page delete confirmations; accurate encryption wording; one contact email domain; dead "Quick Select" with a personal email removed. |
+| L4 not changed | The login token stays in the live-updates URL (a browser limitation of this connection type). The production-API fallback in `jitsiDiscovery` runs on localhost only. |
+
 ### C3. Anyone with a Google account could make themselves a coach (found while fixing H2)
 - **Where:** `backend/app/routers/auth.py:274-301`
 - **What happened:** Sending `role: "coach"` to `/api/auth/google` created a coach account with no invite code. It also silently upgraded an existing speaker to coach. That gave anyone with a Google account coach access, including the unassigned applicant pool.

@@ -297,6 +297,7 @@ export const ClientPortal: React.FC = () => {
 
   // Real Audio Recordings Vault (Encrypted Backend Persistence)
   const [persistedRecordings, setPersistedRecordings] = useState<RecordingResponse[]>([]);
+  const [confirmingRecordingId, setConfirmingRecordingId] = useState<string | null>(null);
 
   // Hydrate recordings from backend
   useEffect(() => {
@@ -1271,7 +1272,7 @@ export const ClientPortal: React.FC = () => {
             <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 sm:p-8 relative overflow-hidden">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <span className={`p-2 rounded-xl text-slate-950 font-bold ${
+                  <span className={`p-2 rounded-xl text-on-gold font-bold ${
                     isAcademy ? 'bg-emerald-400' : 'bg-teal-400'
                   }`}>
                     <Mic className="w-5 h-5" />
@@ -1423,13 +1424,31 @@ export const ClientPortal: React.FC = () => {
                           </div>
                           <div className="flex items-center gap-2">
                             <AuthenticatedVaultPlayer recordingId={rec.id} />
-                            <button
-                              onClick={() => handleDeleteRecording(rec.id)}
-                              title="Purge rehearsal from vault"
-                              className="p-2 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition cursor-pointer"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            {confirmingRecordingId === rec.id ? (
+                              <div className="flex items-center gap-1.5 text-xs">
+                                <button
+                                  onClick={() => { setConfirmingRecordingId(null); handleDeleteRecording(rec.id); }}
+                                  className="px-2 py-1 rounded-lg font-bold text-rose-400 hover:bg-rose-500/10"
+                                >
+                                  Delete
+                                </button>
+                                <button
+                                  onClick={() => setConfirmingRecordingId(null)}
+                                  className="px-2 py-1 rounded-lg text-slate-400 hover:text-slate-200"
+                                >
+                                  Keep
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setConfirmingRecordingId(rec.id)}
+                                title="Purge rehearsal from vault"
+                                aria-label="Delete this recording"
+                                className="p-2 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition cursor-pointer"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -1618,7 +1637,7 @@ export const ClientPortal: React.FC = () => {
 
                   <button
                     type="submit"
-                    disabled={isSavingJournal}
+                    disabled={isSavingJournal || !journalText.trim()}
                     className="px-5 py-2 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs shadow-md shadow-teal-500/20 cursor-pointer disabled:opacity-50"
                   >
                     {isSavingJournal ? 'Saving...' : 'Save Reflection'}
@@ -1766,7 +1785,7 @@ export const ClientPortal: React.FC = () => {
                                 setActiveChamberTitle(session.workoutTitle);
                                 setIsLiveRehearsalOpen(true);
                               }}
-                              className="flex-1 px-3.5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-md flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                              className="flex-1 px-3.5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-on-gold font-bold text-xs shadow-md flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                             >
                               <Video className="w-4 h-4" />
                               <span>Join Chamber</span>
@@ -1871,7 +1890,7 @@ export const ClientPortal: React.FC = () => {
                       <div className="flex items-center gap-3">
                         <div
                           className={`w-5 h-5 rounded-lg flex items-center justify-center transition-all ${
-                            habit.completed ? 'bg-emerald-500 text-slate-950' : 'border border-slate-700'
+                            habit.completed ? 'bg-emerald-500 text-on-gold' : 'border border-slate-700'
                           }`}
                         >
                           {habit.completed && <CheckCircle2 className="w-3.5 h-3.5" />}
@@ -1996,7 +2015,7 @@ export const ClientPortal: React.FC = () => {
                       const isOptimal = wpm >= 135 && wpm <= 145;
                       return (
                         <div key={idx} className="flex flex-col items-center gap-1.5 h-full justify-end group">
-                          <span className="text-[10px] font-mono text-slate-300 font-bold opacity-0 group-hover:opacity-100 transition-opacity">
+                          <span className="text-[10px] font-mono text-slate-300 font-bold opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                             {wpm}
                           </span>
                           <div className="w-full max-w-[36px] bg-slate-900 rounded-t-lg overflow-hidden flex flex-col justify-end h-28 relative">

@@ -147,7 +147,7 @@ export const ExerciseLibrary: React.FC<{
                 onClick={() => setSelectedMuscle(m)}
                 className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
                   selectedMuscle === m
-                    ? 'bg-emerald-500 text-slate-950 font-bold'
+                    ? 'bg-emerald-500 text-on-gold font-bold'
                     : 'bg-slate-800/80 text-slate-400 hover:text-white'
                 }`}
               >
@@ -459,7 +459,7 @@ export const ExerciseLibrary: React.FC<{
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold hover:bg-emerald-400 shadow-md transition-all"
+                  className="px-5 py-2 rounded-xl bg-emerald-500 text-on-gold font-bold hover:bg-emerald-400 shadow-md transition-all"
                 >
                   Add to Library
                 </button>

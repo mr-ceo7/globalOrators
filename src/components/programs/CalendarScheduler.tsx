@@ -130,12 +130,14 @@ export const CalendarScheduler: React.FC = () => {
             <div className="flex items-center gap-1">
               <button
                 onClick={handlePrevMonth}
+                aria-label="Previous month"
                 className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
               <button
                 onClick={handleNextMonth}
+                aria-label="Next month"
                 className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
               >
                 <ChevronRight className="h-4 w-4" />
@@ -218,14 +220,14 @@ export const CalendarScheduler: React.FC = () => {
                 {/* Date header */}
                 <div className="flex items-center justify-between mb-1.5">
                   <span className={`text-xs font-extrabold h-6 w-6 rounded-full flex items-center justify-center ${
-                    isToday ? 'bg-emerald-500 text-slate-950 shadow-xs' : 'text-slate-300'
+                    isToday ? 'bg-emerald-500 text-on-gold shadow-xs' : 'text-slate-300'
                   }`}>
                     {dayNum}
                   </span>
 
                   <button
                     onClick={() => handleOpenScheduleForDate(dayNum)}
-                    className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-emerald-400 hover:bg-slate-800 rounded transition-opacity"
+                    className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus-visible:opacity-100 p-1 text-slate-400 hover:text-emerald-400 hover:bg-slate-800 rounded transition-opacity"
                     title={`Schedule rehearsal for ${dayDateStr}`}
                   >
                     <Plus className="h-3.5 w-3.5" />
@@ -311,7 +313,7 @@ export const CalendarScheduler: React.FC = () => {
               >
                 <span className={`text-[10px] font-bold h-5 w-5 rounded-full flex items-center justify-center ${
                   isSelected 
-                    ? 'bg-emerald-500 text-slate-950 font-extrabold' 
+                    ? 'bg-emerald-500 text-on-gold font-extrabold' 
                     : isToday
                       ? 'border border-emerald-500/50 text-emerald-400 font-extrabold'
                       : 'text-slate-300'
@@ -437,7 +439,7 @@ export const CalendarScheduler: React.FC = () => {
                 <p className="font-bold text-xs">No sessions scheduled for this month.</p>
                 <button
                   onClick={() => setIsScheduleModalOpen(true)}
-                  className="mt-3 text-xs text-emerald-400 font-bold hover:underline"
+                  className="mt-3 text-xs text-emerald-400 font-bold hover:underline min-h-[24px] px-2"
                 >
                   Schedule a speech session
                 </button>
@@ -526,8 +528,9 @@ export const CalendarScheduler: React.FC = () => {
 
             <form onSubmit={handleCreateScheduledWorkout} className="space-y-3.5 text-xs">
               <div>
-                <label className="block text-slate-400 font-bold uppercase text-[10px] mb-1">Speaker / Debater</label>
+                <label htmlFor="schedule-speaker" className="block text-slate-400 font-bold uppercase text-[10px] mb-1">Speaker / Debater</label>
                 <select
+                    id="schedule-speaker"
                   value={schedClientId}
                   onChange={(e) => setSchedClientId(e.target.value)}
                   className="w-full h-9 px-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-hidden"
@@ -539,8 +542,9 @@ export const CalendarScheduler: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-slate-400 font-bold uppercase text-[10px] mb-1">Speech Curriculum</label>
+                <label htmlFor="schedule-curriculum" className="block text-slate-400 font-bold uppercase text-[10px] mb-1">Speech Curriculum</label>
                 <select
+                    id="schedule-curriculum"
                   value={schedProgramId}
                   onChange={(e) => {
                     setSchedProgramId(e.target.value);
@@ -558,8 +562,9 @@ export const CalendarScheduler: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-slate-400 font-bold uppercase text-[10px] mb-1">Session Template / Round</label>
+                <label htmlFor="schedule-template" className="block text-slate-400 font-bold uppercase text-[10px] mb-1">Session Template / Round</label>
                 <select
+                    id="schedule-template"
                   value={schedWorkoutTitle}
                   onChange={(e) => setSchedWorkoutTitle(e.target.value)}
                   className="w-full h-9 px-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-hidden"
@@ -574,8 +579,9 @@ export const CalendarScheduler: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-400 font-bold uppercase text-[10px] mb-1">Date</label>
+                  <label htmlFor="schedule-date" className="block text-slate-400 font-bold uppercase text-[10px] mb-1">Date</label>
                   <input
+                    id="schedule-date"
                     type="date"
                     value={schedDate}
                     onChange={(e) => setSchedDate(e.target.value)}
@@ -583,8 +589,9 @@ export const CalendarScheduler: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-400 font-bold uppercase text-[10px] mb-1">Time</label>
+                  <label htmlFor="schedule-time" className="block text-slate-400 font-bold uppercase text-[10px] mb-1">Time</label>
                   <input
+                    id="schedule-time"
                     type="text"
                     value={schedTime}
                     onChange={(e) => setSchedTime(e.target.value)}

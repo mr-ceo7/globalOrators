@@ -281,23 +281,6 @@ export const SpeakerLoginModal: React.FC<SpeakerLoginModalProps> = ({
               </button>
             </form>
 
-            {/* Verified Speaker Shortcut */}
-            <div className="mt-6 pt-5 border-t border-slate-850">
-              <div className="text-[10px] font-mono uppercase tracking-widest text-slate-500 mb-2">
-                Quick Select
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail('kassimmusa322@gmail.com');
-                  setErrorMsg(null);
-                }}
-                className="w-full p-2.5 rounded-lg border border-slate-800 bg-slate-900/60 hover:border-slate-700 text-left transition-colors cursor-pointer group"
-              >
-                <div className="font-semibold text-slate-200 group-hover:text-white">Kassim Musa</div>
-                <div className="text-[10px] text-slate-400 font-mono truncate">kassimmusa322@gmail.com</div>
-              </button>
-            </div>
           </>
         ) : (
           /* Step 2: 6-Digit Passcode Form */

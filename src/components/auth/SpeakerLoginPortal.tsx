@@ -170,6 +170,7 @@ export const SpeakerLoginPortal: React.FC = () => {
         <div className="flex items-center gap-2 sm:gap-3 text-xs">
           <button
             onClick={() => setCurrentPortal('landing')}
+            aria-label="Public Site"
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-800 hover:border-slate-700 bg-slate-900/60 hover:bg-slate-900 text-slate-300 hover:text-white transition-all cursor-pointer"
           >
             <Globe className="w-3.5 h-3.5 text-emerald-400" />
@@ -177,6 +178,7 @@ export const SpeakerLoginPortal: React.FC = () => {
           </button>
           <button
             onClick={() => setCurrentPortal('coach_os')}
+            aria-label="Coach App"
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-800 hover:border-slate-700 bg-slate-900/60 hover:bg-slate-900 text-slate-300 hover:text-white transition-all cursor-pointer"
           >
             <ShieldCheck className="w-3.5 h-3.5 text-brand-gold" />

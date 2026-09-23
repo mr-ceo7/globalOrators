@@ -222,6 +222,7 @@ vi.mock('../services/apiClient', () => ({
 describe('SpeakerMessenger Component', () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
     localStorage.setItem('globalorators_token', 'test-token');
     localStorage.setItem('globalorators_speaker_token', 'test-token');
     localStorage.setItem('globalorators_speaker_profile', JSON.stringify({

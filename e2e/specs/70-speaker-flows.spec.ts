@@ -88,8 +88,8 @@ test('journal: empty entry blocked, entry persists and renders safely', async ({
   await expect(box).toBeVisible();
   const before = (await apiGet(`/journals?clientId=${clientId}`)).length;
   await box.fill('   ');
-  await box.locator('xpath=ancestor::form').locator('button[type="submit"]').click();
-  await page.waitForTimeout(800);
+  // Nothing to save: the button stays disabled rather than silently doing nothing.
+  await expect(box.locator('xpath=ancestor::form').locator('button[type="submit"]')).toBeDisabled();
   expect((await apiGet(`/journals?clientId=${clientId}`)).length, 'whitespace journal saved').toBe(before);
 
   const id = uid();

@@ -996,12 +996,37 @@ export const getStep4Habits = (branch: BranchType): Step4HabitOption[] => {
   ];
 };
 
+// In-progress answers survive a page refresh (this tab only; cleared after submitting).
+const ONBOARDING_DRAFT_KEY = 'globalorators_onboarding_draft';
+
+const readOnboardingDraft = (): Record<string, any> => {
+  try {
+    return JSON.parse(sessionStorage.getItem(ONBOARDING_DRAFT_KEY) || '{}') || {};
+  } catch {
+    return {};
+  }
+};
+
 export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   initialBranch: propBranch,
   initialStep: propStep
 }) => {
   const { completeOnboarding, setCurrentPortal, referredCoach, activeSpeakerProfile } = useApp();
-  const [coachReferralInput, setCoachReferralInput] = useState(referredCoach || '');
+  const [draft] = useState<Record<string, any>>(() => {
+    const saved = readOnboardingDraft();
+    // A branch chosen just now (e.g. "Apply to Academy") wins over a draft for the other branch.
+    let preselected: string | null = propBranch || null;
+    if (!preselected) {
+      try {
+        const stored = localStorage.getItem('globalorators_selected_branch');
+        preselected = stored === 'Academy' || stored === 'Foundation' ? stored : null;
+      } catch {
+        preselected = null;
+      }
+    }
+    return preselected && saved.branch && saved.branch !== preselected ? {} : saved;
+  });
+  const [coachReferralInput, setCoachReferralInput] = useState(draft.coachReferralInput ?? (referredCoach || ''));
 
   // Form State & Preselection Check
   const rawStoredBranch = typeof window !== 'undefined'
@@ -1014,7 +1039,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   );
 
   const resolvedBranch: BranchType = propBranch || (rawStoredBranch === 'Academy' ? 'Academy' : 'Foundation');
-  const [branch, setBranch] = useState<BranchType>(resolvedBranch);
+  const [branch, setBranch] = useState<BranchType>(draft.branch ?? resolvedBranch);
 
   // If a branch was pre-selected via an audience CTA (e.g. "Apply to Academy" or "Apply for Fellowship"),
   // start directly at Step 2 (Speaking Mission) instead of asking the user to choose their branch again.
@@ -1022,22 +1047,23 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     ? propStep 
     : (hasPreselectedBranch ? 2 : 1);
 
-  const [currentStep, setCurrentStep] = useState<number>(resolvedInitialStep);
+  const [currentStep, setCurrentStep] = useState<number>(propStep ?? draft.currentStep ?? resolvedInitialStep);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const initialMission = resolvedBranch === 'Academy'
     ? 'Pan-African Leadership & Cognitive Deconditioning'
     : 'Speaking as a Form of Escapism & Emotional Catharsis';
 
-  const [missionFocus, setMissionFocus] = useState<string>(initialMission);
+  const [missionFocus, setMissionFocus] = useState<string>(draft.missionFocus ?? initialMission);
 
   const [speakingGoal, setSpeakingGoal] = useState<SpeakingGoal>(
-    resolvedBranch === 'Academy' ? 'Pan-African Leadership' : 'Cathartic Expression & Healing'
+    draft.speakingGoal ?? (resolvedBranch === 'Academy' ? 'Pan-African Leadership' : 'Cathartic Expression & Healing')
   );
 
   const activeConfig = useMemo(() => getStep3Config(branch, missionFocus), [branch, missionFocus]);
 
   const [fullName, setFullName] = useState(() => {
+    if (draft.fullName) return draft.fullName;
     if (typeof window !== 'undefined') {
       try {
         const u = localStorage.getItem('globalorators_user') || localStorage.getItem('nubianfit_user');
@@ -1051,6 +1077,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   });
 
   const [email, setEmail] = useState(() => {
+    if (draft.email) return draft.email;
     if (typeof window !== 'undefined') {
       try {
         const u = localStorage.getItem('globalorators_user') || localStorage.getItem('nubianfit_user');
@@ -1062,18 +1089,18 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     }
     return '';
   });
-  const [phone, setPhone] = useState('');
-  const [otherDescription, setOtherDescription] = useState('');
-  const [customFormatDescription, setCustomFormatDescription] = useState('');
-  const [customPriorityDescription, setCustomPriorityDescription] = useState('');
-  const [customHabitDescription, setCustomHabitDescription] = useState('');
-  const [age, setAge] = useState<number>(20);
-  const [institution, setInstitution] = useState('');
-  const [primaryDiscipline, setPrimaryDiscipline] = useState(activeConfig.formats[0].id);
-  const [coreFocus, setCoreFocus] = useState(activeConfig.priorities[0].id);
-  const [experienceLevel, setExperienceLevel] = useState<ExperienceLevel>('Novice Speaker');
-  const [vocalBaselinePace, setVocalBaselinePace] = useState<number>(activeConfig.cadenceDefault);
-  const [emotionalOpennessRating, setEmotionalOpennessRating] = useState<number>(8);
+  const [phone, setPhone] = useState<string>(draft.phone ?? '');
+  const [otherDescription, setOtherDescription] = useState<string>(draft.otherDescription ?? '');
+  const [customFormatDescription, setCustomFormatDescription] = useState<string>(draft.customFormatDescription ?? '');
+  const [customPriorityDescription, setCustomPriorityDescription] = useState<string>(draft.customPriorityDescription ?? '');
+  const [customHabitDescription, setCustomHabitDescription] = useState<string>(draft.customHabitDescription ?? '');
+  const [age, setAge] = useState<number>(draft.age ?? 20);
+  const [institution, setInstitution] = useState<string>(draft.institution ?? '');
+  const [primaryDiscipline, setPrimaryDiscipline] = useState<string>(draft.primaryDiscipline ?? activeConfig.formats[0].id);
+  const [coreFocus, setCoreFocus] = useState<string>(draft.coreFocus ?? activeConfig.priorities[0].id);
+  const [experienceLevel, setExperienceLevel] = useState<ExperienceLevel>(draft.experienceLevel ?? 'Novice Speaker');
+  const [vocalBaselinePace, setVocalBaselinePace] = useState<number>(draft.vocalBaselinePace ?? activeConfig.cadenceDefault);
+  const [emotionalOpennessRating, setEmotionalOpennessRating] = useState<number>(draft.emotionalOpennessRating ?? 8);
 
   // Form input validation & touched state
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -1132,7 +1159,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   const currentHabitOptions = useMemo(() => getStep4Habits(branch), [branch]);
 
   const [selectedHabits, setSelectedHabits] = useState<string[]>(() =>
-    resolvedBranch === 'Academy'
+    draft.selectedHabits ?? (resolvedBranch === 'Academy'
       ? [
           'Diaphragmatic Breathwork & Resonance',
           'Vocal Hydration & Cord Conditioning',
@@ -1142,7 +1169,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
           'Cathartic Voice Audio Journaling',
           'Diaphragmatic Somatic Grounding',
           'Vocal Hydration & Gentle Warm-Up'
-        ]
+        ])
   );
 
   const prevBranchHabitsRef = useRef(branch);
@@ -1175,13 +1202,38 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   };
 
   // Next Step validation
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(ONBOARDING_DRAFT_KEY, JSON.stringify({
+        currentStep, branch, missionFocus, speakingGoal, fullName, email, phone, institution, age,
+        otherDescription, customFormatDescription, customPriorityDescription, customHabitDescription,
+        primaryDiscipline, coreFocus, experienceLevel, vocalBaselinePace, emotionalOpennessRating,
+        selectedHabits, coachReferralInput
+      }));
+    } catch {
+      // Storage unavailable (private mode): the form still works, just without a draft.
+    }
+  }, [currentStep, branch, missionFocus, speakingGoal, fullName, email, phone, institution, age,
+    otherDescription, customFormatDescription, customPriorityDescription, customHabitDescription,
+    primaryDiscipline, coreFocus, experienceLevel, vocalBaselinePace, emotionalOpennessRating,
+    selectedHabits, coachReferralInput]);
+
+  // Errors are shown inline under each field; move focus to the first one instead of a pop-up.
+  const focusFirstInvalidField = () => {
+    requestAnimationFrame(() => {
+      const field = document.querySelector<HTMLElement>('[aria-invalid="true"]');
+      field?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      field?.focus();
+    });
+  };
+
   const handleNext = () => {
     if (currentStep === 2) {
       if (missionFocus === 'Other Speaking Pursuit') {
         const err = validateField('otherDescription', otherDescription);
         if (err) {
           setTouched(prev => ({ ...prev, otherDescription: true }));
-          alert('Please give a brief description of what you are looking for.');
+          focusFirstInvalidField();
           return;
         }
       }
@@ -1206,24 +1258,8 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         customPriorityDescription: true
       }));
 
-      if (nameErr) {
-        alert(nameErr.includes('required') ? 'Please enter your name to personalize your curriculum.' : nameErr);
-        return;
-      }
-      if (emailErr) {
-        alert(emailErr.includes('required') ? 'Please enter your email.' : emailErr);
-        return;
-      }
-      if (phoneErr) {
-        alert(phoneErr);
-        return;
-      }
-      if (formatErr) {
-        alert('Please give a brief description of what you are looking for in your rhetorical arena.');
-        return;
-      }
-      if (priorityErr) {
-        alert('Please give a brief description of what you are looking for in your technical priority.');
+      if (nameErr || emailErr || phoneErr || formatErr || priorityErr) {
+        focusFirstInvalidField();
         return;
       }
     }
@@ -1232,7 +1268,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         const habitErr = validateField('customHabitDescription', customHabitDescription);
         if (habitErr) {
           setTouched(prev => ({ ...prev, customHabitDescription: true }));
-          alert('Please give a brief description of your custom daily ritual.');
+          focusFirstInvalidField();
           return;
         }
       }
@@ -1294,7 +1330,10 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         coachRef: coachReferralInput.trim() || referredCoach || undefined
       };
 
-      await completeOnboarding(data);
+      const result = await completeOnboarding(data);
+      if (result.success) {
+        try { sessionStorage.removeItem(ONBOARDING_DRAFT_KEY); } catch { /* storage unavailable */ }
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -1314,7 +1353,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
             localStorage.removeItem('globalorators_selected_branch');
             setCurrentPortal('landing');
           }}
-          className="text-xs text-slate-400 hover:text-white flex items-center gap-1.5 transition-colors"
+          className="text-xs text-slate-400 hover:text-white flex items-center gap-1.5 min-h-[24px] transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Back to Landing Page</span>
@@ -1433,7 +1472,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 }`}
               >
                 {branch === 'Foundation' && (
-                  <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center">
+                  <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-emerald-500 text-on-gold flex items-center justify-center">
                     <Check className="w-3 h-3 stroke-[3]" />
                   </div>
                 )}

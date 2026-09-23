@@ -885,7 +885,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
             </h3>
             <button
               onClick={() => setIsCreateGroupOpen(true)}
-              className="px-2.5 py-1 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-[11px] font-bold flex items-center gap-1 transition-colors cursor-pointer shadow-sm"
+              className="px-2.5 py-1 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-on-gold text-[11px] font-bold flex items-center gap-1 transition-colors cursor-pointer shadow-sm"
               title="Create New Orator Syndicate Group"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -1006,7 +1006,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
                         </p>
                       )}
                       {conv.unreadCount !== undefined && conv.unreadCount > 0 && (
-                        <span className="h-4 min-w-[16px] px-1 rounded-full bg-emerald-500 text-slate-950 font-bold text-[9px] flex items-center justify-center shrink-0">
+                        <span className="h-4 min-w-[16px] px-1 rounded-full bg-emerald-500 text-on-gold font-bold text-[9px] flex items-center justify-center shrink-0">
                           {conv.unreadCount}
                         </span>
                       )}
@@ -1537,7 +1537,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
             <button
               key={idx}
               onClick={() => handleSendText(cue)}
-              className="px-3 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 whitespace-nowrap transition-colors truncate max-w-xs cursor-pointer text-xs"
+              className="shrink-0 px-3 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 whitespace-nowrap transition-colors cursor-pointer text-xs"
             >
               {cue}
             </button>
@@ -1847,7 +1847,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
                 <button
                   type="submit"
                   disabled={isCreatingGroup || !newGroupName.trim()}
-                  className="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-slate-950 font-bold text-xs transition-all shadow-md cursor-pointer"
+                  className="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-on-gold font-bold text-xs transition-all shadow-md cursor-pointer"
                 >
                   {isCreatingGroup ? 'Creating...' : 'Establish Syndicate'}
                 </button>

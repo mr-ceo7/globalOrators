@@ -149,6 +149,7 @@ import { coachesApi, clientsApi } from '../services/apiClient';
 describe('CoachManager Component Tests', () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
     localStorage.setItem('globalorators_token', 'mock-coach-token');
     localStorage.setItem('globalorators_user', JSON.stringify({
       id: 'coach-1',

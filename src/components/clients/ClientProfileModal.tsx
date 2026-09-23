@@ -179,7 +179,7 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({ client, 
                             showToast(`Claimed ${client.name} to your roster.`);
                           }
                         }}
-                        className="ml-1 inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider px-2.5 py-0.5 rounded bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold shadow-sm transition-all cursor-pointer"
+                        className="ml-1 inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider px-2.5 py-0.5 rounded bg-emerald-500 hover:bg-emerald-400 text-on-gold font-bold shadow-sm transition-all cursor-pointer"
                         title={`Claim ${client.name} to your personal coaching roster`}
                       >
                         <UserPlus className="h-3 w-3 stroke-[2.5]" />
@@ -234,7 +234,7 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({ client, 
                             setReassignReason('');
                           }
                         }}
-                        className="h-8 px-3 rounded-lg bg-emerald-500 text-slate-950 font-mono text-xs font-bold hover:bg-emerald-400 disabled:opacity-50 transition-colors cursor-pointer"
+                        className="h-8 px-3 rounded-lg bg-emerald-500 text-on-gold font-mono text-xs font-bold hover:bg-emerald-400 disabled:opacity-50 transition-colors cursor-pointer"
                       >
                         {isSubmittingReassign ? 'Saving...' : 'Confirm'}
                       </button>
@@ -255,7 +255,7 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({ client, 
                       showToast(`Claimed ${client.name} to your roster.`);
                     }
                   }}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 text-slate-950 text-xs font-bold shadow-md shadow-emerald-500/25 hover:shadow-emerald-500/40 active:scale-95 transition-all cursor-pointer"
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 text-on-gold text-xs font-bold shadow-md shadow-emerald-500/25 hover:shadow-emerald-500/40 active:scale-95 transition-all cursor-pointer"
                   title={`Claim ${client.name} to your coaching roster`}
                 >
                   <UserPlus className="h-3.5 w-3.5 stroke-[2.5]" />
@@ -596,7 +596,7 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({ client, 
                   />
                   <button
                     type="submit"
-                    className="px-4 h-10 rounded-xl bg-emerald-500 text-slate-950 font-bold hover:bg-emerald-400 transition-colors shrink-0"
+                    className="px-4 h-10 rounded-xl bg-emerald-500 text-on-gold font-bold hover:bg-emerald-400 transition-colors shrink-0"
                   >
                     Add Note
                   </button>
@@ -687,7 +687,7 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({ client, 
                   <button
                     type="submit"
                     disabled={isSubmittingAdj || !adjNote.trim()}
-                    className="px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 font-mono text-xs font-bold hover:bg-emerald-400 disabled:opacity-50 transition-colors cursor-pointer"
+                    className="px-4 py-2 rounded-xl bg-emerald-500 text-on-gold font-mono text-xs font-bold hover:bg-emerald-400 disabled:opacity-50 transition-colors cursor-pointer"
                   >
                     {isSubmittingAdj ? 'Submitting Evaluation...' : 'Record Evaluation'}
                   </button>

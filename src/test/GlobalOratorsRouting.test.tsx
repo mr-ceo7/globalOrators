@@ -44,6 +44,7 @@ const NavigationTester: React.FC = () => {
 describe('Global Orators Dedicated Routing & SEO Tests', () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
     window.history.replaceState({}, '', '/');
   });
 

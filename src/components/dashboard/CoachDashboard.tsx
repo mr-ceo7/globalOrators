@@ -98,7 +98,7 @@ export const CoachDashboard: React.FC<{
             <button
               id="dashboard-build-program-btn"
               onClick={handleOpenProgram}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition-colors shadow-sm cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-on-gold text-xs font-bold transition-colors shadow-sm cursor-pointer"
             >
               <BookOpen className="h-4 w-4" />
               <span>Create Curriculum</span>
@@ -196,7 +196,7 @@ export const CoachDashboard: React.FC<{
           onClick={() => setActiveMobileSection('schedule')}
           className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors ${
             activeMobileSection === 'schedule'
-              ? 'bg-emerald-500 text-slate-950 shadow-xs'
+              ? 'bg-emerald-500 text-on-gold shadow-xs'
               : 'text-slate-400 hover:text-white'
           }`}
         >
@@ -206,7 +206,7 @@ export const CoachDashboard: React.FC<{
           onClick={() => setActiveMobileSection('activity')}
           className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors ${
             activeMobileSection === 'activity'
-              ? 'bg-emerald-500 text-slate-950 shadow-xs'
+              ? 'bg-emerald-500 text-on-gold shadow-xs'
               : 'text-slate-400 hover:text-white'
           }`}
         >
@@ -216,7 +216,7 @@ export const CoachDashboard: React.FC<{
           onClick={() => setActiveMobileSection('watchlist')}
           className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors ${
             activeMobileSection === 'watchlist'
-              ? 'bg-emerald-500 text-slate-950 shadow-xs'
+              ? 'bg-emerald-500 text-on-gold shadow-xs'
               : 'text-slate-400 hover:text-white'
           }`}
         >
@@ -237,7 +237,7 @@ export const CoachDashboard: React.FC<{
             </div>
             <button
               onClick={() => setActiveTab('calendar')}
-              className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1"
+              className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 min-h-[24px]"
             >
               Full Calendar <ChevronRight className="h-3.5 w-3.5" />
             </button>
@@ -324,7 +324,7 @@ export const CoachDashboard: React.FC<{
                             <button
                               id={`log-workout-${workout.id}`}
                               onClick={() => openWorkoutLogger(workout)}
-                              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-colors shadow-xs"
+                              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-on-gold font-bold text-xs transition-colors shadow-xs"
                             >
                               <Play className="h-3 w-3 fill-slate-950" />
                               <span>Log Session</span>
@@ -365,7 +365,7 @@ export const CoachDashboard: React.FC<{
               </div>
               <button
                 onClick={() => setActiveTab('messenger')}
-                className="text-xs font-bold text-emerald-400 hover:underline shrink-0"
+                className="text-xs font-bold text-emerald-400 hover:underline shrink-0 inline-flex items-center min-h-[24px]"
               >
                 Broadcast to Speakers →
               </button>

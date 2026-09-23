@@ -67,6 +67,7 @@ vi.mock('../services/apiClient', () => ({
 describe('Global Orators Landing Page & Features Tests', () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
   });
 
   test('should render GOP umbrella title, tagline, and both functional branches on Landing Page', () => {

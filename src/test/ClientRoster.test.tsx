@@ -134,6 +134,7 @@ import { clientsApi } from '../services/apiClient';
 describe('ClientRoster UI Optimization and Standout Claim Button', () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
     localStorage.setItem('globalorators_token', 'mock-coach-token');
     localStorage.setItem('globalorators_user', JSON.stringify({
       id: 'coach-1',

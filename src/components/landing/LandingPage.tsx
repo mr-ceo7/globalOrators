@@ -11,6 +11,7 @@ import { EscapismPage } from '../../pages/EscapismPage';
 import { TournamentsPage } from '../../pages/TournamentsPage';
 import { TestimonialsPage } from '../../pages/TestimonialsPage';
 import { ContactPage } from '../../pages/ContactPage';
+import { NotFoundPage } from '../../pages/NotFoundPage';
 
 export const LandingPage: React.FC = () => {
   const { currentPath, navigate, setCurrentPortal } = useApp();
@@ -92,7 +93,6 @@ export const LandingPage: React.FC = () => {
           />
         );
       case '/':
-      default:
         return (
           <HomePage 
             onStartOnboarding={handleStartOnboarding} 
@@ -100,6 +100,8 @@ export const LandingPage: React.FC = () => {
             onNavigate={navigate} 
           />
         );
+      default:
+        return <NotFoundPage onNavigate={navigate} />;
     }
   };
 

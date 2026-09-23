@@ -163,7 +163,7 @@ export const ClientRoster: React.FC<{
       const saved = await addClient({
         name: formName.trim(),
         email: formEmail.trim(),
-        phone: formPhone.trim() || '+1 (555) 000-1234',
+        phone: formPhone.trim(),
         avatar: '',
         age: Number(formAge),
         gender: formGender,
@@ -291,9 +291,9 @@ export const ClientRoster: React.FC<{
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-4 rounded-2xl bg-slate-900/90 border border-slate-800">
+      <div className="flex flex-col md:flex-row md:flex-wrap md:items-center justify-between gap-3 p-4 rounded-2xl bg-slate-900/90 border border-slate-800">
         {/* Search */}
-        <div className="relative flex-1 max-w-md">
+        <div className="relative flex-1 max-w-md md:min-w-[16rem]">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
           <input
             id="client-roster-search-input"
@@ -317,7 +317,7 @@ export const ClientRoster: React.FC<{
               onClick={() => setSelectedBranchFilter(b.id as any)}
               className={`px-2.5 py-1 rounded-lg text-xs font-mono uppercase tracking-wider transition-all ${
                 selectedBranchFilter === b.id
-                  ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
+                  ? 'bg-emerald-500 text-on-gold font-bold shadow-sm'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -597,7 +597,7 @@ export const ClientRoster: React.FC<{
                                     showToast(`Claimed ${client.name} to your roster.`);
                                   }
                                 }}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold shadow-sm active:scale-95 transition-all cursor-pointer"
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-on-gold text-xs font-bold shadow-sm active:scale-95 transition-all cursor-pointer"
                                 title={`Claim ${client.name} to your coaching roster`}
                               >
                                 <UserPlus className="h-3.5 w-3.5 stroke-[2.5]" />
@@ -708,6 +708,11 @@ export const ClientRoster: React.FC<{
       ) : (
         /* Grid Card View */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredClients.length === 0 && (
+            <div className="col-span-full py-12 text-center text-sm text-slate-400 rounded-2xl border border-dashed border-slate-800">
+              No speakers found matching the filters.
+            </div>
+          )}
           {filteredClients.map((client) => {
             const isUnassigned = !client.coachId;
             const isMySpeaker = client.coachId === currentUser?.id;
@@ -856,7 +861,7 @@ export const ClientRoster: React.FC<{
                               showToast(`Claimed ${client.name} to your roster.`);
                             }
                           }}
-                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 text-slate-950 font-bold text-xs shadow-md shadow-emerald-500/25 hover:shadow-emerald-500/40 active:scale-95 transition-all cursor-pointer"
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 text-on-gold font-bold text-xs shadow-md shadow-emerald-500/25 hover:shadow-emerald-500/40 active:scale-95 transition-all cursor-pointer"
                           title={`Claim ${client.name} to your personal coaching roster`}
                         >
                           <UserPlus className="h-3.5 w-3.5 stroke-[2.5]" />

@@ -112,6 +112,7 @@ export const ProgramBuilder: React.FC<{
   const [isDrillPickerOpen, setIsDrillPickerOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [isProgramDropdownOpen, setIsProgramDropdownOpen] = useState(false);
   const [selectedClientToAssign, setSelectedClientToAssign] = useState<string>(clients[0]?.id || '');
   const [pickerSearch, setPickerSearch] = useState('');
@@ -1027,20 +1028,26 @@ export const ProgramBuilder: React.FC<{
 
               <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <label className="block text-slate-400 font-mono text-[10px] uppercase mb-1 font-bold">Weeks</label>
+                  <label htmlFor="program-duration-weeks" className="block text-slate-400 font-mono text-[10px] uppercase mb-1 font-bold">Weeks</label>
                   <input
+                    id="program-duration-weeks"
                     type="number"
+                    min={1}
+                    max={52}
                     value={activeProgram.durationWeeks}
-                    onChange={(e) => updateProgramField('durationWeeks', Number(e.target.value))}
+                    onChange={(e) => updateProgramField('durationWeeks', Math.min(52, Math.max(1, Math.round(Number(e.target.value)) || 1)))}
                     className="w-full h-9 px-2 rounded-xl bg-slate-900 border border-slate-800 text-white text-center focus:outline-hidden"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-400 font-mono text-[10px] uppercase mb-1 font-bold">Sessions/Wk</label>
+                  <label htmlFor="program-sessions-per-week" className="block text-slate-400 font-mono text-[10px] uppercase mb-1 font-bold">Sessions/Wk</label>
                   <input
+                    id="program-sessions-per-week"
                     type="number"
+                    min={1}
+                    max={7}
                     value={activeProgram.daysPerWeek}
-                    onChange={(e) => updateProgramField('daysPerWeek', Number(e.target.value))}
+                    onChange={(e) => updateProgramField('daysPerWeek', Math.min(7, Math.max(1, Math.round(Number(e.target.value)) || 1)))}
                     className="w-full h-9 px-2 rounded-xl bg-slate-900 border border-slate-800 text-white text-center focus:outline-hidden"
                   />
                 </div>
@@ -1071,19 +1078,33 @@ export const ProgramBuilder: React.FC<{
 
             <div className="pt-3 border-t border-slate-900 flex items-center justify-between">
               {programs.length > 1 && (
-                <button
-                  onClick={async () => {
-                    if (window.confirm(`Delete curriculum "${activeProgram.title}"?`)) {
-                      await deleteProgram(activeProgram.id);
-                      setIsSettingsOpen(false);
-                      const rem = programs.filter(p => p.id !== activeProgram.id);
-                      if (rem[0]) setActiveProgram(JSON.parse(JSON.stringify(rem[0])));
-                    }
-                  }}
-                  className="text-xs text-red-400 hover:text-red-300"
-                >
-                  Delete Curriculum
-                </button>
+                confirmingDelete ? (
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="text-slate-400">Delete permanently?</span>
+                    <button
+                      onClick={async () => {
+                        setConfirmingDelete(false);
+                        await deleteProgram(activeProgram.id);
+                        setIsSettingsOpen(false);
+                        const rem = programs.filter(p => p.id !== activeProgram.id);
+                        if (rem[0]) setActiveProgram(JSON.parse(JSON.stringify(rem[0])));
+                      }}
+                      className="font-bold text-red-400 hover:text-red-300"
+                    >
+                      Delete
+                    </button>
+                    <button onClick={() => setConfirmingDelete(false)} className="text-slate-400 hover:text-slate-200">
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setConfirmingDelete(true)}
+                    className="text-xs text-red-400 hover:text-red-300"
+                  >
+                    Delete Curriculum
+                  </button>
+                )
               )}
               <button
                 onClick={() => setIsSettingsOpen(false)}

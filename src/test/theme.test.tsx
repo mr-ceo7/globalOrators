@@ -39,6 +39,7 @@ describe('Theme Context Unit Tests', () => {
 
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
     document.documentElement.className = '';
     matchMediaListeners = [];
     prefersDark = false;

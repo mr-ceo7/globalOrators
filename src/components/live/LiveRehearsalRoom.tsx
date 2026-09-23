@@ -1517,7 +1517,9 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
         <div className="hidden sm:flex items-center gap-3">
           <span>Chamber: <strong className="text-slate-400 font-medium">{safeRoomId}</strong></span>
           <span className="text-slate-800">|</span>
-          <span>Zero Ads · End-to-End Encrypted</span>
+          {/* SFU calls are encrypted in transit but decrypted on the media server; only the
+              direct peer-to-peer mode is end-to-end encrypted. */}
+          <span>Zero Ads · {studioMode === 'jitsi' ? 'Encrypted in transit' : 'End-to-End Encrypted'}</span>
         </div>
       </footer>
     </div>

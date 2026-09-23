@@ -154,8 +154,8 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
               onClick={isActionSheetOpen ? () => setIsActionSheetOpen(false) : handleOpenActionSheet}
               className={`w-12 h-12 rounded-full flex items-center justify-center shadow-md border-2 border-slate-950 active:scale-90 transition-all duration-300 focus:outline-none ${
                 isActionSheetOpen
-                  ? 'bg-slate-700 text-white rotate-45'
-                  : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 rotate-0'
+                  ? 'bg-slate-700 text-on-gold rotate-45'
+                  : 'bg-emerald-500 hover:bg-emerald-400 text-on-gold rotate-0'
               }`}
               title="Quick Actions"
             >
@@ -258,7 +258,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                   onClick={handleQuickLogFirstWorkout}
                   className="p-3.5 rounded-2xl bg-emerald-950/60 border border-emerald-800/40 flex flex-col items-start gap-2 text-left active:scale-[0.97] transition-transform"
                 >
-                  <div className="p-2 rounded-xl bg-emerald-500 text-slate-950">
+                  <div className="p-2 rounded-xl bg-emerald-500 text-on-gold">
                     <Play className="w-4 h-4 fill-slate-950" />
                   </div>
                   <div>

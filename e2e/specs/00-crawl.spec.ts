@@ -17,6 +17,9 @@ for (const route of PUBLIC_ROUTES) {
     await snap(page, testInfo, `public_${name}`);
     await recordLayout(page, testInfo, `public_${name}`);
     await expect(page.locator('#root')).not.toBeEmpty();
+    if (route === '/does-not-exist') {
+      await expect(page.getByRole('heading', { name: 'Page not found' })).toBeVisible();
+    }
     expect(issues.filter((i) => i.kind === 'pageerror')).toEqual([]);
   });
 }

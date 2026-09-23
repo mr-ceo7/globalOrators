@@ -27,7 +27,7 @@ test.describe('onboarding (anonymous applicant)', () => {
     await next(page).click();
     await page.waitForTimeout(500);
     expect(await page.getByText(/step 3 of 5/i).isVisible(), 'blocked on step 3 with empty name').toBeTruthy();
-    testInfo.annotations.push({ type: 'validation-ui', description: alerts.length ? `native alert(): ${alerts.join(' / ')}` : 'inline' });
+    expect(alerts, 'validation uses inline errors, not alert()').toEqual([]);
 
     await page.locator('input[name="fullName"]').fill('E2E Applicant <b>bold</b>');
     await page.getByPlaceholder('nia@example.org').fill('not-an-email');
@@ -37,15 +37,15 @@ test.describe('onboarding (anonymous applicant)', () => {
 
     const email = `applicant.${Date.now()}@example.com`;
     await page.getByPlaceholder('nia@example.org').fill(email);
+    // Letters are stripped as you type; a too-short number is flagged inline.
     await page.getByPlaceholder('+254 700 000 000').fill('abc');
+    await expect(page.getByPlaceholder('+254 700 000 000')).toHaveValue('');
+    await page.getByPlaceholder('+254 700 000 000').fill('123');
     await next(page).click();
-    await page.waitForTimeout(500);
-    const phoneBlocked = await page.getByText(/step 3 of 5/i).isVisible();
-    testInfo.annotations.push({ type: 'phone "abc"', description: phoneBlocked ? 'rejected' : 'ACCEPTED' });
-    if (phoneBlocked) {
-      await page.getByPlaceholder('+254 700 000 000').fill('+254 712 345 678');
-      await next(page).click();
-    }
+    await expect(page.getByText(/at least 7 digits/i).first()).toBeVisible();
+    expect(alerts, 'no browser alert() pop-ups').toEqual([]);
+    await page.getByPlaceholder('+254 700 000 000').fill('+254 712 345 678');
+    await next(page).click();
     await snap(page, testInfo, 'onboarding_step4');
     await recordLayout(page, testInfo, 'onboarding_step4');
 

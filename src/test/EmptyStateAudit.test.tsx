@@ -34,6 +34,7 @@ const ContextInspector: React.FC<{ onContext: (ctx: ReturnType<typeof useApp>) =
 describe('Empty State Rendering (Audit Gate Item 9)', () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
     // Simulate authenticated coach session
     localStorage.setItem('globalorators_token', 'test-jwt-token');
   });

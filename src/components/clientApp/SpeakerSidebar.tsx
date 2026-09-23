@@ -81,7 +81,7 @@ export const SpeakerSidebar: React.FC<SpeakerSidebarProps> = ({
       label: 'Daily Orator Rituals',
       icon: CheckCircle2,
       badge: habitsRemainingCount > 0 ? habitsRemainingCount : undefined,
-      badgeColor: 'bg-emerald-500 text-slate-950'
+      badgeColor: 'bg-emerald-500 text-on-gold'
     },
     {
       id: 'progress' as SpeakerTabType,
@@ -134,7 +134,7 @@ export const SpeakerSidebar: React.FC<SpeakerSidebarProps> = ({
                   <span>impact</span>
                 </div>
               </div>
-              <span className="text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-md bg-[#C89630]/10 text-brand-gold border border-[#C89630]/30 leading-none self-start mt-0.5">
+              <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-[#C89630]/10 text-brand-gold border border-[#C89630]/30 leading-none self-start mt-0.5">
                 {trackBadgeLabel}
               </span>
             </div>

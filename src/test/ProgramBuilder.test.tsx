@@ -31,6 +31,7 @@ vi.mock('../services/apiClient', () => ({
 describe('Global Orators Minimalist Split-View ProgramBuilder', () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
   });
 
   test('renders the minimalist command bar, roadmap, and editorial canvas', () => {

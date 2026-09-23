@@ -149,6 +149,7 @@ vi.mock('../services/apiClient', () => ({
 describe('Speaker Login & Portal Integration Tests', () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
   });
 
   test('should render SpeakerLoginModal and log in with email and OTP passcode', async () => {
@@ -340,6 +341,7 @@ describe('Speaker Login & Portal Integration Tests', () => {
   test('requires authentication and renders SpeakerLoginPortal when unauthenticated (no guest access)', async () => {
     // Ensure no active speaker profile exists
     localStorage.clear();
+    sessionStorage.clear();
 
     render(
       <AppProvider>
@@ -357,6 +359,7 @@ describe('Speaker Login & Portal Integration Tests', () => {
 
   test('should automatically authenticate via 1-click magic link URL parameters', async () => {
     localStorage.clear();
+    sessionStorage.clear();
 
     // Set magic_token in window.location.search
     const originalLocation = window.location;
@@ -386,6 +389,7 @@ describe('Speaker Login & Portal Integration Tests', () => {
 
   test('should recognize speaker as onboarded and enter speaker studio when onboardingSurvey is filled even if status is Pending Onboarding', async () => {
     localStorage.clear();
+    sessionStorage.clear();
     const { clientsApi } = await import('../services/apiClient');
     (clientsApi.getMe as any).mockResolvedValueOnce({
       id: 'client-17860310',

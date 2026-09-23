@@ -33,6 +33,7 @@ import { authApi } from '../services/apiClient';
 describe('CoachLoginPortal Tests', () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
     vi.clearAllMocks();
   });
 

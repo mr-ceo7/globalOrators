@@ -146,7 +146,7 @@ export const PwaInstallPrompt: React.FC<PwaInstallPromptProps> = ({ isOpen, onCl
               <button
                 onClick={handleInstallClick}
                 disabled={isInstalling}
-                className="w-full py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm flex items-center justify-center gap-2 transition-colors active:scale-[0.98]"
+                className="w-full py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-on-gold font-bold text-sm flex items-center justify-center gap-2 transition-colors active:scale-[0.98]"
               >
                 <Download className="w-4 h-4" />
                 {isInstalling ? 'Installing Global Orators...' : 'Install App to Home Screen'}

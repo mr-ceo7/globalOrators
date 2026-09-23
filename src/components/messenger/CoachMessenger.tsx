@@ -595,7 +595,7 @@ export const CoachMessenger: React.FC = () => {
                       </p>
                     )}
                     {unreadCount > 0 && (
-                      <span className="h-4 min-w-[16px] px-1 rounded-full bg-emerald-500 text-slate-950 font-bold text-[9px] flex items-center justify-center shrink-0">
+                      <span className="h-4 min-w-[16px] px-1 rounded-full bg-emerald-500 text-on-gold font-bold text-[9px] flex items-center justify-center shrink-0">
                         {unreadCount}
                       </span>
                     )}
@@ -675,7 +675,7 @@ export const CoachMessenger: React.FC = () => {
 
               <button
                 onClick={() => setIsLiveRoomOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition-all shadow cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-on-gold text-xs font-bold transition-all shadow cursor-pointer"
                 title="Launch Live Rehearsal Chamber"
               >
                 <Video className="w-3.5 h-3.5" />
@@ -890,7 +890,7 @@ export const CoachMessenger: React.FC = () => {
                           <p className="text-[11px] text-slate-300">Tap below to view full curriculum structure & log rehearsals.</p>
                           <button
                             onClick={() => setActiveTab('calendar')}
-                            className="w-full py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-bold text-[11px] hover:bg-emerald-400 transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                            className="w-full py-1.5 rounded-lg bg-emerald-500 text-on-gold font-bold text-[11px] hover:bg-emerald-400 transition-colors flex items-center justify-center gap-1 cursor-pointer"
                           >
                             <span>Open Rehearsal Calendar</span>
                             <ExternalLink className="h-3 w-3" />
@@ -908,7 +908,7 @@ export const CoachMessenger: React.FC = () => {
                               className="h-full w-full object-cover"
                             />
                             <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                              <div className="h-10 w-10 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center shadow-lg">
+                              <div className="h-10 w-10 rounded-full bg-emerald-500 text-on-gold flex items-center justify-center shadow-lg">
                                 <Play className="h-4 w-4 ml-0.5 fill-current" />
                               </div>
                             </div>
@@ -977,7 +977,7 @@ export const CoachMessenger: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => handleTogglePlayAudio(msg)}
-                              className="h-9 w-9 rounded-full bg-emerald-400 hover:bg-emerald-300 text-slate-950 flex items-center justify-center shrink-0 transition-transform active:scale-95 cursor-pointer shadow-md"
+                              className="h-9 w-9 rounded-full bg-emerald-400 hover:bg-emerald-300 text-on-gold flex items-center justify-center shrink-0 transition-transform active:scale-95 cursor-pointer shadow-md"
                               title={isThisPlaying ? 'Pause Voice Memo' : 'Play Voice Memo'}
                             >
                               {isThisPlaying ? (
@@ -1171,7 +1171,7 @@ export const CoachMessenger: React.FC = () => {
                 <button
                   type="button"
                   onClick={stopAndSendRecording}
-                  className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-on-gold font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer"
                 >
                   <span>Send Voice Memo</span>
                   <Send className="w-3.5 h-3.5" />
@@ -1190,7 +1190,7 @@ export const CoachMessenger: React.FC = () => {
                   onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
                   className={`p-2.5 rounded-xl border transition-colors ${
                     showAttachmentMenu 
-                      ? 'bg-emerald-500 text-slate-950 border-emerald-400' 
+                      ? 'bg-emerald-500 text-on-gold border-emerald-400' 
                       : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
                   }`}
                   title="Attach Protocol, Critique or Document"
@@ -1224,7 +1224,7 @@ export const CoachMessenger: React.FC = () => {
                 <button
                   type="submit"
                   disabled={!inputMessage.trim() || isSending}
-                  className="h-10 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md transition-all cursor-pointer"
+                  className="h-10 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 text-on-gold font-bold text-xs flex items-center gap-1.5 shadow-md transition-all cursor-pointer"
                 >
                   <span>{isSending ? 'Sending...' : 'Send'}</span>
                   <Send className="h-3.5 w-3.5" />

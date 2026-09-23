@@ -106,7 +106,7 @@ export const PartnerModal: React.FC<PartnerModalProps> = ({ isOpen, onClose, bra
     }
   };
 
-  const mailtoUrl = `mailto:director@globalorators.org?subject=${encodeURIComponent(
+  const mailtoUrl = `mailto:director@globaloratorsproject.com?subject=${encodeURIComponent(
     `Partnership Inquiry: ${organization || 'Institution'} (${branch})`
   )}&body=${encodeURIComponent(
     `Organization: ${organization}\nEmail: ${email}\nBranch: ${branch}\nFocus: ${focus}\nNotes: ${notes}`

@@ -486,7 +486,7 @@ export const ProgressTracker: React.FC = () => {
                   </div>
 
                   <div className={`p-2 rounded-xl transition-colors ${
-                    habit.completed ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900 text-slate-500'
+                    habit.completed ? 'bg-emerald-500 text-on-gold' : 'bg-slate-900 text-slate-500'
                   }`}>
                     <CheckCircle2 className="h-4 w-4" />
                   </div>
@@ -743,7 +743,7 @@ export const ProgressTracker: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold shadow-md"
+                  className="px-5 py-2 rounded-xl bg-emerald-500 text-on-gold font-bold shadow-md"
                 >
                   Save Entry
                 </button>
@@ -812,7 +812,7 @@ export const ProgressTracker: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold shadow-md"
+                  className="px-5 py-2 rounded-xl bg-emerald-500 text-on-gold font-bold shadow-md"
                 >
                   Log Milestone
                 </button>
@@ -880,7 +880,7 @@ export const ProgressTracker: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold shadow-md"
+                  className="px-5 py-2 rounded-xl bg-emerald-500 text-on-gold font-bold shadow-md"
                 >
                   Save Photo
                 </button>

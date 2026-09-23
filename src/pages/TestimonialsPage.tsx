@@ -227,7 +227,7 @@ export const TestimonialsPage: React.FC<TestimonialsPageProps> = ({
             </button>
           </div>
           <div className="pt-4 text-[11px] font-mono text-slate-400">
-            Director Governance Inquiries: <a href="mailto:director@globalorators.org" className="text-[#7A4B06] dark:text-[#E3B95C] underline">director@globalorators.org</a>
+            Director Governance Inquiries: <a href="mailto:director@globaloratorsproject.com" className="text-[#7A4B06] dark:text-[#E3B95C] underline">director@globaloratorsproject.com</a>
           </div>
         </div>
       </section>

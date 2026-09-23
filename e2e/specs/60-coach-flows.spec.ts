@@ -174,12 +174,10 @@ test.describe('curriculum builder', () => {
 
     // Delete it again through the UI.
     await page.getByRole('button', { name: /^settings$/i }).click();
-    // Deletion is confirmed with a native window.confirm().
-    page.once('dialog', (d) => { testInfo.annotations.push({ type: 'delete-confirm', description: `${d.type()}: ${d.message()}` }); d.accept(); });
+    // Deletion asks for confirmation in the dialog itself (no browser confirm()).
     await page.getByRole('button', { name: /delete curriculum/i }).click();
-    await page.waitForTimeout(500);
-    const confirm = page.getByRole('button', { name: /^(delete|confirm|yes)/i }).filter({ visible: true } as any);
-    if (await confirm.count()) await confirm.last().click();
+    await expect(page.getByText('Delete permanently?')).toBeVisible();
+    await page.getByRole('button', { name: /^delete$/i }).click();
     await page.waitForTimeout(2000);
     after = await apiGet('/programs');
     expect(after.some((p: any) => p.id === created.id), 'curriculum deleted on server').toBeFalsy();

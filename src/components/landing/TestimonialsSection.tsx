@@ -150,7 +150,7 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
           </div>
 
           <div className="pt-2 text-[11px] font-mono text-slate-400">
-            Direct Director Governance Inquiries: <a href="mailto:director@globalorators.org" className="text-[#7A4B06] dark:text-[#E3B95C] underline hover:text-[#B37D22]">director@globalorators.org</a>
+            Direct Director Governance Inquiries: <a href="mailto:director@globaloratorsproject.com" className="text-[#7A4B06] dark:text-[#E3B95C] underline hover:text-[#B37D22]">director@globaloratorsproject.com</a>
           </div>
         </div>
       </section>

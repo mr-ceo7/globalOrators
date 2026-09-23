@@ -71,7 +71,7 @@ export const SubdomainSwitcher: React.FC = () => {
                   onClick={() => setCurrentPortal(p.id)}
                   className={`flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-lg font-medium transition-all text-[11px] whitespace-nowrap ${
                     isActive
-                      ? 'bg-emerald-500 text-slate-950 shadow-sm font-semibold'
+                      ? 'bg-emerald-500 text-on-gold shadow-sm font-semibold'
                       : 'text-slate-300 hover:text-white hover:bg-slate-900 border border-slate-800/80'
                   }`}
                 >

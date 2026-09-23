@@ -109,7 +109,7 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Toast Notification Banner */}
       {toastMessage && (
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-xs font-bold text-slate-950 shadow-lg animate-in fade-in slide-in-from-top-3">
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-xs font-bold text-on-gold shadow-lg animate-in fade-in slide-in-from-top-3">
           <CheckCircle2 className="h-4 w-4 shrink-0" />
           <span>{toastMessage}</span>
         </div>
@@ -320,6 +320,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="relative">
           <button
             id="notifications-btn"
+            aria-label="Notifications"
             onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
             className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
           >
@@ -374,7 +375,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             id="quick-action-menu-btn"
             onClick={() => setIsQuickActionsOpen(!isQuickActionsOpen)}
-            className="flex items-center gap-1.5 h-9 px-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-colors shadow-xs"
+            className="flex items-center gap-1.5 h-9 px-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-on-gold font-bold text-xs transition-colors shadow-xs"
           >
             <Plus className="h-4 w-4 stroke-[3]" />
             <span className="hidden sm:inline">Create</span>

@@ -377,7 +377,7 @@ const WorkoutLoggerDialog: React.FC<{ activeWorkoutToLog: ScheduledWorkout }> = 
                                 onClick={() => handleToggleSetComplete(exIdx, setIdx)}
                                 className={`p-1.5 rounded-lg transition-colors ${
                                   set.isCompleted 
-                                    ? 'bg-emerald-500 text-slate-950' 
+                                    ? 'bg-emerald-500 text-on-gold' 
                                     : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
                                 }`}
                               >
@@ -466,7 +466,7 @@ const WorkoutLoggerDialog: React.FC<{ activeWorkoutToLog: ScheduledWorkout }> = 
             id="finish-workout-btn"
             onClick={handleFinishWorkout}
             disabled={isSubmitting}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-colors shadow-sm disabled:opacity-50 disabled:pointer-events-none"
+            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-on-gold font-bold text-xs transition-colors shadow-sm disabled:opacity-50 disabled:pointer-events-none"
           >
             {isSubmitting ? (
               <>

@@ -109,6 +109,7 @@ vi.mock('../services/apiClient', () => ({
 describe('CoachMessenger Component (WhatsApp-style Modern Chat)', () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
     localStorage.setItem('globalorators_token', 'test-token');
     localStorage.setItem('globalorators_user', JSON.stringify({ id: 'coach-1', email: 'kassimmusa322@gmail.com', role: 'coach', full_name: 'Coach Qassim' }));
   });
