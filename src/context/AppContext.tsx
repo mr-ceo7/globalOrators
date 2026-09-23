@@ -58,7 +58,8 @@ export type NavigationTab =
   | 'exercises'
   | 'calendar'
   | 'progress'
-  | 'messenger';
+  | 'messenger'
+  | 'invoices';
 
 interface AppContextType {
   activeTab: NavigationTab;
@@ -91,7 +92,7 @@ interface AppContextType {
   closeWorkoutLogger: () => void;
 
   // Actions
-  addClient: (client: Omit<Client, 'id' | 'workoutsCompleted' | 'totalWorkoutsAssigned' | 'complianceRate' | 'lastActive'>) => void;
+  addClient: (client: Omit<Client, 'id' | 'workoutsCompleted' | 'totalWorkoutsAssigned' | 'complianceRate' | 'lastActive'>) => Promise<boolean>;
   updateClient: (id: string, updates: Partial<Client>) => void;
   deleteClient: (id: string) => Promise<boolean>;
   suspendClient: (id: string) => Promise<boolean>;
@@ -147,6 +148,10 @@ interface AppContextType {
   activeSpeakerProfile: SpeakerOnboardingData | null;
   setActiveSpeakerProfile: (profile: SpeakerOnboardingData | null) => void;
   completeOnboarding: (data: SpeakerOnboardingData) => Promise<{ success: boolean; error?: string }>;
+  // Set when an anonymous applicant finishes onboarding: the speaker login opens pre-filled
+  // so they can verify their email before entering the app.
+  pendingSpeakerSignIn: PendingSpeakerSignIn | null;
+  clearPendingSpeakerSignIn: () => void;
   loginSpeaker: (email: string, code?: string) => Promise<{ success: boolean; error?: string }>;
   sendSpeakerOtp: (email: string) => Promise<{ success: boolean; error?: string }>;
   verifySpeakerOtp: (email: string, code: string) => Promise<{ success: boolean; error?: string }>;
@@ -170,6 +175,12 @@ interface AppContextType {
 }
 
 
+
+export interface PendingSpeakerSignIn {
+  email: string;
+  passcodeSent: boolean;
+  message: string;
+}
 
 // No default speaker profile — user must authenticate or complete onboarding (H1 audit fix).
 
@@ -234,7 +245,13 @@ const getSystemTheme = (): 'light' | 'dark' => {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [activeTab, setActiveTab] = useState<NavigationTab>('dashboard');
+  const [activeTab, setActiveTab] = useState<NavigationTab>(() => {
+    if (typeof window !== 'undefined') {
+      const pathname = window.location.pathname.toLowerCase();
+      if (pathname === '/admin/invoices' || pathname === '/invoices') return 'invoices';
+    }
+    return 'dashboard';
+  });
   const [isBackendConnected, setIsBackendConnected] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -274,14 +291,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
 
       const pathname = window.location.pathname.toLowerCase();
-      if (pathname === '/coach' || pathname === '/coach_os') return 'coach_os';
+      if (pathname === '/coach' || pathname === '/coach_os' || pathname === '/admin/invoices' || pathname === '/invoices') return 'coach_os';
       if (pathname === '/app' || pathname === '/speaker' || pathname === '/speaker_app') return 'speaker_app';
       if (pathname === '/onboarding' || pathname === '/apply') return 'onboarding';
 
       const params = new URLSearchParams(window.location.search);
       if (params.has('magic_token') || params.has('token')) return 'speaker_app';
       const portalParam = params.get('portal');
-      if (portalParam === 'coach' || portalParam === 'coach_os') return 'coach_os';
+      if (portalParam === 'coach' || portalParam === 'coach_os' || portalParam === 'invoices') return 'coach_os';
       if (portalParam === 'app' || portalParam === 'speaker_app') return 'speaker_app';
       if (portalParam === 'onboarding' || portalParam === 'apply') return 'onboarding';
       if (portalParam === 'landing') return 'landing';
@@ -310,6 +327,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setCurrentPortalState('onboarding');
       } else if (cleanPath === '/coach' || cleanPath === '/coach_os') {
         setCurrentPortalState('coach_os');
+      } else if (cleanPath === '/admin/invoices' || cleanPath === '/invoices') {
+        setCurrentPortalState('coach_os');
+        setActiveTab('invoices');
       } else if (cleanPath === '/app' || cleanPath === '/speaker' || cleanPath === '/speaker_app') {
         setCurrentPortalState('speaker_app');
       } else {
@@ -328,6 +348,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setCurrentPortalState('onboarding');
       } else if (pathname === '/coach' || pathname === '/coach_os') {
         setCurrentPortalState('coach_os');
+      } else if (pathname === '/admin/invoices' || pathname === '/invoices') {
+        setCurrentPortalState('coach_os');
+        setActiveTab('invoices');
       } else if (pathname === '/app' || pathname === '/speaker' || pathname === '/speaker_app') {
         setCurrentPortalState('speaker_app');
       } else {
@@ -406,6 +429,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [onlineUserIds, setOnlineUserIds] = useState<string[]>([]);
   const [typingUsers, setTypingUsers] = useState<Record<string, { userId: string; userName: string; role: string; timestamp: number }>>({});
   const typingTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+  const [pendingSpeakerSignIn, setPendingSpeakerSignIn] = useState<PendingSpeakerSignIn | null>(null);
+  const clearPendingSpeakerSignIn = useCallback(() => setPendingSpeakerSignIn(null), []);
 
   // Faculty Coaches & Referrals
   const [coaches, setCoaches] = useState<CoachItem[]>([]);
@@ -1001,8 +1027,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setActiveWorkoutToLog(null);
   };
 
-  const addClient = async (clientData: Omit<Client, 'id' | 'workoutsCompleted' | 'totalWorkoutsAssigned' | 'complianceRate' | 'lastActive'>) => {
+  const addClient = async (clientData: Omit<Client, 'id' | 'workoutsCompleted' | 'totalWorkoutsAssigned' | 'complianceRate' | 'lastActive'>): Promise<boolean> => {
     const tempId = `client-${Date.now()}`;
+    const activityId = `act-${Date.now()}`;
     const newClient: Client = {
       ...clientData,
       id: tempId,
@@ -1019,7 +1046,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Activity feed item
     setActivityFeed(prev => [
       {
-        id: `act-${Date.now()}`,
+        id: activityId,
         type: 'check_in_submitted',
         clientId: newClient.id,
         clientName: newClient.name,
@@ -1030,7 +1057,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       },
       ...prev
     ]);
-    showToast(`Client ${newClient.name} added successfully!`);
 
     // Sync to Backend
     try {
@@ -1039,10 +1065,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setClients(prev => prev.map(c => c.id === tempId ? created : c));
         setSelectedClientId(created.id);
       }
-    } catch (err) {
+      showToast(`Speaker ${newClient.name} added successfully!`);
+      return true;
+    } catch (err: any) {
       console.warn('Backend sync failed for addClient:', err);
       setClients(prev => prev.filter(c => c.id !== tempId));
-      showToast('Failed to save speaker to server. Reverting changes.');
+      setActivityFeed(prev => prev.filter(a => a.id !== activityId));
+      showToast(err?.message || 'Failed to save speaker to server. Reverting changes.');
+      return false;
     }
   };
 
@@ -1691,6 +1721,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } as any
     };
 
+    // Anonymous applicants have no session yet; signed-in speakers (who verified their email
+    // before onboarding) go straight into the app.
+    const hasSession = Boolean(localStorage.getItem('globalorators_token') || localStorage.getItem('nubianfit_token'));
+    const email = data.email.trim().toLowerCase();
+
     try {
       // Must persist to backend database first (Fail-Closed, No Offline Mode)
       const persisted = await clientsApi.create(newClientEntry);
@@ -1706,6 +1741,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         adjudicatorNotes: persisted.adjudicatorNotes || []
       };
 
+      if (!hasSession) {
+        // Verify the applicant's email before opening the app: send a passcode and hand
+        // over to the speaker login, pre-filled.
+        let passcodeSent = false;
+        try {
+          await authApi.sendOtp(email);
+          passcodeSent = true;
+        } catch (otpErr) {
+          console.warn('Could not send sign-in passcode after onboarding:', otpErr);
+        }
+        setPendingSpeakerSignIn({
+          email,
+          passcodeSent,
+          message: passcodeSent
+            ? `Application received. We emailed a 6-digit passcode and sign-in link to ${email}. Enter the passcode to open your Orators App.`
+            : `Application received. Request a sign-in passcode for ${email} to open your Orators App.`
+        });
+        setCurrentPortal('speaker_app');
+        return { success: true };
+      }
 
       // 1. Update in-memory roster with verified server record
       setClients(prev => [resolvedClient, ...prev.filter(c => c.email !== data.email && c.id !== resolvedClient.id)]);
@@ -1722,6 +1777,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (err: any) {
       console.error('Backend client persistence failed (fail-closed):', err);
       const errorMsg = err?.message || 'Unable to register profile to server. Please check your connection and try again.';
+      if (!hasSession && /already exists/i.test(errorMsg)) {
+        // The email is already enrolled: send the applicant to sign in instead.
+        setPendingSpeakerSignIn({ email, passcodeSent: false, message: errorMsg });
+        setCurrentPortal('speaker_app');
+        return { success: false, error: errorMsg };
+      }
       showToast(errorMsg);
       // DO NOT set active speaker profile
       // DO NOT save to localStorage
@@ -1935,7 +1996,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         password: payload.password,
         full_name: payload.fullName.trim(),
         role: 'coach',
-        coach_invite_code: payload.inviteCode?.trim() || 'FACULTY-INVITE-2026'
+        coach_invite_code: payload.inviteCode?.trim() || undefined
       });
       if (res && res.access_token && res.user) {
         setCurrentCoachUser(res.user);
@@ -2030,6 +2091,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         activeSpeakerProfile,
         setActiveSpeakerProfile,
         completeOnboarding,
+        pendingSpeakerSignIn,
+        clearPendingSpeakerSignIn,
         loginSpeaker,
         sendSpeakerOtp,
         verifySpeakerOtp,

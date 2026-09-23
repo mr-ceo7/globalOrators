@@ -18,7 +18,7 @@ import { GlobalOratorsLogo } from '../common/GlobalOratorsLogo';
 import { GoogleAuthButton } from './GoogleAuthButton';
 
 export const SpeakerLoginPortal: React.FC = () => {
-  const { sendSpeakerOtp, verifySpeakerOtp, verifySpeakerMagicLink, setCurrentPortal } = useApp();
+  const { sendSpeakerOtp, verifySpeakerOtp, verifySpeakerMagicLink, setCurrentPortal, pendingSpeakerSignIn, clearPendingSpeakerSignIn } = useApp();
 
   const [step, setStep] = useState<'email' | 'otp'>('email');
   const [email, setEmail] = useState('');
@@ -59,6 +59,16 @@ export const SpeakerLoginPortal: React.FC = () => {
         });
     }
   }, [verifySpeakerMagicLink]);
+
+  // Hand-off from onboarding: open pre-filled so the new applicant can verify their email.
+  useEffect(() => {
+    if (!pendingSpeakerSignIn) return;
+    setEmail(pendingSpeakerSignIn.email);
+    setStep(pendingSpeakerSignIn.passcodeSent ? 'otp' : 'email');
+    setErrorMsg(null);
+    setInfoMsg(pendingSpeakerSignIn.message);
+    clearPendingSpeakerSignIn();
+  }, [pendingSpeakerSignIn, clearPendingSpeakerSignIn]);
 
   useEffect(() => {
     if (step === 'email') {

@@ -92,6 +92,10 @@ class Settings(BaseSettings):
     FORWARDING_EMAIL: str = os.getenv("FORWARDING_EMAIL", "kassimmusa322@gmail.com")
     RESEND_WEBHOOK_SECRET: Optional[str] = os.getenv("RESEND_WEBHOOK_SECRET", None)
 
+    # Shared token the Jitsi tunnel watchdog sends to update the live-room domain.
+    # Leave empty to disable remote domain updates.
+    JITSI_UPDATE_TOKEN: str = os.getenv("JITSI_UPDATE_TOKEN", "")
+
     # CORS: Explicit allowed origins (no wildcard with credentials)
     CORS_ORIGINS: List[str] = [
         "https://globaloratorsproject.com",

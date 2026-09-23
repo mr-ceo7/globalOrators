@@ -161,7 +161,7 @@ export const ClientRoster: React.FC<{
 
     setIsSaving(true);
     try {
-      await addClient({
+      const saved = await addClient({
         name: formName.trim(),
         email: formEmail.trim(),
         phone: formPhone.trim() || '+1 (555) 000-1234',
@@ -195,7 +195,8 @@ export const ClientRoster: React.FC<{
         }
       });
 
-      onCloseAddModal();
+      // Keep the form open (and the coach's input) when the server rejects it.
+      if (saved) onCloseAddModal();
     } finally {
       setIsSaving(false);
     }

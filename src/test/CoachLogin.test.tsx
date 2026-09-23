@@ -151,6 +151,9 @@ describe('CoachLoginPortal Tests', () => {
     fireEvent.change(screen.getByLabelText(/^Password/i), {
       target: { value: 'FacultyMasterKey123' }
     });
+    fireEvent.change(screen.getByLabelText(/Faculty Invite Code/i), {
+      target: { value: 'real-invite-code' }
+    });
 
     fireEvent.click(screen.getByRole('button', { name: /Create Coach Account/i }));
 
@@ -160,7 +163,7 @@ describe('CoachLoginPortal Tests', () => {
         password: 'FacultyMasterKey123',
         full_name: 'Dr. Evelyn Reed',
         role: 'coach',
-        coach_invite_code: 'FACULTY-INVITE-2026'
+        coach_invite_code: 'real-invite-code'
       });
     });
   });

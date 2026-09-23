@@ -151,26 +151,38 @@ async def toggle_habit(
     log = result.scalar_one_or_none()
     
     if not log:
-        # Create new log entry using speaker's server-assigned habits only
+        # Start today's log from the speaker's assigned rituals: the onboarding selection,
+        # or else the rituals on their most recent earlier log (with completion reset).
         survey = client.onboarding_survey or {}
         selected_habits = survey.get("selectedHabits") or survey.get("selected_habits") or []
-        if not selected_habits:
+        if selected_habits:
+            new_habits = [
+                {
+                    "habitId": f"h-{i+1}",
+                    "title": h_title,
+                    "completed": (req.habit_id == f"h-{i+1}"),
+                    "targetValue": "1",
+                    "unit": "daily"
+                }
+                for i, h_title in enumerate(selected_habits)
+            ]
+        else:
+            prev_res = await db.execute(
+                select(ClientDailyHabitLog)
+                .where((ClientDailyHabitLog.client_id == req.client_id) & (ClientDailyHabitLog.date < req.date))
+                .order_by(ClientDailyHabitLog.date.desc())
+                .limit(1)
+            )
+            previous = prev_res.scalar_one_or_none()
+            new_habits = [
+                {**h, "completed": (h.get("habitId") == req.habit_id), "currentValue": 0}
+                for h in (previous.habits if previous else []) or []
+            ]
+        if not new_habits:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="No assigned orator habits found for this speaker profile"
             )
-
-        # Build habits list strictly from assigned survey rituals
-        new_habits = [
-            {
-                "habitId": f"h-{i+1}",
-                "title": h_title,
-                "completed": (req.habit_id == f"h-{i+1}"),
-                "targetValue": "1",
-                "unit": "daily"
-            }
-            for i, h_title in enumerate(selected_habits)
-        ]
 
         if not any(h["habitId"] == req.habit_id for h in new_habits):
             raise HTTPException(

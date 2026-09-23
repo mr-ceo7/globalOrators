@@ -289,6 +289,10 @@ export const ClientPortal: React.FC = () => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  // The onstop handler is created when recording starts, so it can't read the live
+  // recordingSeconds state; measure the duration from timestamps instead.
+  const recordingStartedAtRef = useRef<number>(0);
+  const recordedDurationRef = useRef<number>(0);
 
   // Real Audio Recordings Vault (Encrypted Backend Persistence)
   const [persistedRecordings, setPersistedRecordings] = useState<RecordingResponse[]>([]);
@@ -343,6 +347,7 @@ export const ClientPortal: React.FC = () => {
       };
 
       recorder.onstop = async () => {
+        recordedDurationRef.current = Math.max(1, Math.round((Date.now() - recordingStartedAtRef.current) / 1000));
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         recordedAudioBlobRef.current = audioBlob;
         const url = URL.createObjectURL(audioBlob);
@@ -358,7 +363,7 @@ export const ClientPortal: React.FC = () => {
               pairedClient.id,
               audioBlob,
               title,
-              recordingSeconds
+              recordedDurationRef.current
             );
             if (uploaded && uploaded.id) {
               setPersistedRecordings(prev => [uploaded, ...prev]);
@@ -378,6 +383,7 @@ export const ClientPortal: React.FC = () => {
         }
       };
 
+      recordingStartedAtRef.current = Date.now();
       recorder.start(250);
       setIsRecording(true);
       setRecordingSeconds(0);
@@ -412,7 +418,7 @@ export const ClientPortal: React.FC = () => {
         pairedClient.id,
         recordedAudioBlobRef.current,
         title,
-        recordingSeconds
+        recordedDurationRef.current
       );
       if (uploaded && uploaded.id) {
         setPersistedRecordings(prev => [uploaded, ...prev]);
@@ -611,12 +617,24 @@ export const ClientPortal: React.FC = () => {
         completed: Boolean(h.completed),
       }));
     }
-    return (profile.selectedHabits || []).map((title, i) => ({
-      habitId: `h-${i + 1}`,
-      title,
+    if (profile.selectedHabits && profile.selectedHabits.length > 0) {
+      return profile.selectedHabits.map((title, i) => ({
+        habitId: `h-${i + 1}`,
+        title,
+        completed: false,
+      }));
+    }
+    // No log yet today and no onboarding selection: carry over the rituals from the most
+    // recent earlier log (the backend starts today's log the same way on first toggle).
+    const previousLog = habitLogs
+      .filter(l => l.clientId === pairedClient?.id && l.date < todayStr && l.habits?.length)
+      .sort((a, b) => b.date.localeCompare(a.date))[0];
+    return (previousLog?.habits || []).map((h, i) => ({
+      habitId: h.habitId || `h-${i + 1}`,
+      title: h.title,
       completed: false,
     }));
-  }, [currentClientHabitLog, profile.selectedHabits]);
+  }, [currentClientHabitLog, profile.selectedHabits, habitLogs, pairedClient?.id, todayStr]);
 
   // Client to Coach messages initialized from authoritative AppContext
   const [clientMessageInput, setClientMessageInput] = useState('');

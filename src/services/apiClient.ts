@@ -41,6 +41,36 @@ export const clearAuthSession = () => {
   }
 };
 
+const SESSION_EXPIRED_MESSAGE = 'Your session has expired. Please sign in again.';
+
+// Endpoints where a 401 means "wrong credentials" rather than "session expired".
+const CREDENTIAL_ENDPOINTS = [
+  '/auth/login',
+  '/auth/register',
+  '/auth/google',
+  '/auth/check-email',
+  '/auth/otp/send',
+  '/auth/otp/verify',
+  '/auth/magic-link/verify',
+];
+
+const isCredentialEndpoint = (endpoint: string) => {
+  const path = (endpoint.startsWith('/') ? endpoint : `/${endpoint}`).split('?')[0];
+  return CREDENTIAL_ENDPOINTS.includes(path);
+};
+
+const readErrorMessage = async (response: Response): Promise<string> => {
+  try {
+    const errJson = await response.json();
+    if (errJson?.detail) {
+      return typeof errJson.detail === 'string' ? errJson.detail : JSON.stringify(errJson.detail);
+    }
+  } catch {
+    // Non-JSON error body
+  }
+  return `API Error ${response.status}: ${response.statusText}`;
+};
+
 class ApiClient {
 
   async request<T>(endpoint: string, options: RequestInit = {}, isRetry = false): Promise<T> {
@@ -64,20 +94,15 @@ class ApiClient {
     });
 
     if (!response.ok) {
-      // If 401 Unauthorized, purge all cached credentials and throw AuthenticationError
+      const errorMsg = await readErrorMessage(response);
       if (response.status === 401) {
-        clearAuthSession();
-        throw new Error('AuthenticationError');
-      }
-
-      let errorMsg = `API Error ${response.status}: ${response.statusText}`;
-      try {
-        const errJson = await response.json();
-        if (errJson.detail) {
-          errorMsg = typeof errJson.detail === 'string' ? errJson.detail : JSON.stringify(errJson.detail);
+        // A 401 from a sign-in endpoint means wrong credentials, not an expired session:
+        // keep the user where they are and show the server's message.
+        if (isCredentialEndpoint(endpoint)) {
+          throw new Error(errorMsg);
         }
-      } catch {
-        // use default error message
+        clearAuthSession();
+        throw new Error(SESSION_EXPIRED_MESSAGE);
       }
       throw new Error(errorMsg);
     }
@@ -148,17 +173,9 @@ class ApiClient {
     if (!response.ok) {
       if (response.status === 401) {
         clearAuthSession();
-        throw new Error('AuthenticationError');
+        throw new Error(SESSION_EXPIRED_MESSAGE);
       }
-
-      let errorMsg = `API Error ${response.status}: ${response.statusText}`;
-      try {
-        const errJson = await response.json();
-        if (errJson.detail) {
-          errorMsg = typeof errJson.detail === 'string' ? errJson.detail : JSON.stringify(errJson.detail);
-        }
-      } catch {}
-      throw new Error(errorMsg);
+      throw new Error(await readErrorMessage(response));
     }
 
     return response.json();
@@ -179,7 +196,7 @@ class ApiClient {
     if (!response.ok) {
       if (response.status === 401) {
         clearAuthSession();
-        throw new Error('AuthenticationError');
+        throw new Error(SESSION_EXPIRED_MESSAGE);
       }
       throw new Error(`Failed to fetch audio stream: ${response.statusText}`);
     }
@@ -218,7 +235,6 @@ export const authApi = {
     const data = await api.post<{ access_token: string; token_type: string; user: any }>('/auth/google', {
       credential,
       role,
-      coach_invite_code: role === 'coach' ? 'FACULTY-INVITE-2026' : undefined
     });
     if (data?.access_token) {
       localStorage.setItem('nubianfit_token', data.access_token);

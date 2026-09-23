@@ -19,16 +19,21 @@ import { useApp } from '../../context/AppContext';
 import { ScheduledWorkout, WorkoutSet } from '../../types';
 
 export const WorkoutLoggerModal: React.FC = () => {
+  const { isWorkoutLoggerOpen, activeWorkoutToLog } = useApp();
+
+  if (!isWorkoutLoggerOpen || !activeWorkoutToLog) return null;
+
+  // Keyed by session so the form state starts fresh for each session opened.
+  return <WorkoutLoggerDialog key={activeWorkoutToLog.id} activeWorkoutToLog={activeWorkoutToLog} />;
+};
+
+const WorkoutLoggerDialog: React.FC<{ activeWorkoutToLog: ScheduledWorkout }> = ({ activeWorkoutToLog }) => {
   const { 
-    isWorkoutLoggerOpen, 
     closeWorkoutLogger, 
-    activeWorkoutToLog, 
     completeWorkout, 
     updateWorkoutLog,
     addPersonalRecord
   } = useApp();
-
-  if (!isWorkoutLoggerOpen || !activeWorkoutToLog) return null;
 
   // Local state for live editable speech drills and rounds
   const [exercises, setExercises] = useState(activeWorkoutToLog.exercises || []);

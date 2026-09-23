@@ -270,9 +270,16 @@ async def google_auth(req: GoogleAuthRequest, db: AsyncSession = Depends(get_db)
     result = await db.execute(select(User).where(User.email == email_clean))
     user = result.scalar_one_or_none()
 
+    has_valid_invite = bool(req.coach_invite_code) and req.coach_invite_code == settings.COACH_INVITE_CODE
+
     if not user:
-        # Determine role: allow coach if role requested is coach or invite code matches
-        if req.role == "coach" or req.coach_invite_code == settings.COACH_INVITE_CODE:
+        # Coach accounts require a valid faculty invite code; asking for the coach role is not enough.
+        if req.role == "coach" and not has_valid_invite:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No coach account exists for this Google email. Create one with your faculty invite code first."
+            )
+        if has_valid_invite:
             role = "coach"
             user = User(
                 id=f"{role}-{uuid.uuid4().hex[:8]}",
@@ -298,11 +305,12 @@ async def google_auth(req: GoogleAuthRequest, db: AsyncSession = Depends(get_db)
             await db.commit()
             await db.refresh(user)
     else:
-        # If user is logging into Coach portal, ensure coach role
+        # Signing in through the coach portal never promotes an existing account.
         if req.role == "coach" and user.role != "coach":
-            user.role = "coach"
-            await db.commit()
-            await db.refresh(user)
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="This Google account does not have coach access."
+            )
 
         role = user.role
         updated = False

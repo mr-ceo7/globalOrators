@@ -13,6 +13,8 @@ RestartSec=5
 StandardOutput=journal
 StandardError=journal
 Environment=PYTHONUNBUFFERED=1
+# Provides JITSI_UPDATE_TOKEN (must match the backend) and optionally BACKEND_NOTIFY_URL.
+EnvironmentFile=-/home/qsm/jitsi/watchdog.env
 
 [Install]
 WantedBy=multi-user.target

@@ -51,7 +51,9 @@ logger = logging.getLogger("jitsi_watchdog")
 CLOUDFLARED_BIN = "/usr/local/bin/cloudflared"
 ENV_FILE = os.path.expanduser("/home/qsm/jitsi/.env")
 CONFIG_JS_FILE = os.path.expanduser("/home/qsm/.jitsi-meet-cfg/web/config.js")
-BACKEND_NOTIFY_URL = "http://localhost:8000/api/system/jitsi-domain"
+BACKEND_NOTIFY_URL = os.getenv("BACKEND_NOTIFY_URL", "http://localhost:8000/api/system/jitsi-domain")
+# Must match the backend's JITSI_UPDATE_TOKEN; the backend refuses domain updates without it.
+JITSI_UPDATE_TOKEN = os.getenv("JITSI_UPDATE_TOKEN", "")
 METRICS_READY_URL = "http://127.0.0.1:20241/ready"
 
 HEALTH_CHECK_INTERVAL = 15  # seconds
@@ -147,7 +149,7 @@ def notify_backend(domain: str) -> bool:
     req = urllib.request.Request(
         BACKEND_NOTIFY_URL,
         data=payload,
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": "application/json", "X-Jitsi-Update-Token": JITSI_UPDATE_TOKEN},
         method="POST"
     )
     for attempt in range(5):

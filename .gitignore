@@ -29,3 +29,4 @@ uploads/
 backend/uploads/
 backend/app/jitsi_domain*.json
 lighthouse-reports/
+e2e/.run/

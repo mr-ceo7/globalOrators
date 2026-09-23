@@ -10,7 +10,8 @@ import {
   User, 
   Globe, 
   Mic,
-  ArrowLeft
+  ArrowLeft,
+  KeyRound
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { sanitizeText } from '../../utils/sanitization';
@@ -28,6 +29,7 @@ export const CoachLoginPortal: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [inviteCode, setInviteCode] = useState('');
 
   // Status & loading states
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
@@ -124,6 +126,11 @@ export const CoachLoginPortal: React.FC = () => {
       setErrorMessage('Password must contain at least 8 characters.');
       return;
     }
+    const cleanInvite = sanitizeText(inviteCode, 120).trim();
+    if (!cleanInvite) {
+      setErrorMessage('A faculty invite code is required. Ask your head coach for one.');
+      return;
+    }
 
     setIsSubmitting(true);
     setErrorMessage(null);
@@ -133,7 +140,8 @@ export const CoachLoginPortal: React.FC = () => {
       const result = await registerCoach({
         email: cleanEmail,
         password: cleanPassword,
-        fullName: cleanName
+        fullName: cleanName,
+        inviteCode: cleanInvite
       });
 
       if (result.success) {
@@ -153,6 +161,7 @@ export const CoachLoginPortal: React.FC = () => {
     setErrorMessage(null);
     setSuccessMessage(null);
     setPassword('');
+    setInviteCode('');
   };
 
   return (
@@ -398,6 +407,27 @@ export const CoachLoginPortal: React.FC = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Minimum 8 characters"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-100 placeholder-slate-500 focus:outline-hidden focus:border-[#C89630] focus:ring-1 focus:ring-[#C89630] transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="coach-reg-invite-input" className="block text-[11px] font-mono uppercase tracking-wider text-slate-300 mb-1.5">
+                  Faculty Invite Code
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <KeyRound className="w-4 h-4 text-[#C89630]" />
+                  </div>
+                  <input
+                    id="coach-reg-invite-input"
+                    type="text"
+                    required
+                    autoComplete="off"
+                    value={inviteCode}
+                    onChange={(e) => setInviteCode(e.target.value)}
+                    placeholder="Provided by your head coach"
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-100 placeholder-slate-500 focus:outline-hidden focus:border-[#C89630] focus:ring-1 focus:ring-[#C89630] transition-colors"
                   />
                 </div>

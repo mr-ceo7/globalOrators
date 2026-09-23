@@ -4,6 +4,7 @@ Handles dynamic domain discovery (e.g. Jitsi active tunnel URL) with fail-safe p
 """
 
 import json
+import hmac
 import os
 import re
 from datetime import datetime, timezone
@@ -83,16 +84,16 @@ async def get_jitsi_domain():
 async def update_jitsi_domain(payload: JitsiDomainUpdate, request: Request):
     """
     Updates the active Jitsi domain dynamically when the tunnel rotates.
-    Authorized for localhost invocations or via shared SECRET_KEY.
+    Requires JITSI_UPDATE_TOKEN, sent as the X-Jitsi-Update-Token header (or secret_key).
+    The caller's address is not trusted: behind a tunnel or proxy every request looks local.
     """
     client_ip = request.client.host if request.client else "unknown"
-    is_localhost = client_ip in ("127.0.0.1", "::1", "localhost")
-
-    # Authorize: either from localhost or with matching SECRET_KEY
-    if not is_localhost and payload.secret_key != settings.SECRET_KEY:
+    expected = settings.JITSI_UPDATE_TOKEN
+    provided = request.headers.get("X-Jitsi-Update-Token") or payload.secret_key or ""
+    if not expected or not hmac.compare_digest(provided.encode(), expected.encode()):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Forbidden: Updating active infrastructure domain requires local authorization."
+            detail="Updating the live-room domain requires a valid update token."
         )
 
     clean_dom = _clean_domain(payload.domain)

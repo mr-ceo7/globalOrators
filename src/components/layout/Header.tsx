@@ -80,6 +80,7 @@ export const Header: React.FC<HeaderProps> = ({
       case 'calendar': return 'Session Schedule';
       case 'progress': return 'Speech Analytics';
       case 'messenger': return 'Messenger';
+      case 'invoices': return 'Invoicing & Billing Desk';
       default: return 'Global Orators';
     }
   };

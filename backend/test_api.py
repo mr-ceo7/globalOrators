@@ -349,13 +349,24 @@ async def test_api_endpoints():
         res_me_unauth = await client.get("/api/clients/me")
         assert res_me_unauth.status_code == 401
 
-        # Re-submitting with same email updates existing record without duplicate
+        # Anonymous re-submission with an existing email is refused without leaking the profile
         updated_payload = dict(speaker_payload)
         updated_payload["currentWeightKg"] = 144.0
         res_update = await client.post("/api/clients", json=updated_payload)
-        assert res_update.status_code == 201
-        assert res_update.json()["id"] == client_db_id
-        assert res_update.json()["currentWeightKg"] == 144.0
+        assert res_update.status_code == 409
+        assert "phone" not in res_update.json()
+
+        # The signed-in owner can update their own onboarding fields
+        res_owner_update = await client.post("/api/clients", json=updated_payload, headers=speaker_headers)
+        assert res_owner_update.status_code == 201
+        assert res_owner_update.json()["id"] == client_db_id
+        assert res_owner_update.json()["currentWeightKg"] == 144.0
+
+        # A coach adding a speaker whose email already exists gets a conflict, not an overwrite
+        res_coach_dup = await client.post("/api/clients", json={"name": "Duplicate Person", "email": test_email}, headers=headers)
+        assert res_coach_dup.status_code == 409
+        res_after_dup = await client.get(f"/api/clients/{client_db_id}", headers=headers)
+        assert res_after_dup.json()["name"] == "KASSIM MUSA"
 
         print("All API endpoints tested and passed flawlessly!")
 
@@ -892,7 +903,8 @@ async def test_public_client_hardening_and_lookup_protection():
             "customCoachNotes": ["Attacker Injected Note"]
         }
         res_tamper = await client.post("/api/clients", json=malicious_payload)
-        assert res_tamper.status_code == 201
+        assert res_tamper.status_code == 409
+        assert "phone" not in res_tamper.json() and "onboardingSurvey" not in res_tamper.json()
         # Re-check via coach: notes must be unchanged
         res_verify = await client.get(f"/api/clients/{created_client['id']}", headers=coach_headers)
         assert res_verify.status_code == 200
@@ -2192,19 +2204,33 @@ async def test_system_jitsi_domain_endpoints():
             assert "url" in data
             assert data["url"].startswith("https://")
 
-            # 2. Update domain as localhost
+            # 2. Updates without the watchdog token are refused, even from localhost
             new_tunnel = "https://fresh-dynamic-tunnel-123.trycloudflare.com"
+            original_token = settings.JITSI_UPDATE_TOKEN
+            settings.JITSI_UPDATE_TOKEN = "test-watchdog-token"
+            res_denied = await client.post("/api/system/jitsi-domain", json={"domain": "evil.example.com"})
+            assert res_denied.status_code == 403
+            res_wrong = await client.post(
+                "/api/system/jitsi-domain",
+                json={"domain": "evil.example.com"},
+                headers={"X-Jitsi-Update-Token": "wrong"}
+            )
+            assert res_wrong.status_code == 403
+
+            # 3. The watchdog token authorizes the update
             res_post = await client.post(
                 "/api/system/jitsi-domain",
-                json={"domain": new_tunnel}
+                json={"domain": new_tunnel},
+                headers={"X-Jitsi-Update-Token": "test-watchdog-token"}
             )
+            settings.JITSI_UPDATE_TOKEN = original_token
             assert res_post.status_code == 200
             post_data = res_post.json()
             assert post_data["domain"] == "fresh-dynamic-tunnel-123.trycloudflare.com"
             assert post_data["url"] == "https://fresh-dynamic-tunnel-123.trycloudflare.com"
             assert post_data["source"] == "tunnel_watchdog"
 
-            # 3. Subsequent GET returns the newly updated domain
+            # 4. Subsequent GET returns the newly updated domain
             res_get2 = await client.get("/api/system/jitsi-domain")
             assert res_get2.status_code == 200
             assert res_get2.json()["domain"] == "fresh-dynamic-tunnel-123.trycloudflare.com"
@@ -2641,3 +2667,41 @@ async def test_mark_messages_read_and_typing_indicators():
         assert typing_res.json()["status"] == "ok"
 
 
+
+
+@pytest.mark.asyncio
+async def test_google_sign_in_cannot_self_grant_coach_role():
+    """Google sign-in only grants the coach role with a valid invite code and never promotes speakers."""
+    import base64
+    import json
+    import time
+
+    def mock_google(email: str) -> str:
+        payload = base64.urlsafe_b64encode(json.dumps({"sub": f"g-{email}", "email": email, "name": "Test"}).encode()).decode().rstrip("=")
+        return f"mockHeader.{payload}.mockSignature"
+
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        ts = int(time.time() * 1000)
+
+        # New Google user asking for the coach role without an invite code is refused.
+        new_email = f"google.rogue.{ts}@example.com"
+        res = await client.post("/api/auth/google", json={"credential": mock_google(new_email), "role": "coach"})
+        assert res.status_code == 403
+
+        # With a valid invite code the coach account is created.
+        invited_email = f"google.invited.{ts}@example.com"
+        res = await client.post("/api/auth/google", json={
+            "credential": mock_google(invited_email), "role": "coach", "coach_invite_code": settings.COACH_INVITE_CODE
+        })
+        assert res.status_code == 200
+        assert res.json()["user"]["role"] == "coach"
+
+        # An existing speaker signing in through the coach portal is not promoted.
+        speaker_email = f"google.speaker.{ts}@example.com"
+        res = await client.post("/api/auth/google", json={"credential": mock_google(speaker_email), "role": "speaker"})
+        assert res.status_code == 200 and res.json()["user"]["role"] == "speaker"
+        res = await client.post("/api/auth/google", json={"credential": mock_google(speaker_email), "role": "coach"})
+        assert res.status_code == 403
+        res = await client.post("/api/auth/google", json={"credential": mock_google(speaker_email), "role": "speaker"})
+        assert res.json()["user"]["role"] == "speaker"

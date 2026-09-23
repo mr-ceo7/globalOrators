@@ -342,63 +342,57 @@ async def create_client(
     user: Optional[User] = Depends(get_optional_user)
 ):
     """
-    Onboard a new speaker or update existing record during speaker self-onboarding.
-    Public unauthenticated callers are strictly restricted from modifying coach assignments,
-    coach notes, compliance rates, or account status of existing profiles.
+    Onboard a new speaker, or let a signed-in speaker complete their own onboarding survey.
+    An existing profile can only be updated here by the speaker who owns its email; everyone
+    else (anonymous callers and coaches) gets a 409 without any profile data. Coaches edit
+    speakers through PATCH /clients/{id}.
     """
-    # Check if a client with the same email or phone already exists
+    # A signed-in speaker can only onboard themselves.
+    if user and user.role != "coach":
+        client_in.email = user.email
+
     existing = None
     if client_in.email and client_in.email.strip():
         res = await db.execute(select(Client).where(Client.email.ilike(client_in.email.strip())))
         existing = res.scalars().first()
-    if not existing and client_in.phone and client_in.phone.strip():
-        phone_digits = "".join(c for c in client_in.phone if c.isdigit())
-        if len(phone_digits) >= 7:
-            res = await db.execute(select(Client).where(Client.phone.ilike(f"%{phone_digits}%")))
-            existing = res.scalars().first()
 
     if existing:
-        if user and user.role == "coach":
-            is_default_coach = (
-                user.email.lower() == settings.DEFAULT_COACH_EMAIL.lower() 
-                or user.id == "coach-1"
+        is_owner = bool(user and user.role != "coach" and existing.email and existing.email.lower() == user.email.lower())
+        if not is_owner:
+            detail = (
+                "A speaker with this email is already enrolled"
+                if user and user.role == "coach"
+                else "An orator profile with this email already exists. Sign in to continue."
             )
-            if not is_default_coach and existing.coach_id and existing.coach_id != user.id:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="A speaker with this email or phone is already enrolled with another coach"
-                )
-            update_data = client_in.model_dump(exclude_unset=True)
-            for key, value in update_data.items():
-                setattr(existing, key, value)
-        else:
-            # Unauthenticated public caller: Strictly whitelist safe onboarding survey fields only
-            # Prevent privilege escalation and mutation of coach assignments or notes
-            safe_allowed_keys = {
-                "onboarding_survey", "goal", "branch", "mission_focus", 
-                "experience_level", "current_weight_kg", "target_weight_kg", 
-                "starting_weight_kg", "avatar"
-            }
-            submitted_data = client_in.model_dump(exclude_unset=True)
-            for key, value in submitted_data.items():
-                if key in safe_allowed_keys:
-                    setattr(existing, key, value)
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=detail)
 
-            # If client was Pending Onboarding and submitted onboarding survey or goal, transition to Active
-            survey_data = submitted_data.get("onboarding_survey") or {}
-            has_survey = bool(
-                survey_data.get("speaking_goal") or 
-                survey_data.get("branch") or 
-                survey_data.get("primary_discipline") or
-                survey_data.get("speakingGoal") or
-                survey_data.get("primaryDiscipline") or
-                survey_data.get("fullName") or
-                survey_data.get("full_name")
-            )
-            if existing.status == "Pending Onboarding" and (has_survey or existing.goal):
-                existing.status = "Active"
-            elif submitted_data.get("status") in {"Active", "Onboarding"}:
-                existing.status = submitted_data["status"]
+        # The owning speaker may only update safe onboarding survey fields,
+        # never coach assignments, coach notes or compliance data.
+        safe_allowed_keys = {
+            "onboarding_survey", "goal", "branch", "mission_focus", 
+            "experience_level", "current_weight_kg", "target_weight_kg", 
+            "starting_weight_kg", "avatar"
+        }
+        submitted_data = client_in.model_dump(exclude_unset=True)
+        for key, value in submitted_data.items():
+            if key in safe_allowed_keys:
+                setattr(existing, key, value)
+
+        # If client was Pending Onboarding and submitted onboarding survey or goal, transition to Active
+        survey_data = submitted_data.get("onboarding_survey") or {}
+        has_survey = bool(
+            survey_data.get("speaking_goal") or 
+            survey_data.get("branch") or 
+            survey_data.get("primary_discipline") or
+            survey_data.get("speakingGoal") or
+            survey_data.get("primaryDiscipline") or
+            survey_data.get("fullName") or
+            survey_data.get("full_name")
+        )
+        if existing.status == "Pending Onboarding" and (has_survey or existing.goal):
+            existing.status = "Active"
+        elif submitted_data.get("status") in {"Active", "Onboarding"}:
+            existing.status = submitted_data["status"]
 
         existing.last_active = "Just now"
         await db.commit()
