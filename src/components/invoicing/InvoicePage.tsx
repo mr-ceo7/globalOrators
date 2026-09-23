@@ -19,7 +19,7 @@ import {
   ShieldCheck
 } from 'lucide-react';
 
-const PAYMENT_BACKEND_URL = import.meta.env.VITE_PAYMENT_BACKEND_URL || 'https://payment-backend-0eo0.onrender.com';
+const PAYMENT_BACKEND_URL = import.meta.env.VITE_PAYMENT_BACKEND_URL || 'https://uon-smart-backend.onrender.com';
 
 interface InvoicePageProps {
   invoiceId?: string;

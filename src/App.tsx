@@ -28,6 +28,8 @@ import { ClientPortal } from './components/clientApp/ClientPortal';
 import { CoachLoginPortal } from './components/auth/CoachLoginPortal';
 import { SpeakerLoginPortal } from './components/auth/SpeakerLoginPortal';
 import { CoachManager } from './components/coaches/CoachManager';
+import { AdminInvoices } from './components/invoicing/AdminInvoices';
+import { InvoicePage } from './components/invoicing/InvoicePage';
 import { SEOHead } from './components/common/SEOHead';
 
 const MainLayout: React.FC = () => {
@@ -131,6 +133,10 @@ const MainLayout: React.FC = () => {
             {activeTab === 'coaches' && (
               <CoachManager />
             )}
+
+            {activeTab === 'invoices' && (
+              <AdminInvoices />
+            )}
           </div>
         </main>
       </div>
@@ -154,7 +160,7 @@ const MainLayout: React.FC = () => {
 };
 
 const AppContent: React.FC = () => {
-  const { currentPortal, isAuthenticatedCoach, activeSpeakerProfile } = useApp();
+  const { currentPortal, isAuthenticatedCoach, activeSpeakerProfile, currentPath } = useApp();
 
   const isPreviewOrDev = typeof window !== 'undefined' && (
     window.location.hostname === 'localhost' ||
@@ -162,6 +168,11 @@ const AppContent: React.FC = () => {
     window.location.hostname.includes('.vercel.app') ||
     new URLSearchParams(window.location.search).has('debug_domains')
   );
+
+  const isInvoicePath = currentPath.toLowerCase().startsWith('/invoice/');
+  if (isInvoicePath) {
+    return <InvoicePage />;
+  }
 
   return (
     <div className={`${currentPortal === 'coach_os' || currentPortal === 'speaker_app' ? 'h-screen overflow-hidden' : 'min-h-screen'} bg-slate-950 text-slate-100 flex flex-col font-sans antialiased`}>
