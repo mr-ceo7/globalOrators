@@ -92,6 +92,12 @@ class Settings(BaseSettings):
     FORWARDING_EMAIL: str = os.getenv("FORWARDING_EMAIL", "kassimmusa322@gmail.com")
     RESEND_WEBHOOK_SECRET: Optional[str] = os.getenv("RESEND_WEBHOOK_SECRET", None)
 
+    # Invoicing: the shared payment backend and the Global Orators company key for its admin API.
+    PAYMENT_BACKEND_URL: str = os.getenv("PAYMENT_BACKEND_URL", "https://payment-backend-0eo0.onrender.com")
+    INVOICE_ADMIN_KEY: str = os.getenv("INVOICE_ADMIN_KEY", "")
+    # Server-side key for AI invoice drafting (never shipped to the browser).
+    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+
     # Shared token the Jitsi tunnel watchdog sends to update the live-room domain.
     # Leave empty to disable remote domain updates.
     JITSI_UPDATE_TOKEN: str = os.getenv("JITSI_UPDATE_TOKEN", "")

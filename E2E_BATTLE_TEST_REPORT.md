@@ -29,6 +29,41 @@ Critical and high issues were fixed on this branch. The browser suite now has **
 | H7 | Fixed | Updating the video-call domain requires `JITSI_UPDATE_TOKEN` (header `X-Jitsi-Update-Token`); requests from localhost are no longer trusted. The watchdog sends the token from `/home/qsm/jitsi/watchdog.env`. **Deploy note:** set the same `JITSI_UPDATE_TOKEN` for the backend and the watchdog, or domain rotation will stop updating. |
 | H8 | Fixed | `@custom-variant dark (&:where(.dark, .dark *));` added to `src/index.css`. |
 
+## Production server (10.42.0.1), 23 Sep 2026
+
+### C4. Production was running on the repo's public default secrets (fixed and deployed)
+The live backend had no `SECRET_KEY`, `ENVIRONMENT` or `COACH_INVITE_CODE` set, so it used the defaults written in `config.py`:
+- Login tokens were signed with the public default key, so anyone could forge a head-coach token.
+- In development mode, `/api/auth/otp/send` returned a working magic login link in its response, so anyone could sign in as any speaker. `/docs` was also public.
+- The coach invite code was the repo default.
+
+**Done:**
+- Backed up everything to `~/backups/predeploy_20260923_124916`: code, `.env`, a consistent copy of the database (integrity check OK), the watchdog script and its service unit.
+- Deployed the current backend (commit `4556a87`). The previous code is kept as `~/backend/app.prev_20260923_125120`.
+- Added `ENVIRONMENT=production` and freshly generated `SECRET_KEY`, `COACH_INVITE_CODE`, `DEFAULT_COACH_PASSWORD` and `JITSI_UPDATE_TOKEN` to `~/backend/.env` (permissions 600).
+- Installed the new watchdog with `~/jitsi/watchdog.env` (600) and added `EnvironmentFile` to its service unit.
+
+**Verified from outside:**
+- `/api/health` reports `environment: production` through both ngrok and `coach.globaloratorsproject.com`.
+- `/docs` returns 404.
+- Changing the video-call domain without the token returns 403.
+- The watchdog's own domain update returns 200.
+- A token forged with the old key returns 401.
+- The new tables were created, no columns are missing, and all 11 users are intact.
+
+**Side effects:** everyone was logged out once. The coach invite code for new faculty is `COACH_INVITE_CODE` in `~/backend/.env`.
+
+**Rollback:** stop the service, move `app.prev_20260923_125120` back to `app`, restore `.env` and `nubianfit.db` from the backup folder, then start the service.
+
+### Still open (needs your action)
+- **Rotate the Google OAuth client secret.** It's stored in plain text in `/etc/systemd/system/globalorators-backend.service`, which any user on the box can read. Move the new one into `~/backend/.env`.
+- **Rotate the Gemini API key** that appears in `~/.bash_history`.
+- **Invoicing (commit `4556a87`):**
+  - Every call to the payment backend (`payment-backend-0eo0.onrender.com`) is sent without authentication: listing all invoices, creating and editing them, setting status (for example to PAID), and starting M-Pesa payments. If that backend doesn't check who's calling, anyone can read or alter invoices.
+  - `VITE_GEMINI_API_KEY` is used in the browser (`AdminInvoices.tsx:27`), so the key would be published in the JavaScript bundle.
+  - A Paystack **test** key is the hard-coded fallback (`InvoicePage.tsx:117`).
+- **The frontend fixes (C2, H1, H2, H3 UI, H4–H6, H8) need a Vercel deploy** before users see them. The backend is already live.
+
 ### C3. Anyone with a Google account could make themselves a coach (found while fixing H2)
 - **Where:** `backend/app/routers/auth.py:274-301`
 - **What happened:** Sending `role: "coach"` to `/api/auth/google` created a coach account with no invite code. It also silently upgraded an existing speaker to coach. That gave anyone with a Google account coach access, including the unassigned applicant pool.

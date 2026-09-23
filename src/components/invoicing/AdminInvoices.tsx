@@ -19,12 +19,11 @@ import {
   updateInvoice, 
   updateInvoiceStatus, 
   generateInvoicePDF,
+  draftInvoice,
   Invoice, 
   InvoiceItem 
 } from '../../services/invoiceService';
 import { GOP_BILLING_CONFIG } from '../../config/company';
-
-const GEMINI_API_KEY = (import.meta.env.VITE_GEMINI_API_KEY as string) || '';
 
 export const AdminInvoices: React.FC = () => {
   const [view, setView] = useState<'list' | 'create' | 'edit'>('list');
@@ -60,10 +59,10 @@ export const AdminInvoices: React.FC = () => {
     setLoading(true);
     setError('');
     try {
-      const data = await listInvoices({ company: GOP_BILLING_CONFIG.id });
+      const data = await listInvoices();
       setInvoices(data);
     } catch (err: any) {
-      setError('Unable to retrieve invoices from the billing network.');
+      setError(err?.message || 'Unable to retrieve invoices from the billing network.');
     } finally {
       setLoading(false);
     }
@@ -85,9 +84,7 @@ export const AdminInvoices: React.FC = () => {
         items: validItems,
         tax: Number(tax),
         dueDate,
-        notes: notes.trim(),
-        company: GOP_BILLING_CONFIG.id,
-        prefix: GOP_BILLING_CONFIG.invoicePrefix
+        notes: notes.trim()
       });
 
       setSuccessBanner(`Invoice ${result.invoiceNumber} registered successfully.`);
@@ -128,8 +125,7 @@ export const AdminInvoices: React.FC = () => {
         tax: Number(tax),
         dueDate,
         notes: notes.trim(),
-        status: editStatus,
-        company: GOP_BILLING_CONFIG.id
+        status: editStatus
       });
 
       setSuccessBanner(`Invoice ${editingInvoiceNumber} updated.`);
@@ -185,39 +181,12 @@ export const AdminInvoices: React.FC = () => {
       setAiFeedback('Please enter natural language details.');
       return;
     }
-    if (!GEMINI_API_KEY) {
-      setAiFeedback('Gemini API key is not configured in environment.');
-      return;
-    }
-
     setIsGenerating(true);
     setAiFeedback('');
 
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: `You are an assistant for Global Orators Project that extracts invoice data from natural language into clean JSON.
-Fields: clientName, clientEmail, clientPhone, items (array of { description: string, quantity: number, unitPrice: number }), tax (number), dueDate (YYYY-MM-DD), notes (string).
-Today's date is: ${new Date().toISOString().split('T')[0]}.
-Input text: "${aiPrompt}"
-
-Return ONLY valid JSON matching the schema without markdown tags.`
-            }]
-          }]
-        })
-      });
-
-      const data = await response.json();
-      if (data.error) throw new Error(data.error.message);
-
-      let textOutput = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      textOutput = textOutput.replace(/```json/gi, '').replace(/```/gi, '').trim();
-
-      const parsed = JSON.parse(textOutput);
+      // Drafting runs on the Global Orators API so the Gemini key never reaches the browser.
+      const parsed = await draftInvoice(aiPrompt);
       if (parsed.clientName) setClientName(parsed.clientName);
       if (parsed.clientEmail) setClientEmail(parsed.clientEmail);
       if (parsed.clientPhone) setClientPhone(parsed.clientPhone);
@@ -229,7 +198,7 @@ Return ONLY valid JSON matching the schema without markdown tags.`
       setAiFeedback('Invoice form populated. Review line items before saving.');
     } catch (err: any) {
       console.error(err);
-      setAiFeedback('Could not parse natural language prompt. Please specify details clearly.');
+      setAiFeedback(err?.message || 'Could not parse natural language prompt. Please specify details clearly.');
     } finally {
       setIsGenerating(false);
     }

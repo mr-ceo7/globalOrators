@@ -2705,3 +2705,48 @@ async def test_google_sign_in_cannot_self_grant_coach_role():
         assert res.status_code == 403
         res = await client.post("/api/auth/google", json={"credential": mock_google(speaker_email), "role": "speaker"})
         assert res.json()["user"]["role"] == "speaker"
+
+
+@pytest.mark.asyncio
+async def test_invoice_proxy_is_head_coach_only_and_uses_server_key(monkeypatch):
+    """The invoice proxy forwards only for the head coach, with the server-side company key."""
+    import app.routers.invoices as invoices_module
+
+    forwarded = []
+
+    def fake_payment_backend(request: httpx.Request) -> httpx.Response:
+        forwarded.append(request)
+        return httpx.Response(200, json=[{"id": "inv_1", "company": "gop"}])
+
+    real_client = httpx.AsyncClient
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        # Patch after creating the test client: only the proxy's outgoing calls hit the fake backend.
+        monkeypatch.setattr(invoices_module.httpx, "AsyncClient",
+                            lambda **kw: real_client(transport=httpx.MockTransport(fake_payment_backend), **kw))
+        monkeypatch.setattr(settings, "INVOICE_ADMIN_KEY", "gop-test-key")
+        head = await client.post("/api/auth/login", json={"email": settings.DEFAULT_COACH_EMAIL, "password": settings.DEFAULT_COACH_PASSWORD})
+        head_headers = {"Authorization": f"Bearer {head.json()['access_token']}"}
+        other = await client.post("/api/auth/login", json={"email": "coach@globalorators.com", "password": "CoachSecurePassword123"})
+        other_headers = {"Authorization": f"Bearer {other.json()['access_token']}"}
+        speaker = await client.post("/api/auth/otp/verify", json={"email": "marcus.vance@example.com", "code": "123456"})
+        speaker_headers = {"Authorization": f"Bearer {speaker.json()['access_token']}"}
+
+        assert (await client.get("/api/invoices")).status_code == 401
+        assert (await client.get("/api/invoices", headers=speaker_headers)).status_code == 403
+        assert (await client.get("/api/invoices", headers=other_headers)).status_code == 403
+        assert forwarded == []
+
+        res = await client.get("/api/invoices", headers=head_headers)
+        assert res.status_code == 200
+        assert res.json() == [{"id": "inv_1", "company": "gop"}]
+        assert forwarded[0].headers["X-Invoice-Admin-Key"] == "gop-test-key"
+        assert forwarded[0].url.path == "/api/invoices"
+
+        # Ids that could steer the forwarded URL elsewhere are refused.
+        res = await client.patch("/api/invoices/..", json={"status": "PAID"}, headers=head_headers)
+        assert res.status_code in (404, 422)
+
+        # Without a configured key the proxy refuses instead of calling out unauthenticated.
+        monkeypatch.setattr(settings, "INVOICE_ADMIN_KEY", "")
+        assert (await client.get("/api/invoices", headers=head_headers)).status_code == 503

@@ -38,6 +38,7 @@ from app.routers import (
     system_router,
     webhooks_router,
     groups_router,
+    invoices_router,
 )
 
 logging.basicConfig(
@@ -208,6 +209,7 @@ app.include_router(habits_router, prefix=settings.API_PREFIX)
 app.include_router(photos_router, prefix=settings.API_PREFIX)
 app.include_router(messages_router, prefix=settings.API_PREFIX)
 app.include_router(groups_router, prefix=settings.API_PREFIX)
+app.include_router(invoices_router, prefix=settings.API_PREFIX)
 app.include_router(activity_router, prefix=settings.API_PREFIX)
 app.include_router(inquiries_router, prefix=settings.API_PREFIX)
 app.include_router(coaches_router, prefix=settings.API_PREFIX)

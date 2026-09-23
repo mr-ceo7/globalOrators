@@ -8,6 +8,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
+from app.config import settings
 from app.database import AsyncSessionLocal
 from app.models.user import User
 from app.security import decode_access_token
@@ -91,3 +92,14 @@ async def require_coach(
         )
     return current_user
 
+
+async def require_head_coach(
+    current_user: User = Depends(require_coach)
+) -> User:
+    """Ensure the caller is the head coach (coach-1 or DEFAULT_COACH_EMAIL)."""
+    if current_user.id != "coach-1" and current_user.email.lower() != settings.DEFAULT_COACH_EMAIL.lower():
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the head coach can manage invoices"
+        )
+    return current_user

@@ -2,6 +2,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import QRCode from 'qrcode';
 import { GOP_BILLING_CONFIG } from '../config/company';
+import { api } from './apiClient';
 
 const PAYMENT_BACKEND_URL = import.meta.env.VITE_PAYMENT_BACKEND_URL || 'https://payment-backend-0eo0.onrender.com';
 
@@ -32,6 +33,9 @@ export interface Invoice {
 }
 
 // ─── API CALLS ─────────────────────────────────────────────────────
+// Public invoice views and payments go straight to the payment backend. Admin calls (create,
+// list, edit, change status, AI drafting) go through the Global Orators API, which checks the
+// head coach and holds the payment backend's company key server-side.
 
 export const fetchInvoice = async (id: string): Promise<Invoice> => {
   const res = await fetch(`${PAYMENT_BACKEND_URL}/api/invoices/${id}`);
@@ -47,32 +51,12 @@ export const createInvoice = async (data: {
   tax?: number;
   dueDate?: string;
   notes?: string;
-  company?: string;
-  prefix?: string;
 }): Promise<{ success: boolean; id: string; invoiceNumber: string; company?: string }> => {
-  const res = await fetch(`${PAYMENT_BACKEND_URL}/api/invoices`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      ...data,
-      company: data.company || GOP_BILLING_CONFIG.id,
-      prefix: data.prefix || GOP_BILLING_CONFIG.invoicePrefix,
-    }),
-  });
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error || 'Failed to create invoice');
-  }
-  return res.json();
+  return api.post('/invoices', data);
 };
 
-export const listInvoices = async (filters?: { status?: string; company?: string }): Promise<Invoice[]> => {
-  const params = new URLSearchParams();
-  if (filters?.status) params.set('status', filters.status);
-  params.set('company', filters?.company || GOP_BILLING_CONFIG.id);
-  const res = await fetch(`${PAYMENT_BACKEND_URL}/api/invoices?${params}`);
-  if (!res.ok) throw new Error('Failed to list invoices');
-  return res.json();
+export const listInvoices = async (filters?: { status?: string }): Promise<Invoice[]> => {
+  return api.get<Invoice[]>('/invoices', filters?.status ? { status: filters.status } : undefined);
 };
 
 export const payInvoice = async (invoiceId: string, phone: string) => {
@@ -97,34 +81,27 @@ export const updateInvoice = async (id: string, data: {
   dueDate?: string;
   notes?: string;
   status?: string;
-  company?: string;
 }): Promise<{ success: boolean }> => {
-  const res = await fetch(`${PAYMENT_BACKEND_URL}/api/invoices/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      ...data,
-      company: data.company || GOP_BILLING_CONFIG.id
-    }),
-  });
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error || 'Failed to update invoice');
-  }
-  return res.json();
+  return api.put(`/invoices/${encodeURIComponent(id)}`, data);
 };
 
 export const updateInvoiceStatus = async (id: string, status: string): Promise<{ success: boolean }> => {
-  const res = await fetch(`${PAYMENT_BACKEND_URL}/api/invoices/${id}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ status }),
-  });
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error || 'Failed to update invoice status');
-  }
-  return res.json();
+  return api.patch(`/invoices/${encodeURIComponent(id)}`, { status });
+};
+
+export interface InvoiceDraft {
+  clientName?: string;
+  clientEmail?: string;
+  clientPhone?: string;
+  items?: InvoiceItem[];
+  tax?: number;
+  dueDate?: string;
+  notes?: string;
+}
+
+/** Turns a natural-language description into invoice fields (AI runs server-side). */
+export const draftInvoice = async (prompt: string): Promise<InvoiceDraft> => {
+  return api.post<InvoiceDraft>('/invoices/draft', { prompt });
 };
 
 // ─── LOGO HELPER ───────────────────────────────────────────────────

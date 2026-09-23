@@ -112,9 +112,10 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
         throw new Error('Payment server did not return a transaction identifier.');
       }
 
-      // Check if redirect payment gateway is provided
-      if (result.access_code) {
-        const paystackKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || 'pk_test_3b090dc14ceb6fe8e611f786e42a26152f59e241';
+      // Use the branded gateway only when a live public key is configured; otherwise fall back
+      // to Paystack's hosted checkout (never a hard-coded test key).
+      const paystackKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY as string | undefined;
+      if (result.access_code && paystackKey) {
         const redirectUrl = encodeURIComponent(`${window.location.origin}${window.location.pathname}?success_txn=${txn}`);
         const amountCents = Math.round(invoice.total * 100);
         const cleanPhone = phone.replace(/[^0-9]/g, '');

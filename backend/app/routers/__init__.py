@@ -23,6 +23,7 @@ from app.routers.events import router as events_router
 from app.routers.system import router as system_router
 from app.routers.webhooks import router as webhooks_router
 from app.routers.groups import router as groups_router
+from app.routers.invoices import router as invoices_router
 
 __all__ = [
     "auth_router",
@@ -36,6 +37,7 @@ __all__ = [
     "photos_router",
     "messages_router",
     "groups_router",
+    "invoices_router",
     "activity_router",
     "inquiries_router",
     "webrtc_router",

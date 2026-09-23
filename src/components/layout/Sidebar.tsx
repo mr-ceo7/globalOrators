@@ -46,6 +46,8 @@ export const Sidebar: React.FC = () => {
   })();
 
   const isHeadCoach = currentUser?.id === 'coach-1' || currentUser?.email?.toLowerCase() === 'kassimmusa322@gmail.com' || currentUser?.email?.toLowerCase() === 'coach@globalorators.com';
+  // Mirrors the backend's require_head_coach (coach-1 or DEFAULT_COACH_EMAIL).
+  const canManageInvoices = currentUser?.id === 'coach-1' || currentUser?.email?.toLowerCase() === 'kassimmusa322@gmail.com';
 
   const navItems: { id: NavigationTab; label: string; icon: React.FC<{ className?: string }>; badge?: number; badgeColor?: string }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -56,7 +58,7 @@ export const Sidebar: React.FC = () => {
     { id: 'calendar', label: 'Session Schedule', icon: CalendarDays, badge: todayPendingCount > 0 ? todayPendingCount : undefined, badgeColor: 'bg-emerald-500' },
     { id: 'progress', label: 'Speech Analytics', icon: TrendingUp },
     { id: 'messenger', label: 'Messenger', icon: MessageSquare, badge: unreadCount > 0 ? unreadCount : undefined, badgeColor: 'bg-cyan-500' },
-    { id: 'invoices', label: 'Invoices & Billing', icon: Receipt }
+    ...(canManageInvoices ? [{ id: 'invoices' as NavigationTab, label: 'Invoices & Billing', icon: Receipt }] : [])
   ];
 
   return (
