@@ -53,7 +53,12 @@ export const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
   }, []);
 
   const handleCredentialResponse = async (response: CredentialResponse) => {
-    if (!response?.credential) return;
+    console.log('[Google Auth] Credential response received:', response?.select_by);
+    if (!response?.credential) {
+      console.warn('[Google Auth] Response missing credential payload.');
+      onError?.('Google did not return credentials. Please check origin in Google Cloud Console.');
+      return;
+    }
     setLoading(true);
     try {
       const res = await loginWithGoogle(response.credential, role);
@@ -83,9 +88,26 @@ export const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
         <div className="w-full max-w-full flex justify-center overflow-hidden [&>div]:max-w-full [&>div]:w-full [&>div]:flex [&>div]:justify-center [&_iframe]:max-w-full">
           <GoogleLogin
             onSuccess={handleCredentialResponse}
-            onError={() =>
-              onError?.('Google Authentication Failed. Ensure origin is authorized in Google Cloud Console.')
-            }
+            onError={() => {
+              console.error('[Google Auth] GoogleLogin onError fired.');
+              onError?.('Google authentication failed. Ensure this domain (coach.globaloratorsproject.com) is in Authorized JavaScript Origins in Google Cloud Console.');
+            }}
+            promptMomentNotification={(moment) => {
+              if (moment.isNotDisplayed()) {
+                const reason = moment.getNotDisplayedReason();
+                console.warn('[Google Auth] Prompt not displayed:', reason);
+                if (reason === 'unregistered_origin') {
+                  onError?.('This domain (coach.globaloratorsproject.com) is not in Google Cloud Console Authorized JavaScript Origins.');
+                }
+              }
+              if (moment.isSkippedMoment()) {
+                console.warn('[Google Auth] Prompt skipped:', moment.getSkippedReason());
+              }
+            }}
+            click_listener={() => {
+              console.log('[Google Auth] Google Sign-In button clicked.');
+            }}
+            use_fedcm_for_prompt={true}
             text={text as 'signin_with' | 'signup_with' | 'continue_with' | 'signin'}
             theme="filled_black"
             shape="rectangular"

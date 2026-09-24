@@ -486,7 +486,17 @@ export const CoachLoginPortal: React.FC = () => {
                 />
               </div>
 
-              <div className="pt-2 text-center">
+              <div className="pt-2 flex flex-col items-center gap-2.5 text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setErrorMessage(null);
+                    setStep('password');
+                  }}
+                  className="text-xs text-brand-gold hover:text-[#E3B95C] underline font-medium cursor-pointer"
+                >
+                  Sign in with password instead
+                </button>
                 <button
                   type="button"
                   onClick={handleResetToEmail}
