@@ -1,5 +1,4 @@
 {
-  "cleanUrls": true,
   "headers": [
     {
       "source": "/(.*)",
@@ -55,11 +54,15 @@
   ],
   "rewrites": [
     {
-      "source": "/api/((?!webhooks/).*)",
-      "destination": "https://unfenestral-scratchily-lester.ngrok-free.dev/api/$1"
+      "source": "/api/webhooks/:path*",
+      "destination": "/api/webhooks/:path*"
     },
     {
-      "source": "/((?!assets/|images/|audio/|favicon\\.ico|icon\\.svg|icon\\.png|logo.*|manifest\\.json|robots\\.txt|sitemap\\.xml|sw\\.js).*)",
+      "source": "/api/:path*",
+      "destination": "https://unfenestral-scratchily-lester.ngrok-free.dev/api/:path*"
+    },
+    {
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
