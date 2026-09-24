@@ -89,6 +89,8 @@ const teamMembers: TeamMember[] = [
     role: 'Marketing, Branding & Social Media Specialist',
     category: 'Brand & Media',
     initials: 'MK',
+    image: '/images/michelle.jpg',
+    imagePosition: 'object-[center_25%]',
     specialty: 'Brand Identity & Digital Storytelling',
     bio: 'Directs brand identity, social media storytelling, and movement communications. Crafts documentary visual narratives and digital campaigns that amplify African voices across continental networks.'
   }

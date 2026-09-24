@@ -23,8 +23,6 @@ export const GOP_BILLING_CONFIG: CompanyBillingConfig = {
   tagline: 'Pan-African Forensics, Debate & Voice Sovereignty',
   registrationNumber: 'GOP-KE-2024',
   addressLines: [
-    'Pan-African Forensics HQ',
-    'P.O. BOX 90119-00100',
     'Nairobi, Kenya'
   ],
   email: 'director@globaloratorsproject.com',
