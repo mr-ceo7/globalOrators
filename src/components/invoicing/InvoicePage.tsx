@@ -12,7 +12,6 @@ import {
   Download, 
   Printer, 
   FileText, 
-  Phone, 
   Loader2, 
   AlertCircle,
   ExternalLink,
@@ -36,8 +35,7 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [phone, setPhone] = useState('0700000000');
-  const [payStep, setPayStep] = useState<'idle' | 'input' | 'sending' | 'waiting' | 'paid'>('idle');
+  const [payStep, setPayStep] = useState<'idle' | 'sending' | 'waiting' | 'paid'>('idle');
   const [payError, setPayError] = useState('');
   const [transactionId, setTransactionId] = useState('');
 
@@ -54,9 +52,6 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
         setInvoice(inv);
         if (inv.status === 'PAID') {
           setPayStep('paid');
-        }
-        if (inv.clientPhone) {
-          setPhone(inv.clientPhone);
         }
         setLoading(false);
       })
@@ -94,7 +89,7 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
           clearInterval(interval);
         } else if (data.status === 'FAILED') {
           setPayError('Payment was not completed. Please try again.');
-          setPayStep('input');
+          setPayStep('idle');
           clearInterval(interval);
         }
       } catch {
@@ -105,11 +100,12 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
   }, [payStep, transactionId]);
 
   const handlePay = async () => {
-    if (!phone.trim() || !invoice) return;
+    if (!invoice) return;
     setPayStep('sending');
     setPayError('');
     try {
-      const result = await payInvoice(invoice.id, phone.trim());
+      const clientContactPhone = invoice.clientPhone || '';
+      const result = await payInvoice(invoice.id, clientContactPhone);
       const txn = result.transactionId || result.reference;
 
       if (!txn) {
@@ -122,7 +118,7 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
       if (result.access_code && paystackKey) {
         const redirectUrl = encodeURIComponent(`${window.location.origin}${window.location.pathname}?success_txn=${txn}`);
         const amountCents = Math.round(invoice.total * 100);
-        const cleanPhone = phone.replace(/[^0-9]/g, '');
+        const cleanPhone = (clientContactPhone || '').replace(/[^0-9]/g, '');
         const email = invoice.clientEmail || (cleanPhone ? `${cleanPhone}@gmail.com` : 'director@globaloratorsproject.com');
         
         const gatewayUrl = `https://payments.royalmint.app/?access_code=${result.access_code}&public_key=${paystackKey}&reference=${txn}&amount=${amountCents}&email=${encodeURIComponent(email)}&redirect_url=${redirectUrl}`;
@@ -137,7 +133,7 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
       setPayStep('waiting');
     } catch (err: any) {
       setPayError(err.message || 'Payment initiation failed.');
-      setPayStep('input');
+      setPayStep('idle');
     }
   };
 
@@ -153,8 +149,8 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
       date: new Date().toLocaleDateString(),
       planName: `Invoice ${invoice.invoiceNumber}`,
       amount: invoice.total,
-      paymentMethod: 'M-Pesa Direct Settlement',
-      phone: invoice.clientPhone || phone || 'N/A'
+      paymentMethod: 'Online Settlement',
+      phone: invoice.clientPhone || 'N/A'
     });
   };
 
@@ -393,17 +389,23 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
                   </div>
                 </div>
               ) : (
-                <div className="p-5 sm:p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
-                  <div>
-                    <div className="text-[10px] font-mono tracking-widest uppercase text-brand-gold font-semibold mb-1">
-                      Direct Settlement
+                <div className="p-5 sm:p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-5">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-800/80 pb-4">
+                    <div>
+                      <div className="text-[10px] font-mono tracking-widest uppercase text-brand-gold font-semibold">
+                        Online Settlement
+                      </div>
+                      <h3 className="font-serif font-bold text-base text-slate-100 mt-0.5">
+                        Settle Invoice Online
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Instant secure checkout supporting Safaricom M-Pesa, Card, and Mobile Money.
+                      </p>
                     </div>
-                    <h3 className="font-serif font-bold text-base text-slate-100">
-                      Settle Invoice via M-Pesa
-                    </h3>
-                    <p className="text-xs text-slate-400 mt-0.5">
-                      Enter your Safaricom M-Pesa number below to receive an instant payment prompt.
-                    </p>
+                    <div className="flex items-center gap-1.5 text-[11px] font-mono text-slate-400">
+                      <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                      <span>256-Bit Encrypted</span>
+                    </div>
                   </div>
 
                   {payError && (
@@ -416,36 +418,29 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
                     <div className="p-6 text-center space-y-3">
                       <Loader2 className="w-8 h-8 text-brand-gold animate-spin mx-auto" />
                       <div className="font-mono text-xs text-slate-200 font-bold">
-                        Awaiting M-Pesa PIN Confirmation...
+                        Awaiting Payment Confirmation...
                       </div>
                       <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                        Please check your phone and enter your M-Pesa PIN. This window will automatically verify once complete.
+                        Please complete payment on the checkout window. This page will automatically update once verified.
                       </p>
                     </div>
                   ) : (
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <div className="relative flex-1">
-                        <Phone className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                        <input
-                          type="tel"
-                          value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
-                          placeholder="07XXXXXXXX or 2547XXXXXXXX"
-                          className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs font-mono text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-[#C89630]"
-                        />
-                      </div>
+                    <div>
                       <button
                         onClick={handlePay}
-                        disabled={payStep === 'sending' || !phone.trim()}
-                        className="px-6 py-2.5 bg-[#C89630] hover:bg-[#D9A741] text-on-gold font-serif font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md hover:shadow-lg disabled:opacity-50 inline-flex items-center justify-center gap-2"
+                        disabled={payStep === 'sending'}
+                        className="w-full sm:w-auto px-6 py-3 bg-[#C89630] hover:bg-[#D9A741] text-on-gold font-serif font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md hover:shadow-lg disabled:opacity-50 inline-flex items-center justify-center gap-2"
                       >
                         {payStep === 'sending' ? (
                           <>
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            Dispatching STK...
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>Connecting to Secure Checkout...</span>
                           </>
                         ) : (
-                          `Pay KES ${invoice.total.toLocaleString()} Now`
+                          <>
+                            <span>Proceed to Secure Checkout — KES {invoice.total.toLocaleString()}</span>
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </>
                         )}
                       </button>
                     </div>

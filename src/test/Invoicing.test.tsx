@@ -117,7 +117,7 @@ describe('GOP Invoicing Module Integration', () => {
       expect(screen.getAllByText('GOP-2026-0005')[0]).toBeInTheDocument();
       expect(screen.getByText('Kenya High Debate Club')).toBeInTheDocument();
       expect(screen.getByText('Parliamentary Forensics Masterclass')).toBeInTheDocument();
-      expect(screen.getByText(/Pay KES 25,000 Now/i)).toBeInTheDocument();
+      expect(screen.getByText(/Proceed to Secure Checkout — KES 25,000/i)).toBeInTheDocument();
     });
   });
 });
