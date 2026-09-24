@@ -67,7 +67,7 @@ export const HomePage: React.FC<HomePageProps> = ({
       {/* 6. Chapter III: Continental & World Championships */}
       <ChampionshipsSection />
 
-      {/* 7. Featured Speaker Spotlight: Imani & Milo Brian */}
+      {/* 7. Featured Speaker Spotlight: Imani, Milo Brian & Valerie Wanjiku */}
       <SpeakerSpotlight onStartOnboarding={onStartOnboarding} />
 
       {/* 8. Chapter IV: Living Catharsis Proof & Conversion CTAs */}

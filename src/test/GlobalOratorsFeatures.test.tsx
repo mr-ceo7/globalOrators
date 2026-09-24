@@ -280,7 +280,7 @@ describe('Global Orators Landing Page & Features Tests', () => {
     });
   });
 
-  test('should render Speaker Spotlight and Testimonials featuring authentic profiles for both Imani and Milo Brian', () => {
+  test('should render Speaker Spotlight and Testimonials featuring authentic profiles for Imani, Milo Brian, and Valerie Wanjiku', () => {
     render(
       <AppProvider>
         <LandingPage />
@@ -301,6 +301,12 @@ describe('Global Orators Landing Page & Features Tests', () => {
     expect(screen.getByText(/Milo, among other things, is a legal scholar, award winning debater, poet/i)).toBeInTheDocument();
     expect(screen.getByAltText(/Milo Brian delivering an award-winning speech at the podium with microphone/i)).toBeInTheDocument();
     expect(screen.getByAltText(/Milo Brian reviewing debate frameworks and poetry in front of a green chalkboard/i)).toBeInTheDocument();
+
+    // Verify Valerie Wanjiku's presence in spotlight
+    expect(screen.getAllByText('Valerie Wanjiku').length).toBeGreaterThan(0);
+    expect(screen.getByText(/Dispatch 03 · Narrative Forensics & African Voices/i)).toBeInTheDocument();
+    expect(screen.getByAltText(/Valerie Wanjiku addressing the continental assembly forum at the rostrum in Maseru/i)).toBeInTheDocument();
+    expect(screen.getByAltText(/Valerie Wanjiku in oratorical delivery at the International Sports and Olympism podium/i)).toBeInTheDocument();
   });
 
   test('should render dynamic Step 3 Personal Baseline adapted for Foundation Escapism & Catharsis by default', async () => {

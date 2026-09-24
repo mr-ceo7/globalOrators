@@ -268,6 +268,76 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({
         </div>
       </section>
 
+      {/* Academy Faculty in Focus: Valerie Wanjiku */}
+      <section className="py-12 sm:py-16 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800 text-left">
+        <div className="p-6 sm:p-10 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-6">
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
+              Faculty in Focus · Debate Coach & Storytelling Specialist
+            </span>
+            <div className="h-px bg-slate-800 flex-1" />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            <div className="lg:col-span-7 space-y-4">
+              <blockquote className="space-y-3">
+                <Quote className="w-8 h-8 text-brand-gold/40 shrink-0" />
+                <p className="font-serif italic text-sm sm:text-base text-slate-100 leading-relaxed">
+                  "A debater and storyteller at heart, driven by the belief that African voices deserve center stage, for the richness of culture, wisdom, and life it carries, and for stories the world has yet to fully hear. Committed to the pursuit of structured argument and eloquent expression, not just to build tomorrow’s leaders, but to help shape a more profound, self-assured continent."
+                </p>
+              </blockquote>
+
+              <p className="text-xs text-slate-300 leading-relaxed font-normal pt-2 border-t border-slate-800">
+                In the Academy debate chambers, Valerie Wanjiku instructs debaters on the synergy between disciplined forensic clash and narrative authenticity. Her coaching equips students to defend high-stakes motions while articulating African historical perspectives with profound rhetorical confidence.
+              </p>
+
+              <div className="pt-2 flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex items-center gap-3">
+                  <picture>
+                    <source srcSet="/images/valerie.webp" type="image/webp" />
+                    <img 
+                      src="/images/valerie.jpg" 
+                      alt="Valerie Wanjiku" 
+                      className="w-10 h-10 rounded-full object-cover object-[center_20%] border border-slate-700 shrink-0" 
+                      loading="lazy"
+                    />
+                  </picture>
+                  <div>
+                    <div className="font-serif font-bold text-slate-100 text-sm">Valerie Wanjiku</div>
+                    <div className="text-[10px] text-slate-400 font-mono">Debate Coach · Storytelling Specialist</div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => onStartOnboarding('Academy')}
+                  className="px-4 py-2 rounded-lg bg-[#C89630] hover:bg-[#B37D22] text-on-gold font-serif font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shrink-0"
+                >
+                  <span>Train With Academy Coaches</span>
+                  <ArrowRight className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
+
+            <div className="lg:col-span-5 flex flex-col gap-3">
+              <div className="rounded-xl overflow-hidden border border-slate-800 bg-slate-950 shadow-md">
+                <picture>
+                  <source srcSet="/images/valerie-assembly.webp" type="image/webp" />
+                  <img 
+                    src="/images/valerie-assembly.jpg" 
+                    alt="Valerie Wanjiku addressing the continental assembly in Maseru, Lesotho" 
+                    className="w-full h-56 sm:h-64 object-cover object-[center_20%] filter contrast-[1.03]" 
+                    loading="lazy" 
+                  />
+                </picture>
+              </div>
+              <div className="text-[10px] font-mono text-slate-400 flex items-center justify-between px-1">
+                <span className="text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">Continental Assembly Rostrum</span>
+                <span>Maseru, Lesotho</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* School Accreditation Section */}
       <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-5xl mx-auto border-b border-slate-800">
         <div className="p-6 sm:p-8 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">

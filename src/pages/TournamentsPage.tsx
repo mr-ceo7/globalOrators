@@ -106,34 +106,58 @@ export const TournamentsPage: React.FC<TournamentsPageProps> = ({
 
       {/* Featured Arena Visual Dispatch: Authentic Championship Photography */}
       <section className="py-8 sm:py-12 px-4 sm:px-8 max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-          <figure className="md:col-span-7 rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl flex flex-col justify-between">
-            <div className="h-64 sm:h-80 md:h-96 w-full overflow-hidden bg-slate-950">
-              <img 
-                src="/images/obed-arena.jpg" 
-                alt="Global Orators debater standing at the international tournament adjudication rostrum with pan-African flags" 
-                className="w-full h-full object-cover object-[center_20%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500" 
-                loading="lazy" 
-              />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl flex flex-col justify-between">
+            <div className="h-60 sm:h-72 md:h-80 w-full overflow-hidden bg-slate-950">
+              <picture>
+                <source srcSet="/images/obed-arena.webp" type="image/webp" />
+                <img 
+                  src="/images/obed-arena.jpg" 
+                  alt="Global Orators debater standing at the international tournament adjudication rostrum with pan-African flags" 
+                  className="w-full h-full object-cover object-[center_20%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500" 
+                  loading="lazy" 
+                />
+              </picture>
             </div>
             <figcaption className="px-4 py-3 bg-slate-900 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] font-mono uppercase tracking-widest text-slate-400">
-              <span className="text-[#7A4B06] dark:text-[#E3B95C] font-semibold">International Adjudication Chamber</span>
-              <span>Continental Flags & Delegations</span>
+              <span className="text-[#7A4B06] dark:text-[#E3B95C] font-semibold">Adjudication Chamber</span>
+              <span>Continental Flags</span>
             </figcaption>
           </figure>
 
-          <figure className="md:col-span-5 rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl flex flex-col justify-between">
-            <div className="h-64 sm:h-80 md:h-96 w-full overflow-hidden bg-slate-950">
-              <img 
-                src="/images/obed-deliberation.jpg" 
-                alt="Debate squad preparing arguments in the motion deliberation chamber" 
-                className="w-full h-full object-cover object-[center_35%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500" 
-                loading="lazy" 
-              />
+          <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl flex flex-col justify-between">
+            <div className="h-60 sm:h-72 md:h-80 w-full overflow-hidden bg-slate-950">
+              <picture>
+                <source srcSet="/images/valerie-podium.webp" type="image/webp" />
+                <img 
+                  src="/images/valerie-podium.jpg" 
+                  alt="Valerie Wanjiku delivering debate arguments at the international championship assembly in Maseru, Lesotho" 
+                  className="w-full h-full object-cover object-[center_25%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500" 
+                  loading="lazy" 
+                />
+              </picture>
+            </div>
+            <figcaption className="px-4 py-3 bg-slate-900 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] font-mono uppercase tracking-widest text-slate-400">
+              <span className="text-[#7A4B06] dark:text-[#E3B95C] font-semibold">Assembly Podium · Maseru</span>
+              <span>Valerie Wanjiku</span>
+            </figcaption>
+          </figure>
+
+          <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl flex flex-col justify-between">
+            <div className="h-60 sm:h-72 md:h-80 w-full overflow-hidden bg-slate-950">
+              <picture>
+                <source srcSet="/images/obed-deliberation.webp" type="image/webp" />
+                <img 
+                  src="/images/obed-deliberation.jpg" 
+                  alt="Debate squad preparing arguments in the motion deliberation chamber" 
+                  className="w-full h-full object-cover object-[center_35%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500" 
+                  loading="lazy" 
+                />
+              </picture>
             </div>
             <figcaption className="px-4 py-3 bg-slate-900 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] font-mono uppercase tracking-widest text-slate-400">
               <span className="text-emerald-500 font-semibold">15-Min Prep Room</span>
-              <span>Timed Case Construction</span>
+              <span>Case Construction</span>
             </figcaption>
           </figure>
         </div>

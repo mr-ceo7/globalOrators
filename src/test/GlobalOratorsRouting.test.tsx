@@ -69,6 +69,7 @@ describe('Global Orators Dedicated Routing & SEO Tests', () => {
     expect(screen.getByRole('heading', { level: 1, name: /The Sovereign Chamber of Forensics/i })).toBeInTheDocument();
     expect(screen.getByText('The 4 Mastery Modules')).toBeInTheDocument();
     expect(screen.getByText('Obed')).toBeInTheDocument();
+    expect(screen.getAllByText('Valerie Wanjiku').length).toBeGreaterThan(0);
   });
 
   test('should navigate to About page and Foundation page', async () => {
@@ -145,6 +146,7 @@ describe('Global Orators Dedicated Routing & SEO Tests', () => {
     expect(screen.getByText('Imani')).toBeInTheDocument();
     expect(screen.getByText('Milo Brian')).toBeInTheDocument();
     expect(screen.getByText('Obed')).toBeInTheDocument();
+    expect(screen.getAllByText('Valerie Wanjiku').length).toBeGreaterThan(0);
     expect(screen.getByText(/Academy Debate Fellow & Youth Leader/i)).toBeInTheDocument();
   });
 

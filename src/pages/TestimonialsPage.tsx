@@ -53,6 +53,15 @@ export const TestimonialsPage: React.FC<TestimonialsPageProps> = ({
       consent: 'Documented Tournament Delegate'
     },
     {
+      author: 'Valerie Wanjiku',
+      role: 'Debate Coach & Storytelling Specialist',
+      track: 'Academy Faculty & Debate Coach',
+      location: 'Maseru Assembly / Continental Circuit',
+      image: '/images/valerie.jpg',
+      quote: 'A debater and storyteller at heart, driven by the belief that African voices deserve center stage, for the richness of culture, wisdom, and life it carries, and for stories the world has yet to fully hear. Committed to the pursuit of structured argument and eloquent expression, not just to build tomorrow’s leaders, but to help shape a more profound, self-assured continent.',
+      consent: 'Faculty & Adjudication Dispatch'
+    },
+    {
       author: 'David Ochieng',
       role: 'Head of Humanities & Debate Coach',
       track: 'Institutional Partner',
