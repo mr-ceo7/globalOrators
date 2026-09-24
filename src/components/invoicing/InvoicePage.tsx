@@ -66,11 +66,16 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
       });
   }, [id]);
 
-  // Check URL query parameters for return from payment gateway
+  // Check URL query parameters for return from Royal Mint gateway or Paystack
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const status = params.get('status');
     const txnId = params.get('success_txn') || params.get('reference') || params.get('trxref');
-    if (txnId) {
+
+    if (status === 'cancelled') {
+      setPayError('Payment was cancelled.');
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (txnId) {
       setTransactionId(txnId);
       setPayStep('waiting');
       window.history.replaceState({}, '', window.location.pathname);
@@ -114,18 +119,28 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
     setPayError('');
     try {
       const clientContactPhone = invoice.clientPhone || '';
-      // Build the callback URL so Paystack redirects back to this invoice page after payment
-      const callbackUrl = `${window.location.origin}${window.location.pathname}`;
-      const result = await payInvoice(invoice.id, clientContactPhone, callbackUrl);
+      const result = await payInvoice(invoice.id, clientContactPhone);
       const txn = result.transactionId || result.reference;
 
       if (!txn) {
         throw new Error('Payment server did not return a transaction identifier.');
       }
 
-      // Use Paystack's hosted checkout directly — the callback_url we passed to the backend
-      // ensures Paystack redirects back to this invoice page after payment completes.
-      if (result.authorizationUrl) {
+      // Route through the Royal Mint branded gateway (uses Paystack inline popup).
+      // The gateway reads these URL params, launches PaystackPop.newTransaction,
+      // and on success redirects to redirect_url?status=success&reference=...
+      const paystackKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY as string | undefined;
+      if (result.access_code && paystackKey) {
+        const redirectUrl = encodeURIComponent(`${window.location.origin}${window.location.pathname}`);
+        const amountCents = result.amount || Math.round(invoice.total * 100);
+        const cleanPhone = (clientContactPhone || '').replace(/[^0-9]/g, '');
+        const email = invoice.clientEmail || (cleanPhone ? `${cleanPhone}@gmail.com` : 'director@globaloratorsproject.com');
+        const displayCurrency = invoice.currency || 'KES';
+
+        const gatewayUrl = `https://payments.royalmint.app/?access_code=${result.access_code}&public_key=${paystackKey}&reference=${txn}&amount=${amountCents}&currency=${encodeURIComponent(displayCurrency)}&display_amount=${encodeURIComponent(String(invoice.total))}&display_currency=${encodeURIComponent(displayCurrency)}&email=${encodeURIComponent(email)}&redirect_url=${redirectUrl}&channels=card`;
+        window.location.href = gatewayUrl;
+        return;
+      } else if (result.authorizationUrl) {
         window.location.href = result.authorizationUrl;
         return;
       }

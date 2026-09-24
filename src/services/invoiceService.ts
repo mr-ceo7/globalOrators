@@ -64,13 +64,12 @@ export const listInvoices = async (filters?: { status?: string }): Promise<Invoi
   return api.get<Invoice[]>('/invoices', filters?.status ? { status: filters.status } : undefined);
 };
 
-export const payInvoice = async (invoiceId: string, phone?: string, callbackUrl?: string) => {
-  const payload = { phone: phone || '', callback_url: callbackUrl || '' };
+export const payInvoice = async (invoiceId: string, phone?: string) => {
   try {
     const res = await fetch(`${PAYMENT_BACKEND_URL}/api/invoices/${encodeURIComponent(invoiceId)}/pay`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ phone: phone || '' }),
     });
     if (res.ok) return await res.json();
   } catch (err) {
@@ -79,7 +78,7 @@ export const payInvoice = async (invoiceId: string, phone?: string, callbackUrl?
   const fallbackRes = await fetch(`/api/invoices/${encodeURIComponent(invoiceId)}/pay`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ phone: phone || '' }),
   });
   if (!fallbackRes.ok) {
     const err = await fallbackRes.json().catch(() => ({}));
