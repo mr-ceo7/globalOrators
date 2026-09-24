@@ -106,9 +106,9 @@ class ApiClient {
     if (!response.ok) {
       const errorMsg = await readErrorMessage(response);
       if (response.status === 401) {
-        // A 401 from a sign-in endpoint means wrong credentials, not an expired session:
-        // keep the user where they are and show the server's message.
-        if (isCredentialEndpoint(endpoint)) {
+        // A 401 from a sign-in endpoint or invoice administration means credentials/permission
+        // rejection, not an expired session: keep the user logged in and surface the error.
+        if (isCredentialEndpoint(endpoint) || endpoint.includes('/invoices')) {
           throw new Error(errorMsg);
         }
         clearAuthSession();
