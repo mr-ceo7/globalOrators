@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   fetchInvoice, 
   payInvoice, 
+  sendInvoiceReceipt,
   generateInvoicePDF, 
   Invoice 
 } from '../../services/invoiceService';
@@ -15,7 +16,9 @@ import {
   Loader2, 
   AlertCircle,
   ExternalLink,
-  ShieldCheck
+  ShieldCheck,
+  Mail,
+  Check
 } from 'lucide-react';
 
 const PAYMENT_BACKEND_URL = import.meta.env.VITE_PAYMENT_BACKEND_URL || 'https://uon-smart-backend.onrender.com';
@@ -38,6 +41,8 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
   const [payStep, setPayStep] = useState<'idle' | 'sending' | 'waiting' | 'paid'>('idle');
   const [payError, setPayError] = useState('');
   const [transactionId, setTransactionId] = useState('');
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailStatus, setEmailStatus] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) {
@@ -152,6 +157,25 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
       paymentMethod: 'Online Settlement',
       phone: invoice.clientPhone || 'N/A'
     });
+  };
+
+  const handleEmailReceipt = async () => {
+    if (!invoice) return;
+    const targetEmail = invoice.clientEmail;
+    if (!targetEmail || !targetEmail.includes('@')) {
+      setEmailStatus('No client email address is registered for this invoice.');
+      return;
+    }
+    setEmailSending(true);
+    setEmailStatus(null);
+    try {
+      const res = await sendInvoiceReceipt(invoice.id, targetEmail);
+      setEmailStatus(res.message || `Receipt dispatched to ${targetEmail}`);
+    } catch (err: any) {
+      setEmailStatus(err.message || 'Failed to email receipt.');
+    } finally {
+      setEmailSending(false);
+    }
   };
 
   const handlePrint = () => window.print();
@@ -374,19 +398,43 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
                   <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
                     <button
                       onClick={handleDownloadReceipt}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold font-mono text-xs rounded-xl transition-all shadow-md"
+                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold font-mono text-xs rounded-xl transition-all shadow-md"
                     >
                       <Download className="w-3.5 h-3.5" />
                       Download Payment Receipt
                     </button>
                     <button
+                      onClick={handleEmailReceipt}
+                      disabled={emailSending}
+                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-mono text-xs rounded-xl transition-colors border border-slate-700 disabled:opacity-50"
+                    >
+                      {emailSending ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-gold" />
+                          <span>Dispatching Receipt...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Mail className="w-3.5 h-3.5 text-brand-gold" />
+                          <span>Email Receipt</span>
+                        </>
+                      )}
+                    </button>
+                    <button
                       onClick={handleDownloadPDF}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-mono text-xs rounded-xl transition-colors border border-slate-700"
+                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 font-mono text-xs rounded-xl transition-colors border border-slate-800"
                     >
                       <Download className="w-3.5 h-3.5" />
                       Invoice PDF
                     </button>
                   </div>
+
+                  {emailStatus && (
+                    <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900/90 border border-slate-800 text-slate-200 text-xs font-mono max-w-md mx-auto">
+                      <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      <span>{emailStatus}</span>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="p-5 sm:p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-5">

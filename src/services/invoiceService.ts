@@ -87,6 +87,29 @@ export const payInvoice = async (invoiceId: string, phone?: string) => {
   return fallbackRes.json();
 };
 
+export const sendInvoiceReceipt = async (invoiceId: string, email?: string): Promise<{ success: boolean; message: string }> => {
+  try {
+    const res = await fetch(`${PAYMENT_BACKEND_URL}/api/invoices/${encodeURIComponent(invoiceId)}/send-receipt`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    if (res.ok) return await res.json();
+  } catch (err) {
+    console.warn('Direct backend send-receipt failed, trying local rewrite:', err);
+  }
+  const fallback = await fetch(`/api/invoices/${encodeURIComponent(invoiceId)}/send-receipt`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+  if (!fallback.ok) {
+    const err = await fallback.json().catch(() => ({}));
+    throw new Error((err as { error?: string }).error || 'Failed to dispatch receipt email');
+  }
+  return fallback.json();
+};
+
 export const updateInvoice = async (id: string, data: {
   clientName?: string;
   clientEmail?: string;
