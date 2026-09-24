@@ -59,11 +59,11 @@
     },
     {
       "source": "/api/invoices/:path*",
-      "destination": "https://payment-backend-0eo0.onrender.com/api/invoices/:path*"
+      "destination": "https://uon-smart-backend.onrender.com/api/invoices/:path*"
     },
     {
       "source": "/api/transaction-status/:path*",
-      "destination": "https://payment-backend-0eo0.onrender.com/api/transaction-status/:path*"
+      "destination": "https://uon-smart-backend.onrender.com/api/transaction-status/:path*"
     },
     {
       "source": "/api/:path*",

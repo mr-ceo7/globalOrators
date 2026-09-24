@@ -4,7 +4,7 @@ import QRCode from 'qrcode';
 import { GOP_BILLING_CONFIG } from '../config/company';
 import { api } from './apiClient';
 
-const PAYMENT_BACKEND_URL = import.meta.env.VITE_PAYMENT_BACKEND_URL || 'https://payment-backend-0eo0.onrender.com';
+const PAYMENT_BACKEND_URL = import.meta.env.VITE_PAYMENT_BACKEND_URL || 'https://uon-smart-backend.onrender.com';
 
 export interface InvoiceItem {
   description: string;
