@@ -100,6 +100,7 @@ describe('Global Orators Dedicated Routing & SEO Tests', () => {
     expect(screen.getByText('Rachael')).toBeInTheDocument();
     expect(screen.getByText('Qassim Musa')).toBeInTheDocument();
     expect(screen.getByText('Michelle Kinanga')).toBeInTheDocument();
+    expect(screen.getByText('Valerie Wanjiku')).toBeInTheDocument();
 
     // Navigate to Foundation
     const foundationBtn = screen.getByText('Go to Foundation');

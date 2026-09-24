@@ -2,7 +2,7 @@ import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 import { GOP_BILLING_CONFIG } from '../config/company';
-import { createInvoice, listInvoices } from '../services/invoiceService';
+import { createInvoice, listInvoices, sendInvoiceReceipt } from '../services/invoiceService';
 import { AdminInvoices } from '../components/invoicing/AdminInvoices';
 import { InvoicePage } from '../components/invoicing/InvoicePage';
 
@@ -119,5 +119,20 @@ describe('GOP Invoicing Module Integration', () => {
       expect(screen.getByText('Parliamentary Forensics Masterclass')).toBeInTheDocument();
       expect(screen.getByText(/Proceed to Secure Checkout — KES 25,000/i)).toBeInTheDocument();
     });
+  });
+
+  test('sendInvoiceReceipt calls the Global Orators API directly, not the payment backend', async () => {
+    (global.fetch as any).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ success: true, message: 'Receipt dispatched' })
+    });
+
+    const res = await sendInvoiceReceipt('inv_123', 'client@test.com');
+    expect(res.success).toBe(true);
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+    const [url, options] = (global.fetch as any).mock.calls[0];
+    expect(url).toBe('/api/invoices/inv_123/send-receipt');
+    expect(url).not.toContain('onrender.com');
+    expect(options.method).toBe('POST');
   });
 });

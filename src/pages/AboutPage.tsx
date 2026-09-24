@@ -58,6 +58,16 @@ const teamMembers: TeamMember[] = [
     bio: 'Championship finalist and elite collegiate debater. Prepares speakers for high-pressure tournament arenas, teaching policy modeling, strategic rebuttal architecture, and deep dialectical clash on continental circuits.'
   },
   {
+    name: 'Valerie Wanjiku',
+    role: 'Debate Coach & Storytelling Specialist',
+    category: 'Debate Coach',
+    initials: 'VW',
+    image: '/images/valerie.jpg',
+    imagePosition: 'object-[center_20%]',
+    specialty: 'Structured Argument & Narrative Storytelling',
+    bio: 'A debater and storyteller at heart, driven by the belief that African voices deserve center stage, for the richness of culture, wisdom, and life it carries, and for stories the world has yet to fully hear. Committed to the pursuit of structured argument and eloquent expression, not just to build tomorrow’s leaders, but to help shape a more profound, self-assured continent.'
+  },
+  {
     name: 'Liz Imani',
     role: 'Public Speaking Coach & Philosophy Fellow',
     category: 'Speaking Coach',
@@ -324,8 +334,8 @@ export const AboutPage: React.FC<AboutPageProps> = ({
           </p>
         </div>
 
-        {/* 2-Column Responsive Grid on Mobile / 4-Column on Desktop */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        {/* 2-Column Responsive Grid on Mobile / 3-Column on Desktop (3x3 for 9 faculty members) */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6">
           {teamMembers.map((member) => (
             <div 
               key={member.name}

@@ -62,6 +62,10 @@
       "destination": "https://uon-smart-backend.onrender.com/api/transaction-status/:path*"
     },
     {
+      "source": "/api/invoices/:id/send-receipt",
+      "destination": "/api/invoices/send-receipt?invoiceId=:id"
+    },
+    {
       "source": "/api/:path*",
       "destination": "https://unfenestral-scratchily-lester.ngrok-free.dev/api/:path*"
     },
