@@ -69,7 +69,7 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
   // Check URL query parameters for return from payment gateway
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const txnId = params.get('success_txn') || params.get('reference');
+    const txnId = params.get('success_txn') || params.get('reference') || params.get('trxref');
     if (txnId) {
       setTransactionId(txnId);
       setPayStep('waiting');
@@ -114,26 +114,18 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
     setPayError('');
     try {
       const clientContactPhone = invoice.clientPhone || '';
-      const result = await payInvoice(invoice.id, clientContactPhone);
+      // Build the callback URL so Paystack redirects back to this invoice page after payment
+      const callbackUrl = `${window.location.origin}${window.location.pathname}`;
+      const result = await payInvoice(invoice.id, clientContactPhone, callbackUrl);
       const txn = result.transactionId || result.reference;
 
       if (!txn) {
         throw new Error('Payment server did not return a transaction identifier.');
       }
 
-      // Use the branded gateway only when a live public key is configured; otherwise fall back
-      // to Paystack's hosted checkout (never a hard-coded test key).
-      const paystackKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY as string | undefined;
-      if (result.access_code && paystackKey) {
-        const redirectUrl = encodeURIComponent(`${window.location.origin}${window.location.pathname}?success_txn=${txn}`);
-        const amountCents = Math.round(invoice.total * 100);
-        const cleanPhone = (clientContactPhone || '').replace(/[^0-9]/g, '');
-        const email = invoice.clientEmail || (cleanPhone ? `${cleanPhone}@gmail.com` : 'director@globaloratorsproject.com');
-        
-        const gatewayUrl = `https://payments.royalmint.app/?access_code=${result.access_code}&public_key=${paystackKey}&reference=${txn}&amount=${amountCents}&email=${encodeURIComponent(email)}&redirect_url=${redirectUrl}`;
-        window.location.href = gatewayUrl;
-        return;
-      } else if (result.authorizationUrl) {
+      // Use Paystack's hosted checkout directly — the callback_url we passed to the backend
+      // ensures Paystack redirects back to this invoice page after payment completes.
+      if (result.authorizationUrl) {
         window.location.href = result.authorizationUrl;
         return;
       }
