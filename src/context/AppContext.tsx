@@ -813,7 +813,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Real-Time Server-Sent Events (SSE) Stream Connection
   useEffect(() => {
     const token = localStorage.getItem('globalorators_token') || localStorage.getItem('nubianfit_token');
-    if (!token) return;
+    if (!token || (typeof window !== 'undefined' && window.location.pathname.toLowerCase().startsWith('/invoice/'))) return;
 
     const disconnect = startEventStream({
       token,

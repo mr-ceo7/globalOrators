@@ -106,6 +106,10 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
 
   const handlePay = async () => {
     if (!invoice) return;
+    if (invoice.total <= 0) {
+      setPayError('This invoice has a balance of KES 0. No online transaction is required.');
+      return;
+    }
     setPayStep('sending');
     setPayError('');
     try {
@@ -208,12 +212,12 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
   const isPaid = invoice.status === 'PAID' || payStep === 'paid';
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 py-8 px-4 sm:px-6 print:bg-white print:text-slate-900 print:py-0">
-      <div className="max-w-3xl mx-auto space-y-6">
+    <div className="min-h-screen bg-slate-950 text-slate-100 py-4 sm:py-8 px-3 sm:px-6 print:bg-white print:text-slate-900 print:py-0">
+      <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
 
         {/* Top Actions (Print & Download) */}
         <div className="flex items-center justify-between text-xs font-mono print:hidden">
-          <div className="text-slate-400">
+          <div className="text-slate-400 text-[11px] sm:text-xs">
             Reference: <span className="text-slate-200 font-bold">{invoice.invoiceNumber}</span>
           </div>
           <div className="flex items-center gap-2">
@@ -237,30 +241,30 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
         {/* Invoice Card */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl print:border-none print:shadow-none">
           {/* Branded Banner */}
-          <div className="p-6 sm:p-8 bg-slate-950 border-b-2 border-[#C89630] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
+          <div className="p-4 sm:p-8 bg-slate-950 border-b-2 border-[#C89630] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
               <img
                 src={GOP_BILLING_CONFIG.logoUrl}
                 alt="Global Orators"
-                className="w-12 h-12 rounded-lg object-contain bg-slate-900 p-1 border border-slate-800"
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-contain bg-slate-900 p-1 border border-slate-800"
               />
               <div>
-                <h1 className="font-serif font-black text-lg sm:text-xl text-slate-100 tracking-tight">
+                <h1 className="font-serif font-black text-base sm:text-xl text-slate-100 tracking-tight">
                   {GOP_BILLING_CONFIG.name.toUpperCase()}
                 </h1>
-                <p className="text-xs text-slate-400 font-sans">
+                <p className="text-[11px] sm:text-xs text-slate-400 font-sans">
                   {GOP_BILLING_CONFIG.tagline}
                 </p>
               </div>
             </div>
 
-            <div className="text-left sm:text-right">
-              <div className="font-serif font-bold text-lg text-brand-gold">INVOICE</div>
+            <div className="flex items-center justify-between w-full sm:w-auto sm:text-right pt-2 sm:pt-0 border-t border-slate-800/60 sm:border-0">
+              <div className="font-serif font-bold text-base sm:text-lg text-brand-gold">INVOICE</div>
               <div className="font-mono text-xs text-slate-400">{invoice.invoiceNumber}</div>
             </div>
           </div>
 
-          <div className="p-6 sm:p-8 space-y-6">
+          <div className="p-4 sm:p-8 space-y-5 sm:space-y-6">
             {/* Status and Dates */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-slate-950/70 border border-slate-800">
               <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono uppercase tracking-wider font-bold rounded-md border ${
@@ -290,8 +294,8 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
             </div>
 
             {/* Two-Column Billing */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
-              <div className="space-y-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 text-xs">
+              <div className="p-3.5 sm:p-0 rounded-xl bg-slate-950/40 sm:bg-transparent border border-slate-800/80 sm:border-0 space-y-1">
                 <div className="text-[10px] font-mono tracking-widest uppercase text-brand-gold font-semibold">
                   From (Official Payee)
                 </div>
@@ -300,10 +304,10 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
                 {GOP_BILLING_CONFIG.addressLines.map((line, idx) => (
                   <div key={idx} className="text-slate-400">{line}</div>
                 ))}
-                <div className="text-slate-400 font-mono pt-1">{GOP_BILLING_CONFIG.email}</div>
+                <div className="text-slate-400 font-mono pt-0.5">{GOP_BILLING_CONFIG.email}</div>
               </div>
 
-              <div className="space-y-1">
+              <div className="p-3.5 sm:p-0 rounded-xl bg-slate-950/40 sm:bg-transparent border border-slate-800/80 sm:border-0 space-y-1">
                 <div className="text-[10px] font-mono tracking-widest uppercase text-brand-gold font-semibold">
                   Billed To
                 </div>
@@ -311,7 +315,7 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
                   {invoice.clientName || 'Client'}
                 </div>
                 {invoice.clientEmail && (
-                  <div className="text-slate-400 font-mono text-[11px] whitespace-pre-wrap">{invoice.clientEmail}</div>
+                  <div className="text-slate-400 font-mono text-[11px] whitespace-pre-wrap break-all">{invoice.clientEmail}</div>
                 )}
                 {invoice.clientPhone && (
                   <div className="text-slate-400 font-mono text-[11px]">{invoice.clientPhone}</div>
@@ -319,10 +323,13 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
               </div>
             </div>
 
-            {/* Itemized Table */}
-            <div className="border border-slate-800 rounded-xl overflow-hidden">
+            {/* Itemized Deliverables */}
+            <div className="border border-slate-800 rounded-xl overflow-hidden bg-slate-950/40">
+              <div className="sm:hidden bg-slate-950 px-4 py-2.5 border-b border-slate-800 text-[10px] font-mono tracking-wider uppercase text-slate-400">
+                Deliverables ({invoice.items.length})
+              </div>
               <table className="w-full text-xs">
-                <thead>
+                <thead className="hidden sm:table-header-group">
                   <tr className="bg-slate-950 border-b border-slate-800 text-[10px] font-mono tracking-wider uppercase text-slate-400">
                     <th className="text-left py-3 px-4 font-semibold">Description</th>
                     <th className="text-center py-3 px-3 font-semibold w-16">Qty</th>
@@ -330,39 +337,48 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
                     <th className="text-right py-3 px-4 font-semibold sm:w-28">Total</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="block sm:table-row-group divide-y divide-slate-800/60">
                   {invoice.items.map((item, idx) => (
-                    <tr key={idx} className="hover:bg-slate-800/20">
-                      <td className="py-3 px-4 font-sans text-slate-100">{item.description}</td>
-                      <td className="py-3 px-3 text-center font-mono text-slate-300">{item.quantity}</td>
-                      <td className="py-3 px-4 text-right font-mono text-slate-300">
+                    <tr key={idx} className="block sm:table-row p-3.5 sm:p-0 hover:bg-slate-800/20 space-y-1.5 sm:space-y-0">
+                      <td className="block sm:table-cell py-0 sm:py-3 px-0 sm:px-4 font-sans text-slate-100 font-medium sm:font-normal">
+                        {item.description}
+                      </td>
+                      <td className="hidden sm:table-cell py-3 px-3 text-center font-mono text-slate-300">
+                        {item.quantity}
+                      </td>
+                      <td className="hidden sm:table-cell py-3 px-4 text-right font-mono text-slate-300">
                         {invoice.currency} {item.unitPrice.toLocaleString()}
                       </td>
-                      <td className="py-3 px-4 text-right font-mono font-medium text-slate-100">
-                        {invoice.currency} {(item.quantity * item.unitPrice).toLocaleString()}
+                      <td className="flex sm:table-cell items-center justify-between py-1.5 sm:py-3 px-0 sm:px-4 text-right font-mono font-medium text-slate-100 border-t border-slate-800/40 sm:border-0 mt-1 sm:mt-0">
+                        <span className="sm:hidden text-slate-400 text-[11px] font-normal">
+                          {item.quantity} × {invoice.currency} {item.unitPrice.toLocaleString()}
+                        </span>
+                        <span className="font-bold text-slate-100 sm:font-medium">
+                          {invoice.currency} {(item.quantity * item.unitPrice).toLocaleString()}
+                        </span>
                       </td>
                     </tr>
                   ))}
                 </tbody>
-                <tfoot className="bg-slate-950/70 border-t border-slate-800 text-xs font-mono">
-                  <tr>
-                    <td colSpan={2} className="py-2.5 px-4"></td>
-                    <td className="py-2.5 px-4 text-right text-slate-400">Subtotal:</td>
-                    <td className="py-2.5 px-4 text-right text-slate-200">
+                <tfoot className="block sm:table-footer-group bg-slate-950/80 border-t border-slate-800 text-xs font-mono p-3.5 sm:p-0 space-y-1.5 sm:space-y-0">
+                  <tr className="flex justify-between sm:table-row">
+                    <td colSpan={2} className="hidden sm:table-cell py-2.5 px-4"></td>
+                    <td className="py-0 sm:py-2.5 px-0 sm:px-4 text-left sm:text-right text-slate-400">Subtotal:</td>
+                    <td className="py-0 sm:py-2.5 px-0 sm:px-4 text-right text-slate-200">
                       {invoice.currency} {invoice.subtotal.toLocaleString()}
                     </td>
                   </tr>
-                  <tr>
-                    <td colSpan={2} className="py-2 px-4"></td>
-                    <td className="py-2 px-4 text-right text-slate-400">Tax:</td>
-                    <td className="py-2 px-4 text-right text-slate-400">
+                  <tr className="flex justify-between sm:table-row">
+                    <td colSpan={2} className="hidden sm:table-cell py-2 px-4"></td>
+                    <td className="py-0 sm:py-2 px-0 sm:px-4 text-left sm:text-right text-slate-400">Tax:</td>
+                    <td className="py-0 sm:py-2 px-0 sm:px-4 text-right text-slate-400">
                       {invoice.tax ? `${invoice.currency} ${invoice.tax.toLocaleString()}` : 'KES 0'}
                     </td>
                   </tr>
-                  <tr className="border-t border-slate-800 font-bold text-sm">
-                    <td colSpan={2} className="py-3 px-4"></td>
-                    <td className="py-3 px-4 text-right text-slate-100">TOTAL:</td>
-                    <td className="py-3 px-4 text-right text-brand-gold">
+                  <tr className="flex justify-between sm:table-row border-t border-slate-800 font-bold text-sm pt-2 sm:pt-0">
+                    <td colSpan={2} className="hidden sm:table-cell py-3 px-4"></td>
+                    <td className="py-0 sm:py-3 px-0 sm:px-4 text-left sm:text-right text-slate-100">TOTAL:</td>
+                    <td className="py-0 sm:py-3 px-0 sm:px-4 text-right text-brand-gold">
                       {invoice.currency} {invoice.total.toLocaleString()}
                     </td>
                   </tr>
@@ -395,10 +411,10 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
                       Thank you for your transaction with Global Orators Project.
                     </p>
                   </div>
-                  <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                  <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-2.5 sm:gap-3 pt-2">
                     <button
                       onClick={handleDownloadReceipt}
-                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold font-mono text-xs rounded-xl transition-all shadow-md"
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold font-mono text-xs rounded-xl transition-all shadow-md active:scale-95"
                     >
                       <Download className="w-3.5 h-3.5" />
                       Download Payment Receipt
@@ -406,7 +422,7 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
                     <button
                       onClick={handleEmailReceipt}
                       disabled={emailSending}
-                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-mono text-xs rounded-xl transition-colors border border-slate-700 disabled:opacity-50"
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-mono text-xs rounded-xl transition-colors border border-slate-700 disabled:opacity-50 active:scale-95"
                     >
                       {emailSending ? (
                         <>
@@ -422,7 +438,7 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
                     </button>
                     <button
                       onClick={handleDownloadPDF}
-                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 font-mono text-xs rounded-xl transition-colors border border-slate-800"
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 font-mono text-xs rounded-xl transition-colors border border-slate-800 active:scale-95"
                     >
                       <Download className="w-3.5 h-3.5" />
                       Invoice PDF
@@ -437,8 +453,8 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
                   )}
                 </div>
               ) : (
-                <div className="p-5 sm:p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-5">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-800/80 pb-4">
+                <div className="p-4 sm:p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-4 sm:space-y-5">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-3 border-b border-slate-800/80 pb-4">
                     <div>
                       <div className="text-[10px] font-mono tracking-widest uppercase text-brand-gold font-semibold">
                         Online Settlement
@@ -472,12 +488,21 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
                         Please complete payment on the checkout window. This page will automatically update once verified.
                       </p>
                     </div>
+                  ) : invoice.total <= 0 ? (
+                    <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 text-center space-y-2">
+                      <div className="font-mono text-xs font-bold text-slate-300 uppercase tracking-wider">
+                        Zero Balance / Complimentary
+                      </div>
+                      <p className="text-xs text-slate-400">
+                        This invoice has a balance of {invoice.currency} 0. No online transaction is required.
+                      </p>
+                    </div>
                   ) : (
                     <div>
                       <button
                         onClick={handlePay}
                         disabled={payStep === 'sending'}
-                        className="w-full sm:w-auto px-6 py-3 bg-[#C89630] hover:bg-[#D9A741] text-on-gold font-serif font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md hover:shadow-lg disabled:opacity-50 inline-flex items-center justify-center gap-2"
+                        className="w-full px-6 py-3.5 bg-[#C89630] hover:bg-[#D9A741] text-on-gold font-serif font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md hover:shadow-lg disabled:opacity-50 inline-flex items-center justify-center gap-2 active:scale-95"
                       >
                         {payStep === 'sending' ? (
                           <>
@@ -486,7 +511,7 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
                           </>
                         ) : (
                           <>
-                            <span>Proceed to Secure Checkout — KES {invoice.total.toLocaleString()}</span>
+                            <span>Proceed to Secure Checkout — {invoice.currency} {invoice.total.toLocaleString()}</span>
                             <ExternalLink className="w-3.5 h-3.5" />
                           </>
                         )}

@@ -231,10 +231,10 @@ export const AdminInvoices: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <button
             onClick={() => setView('list')}
-            className={`px-4 py-2 rounded-lg text-xs font-mono font-medium transition-colors ${
+            className={`flex-1 sm:flex-initial px-4 py-2 rounded-lg text-xs font-mono font-medium transition-colors text-center ${
               view === 'list' 
                 ? 'bg-slate-800 text-slate-100 border border-slate-700' 
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
@@ -248,7 +248,7 @@ export const AdminInvoices: React.FC = () => {
               setEditingInvoiceNumber('');
               setView('create');
             }}
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-md ${
+            className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-md ${
               view === 'create'
                 ? 'bg-[#C89630] text-on-gold shadow-[#C89630]/20'
                 : 'bg-slate-900 border border-[#C89630]/40 text-brand-gold hover:bg-[#C89630]/10'
@@ -291,9 +291,9 @@ export const AdminInvoices: React.FC = () => {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="p-3 sm:p-0 overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
-                <thead>
+                <thead className="hidden md:table-header-group">
                   <tr className="bg-slate-950/80 border-b border-slate-800 text-[10px] font-mono tracking-wider uppercase text-slate-400">
                     <th className="py-3.5 px-5 font-semibold">Invoice #</th>
                     <th className="py-3.5 px-5 font-semibold">Client / Organization</th>
@@ -303,17 +303,48 @@ export const AdminInvoices: React.FC = () => {
                     <th className="py-3.5 px-5 font-semibold text-center">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="block md:table-row-group space-y-3 md:space-y-0 md:divide-y md:divide-slate-800/60">
                   {invoices.map((inv) => (
-                    <tr key={inv.id} className="hover:bg-slate-800/30 transition-colors">
-                      <td className="py-4 px-5 font-mono font-bold text-brand-gold">
-                        {inv.invoiceNumber}
+                    <tr 
+                      key={inv.id} 
+                      className="block md:table-row bg-slate-950/60 md:bg-transparent border border-slate-800/80 md:border-0 rounded-2xl p-4 md:p-0 space-y-3 md:space-y-0 hover:bg-slate-800/30 transition-colors shadow-xs md:shadow-none"
+                    >
+                      {/* Top Bar on Mobile: Invoice # & Status */}
+                      <td className="flex items-center justify-between md:table-cell md:py-4 md:px-5 font-mono font-bold text-brand-gold">
+                        <span className="text-sm md:text-xs">{inv.invoiceNumber}</span>
+                        {/* Mobile Status Badge inside top bar */}
+                        <div className="md:hidden">
+                          <span className={`inline-flex px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider font-bold rounded-md border ${
+                            inv.status === 'PAID'
+                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                              : inv.status === 'OVERDUE'
+                              ? 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                              : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                          }`}>
+                            {inv.status}
+                          </span>
+                        </div>
                       </td>
-                      <td className="py-4 px-5">
-                        <div className="font-semibold text-slate-100">{inv.clientName || 'N/A'}</div>
-                        {inv.clientEmail && <div className="text-[11px] text-slate-400 font-mono">{inv.clientEmail}</div>}
+
+                      {/* Client / Organization */}
+                      <td className="block md:table-cell md:py-4 md:px-5">
+                        <div className="font-serif md:font-sans font-bold md:font-semibold text-sm md:text-xs text-slate-100">
+                          {inv.clientName || 'N/A'}
+                        </div>
+                        {inv.clientEmail && (
+                          <div className="text-xs md:text-[11px] text-slate-400 font-mono break-all mt-0.5">
+                            {inv.clientEmail}
+                          </div>
+                        )}
+                        {inv.clientPhone && (
+                          <div className="text-xs text-slate-400 font-mono mt-0.5 md:hidden">
+                            {inv.clientPhone}
+                          </div>
+                        )}
                       </td>
-                      <td className="py-4 px-5">
+
+                      {/* Desktop Status Badge (hidden on mobile since it's in the top bar) */}
+                      <td className="hidden md:table-cell md:py-4 md:px-5">
                         <span className={`inline-flex px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider font-bold rounded-md border ${
                           inv.status === 'PAID'
                             ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
@@ -324,44 +355,54 @@ export const AdminInvoices: React.FC = () => {
                           {inv.status}
                         </span>
                       </td>
-                      <td className="py-4 px-5 text-right font-mono font-bold text-slate-100">
-                        {inv.currency} {inv.total.toLocaleString()}
+
+                      {/* Amount & Date Bar on Mobile */}
+                      <td className="flex items-center justify-between md:table-cell md:py-4 md:px-5 md:text-right font-mono font-bold text-slate-100 pt-2 border-t border-slate-800/60 md:pt-0 md:border-0">
+                        <span className="md:hidden text-[10px] font-mono uppercase tracking-wider text-slate-400">Total</span>
+                        <span className="text-sm md:text-xs font-bold text-slate-100">
+                          {inv.currency} {inv.total.toLocaleString()}
+                        </span>
                       </td>
-                      <td className="py-4 px-5 text-slate-400 font-mono text-[11px]">
-                        {new Date(inv.createdAt).toLocaleDateString()}
+
+                      {/* Date Issued */}
+                      <td className="flex items-center justify-between md:table-cell md:py-4 md:px-5 text-slate-400 font-mono text-xs md:text-[11px]">
+                        <span className="md:hidden text-[10px] font-mono uppercase tracking-wider text-slate-400">Issued</span>
+                        <span>{new Date(inv.createdAt).toLocaleDateString()}</span>
                       </td>
-                      <td className="py-4 px-5 text-center">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <button
-                            onClick={() => copyLink(inv.id)}
-                            className="p-1.5 rounded-lg border border-slate-700 bg-slate-800/70 hover:bg-slate-700 text-slate-300 transition-colors"
-                            title="Copy Public Link"
-                          >
-                            <Copy className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => generateInvoicePDF(inv)}
-                            className="p-1.5 rounded-lg border border-slate-700 bg-slate-800/70 hover:bg-slate-700 text-slate-300 transition-colors"
-                            title="Download PDF"
-                          >
-                            <Download className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => startEditing(inv)}
-                            className="p-1.5 rounded-lg border border-slate-700 bg-slate-800/70 hover:bg-slate-700 text-slate-300 transition-colors"
-                            title="Edit Invoice"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                          </button>
+
+                      {/* Actions Toolbar */}
+                      <td className="block md:table-cell md:py-4 md:px-5 md:text-center pt-2 md:pt-0 border-t border-slate-800/60 md:border-0">
+                        <div className="flex items-center justify-end md:justify-center gap-2">
                           {inv.status !== 'PAID' && (
                             <button
                               onClick={() => handleMarkAsPaid(inv.id)}
-                              className="px-2 py-1 rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 text-[10px] font-mono font-bold transition-colors inline-flex items-center gap-1"
+                              className="flex-1 md:flex-initial px-3.5 py-2 md:py-1 rounded-xl md:rounded-lg border border-emerald-500/30 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 text-xs md:text-[10px] font-mono font-bold transition-colors inline-flex items-center justify-center gap-1.5 active:scale-95"
                             >
-                              <Check className="w-3 h-3" />
-                              Paid
+                              <Check className="w-3.5 h-3.5" />
+                              <span>Paid</span>
                             </button>
                           )}
+                          <button
+                            onClick={() => copyLink(inv.id)}
+                            className="p-2 md:p-1.5 rounded-xl md:rounded-lg border border-slate-700 bg-slate-800/70 hover:bg-slate-700 text-slate-300 transition-colors active:scale-95"
+                            title="Copy Public Link"
+                          >
+                            <Copy className="w-4 h-4 md:w-3.5 md:h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => generateInvoicePDF(inv)}
+                            className="p-2 md:p-1.5 rounded-xl md:rounded-lg border border-slate-700 bg-slate-800/70 hover:bg-slate-700 text-slate-300 transition-colors active:scale-95"
+                            title="Download PDF"
+                          >
+                            <Download className="w-4 h-4 md:w-3.5 md:h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => startEditing(inv)}
+                            className="p-2 md:p-1.5 rounded-xl md:rounded-lg border border-slate-700 bg-slate-800/70 hover:bg-slate-700 text-slate-300 transition-colors active:scale-95"
+                            title="Edit Invoice"
+                          >
+                            <Edit3 className="w-4 h-4 md:w-3.5 md:h-3.5" />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -484,50 +525,53 @@ export const AdminInvoices: React.FC = () => {
                   </button>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   {items.map((item, index) => (
-                    <div key={index} className="flex gap-2 items-center bg-slate-950/60 p-2.5 rounded-lg border border-slate-800">
-                      <div className="flex-1">
+                    <div key={index} className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
+                      <div className="flex-1 w-full">
                         <input
                           type="text"
                           required
                           placeholder="Description (e.g. Forensics Masterclass Session)"
                           value={item.description}
                           onChange={(e) => updateItem(index, 'description', e.target.value)}
-                          className="w-full bg-slate-900 border border-slate-800 rounded-md px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-[#C89630]"
+                          className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-[#C89630]"
                         />
                       </div>
-                      <div className="w-20">
-                        <input
-                          type="number"
-                          min="1"
-                          required
-                          placeholder="Qty"
-                          value={item.quantity}
-                          onChange={(e) => updateItem(index, 'quantity', Number(e.target.value))}
-                          className="w-full bg-slate-900 border border-slate-800 rounded-md px-2 py-1.5 text-xs text-center text-slate-100 focus:outline-none focus:border-[#C89630]"
-                        />
+                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <div className="w-20 sm:w-20">
+                          <input
+                            type="number"
+                            min="1"
+                            required
+                            placeholder="Qty"
+                            value={item.quantity}
+                            onChange={(e) => updateItem(index, 'quantity', Number(e.target.value))}
+                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-center text-slate-100 focus:outline-none focus:border-[#C89630]"
+                          />
+                        </div>
+                        <div className="flex-1 sm:w-28">
+                          <input
+                            type="number"
+                            min="0"
+                            required
+                            placeholder="Unit KES"
+                            value={item.unitPrice}
+                            onChange={(e) => updateItem(index, 'unitPrice', Number(e.target.value))}
+                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-right text-slate-100 focus:outline-none focus:border-[#C89630]"
+                          />
+                        </div>
+                        {items.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeItem(index)}
+                            className="p-1.5 text-slate-400 hover:text-rose-400 transition-colors shrink-0"
+                            title="Remove Line"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
-                      <div className="w-28">
-                        <input
-                          type="number"
-                          min="0"
-                          required
-                          placeholder="Unit KES"
-                          value={item.unitPrice}
-                          onChange={(e) => updateItem(index, 'unitPrice', Number(e.target.value))}
-                          className="w-full bg-slate-900 border border-slate-800 rounded-md px-2.5 py-1.5 text-xs text-right text-slate-100 focus:outline-none focus:border-[#C89630]"
-                        />
-                      </div>
-                      {items.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeItem(index)}
-                          className="p-1.5 text-slate-500 hover:text-rose-400 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -668,47 +712,50 @@ export const AdminInvoices: React.FC = () => {
                 </button>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 {items.map((item, index) => (
-                  <div key={index} className="flex gap-2 items-center bg-slate-950/60 p-2.5 rounded-lg border border-slate-800">
-                    <div className="flex-1">
+                  <div key={index} className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
+                    <div className="flex-1 w-full">
                       <input
                         type="text"
                         required
                         value={item.description}
                         onChange={(e) => updateItem(index, 'description', e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-800 rounded-md px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-[#C89630]"
+                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-[#C89630]"
                       />
                     </div>
-                    <div className="w-20">
-                      <input
-                        type="number"
-                        min="1"
-                        required
-                        value={item.quantity}
-                        onChange={(e) => updateItem(index, 'quantity', Number(e.target.value))}
-                        className="w-full bg-slate-900 border border-slate-800 rounded-md px-2 py-1.5 text-xs text-center text-slate-100 focus:outline-none focus:border-[#C89630]"
-                      />
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                      <div className="w-20 sm:w-20">
+                        <input
+                          type="number"
+                          min="1"
+                          required
+                          value={item.quantity}
+                          onChange={(e) => updateItem(index, 'quantity', Number(e.target.value))}
+                          className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-center text-slate-100 focus:outline-none focus:border-[#C89630]"
+                        />
+                      </div>
+                      <div className="flex-1 sm:w-28">
+                        <input
+                          type="number"
+                          min="0"
+                          required
+                          value={item.unitPrice}
+                          onChange={(e) => updateItem(index, 'unitPrice', Number(e.target.value))}
+                          className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-right text-slate-100 focus:outline-none focus:border-[#C89630]"
+                        />
+                      </div>
+                      {items.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeItem(index)}
+                          className="p-1.5 text-slate-400 hover:text-rose-400 transition-colors shrink-0"
+                          title="Remove Line"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
-                    <div className="w-28">
-                      <input
-                        type="number"
-                        min="0"
-                        required
-                        value={item.unitPrice}
-                        onChange={(e) => updateItem(index, 'unitPrice', Number(e.target.value))}
-                        className="w-full bg-slate-900 border border-slate-800 rounded-md px-2.5 py-1.5 text-xs text-right text-slate-100 focus:outline-none focus:border-[#C89630]"
-                      />
-                    </div>
-                    {items.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeItem(index)}
-                        className="p-1.5 text-slate-500 hover:text-rose-400 transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
                   </div>
                 ))}
               </div>
