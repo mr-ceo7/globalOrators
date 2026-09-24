@@ -4,7 +4,7 @@ import QRCode from 'qrcode';
 import { GOP_BILLING_CONFIG } from '../config/company';
 import { api } from './apiClient';
 
-const PAYMENT_BACKEND_URL = import.meta.env.VITE_PAYMENT_BACKEND_URL || 'https://uon-smart-backend.onrender.com';
+const PAYMENT_BACKEND_URL = import.meta.env.VITE_PAYMENT_BACKEND_URL || 'https://payment-backend-0eo0.onrender.com';
 
 export interface InvoiceItem {
   description: string;
@@ -33,14 +33,19 @@ export interface Invoice {
 }
 
 // ─── API CALLS ─────────────────────────────────────────────────────
-// Public invoice views and payments go straight to the payment backend. Admin calls (create,
-// list, edit, change status, AI drafting) go through the Global Orators API, which checks the
-// head coach and holds the payment backend's company key server-side.
+// Public invoice views and payments go straight to the payment backend (with local reverse-proxy fallback).
+// Admin calls go through the Global Orators API proxy.
 
 export const fetchInvoice = async (id: string): Promise<Invoice> => {
-  const res = await fetch(`${PAYMENT_BACKEND_URL}/api/invoices/${id}`);
-  if (!res.ok) throw new Error('Invoice not found');
-  return res.json();
+  try {
+    const res = await fetch(`${PAYMENT_BACKEND_URL}/api/invoices/${encodeURIComponent(id)}`);
+    if (res.ok) return await res.json();
+  } catch (err) {
+    console.warn('Direct payment backend invoice fetch failed, falling back to local proxy:', err);
+  }
+  const fallbackRes = await fetch(`/api/invoices/${encodeURIComponent(id)}`);
+  if (!fallbackRes.ok) throw new Error('Invoice not found');
+  return fallbackRes.json();
 };
 
 export const createInvoice = async (data: {
@@ -60,16 +65,26 @@ export const listInvoices = async (filters?: { status?: string }): Promise<Invoi
 };
 
 export const payInvoice = async (invoiceId: string, phone: string) => {
-  const res = await fetch(`${PAYMENT_BACKEND_URL}/api/invoices/${invoiceId}/pay`, {
+  try {
+    const res = await fetch(`${PAYMENT_BACKEND_URL}/api/invoices/${encodeURIComponent(invoiceId)}/pay`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone }),
+    });
+    if (res.ok) return await res.json();
+  } catch (err) {
+    console.warn('Direct payment backend pay failed, falling back to local proxy:', err);
+  }
+  const fallbackRes = await fetch(`/api/invoices/${encodeURIComponent(invoiceId)}/pay`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ phone }),
   });
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error || 'Payment failed');
+  if (!fallbackRes.ok) {
+    const err = await fallbackRes.json().catch(() => ({}));
+    throw new Error((err as { error?: string }).error || 'Payment failed');
   }
-  return res.json();
+  return fallbackRes.json();
 };
 
 export const updateInvoice = async (id: string, data: {

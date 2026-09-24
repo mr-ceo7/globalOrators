@@ -19,7 +19,7 @@ import {
   ShieldCheck
 } from 'lucide-react';
 
-const PAYMENT_BACKEND_URL = import.meta.env.VITE_PAYMENT_BACKEND_URL || 'https://uon-smart-backend.onrender.com';
+const PAYMENT_BACKEND_URL = import.meta.env.VITE_PAYMENT_BACKEND_URL || 'https://payment-backend-0eo0.onrender.com';
 
 interface InvoicePageProps {
   invoiceId?: string;
@@ -82,7 +82,11 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
     if (payStep !== 'waiting' || !transactionId) return;
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`${PAYMENT_BACKEND_URL}/api/transaction-status/${transactionId}`);
+        let res = await fetch(`${PAYMENT_BACKEND_URL}/api/transaction-status/${encodeURIComponent(transactionId)}`).catch(() => null);
+        if (!res || !res.ok) {
+          res = await fetch(`/api/transaction-status/${encodeURIComponent(transactionId)}`).catch(() => null);
+        }
+        if (!res || !res.ok) return;
         const data = await res.json();
         if (data.status === 'COMPLETED') {
           setPayStep('paid');
