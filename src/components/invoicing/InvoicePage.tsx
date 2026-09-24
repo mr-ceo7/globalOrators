@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   fetchInvoice, 
   payInvoice, 
@@ -17,7 +17,6 @@ import {
   AlertCircle,
   ExternalLink,
   ShieldCheck,
-  Mail,
   Check
 } from 'lucide-react';
 
@@ -66,6 +65,28 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
       });
   }, [id]);
 
+  const autoEmailedRef = useRef(false);
+
+  // Automatically dispatch email receipt when invoice is confirmed paid
+  useEffect(() => {
+    if (payStep !== 'paid' || !invoice?.id || autoEmailedRef.current) return;
+    const targetEmail = invoice.clientEmail;
+    if (!targetEmail || !targetEmail.includes('@')) return;
+
+    autoEmailedRef.current = true;
+    setEmailSending(true);
+    sendInvoiceReceipt(invoice.id, targetEmail)
+      .then((res) => {
+        setEmailStatus(res.message || `Receipt emailed automatically to ${targetEmail}`);
+      })
+      .catch((err) => {
+        console.warn('Auto receipt email dispatch failed:', err);
+      })
+      .finally(() => {
+        setEmailSending(false);
+      });
+  }, [payStep, invoice?.id, invoice?.clientEmail]);
+
   // Check URL query parameters for return from Royal Mint gateway or Paystack
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -75,9 +96,14 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
     if (status === 'cancelled') {
       setPayError('Payment was cancelled.');
       window.history.replaceState({}, '', window.location.pathname);
-    } else if (txnId) {
-      setTransactionId(txnId);
-      setPayStep('waiting');
+    } else if (status === 'success' || txnId) {
+      if (txnId) setTransactionId(txnId);
+      if (status === 'success') {
+        setPayStep('paid');
+        setInvoice(prev => prev ? { ...prev, status: 'PAID', paidAt: new Date().toISOString(), transactionId: txnId || prev.transactionId } : prev);
+      } else {
+        setPayStep('waiting');
+      }
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, []);
@@ -168,25 +194,6 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
       paymentMethod: 'Online Settlement',
       phone: invoice.clientPhone || 'N/A'
     });
-  };
-
-  const handleEmailReceipt = async () => {
-    if (!invoice) return;
-    const targetEmail = invoice.clientEmail;
-    if (!targetEmail || !targetEmail.includes('@')) {
-      setEmailStatus('No client email address is registered for this invoice.');
-      return;
-    }
-    setEmailSending(true);
-    setEmailStatus(null);
-    try {
-      const res = await sendInvoiceReceipt(invoice.id, targetEmail);
-      setEmailStatus(res.message || `Receipt dispatched to ${targetEmail}`);
-    } catch (err: any) {
-      setEmailStatus(err.message || 'Failed to email receipt.');
-    } finally {
-      setEmailSending(false);
-    }
   };
 
   const handlePrint = () => window.print();
@@ -427,23 +434,6 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
                       Download Payment Receipt
                     </button>
                     <button
-                      onClick={handleEmailReceipt}
-                      disabled={emailSending}
-                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-mono text-xs rounded-xl transition-colors border border-slate-700 disabled:opacity-50 active:scale-95"
-                    >
-                      {emailSending ? (
-                        <>
-                          <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-gold" />
-                          <span>Dispatching Receipt...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Mail className="w-3.5 h-3.5 text-brand-gold" />
-                          <span>Email Receipt</span>
-                        </>
-                      )}
-                    </button>
-                    <button
                       onClick={handleDownloadPDF}
                       className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 font-mono text-xs rounded-xl transition-colors border border-slate-800 active:scale-95"
                     >
@@ -451,6 +441,13 @@ export const InvoicePage: React.FC<InvoicePageProps> = ({ invoiceId }) => {
                       Invoice PDF
                     </button>
                   </div>
+
+                  {emailSending && (
+                    <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 text-slate-300 text-xs font-mono max-w-md mx-auto">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-gold shrink-0" />
+                      <span>Emailing receipt automatically to {invoice.clientEmail}...</span>
+                    </div>
+                  )}
 
                   {emailStatus && (
                     <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900/90 border border-slate-800 text-slate-200 text-xs font-mono max-w-md mx-auto">
