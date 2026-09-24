@@ -130,6 +130,13 @@ async def draft_invoice(req: DraftRequest, _: User = Depends(require_head_coach)
     return {k: v for k, v in parsed.items() if k in allowed}
 
 
+@router.get("/{invoice_id}")
+async def get_invoice(
+    invoice_id: str = Path(..., pattern=INVOICE_ID_PATTERN),
+):
+    return await _forward("GET", f"/api/invoices/{invoice_id}")
+
+
 @router.put("/{invoice_id}")
 async def update_invoice(
     req: InvoiceWrite,
@@ -146,3 +153,19 @@ async def update_invoice_status(
     _: User = Depends(require_head_coach),
 ):
     return await _forward("PATCH", f"/api/invoices/{invoice_id}", body=req.model_dump())
+
+
+@router.post("/{invoice_id}/pay")
+async def pay_invoice(
+    invoice_id: str = Path(..., pattern=INVOICE_ID_PATTERN),
+    body: Optional[Dict[str, Any]] = None,
+):
+    return await _forward("POST", f"/api/invoices/{invoice_id}/pay", body=body)
+
+
+@router.post("/{invoice_id}/send-receipt")
+async def send_invoice_receipt(
+    invoice_id: str = Path(..., pattern=INVOICE_ID_PATTERN),
+    body: Optional[Dict[str, Any]] = None,
+):
+    return await _forward("POST", f"/api/invoices/{invoice_id}/send-receipt", body=body)

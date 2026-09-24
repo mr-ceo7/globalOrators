@@ -11,14 +11,17 @@ import {
   Moon,
   Mic,
   ScrollText,
-  Globe
+  Globe,
+  Receipt,
+  ShieldCheck,
+  LogOut
 } from 'lucide-react';
 
 import { useApp } from '../../context/AppContext';
 import { GlobalOratorsLogo } from '../common/GlobalOratorsLogo';
 import { OratorAvatar } from '../common/OratorAvatar';
 import { localDateString } from '../../utils/date';
-import { isHeadCoach } from '../../utils/roles';
+import { isHeadCoach, getStoredUser } from '../../utils/roles';
 
 
 interface HeaderProps {
@@ -48,7 +51,8 @@ export const Header: React.FC<HeaderProps> = ({
     theme,
     toggleTheme,
     setCurrentPortal,
-    showToast
+    showToast,
+    logout
   } = useApp();
 
 
@@ -422,14 +426,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Mobile Profile Settings Menu Trigger */}
         <div className="relative md:hidden">
           {(() => {
-            const user = (() => {
-              try {
-                const stored = localStorage.getItem('globalorators_user') || localStorage.getItem('nubianfit_user');
-                return stored ? JSON.parse(stored) : null;
-              } catch {
-                return null;
-              }
-            })();
+            const user = getStoredUser();
             const headCoach = isHeadCoach(user);
             const coachName = user?.full_name || (headCoach ? 'Head Coach Qassim' : 'Faculty Coach');
             const coachTitle = headCoach ? 'Head Speech & Debate Coach' : 'Faculty Coach';
@@ -456,63 +453,117 @@ export const Header: React.FC<HeaderProps> = ({
                       <div className="text-xs font-bold text-white">{coachName}</div>
                       <div className="text-[10px] text-slate-400">{coachTitle}</div>
                     </div>
-              
-              {/* Theme Toggle (Mobile) */}
-              <button
-                onClick={() => {
-                  toggleTheme();
-                  setIsMobileMenuOpen(false);
-                }}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs text-slate-200 hover:text-white hover:bg-slate-800 transition-colors"
-              >
-                <span className="font-semibold">App Theme</span>
-                <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 capitalize">
-                  {theme} mode
-                </span>
-              </button>
 
-              {/* Orators App Portal (Mobile) */}
-              <button
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  setCurrentPortal('speaker_app');
-                }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs text-slate-200 hover:text-white hover:bg-slate-800 transition-colors"
-              >
-                <Mic className="h-4 w-4 shrink-0 text-emerald-400" />
-                <span className="font-semibold">Orators App</span>
-              </button>
+                    {/* Head Coach Primary Navigation */}
+                    {headCoach && (
+                      <>
+                        <button
+                          id="mobile-profile-invoices"
+                          onClick={() => {
+                            setActiveTab('invoices');
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs transition-colors ${
+                            activeTab === 'invoices'
+                              ? 'bg-slate-800 text-brand-gold font-bold'
+                              : 'text-slate-200 hover:text-white hover:bg-slate-800'
+                          }`}
+                        >
+                          <Receipt className="h-4 w-4 shrink-0 text-brand-gold" />
+                          <span className="font-semibold">Invoices & Billing</span>
+                        </button>
 
-              {/* Public Site (Mobile) */}
-              <button
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  setCurrentPortal('landing');
-                }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs text-slate-200 hover:text-white hover:bg-slate-800 transition-colors"
-              >
-                <Globe className="h-4 w-4 shrink-0 text-emerald-400" />
-                <span className="font-semibold">Public Site</span>
-              </button>
+                        <button
+                          id="mobile-profile-coaches"
+                          onClick={() => {
+                            setActiveTab('coaches');
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs transition-colors ${
+                            activeTab === 'coaches'
+                              ? 'bg-slate-800 text-emerald-400 font-bold'
+                              : 'text-slate-200 hover:text-white hover:bg-slate-800'
+                          }`}
+                        >
+                          <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-400" />
+                          <span className="font-semibold">Faculty Coaches</span>
+                        </button>
 
-              {/* Install PWA (Mobile) */}
-              {onOpenInstallModal && (
-                <button
-                  onClick={() => {
-                    setIsMobileMenuOpen(false);
-                    onOpenInstallModal();
-                  }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs text-slate-200 hover:text-white hover:bg-slate-800 transition-colors"
-                >
-                  <Download className="h-4 w-4 shrink-0 text-emerald-400" />
-                  <span className="font-semibold">Install App</span>
-                </button>
-              )}
-            </div>
-          )}
-        </>
-      );
-    })()}
+                        <div className="h-px bg-slate-800/80 my-1" />
+                      </>
+                    )}
+
+                    {/* Theme Toggle (Mobile) */}
+                    <button
+                      onClick={() => {
+                        toggleTheme();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs text-slate-200 hover:text-white hover:bg-slate-800 transition-colors"
+                    >
+                      <span className="font-semibold">App Theme</span>
+                      <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 capitalize">
+                        {theme} mode
+                      </span>
+                    </button>
+
+                    {/* Orators App Portal (Mobile) */}
+                    <button
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        setCurrentPortal('speaker_app');
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs text-slate-200 hover:text-white hover:bg-slate-800 transition-colors"
+                    >
+                      <Mic className="h-4 w-4 shrink-0 text-emerald-400" />
+                      <span className="font-semibold">Orators App</span>
+                    </button>
+
+                    {/* Public Site (Mobile) */}
+                    <button
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        setCurrentPortal('landing');
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs text-slate-200 hover:text-white hover:bg-slate-800 transition-colors"
+                    >
+                      <Globe className="h-4 w-4 shrink-0 text-emerald-400" />
+                      <span className="font-semibold">Public Site</span>
+                    </button>
+
+                    {/* Install PWA (Mobile) */}
+                    {onOpenInstallModal && (
+                      <button
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          onOpenInstallModal();
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs text-slate-200 hover:text-white hover:bg-slate-800 transition-colors"
+                      >
+                        <Download className="h-4 w-4 shrink-0 text-emerald-400" />
+                        <span className="font-semibold">Install App</span>
+                      </button>
+                    )}
+
+                    {/* Sign Out (Mobile) */}
+                    <div className="h-px bg-slate-800/80 my-1" />
+                    <button
+                      id="mobile-profile-logout"
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        logout();
+                        showToast('Signed out of Coach App.');
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-950/30 transition-colors"
+                    >
+                      <LogOut className="h-4 w-4 shrink-0" />
+                      <span className="font-semibold">Sign Out</span>
+                    </button>
+                  </div>
+                )}
+              </>
+            );
+          })()}
   </div>
 
       </div>

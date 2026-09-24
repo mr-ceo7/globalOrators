@@ -58,10 +58,6 @@
       "destination": "/api/webhooks/:path*"
     },
     {
-      "source": "/api/invoices/inv_:path*",
-      "destination": "https://uon-smart-backend.onrender.com/api/invoices/inv_:path*"
-    },
-    {
       "source": "/api/transaction-status/:path*",
       "destination": "https://uon-smart-backend.onrender.com/api/transaction-status/:path*"
     },

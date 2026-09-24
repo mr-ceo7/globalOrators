@@ -11,7 +11,8 @@ import {
   Download,
   UserPlus,
   Play,
-  ShieldCheck
+  ShieldCheck,
+  Receipt
 } from 'lucide-react';
 
 import { useApp, NavigationTab } from '../../context/AppContext';
@@ -350,6 +351,26 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                     <div>
                       <span className="text-xs font-bold text-white block">Faculty Coaches</span>
                       <span className="text-[11px] text-slate-400">Invite & manage coaches</span>
+                    </div>
+                  </button>
+                )}
+
+                {/* Invoices & Billing (head coach only) */}
+                {headCoach && (
+                  <button
+                    id="mobile-quick-action-invoices"
+                    onClick={() => {
+                      setIsActionSheetOpen(false);
+                      handleTabClick('invoices');
+                    }}
+                    className="p-3.5 rounded-2xl bg-slate-800/50 border border-slate-700/40 flex flex-col items-start gap-2 text-left active:scale-[0.97] transition-transform"
+                  >
+                    <div className="p-2 rounded-xl bg-amber-900/40 text-brand-gold">
+                      <Receipt className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold text-white block">Invoices & Billing</span>
+                      <span className="text-[11px] text-slate-400">Retainers & fee desk</span>
                     </div>
                   </button>
                 )}
