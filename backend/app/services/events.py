@@ -175,7 +175,7 @@ class SSEManager:
                 # If targeted by coach_id
                 if target_coach_id and u_role == "coach":
                     # Head coaches also receive coach updates
-                    is_head = (u_id == "coach-1" or u_id == target_coach_id)
+                    is_head = (u_id in ("coach-1", "coach-test-admin") or u_id == target_coach_id or meta.get("is_head_coach", False))
                     if u_id != target_coach_id and not is_head:
                         continue
 

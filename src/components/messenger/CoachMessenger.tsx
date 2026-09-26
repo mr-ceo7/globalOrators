@@ -26,13 +26,18 @@ import {
   Sparkles,
   PhoneCall,
   Radio,
-  Users
+  Users,
+  Image as ImageIcon,
+  Download,
+  Maximize2
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { ChatMessage, Client } from '../../types';
 import { LiveRehearsalRoom } from '../live/LiveRehearsalRoom';
 import { OratorAvatar } from '../common/OratorAvatar';
 import { localDateString, formatMessageTime } from '../../utils/date';
+import { openOrDownloadFile, readFileAsDataUrl, isImageFile } from '../../utils/fileViewer';
+import { WhatsAppImageLightbox } from './WhatsAppImageLightbox';
 
 // WhatsApp Standard Quick Reactions
 const WHATSAPP_REACTIONS = ['👍', '🎙️', '🔥', '👏', '💡', '❤️'];
@@ -84,8 +89,48 @@ export const CoachMessenger: React.FC = () => {
   const playbackTimerRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
+  const acousticOscRef = useRef<any>(null);
+
+  const stopAcousticPlayback = () => {
+    try {
+      if (acousticOscRef.current) {
+        acousticOscRef.current.stop();
+        acousticOscRef.current.disconnect();
+        acousticOscRef.current = null;
+      }
+    } catch {}
+  };
+
+  const playSyntheticSpeechTone = (durationSec: number) => {
+    try {
+      stopAcousticPlayback();
+      const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(140, ctx.currentTime);
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + durationSec);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + durationSec);
+      acousticOscRef.current = osc;
+    } catch {}
+  };
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
   const typingDebounceTimeoutRef = useRef<any>(null);
+
+  // Staged image and Lightbox modal state
+  const [stagedImage, setStagedImage] = useState<{ file: File; dataUrl: string; name: string; size: string } | null>(null);
+  const [activeLightboxImage, setActiveLightboxImage] = useState<{ url: string; fileName: string; senderName: string; timestamp?: string; caption?: string } | null>(null);
+  const [isDraggingFile, setIsDraggingFile] = useState<boolean>(false);
 
   // Active client conversation
   const activeClient = clients.find(c => c.id === selectedClientId) || clients[0];
@@ -138,12 +183,35 @@ export const CoachMessenger: React.FC = () => {
     );
   }, [activeMessages, inChatSearch]);
 
-  // Mark messages as read when active client changes
+  // Mark messages as read when active client changes AND tab/window is visible AND has unread incoming messages
   useEffect(() => {
-    if (activeClient?.id && markMessagesRead) {
-      markMessagesRead(activeClient.id);
+    if (!activeClient?.id || !markMessagesRead) return;
+
+    const tryMarkRead = () => {
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
+        return;
+      }
+      const hasUnread = activeMessages.some(m => !m.isRead && m.sender === 'client');
+      if (hasUnread) {
+        markMessagesRead(activeClient.id);
+      }
+    };
+
+    tryMarkRead();
+
+    const handleVisibilityOrFocus = () => {
+      tryMarkRead();
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('focus', handleVisibilityOrFocus);
+      document.addEventListener('visibilitychange', handleVisibilityOrFocus);
+      return () => {
+        window.removeEventListener('focus', handleVisibilityOrFocus);
+        document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+      };
     }
-  }, [activeClient?.id, activeMessages.length, markMessagesRead]);
+  }, [activeClient?.id, activeMessages, markMessagesRead]);
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -169,7 +237,7 @@ export const CoachMessenger: React.FC = () => {
       }
       typingDebounceTimeoutRef.current = setTimeout(() => {
         sendTypingIndicator(activeClient.id, false);
-      }, 3000);
+      }, 2500);
     } else {
       if (typingDebounceTimeoutRef.current) {
         clearTimeout(typingDebounceTimeoutRef.current);
@@ -178,9 +246,51 @@ export const CoachMessenger: React.FC = () => {
     }
   };
 
-  // Send standard text or quoted reply
+  // Send standard text, quoted reply, or staged photo
   const handleSendText = async (textToSend?: string) => {
-    if (isSending) return;
+    if (isSending || !activeClient) return;
+
+    if (stagedImage) {
+      if (typingDebounceTimeoutRef.current) {
+        clearTimeout(typingDebounceTimeoutRef.current);
+      }
+      if (sendTypingIndicator && activeClient?.id) {
+        sendTypingIndicator(activeClient.id, false);
+      }
+
+      setIsSending(true);
+      const captionText = (textToSend || inputMessage).trim();
+      setInputMessage('');
+      const imgPayload = { ...stagedImage };
+      setStagedImage(null);
+      setReplyingToMessage(null);
+      setShowAttachmentMenu(false);
+
+      try {
+        await sendMessage({
+          clientId: activeClient.id,
+          sender: 'coach',
+          messageType: 'image',
+          text: captionText,
+          content: captionText,
+          attachmentData: {
+            type: 'image',
+            title: imgPayload.name,
+            fileName: imgPayload.name,
+            fileSize: imgPayload.size,
+            url: imgPayload.dataUrl,
+            imageUrl: imgPayload.dataUrl,
+            caption: captionText
+          }
+        });
+      } catch (err) {
+        console.error('Failed to send image:', err);
+      } finally {
+        setIsSending(false);
+      }
+      return;
+    }
+
     const text = (textToSend || inputMessage).trim();
     if (!text || !activeClient) return;
 
@@ -237,10 +347,17 @@ export const CoachMessenger: React.FC = () => {
       if (audioPlayerRef.current) {
         audioPlayerRef.current.pause();
       }
+      stopAcousticPlayback();
       clearInterval(playbackTimerRef.current);
       clearInterval(recordingTimerRef.current);
+      if (typingDebounceTimeoutRef.current) {
+        clearTimeout(typingDebounceTimeoutRef.current);
+      }
+      if (activeClient?.id && sendTypingIndicator) {
+        sendTypingIndicator(activeClient.id, false);
+      }
     };
-  }, []);
+  }, [activeClient?.id, sendTypingIndicator]);
 
   // Voice Note Recording with Ref-based Duration (prevents stale closure bug)
   const startRecording = async () => {
@@ -251,13 +368,23 @@ export const CoachMessenger: React.FC = () => {
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+      const preferredMime = (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported)
+        ? (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+            ? 'audio/webm;codecs=opus'
+            : MediaRecorder.isTypeSupported('audio/webm')
+              ? 'audio/webm'
+              : MediaRecorder.isTypeSupported('audio/mp4')
+                ? 'audio/mp4'
+                : '')
+        : '';
+      const options = preferredMime ? { mimeType: preferredMime } : undefined;
+      const mediaRecorder = new MediaRecorder(stream, options);
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
       recordingStartTimeRef.current = Date.now();
 
       mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
+        if (event.data && event.data.size > 0) {
           audioChunksRef.current.push(event.data);
         }
       };
@@ -265,9 +392,21 @@ export const CoachMessenger: React.FC = () => {
       mediaRecorder.onstop = () => {
         const elapsedSec = Math.max(1, Math.round((Date.now() - recordingStartTimeRef.current) / 1000));
         const finalDurationSec = elapsedSec > 0 ? elapsedSec : (recordingDurationRef.current || 15);
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        const audioUrl = URL.createObjectURL(audioBlob);
-        sendVoiceNote(audioUrl, finalDurationSec);
+        const resolvedMime = mediaRecorder.mimeType || preferredMime || 'audio/webm';
+        const audioBlob = new Blob(audioChunksRef.current, { type: resolvedMime });
+
+        // Convert audio blob to permanent Base64 Data URL so it is playable across devices and persistent
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64Audio = reader.result as string;
+          sendVoiceNote(base64Audio, finalDurationSec);
+        };
+        reader.onerror = () => {
+          const fallbackUrl = URL.createObjectURL(audioBlob);
+          sendVoiceNote(fallbackUrl, finalDurationSec);
+        };
+        reader.readAsDataURL(audioBlob);
+
         stream.getTracks().forEach(track => track.stop());
       };
 
@@ -370,6 +509,7 @@ export const CoachMessenger: React.FC = () => {
       if (audioPlayerRef.current) {
         audioPlayerRef.current.pause();
       }
+      stopAcousticPlayback();
       clearInterval(playbackTimerRef.current);
       setIsPlayingAudio(null);
       return;
@@ -378,13 +518,15 @@ export const CoachMessenger: React.FC = () => {
     if (audioPlayerRef.current) {
       audioPlayerRef.current.pause();
     }
+    stopAcousticPlayback();
     clearInterval(playbackTimerRef.current);
 
     setIsPlayingAudio(msg.id);
     setPlaybackProgress(0);
 
     const audioUrl = getVoiceAudioUrl(msg);
-    if (audioUrl) {
+    const isPlayableUrl = Boolean(audioUrl && !audioUrl.startsWith('blob:'));
+    if (isPlayableUrl && audioUrl) {
       if (!audioPlayerRef.current) {
         audioPlayerRef.current = new Audio();
       }
@@ -415,10 +557,13 @@ export const CoachMessenger: React.FC = () => {
     const intervalMs = 100;
     const stepPercent = (intervalMs / (effectiveSecs * 1000)) * 100;
 
+    playSyntheticSpeechTone(effectiveSecs);
+
     let current = 0;
     playbackTimerRef.current = setInterval(() => {
       current += stepPercent;
       if (current >= 100) {
+        stopAcousticPlayback();
         clearInterval(playbackTimerRef.current);
         setIsPlayingAudio(null);
         setPlaybackProgress(0);
@@ -469,24 +614,109 @@ export const CoachMessenger: React.FC = () => {
     setShowAttachmentMenu(false);
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !activeClient) return;
 
-    sendMessage({
-      clientId: activeClient.id,
-      sender: 'coach',
-      messageType: 'document',
-      content: `Attached speech document: ${file.name}`,
-      attachmentData: {
-        type: 'document',
-        title: file.name,
-        fileName: file.name,
-        fileSize: `${(file.size / 1024).toFixed(1)} KB`
-      }
-    });
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      sendMessage({
+        clientId: activeClient.id,
+        sender: 'coach',
+        messageType: 'document',
+        text: `Attached speech document: ${file.name}`,
+        content: `Attached speech document: ${file.name}`,
+        attachmentData: {
+          type: 'document',
+          title: file.name,
+          fileName: file.name,
+          fileSize: `${(file.size / 1024).toFixed(1)} KB`,
+          fileUrl: dataUrl,
+          url: dataUrl
+        }
+      });
+    } catch (err) {
+      console.error('Failed to read document:', err);
+    }
     setShowAttachmentMenu(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !activeClient) return;
+
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      setStagedImage({
+        file,
+        dataUrl,
+        name: file.name,
+        size: `${(file.size / 1024).toFixed(1)} KB`
+      });
+    } catch (err) {
+      console.error('Failed to read image:', err);
+    }
+    setShowAttachmentMenu(false);
+    if (imageInputRef.current) imageInputRef.current.value = '';
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith('image/')) {
+        const file = items[i].getAsFile();
+        if (file) {
+          readFileAsDataUrl(file).then(dataUrl => {
+            setStagedImage({
+              file,
+              dataUrl,
+              name: `Pasted_Image_${new Date().toISOString().slice(11, 19).replace(/:/g, '-')}.png`,
+              size: `${(file.size / 1024).toFixed(1)} KB`
+            });
+          });
+          e.preventDefault();
+          break;
+        }
+      }
+    }
+  };
+
+  const handleDropFile = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingFile(false);
+    const file = e.dataTransfer.files?.[0];
+    if (!file || !activeClient) return;
+
+    if (file.type.startsWith('image/')) {
+      readFileAsDataUrl(file).then(dataUrl => {
+        setStagedImage({
+          file,
+          dataUrl,
+          name: file.name,
+          size: `${(file.size / 1024).toFixed(1)} KB`
+        });
+      });
+    } else {
+      readFileAsDataUrl(file).then(dataUrl => {
+        sendMessage({
+          clientId: activeClient.id,
+          sender: 'coach',
+          messageType: 'document',
+          text: `Attached speech document: ${file.name}`,
+          content: `Attached speech document: ${file.name}`,
+          attachmentData: {
+            type: 'document',
+            title: file.name,
+            fileName: file.name,
+            fileSize: `${(file.size / 1024).toFixed(1)} KB`,
+            fileUrl: dataUrl,
+            url: dataUrl
+          }
+        });
+      });
+    }
   };
 
   const handleToggleReaction = (messageId: string, emoji: string) => {
@@ -511,13 +741,22 @@ export const CoachMessenger: React.FC = () => {
 
   return (
     <div className="flex-1 min-h-0 flex flex-col md:flex-row rounded-3xl bg-slate-900/95 border border-slate-800 overflow-hidden shadow-2xl">
-      {/* Hidden file input */}
+      {/* Hidden document file input */}
       <input 
         type="file" 
         ref={fileInputRef} 
         onChange={handleFileUpload} 
         className="hidden" 
-        accept=".pdf,.doc,.docx,.txt,.mp3,.wav" 
+        accept=".pdf,.doc,.docx,.txt,.csv,.pptx,.rtf" 
+      />
+
+      {/* Hidden photo/media input */}
+      <input 
+        type="file" 
+        ref={imageInputRef} 
+        onChange={handleImageUpload} 
+        className="hidden" 
+        accept="image/*" 
       />
 
       {/* Left Sidebar: Conversations List */}
@@ -736,12 +975,15 @@ export const CoachMessenger: React.FC = () => {
               const reactions = msg.attachment?.reactions || [];
               const replyTo = msg.attachment?.replyTo;
 
+              const headCoachInDb = coaches.find(c => c.id === 'coach-1' || c.is_head_coach);
+              const defaultHeadCoachObj = headCoachInDb || { id: 'coach-1', name: 'Head Coach', role: 'Head Coach' };
+
               const msgCoach = isCoach ? (
                 (msg.coachId && coaches.find(c => c.id === msg.coachId)) ||
-                (msg.coachId === 'coach-1' || msg.coachId === 'coach-test-admin' ? { id: 'coach-1', name: 'Head Coach Qassim', role: 'Head Coach' } : null) ||
+                (msg.coachId === 'coach-1' || msg.coachId === 'coach-test-admin' ? defaultHeadCoachObj : null) ||
                 (currentCoachUser?.id === msg.coachId ? currentCoachUser : null) ||
                 currentCoachUser ||
-                { id: 'coach-1', name: 'Head Coach Qassim', role: 'Head Coach' }
+                defaultHeadCoachObj
               ) : null;
               const isHeadCoachSender = Boolean(
                 msgCoach && (
@@ -752,7 +994,7 @@ export const CoachMessenger: React.FC = () => {
                   msgCoach.name?.toLowerCase().includes('head coach')
                 )
               );
-              const msgCoachName = msgCoach?.name || 'Head Coach Qassim';
+              const msgCoachName = msgCoach?.name || defaultHeadCoachObj.name;
               const coachInitials = isHeadCoachSender ? 'HQ' : (msgCoachName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'FC');
 
               return (
@@ -854,7 +1096,7 @@ export const CoachMessenger: React.FC = () => {
                       {replyTo && (() => {
                         const replyCoach = replyTo.sender === 'coach' ? (
                           (replyTo.coachId && coaches.find(c => c.id === replyTo.coachId)) ||
-                          (replyTo.coachId === 'coach-1' ? { name: 'Head Coach Qassim' } : null) ||
+                          (replyTo.coachId === 'coach-1' ? (coaches.find(c => c.id === 'coach-1') || { name: 'Head Coach' }) : null) ||
                           currentCoachUser
                         ) : null;
                         const replyAuthor = replyTo.senderName || (replyTo.sender === 'coach' ? (replyCoach?.name || 'Faculty Coach') : activeClient.name);
@@ -953,16 +1195,82 @@ export const CoachMessenger: React.FC = () => {
                         </div>
                       )}
 
-                      {/* Document File Attachment Card */}
-                      {msg.attachment?.fileName && (
-                        <div className="mt-2 p-2.5 rounded-xl bg-black/40 border border-slate-700 flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-lg bg-slate-800 flex items-center justify-center text-emerald-400 shrink-0">
-                            <FileText className="h-4 w-4" />
+                      {/* Image Message Photo Card (WhatsApp Photo Bubble) */}
+                      {(msg.messageType === 'image' || msg.attachment?.type === 'image' || msg.attachment?.imageUrl || (msg.attachment?.url && isImageFile(msg.attachment?.fileName, msg.attachment?.fileType, msg.attachment?.url))) && (
+                        <div 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveLightboxImage({
+                              url: msg.attachment?.imageUrl || msg.attachment?.url || '',
+                              fileName: msg.attachment?.fileName || msg.attachment?.title || 'Speech_Photo.jpg',
+                              senderName: isCoach ? 'Coach Qassim' : activeClient.name,
+                              timestamp: formatMessageTime(msg.timestamp),
+                              caption: msg.text || msg.attachment?.caption
+                            });
+                          }}
+                          className="mt-1 relative overflow-hidden rounded-2xl cursor-pointer max-w-[320px] sm:max-w-[360px] border border-white/10 group shadow-md"
+                          title="Click to view full photo (WhatsApp Lightbox)"
+                        >
+                          <img
+                            src={msg.attachment?.imageUrl || msg.attachment?.url}
+                            alt={msg.attachment?.fileName || 'Attached Image'}
+                            className="w-full max-h-[320px] object-cover rounded-2xl transition-transform duration-300 group-hover:scale-102"
+                            loading="lazy"
+                          />
+                          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <div className="p-2 rounded-full bg-black/60 text-white backdrop-blur-xs flex items-center gap-1.5 text-xs font-mono">
+                              <Maximize2 className="w-4 h-4 text-emerald-400" />
+                              <span>View Photo</span>
+                            </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="font-bold text-[11px] text-white truncate">{msg.attachment.fileName}</div>
-                            <div className="text-[9px] font-mono text-slate-400">{msg.attachment.fileSize || 'PDF Document'}</div>
+                        </div>
+                      )}
+
+                      {/* Document File Attachment Card (WhatsApp Interactive Document Card) */}
+                      {(msg.attachment?.fileName || msg.attachment?.type === 'document') && msg.attachment?.type !== 'image' && !isImageFile(msg.attachment?.fileName, undefined, msg.attachment?.url) && (
+                        <div 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openOrDownloadFile(
+                              msg.attachment?.fileUrl || msg.attachment?.url || (msg.attachmentData?.fileUrl || msg.attachmentData?.url),
+                              msg.attachment?.fileName || msg.attachment?.title || 'Document.pdf',
+                              { title: msg.attachment?.title, sender: isCoach ? 'Coach' : activeClient.name }
+                            );
+                          }}
+                          className="mt-2 p-3 rounded-2xl bg-black/50 hover:bg-black/70 border border-slate-700/80 hover:border-emerald-500/50 flex items-center justify-between gap-3 cursor-pointer transition-all group shadow-sm"
+                          title="Click to open or download document"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="h-9 w-9 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0 group-hover:scale-105 transition-transform">
+                              <FileText className="h-4.5 w-4.5" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="font-bold text-xs text-white truncate group-hover:text-emerald-300 transition-colors">
+                                {msg.attachment?.fileName || msg.attachment?.title || 'Document'}
+                              </div>
+                              <div className="text-[10px] font-mono text-slate-400 flex items-center gap-1.5 mt-0.5">
+                                <span>{msg.attachment?.fileSize || 'PDF Document'}</span>
+                                <span>•</span>
+                                <span className="uppercase text-emerald-400/90 font-bold">PDF / File</span>
+                              </div>
+                            </div>
                           </div>
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openOrDownloadFile(
+                                msg.attachment?.fileUrl || msg.attachment?.url || (msg.attachmentData?.fileUrl || msg.attachmentData?.url),
+                                msg.attachment?.fileName || msg.attachment?.title || 'Document.pdf',
+                                { title: msg.attachment?.title, sender: isCoach ? 'Coach' : activeClient.name }
+                              );
+                            }}
+                            className="p-2 rounded-xl bg-slate-800 hover:bg-emerald-500 hover:text-slate-950 text-slate-300 transition-all cursor-pointer shrink-0 shadow-xs"
+                            title="Open or Download"
+                          >
+                            <Download className="w-4 h-4" />
+                          </button>
                         </div>
                       )}
 
@@ -1099,27 +1407,71 @@ export const CoachMessenger: React.FC = () => {
           <div className="p-3 sm:p-4 bg-slate-950 border-t border-slate-800 relative">
             {/* Attachment Menu Popup */}
             {showAttachmentMenu && (
-              <div className="absolute bottom-16 left-4 p-2 rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl space-y-1 text-xs animate-in slide-in-from-bottom-2 z-30">
+              <div className="absolute bottom-16 left-4 p-2 rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl space-y-1 text-xs animate-in slide-in-from-bottom-2 z-30 min-w-[220px]">
                 <button
-                  onClick={handleSendWorkoutAttachment}
-                  className="w-full px-3 py-2 rounded-xl text-left font-bold text-slate-200 hover:bg-slate-800 hover:text-emerald-400 flex items-center gap-2 transition-colors cursor-pointer"
+                  type="button"
+                  onClick={() => {
+                    imageInputRef.current?.click();
+                    setShowAttachmentMenu(false);
+                  }}
+                  className="w-full px-3 py-2 rounded-xl text-left font-bold text-slate-200 hover:bg-slate-800 hover:text-emerald-400 flex items-center gap-2.5 transition-colors cursor-pointer"
                 >
-                  <BookOpen className="h-4 w-4 text-emerald-400" />
+                  <ImageIcon className="h-4 w-4 text-emerald-400" />
+                  <span>Photos & Media</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    fileInputRef.current?.click();
+                    setShowAttachmentMenu(false);
+                  }}
+                  className="w-full px-3 py-2 rounded-xl text-left font-bold text-slate-200 hover:bg-slate-800 hover:text-amber-400 flex items-center gap-2.5 transition-colors cursor-pointer"
+                >
+                  <FileText className="h-4 w-4 text-brand-gold" />
+                  <span>Speech Document / PDF</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSendWorkoutAttachment}
+                  className="w-full px-3 py-2 rounded-xl text-left font-bold text-slate-200 hover:bg-slate-800 hover:text-cyan-400 flex items-center gap-2.5 transition-colors cursor-pointer"
+                >
+                  <BookOpen className="h-4 w-4 text-cyan-400" />
                   <span>Attach Training Protocol</span>
                 </button>
                 <button
+                  type="button"
                   onClick={handleSendFormCheckReview}
-                  className="w-full px-3 py-2 rounded-xl text-left font-bold text-slate-200 hover:bg-slate-800 hover:text-cyan-400 flex items-center gap-2 transition-colors cursor-pointer"
+                  className="w-full px-3 py-2 rounded-xl text-left font-bold text-slate-200 hover:bg-slate-800 hover:text-purple-400 flex items-center gap-2.5 transition-colors cursor-pointer"
                 >
-                  <Video className="h-4 w-4 text-cyan-400" />
+                  <Video className="h-4 w-4 text-purple-400" />
                   <span>Attach Delivery Critique</span>
                 </button>
+              </div>
+            )}
+
+            {/* WhatsApp Staged Image Preview Bar */}
+            {stagedImage && (
+              <div className="mb-2 p-2.5 rounded-2xl bg-slate-900 border border-emerald-500/40 flex items-center justify-between gap-3 animate-in slide-in-from-bottom-2">
+                <div className="flex items-center gap-3 min-w-0">
+                  <img 
+                    src={stagedImage.dataUrl} 
+                    alt={stagedImage.name} 
+                    className="h-12 w-12 rounded-xl object-cover border border-emerald-500/30 shrink-0" 
+                  />
+                  <div className="min-w-0">
+                    <div className="font-bold text-xs text-white truncate">{stagedImage.name}</div>
+                    <div className="text-[10px] font-mono text-emerald-400">
+                      {stagedImage.size} · Photo staged. Add caption and tap Send.
+                    </div>
+                  </div>
+                </div>
                 <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full px-3 py-2 rounded-xl text-left font-bold text-slate-200 hover:bg-slate-800 hover:text-amber-400 flex items-center gap-2 transition-colors cursor-pointer"
+                  type="button"
+                  onClick={() => setStagedImage(null)}
+                  className="p-1.5 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer shrink-0"
+                  title="Remove Photo"
                 >
-                  <FileText className="h-4 w-4 text-amber-400" />
-                  <span>Upload Speech Transcript / PDF</span>
+                  <X className="w-4 h-4" />
                 </button>
               </div>
             )}
@@ -1200,9 +1552,10 @@ export const CoachMessenger: React.FC = () => {
 
                 <input
                   type="text"
-                  placeholder={`Message ${activeClient.name}...`}
+                  placeholder={stagedImage ? "Add an optional photo caption..." : `Message ${activeClient.name}...`}
                   value={inputMessage}
                   onChange={handleInputChange}
+                  onPaste={handlePaste}
                   onBlur={() => {
                     if (sendTypingIndicator && activeClient?.id) {
                       sendTypingIndicator(activeClient.id, false);
@@ -1223,7 +1576,7 @@ export const CoachMessenger: React.FC = () => {
 
                 <button
                   type="submit"
-                  disabled={!inputMessage.trim() || isSending}
+                  disabled={(!inputMessage.trim() && !stagedImage) || isSending}
                   className="h-10 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 text-on-gold font-bold text-xs flex items-center gap-1.5 shadow-md transition-all cursor-pointer"
                 >
                   <span>{isSending ? 'Sending...' : 'Send'}</span>
@@ -1263,6 +1616,19 @@ export const CoachMessenger: React.FC = () => {
         <div className="flex-1 flex items-center justify-center text-slate-400 text-xs">
           Select a speaker or debater on the left to start messaging.
         </div>
+      )}
+
+      {/* WhatsApp Full-Screen Image Lightbox */}
+      {activeLightboxImage && (
+        <WhatsAppImageLightbox
+          isOpen={Boolean(activeLightboxImage)}
+          onClose={() => setActiveLightboxImage(null)}
+          imageUrl={activeLightboxImage.url}
+          fileName={activeLightboxImage.fileName}
+          senderName={activeLightboxImage.senderName}
+          timestamp={activeLightboxImage.timestamp}
+          caption={activeLightboxImage.caption}
+        />
       )}
     </div>
   );

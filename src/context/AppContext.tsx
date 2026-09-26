@@ -924,7 +924,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       },
       onTyping: (data) => {
         if (!data?.clientId || !data?.userId) return;
-        const myId = currentCoachUser?.id || activeSpeakerProfile?.id;
+        const storedUser = (() => {
+          try {
+            const u = localStorage.getItem('globalorators_user') || localStorage.getItem('nubianfit_user');
+            return u ? JSON.parse(u) : null;
+          } catch {
+            return null;
+          }
+        })();
+        const myId = currentCoachUser?.id || storedUser?.id || (activeSpeakerProfile as any)?.id;
         if (myId && data.userId === myId) return;
 
         if (typingTimeoutsRef.current[data.clientId]) {

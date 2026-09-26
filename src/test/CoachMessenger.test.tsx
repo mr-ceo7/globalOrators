@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
 import { AppProvider } from '../context/AppContext';
 import { CoachMessenger } from '../components/messenger/CoachMessenger';
+import { messagesApi } from '../services/apiClient';
 
 vi.mock('../services/apiClient', () => ({
   clearAuthSession: vi.fn(),
@@ -93,6 +94,7 @@ vi.mock('../services/apiClient', () => ({
       isRead: false
     }),
     markRead: vi.fn().mockResolvedValue({ status: 'ok', clientId: 'client-1' }),
+    sendTyping: vi.fn().mockResolvedValue({ status: 'ok', clientId: 'client-1', isTyping: true }),
     react: vi.fn().mockResolvedValue({
       id: 'msg-1',
       attachment: {
@@ -199,5 +201,25 @@ describe('CoachMessenger Component (WhatsApp-style Modern Chat)', () => {
       expect(screen.getByText(/Hello Coach, I have practiced the parliamentary/i)).toBeInTheDocument();
       expect(screen.getByText(/1 found/i)).toBeInTheDocument();
     });
+  });
+
+  test('dispatches typing indicator on input change and clears on blur', async () => {
+    render(
+      <AppProvider>
+        <CoachMessenger />
+      </AppProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText(/Message Geoffrey Anyona.../i)).toBeInTheDocument();
+    });
+
+    const input = screen.getByPlaceholderText(/Message Geoffrey Anyona.../i);
+    fireEvent.change(input, { target: { value: 'Working on your vocal pace...' } });
+
+    expect(messagesApi.sendTyping).toHaveBeenCalledWith('client-1', true);
+
+    fireEvent.blur(input);
+    expect(messagesApi.sendTyping).toHaveBeenCalledWith('client-1', false);
   });
 });

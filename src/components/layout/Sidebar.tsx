@@ -189,7 +189,7 @@ export const Sidebar: React.FC = () => {
         <div className="flex items-center gap-3">
           {(() => {
             const user = currentUser;
-            const coachName = user?.full_name || (headCoach ? 'Head Coach Qassim' : 'Faculty Coach');
+            const coachName = user?.full_name || (headCoach ? 'Head Coach' : 'Faculty Coach');
             const coachTitle = headCoach ? 'Head Speech & Debate Coach' : 'Faculty Coach';
             const initials = coachName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || (headCoach ? 'HQ' : 'FC');
 

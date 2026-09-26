@@ -332,7 +332,7 @@ async def broadcast_typing(
     coach_id = client.coach_id if client else None
 
     target_c_id = None if is_group_or_peer else body.client_id
-    target_co_id = None if is_group_or_peer else coach_id
+    target_co_id = None if is_group_or_peer else (coach_id if current_user.role != "coach" else None)
 
     try:
         asyncio.create_task(
@@ -341,7 +341,7 @@ async def broadcast_typing(
                 data={
                     "clientId": body.client_id,
                     "userId": current_user.id,
-                    "userName": current_user.full_name,
+                    "userName": current_user.full_name or ("Coach" if current_user.role == "coach" else "Speaker"),
                     "role": current_user.role,
                     "isTyping": body.is_typing
                 },

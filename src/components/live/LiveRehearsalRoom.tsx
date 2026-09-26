@@ -132,7 +132,7 @@ export const LiveRehearsalRoom: React.FC<LiveRehearsalRoomProps> = ({
       return null;
     }
   })();
-  const coachLabel = currentStoredUser?.full_name || (isHeadCoach(currentStoredUser) ? 'Head Coach Qassim' : 'Faculty Coach');
+  const coachLabel = currentStoredUser?.full_name || (isHeadCoach(currentStoredUser) ? 'Head Coach' : 'Faculty Coach');
   const displayName = userRole === 'coach' ? coachLabel : speakerName;
   const effectiveRoomId = (roomInput.trim() || safeRoomId).replace(/[^a-zA-Z0-9_-]/g, '');
   const selfHostedMeetingUrl = `https://${jitsiDomain}/${effectiveRoomId}#config.prejoinConfig.enabled=true&config.prejoinPageEnabled=true&config.defaultLanguage="en"&config.disableDeepLinking=true&userInfo.displayName=${encodeURIComponent(displayName)}&interfaceConfig.SHOW_JITSI_WATERMARK=false&interfaceConfig.SHOW_WATERMARK_FOR_GUESTS=false&interfaceConfig.SHOW_BRAND_WATERMARK=false&interfaceConfig.SHOW_POWERED_BY=false&interfaceConfig.SHOW_CHROME_EXTENSION_BANNER=false`;

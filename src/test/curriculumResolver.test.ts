@@ -3,7 +3,7 @@ import { resolveSpeakerCurriculum } from '../utils/curriculumResolver';
 import { SpeakerOnboardingData } from '../types';
 
 describe('Speaker Curriculum Dynamic Resolver Tests', () => {
-  test('should resolve Pan-African Debate curriculum for Kassim Musa', () => {
+  test('should return honest Awaiting Faculty Allocation when no curriculum is assigned (Academy)', () => {
     const profile: SpeakerOnboardingData = {
       branch: 'Academy',
       fullName: 'KASSIM MUSA',
@@ -19,44 +19,21 @@ describe('Speaker Curriculum Dynamic Resolver Tests', () => {
       selectedHabits: ['Vocal Hydration (2.5L + Warm Lemon Water)']
     };
 
-    const result = resolveSpeakerCurriculum(profile);
-    expect(result.syllabusKicker).toBe('Tournament & Leadership Syllabus');
-    expect(result.title).toBe('Championship Debate & Pan-African Leadership');
+    const result = resolveSpeakerCurriculum(profile, null, 'Coach Arthur Vance');
+    expect(result.isAssignedByCoach).toBe(false);
+    expect(result.statusLabel).toBe('Awaiting Faculty Allocation');
+    expect(result.syllabusKicker).toBe('Academy Track · Intake Completed');
+    expect(result.title).toBe('Awaiting Faculty Curriculum Allocation');
     expect(result.disciplineLabel).toBe('Decolonial Parliamentary Forensics');
     expect(result.focusLabel).toBe('Ideological Rigor & Rebuttal Depth');
-    expect(result.drillTitle).toContain('Adversarial Rebuttal Sprint');
-    expect(result.drillCategory).toContain('Motion Rebuttal');
-    expect(result.drillPrompt).toContain('African youth must migrate');
-    expect(result.isAssignedByCoach).toBe(false);
-    expect(result.statusLabel).toBe('Recommended Syllabus Preview');
+    expect(result.drillTitle).toBe('Curriculum Allocation Pending');
+    expect(result.drillCategory).toBe('Faculty Allocation • In Review');
+    expect(result.drillPrompt).toContain('No active drills assigned yet');
+    expect(result.description).toContain('Coach Arthur Vance');
+    expect(result.sessionTitle).toBe('Intake Review with Coach Arthur Vance');
   });
 
-  test('should resolve Executive Pitching curriculum for business leaders', () => {
-    const profile: SpeakerOnboardingData = {
-      branch: 'Academy',
-      fullName: 'Amina Kimani',
-      email: 'amina@venture.org',
-      institution: 'Nairobi Tech Hub',
-      primaryDiscipline: 'Executive Investor Pitch',
-      coreFocus: 'High-Stakes Persuasion & Presence',
-      missionFocus: 'Executive Pitching & High-Stakes Storytelling',
-      speakingGoal: 'Executive & Board Pitching',
-      experienceLevel: 'Varsity / Advanced',
-      vocalBaselinePace: 145,
-      emotionalOpennessRating: 7,
-      selectedHabits: []
-    };
-
-    const result = resolveSpeakerCurriculum(profile);
-    expect(result.syllabusKicker).toBe('Executive Thought Leadership Syllabus');
-    expect(result.title).toBe('Executive Investor Pitch: High-Stakes Persuasion & Presence');
-    expect(result.drillTitle).toBe('High-Stakes Persuasion & Presence: The 60-Second Venture Genesis');
-    expect(result.drillCategory).toBe('Executive Pitching • Narrative Delivery');
-    expect(result.drillPrompt).toContain('venture\'s founding conviction');
-    expect(result.sessionTitle).toContain('Venture Narrative');
-  });
-
-  test('should resolve Stutter & Anxiety transformation curriculum for Foundation scholars', () => {
+  test('should return honest Awaiting Faculty Allocation for Foundation scholars', () => {
     const profile: SpeakerOnboardingData = {
       branch: 'Foundation',
       fullName: 'Tariq Osei',
@@ -73,15 +50,17 @@ describe('Speaker Curriculum Dynamic Resolver Tests', () => {
     };
 
     const result = resolveSpeakerCurriculum(profile);
-    expect(result.syllabusKicker).toBe('Fluency Liberation & Pacing Fellowship');
-    expect(result.title).toBe('Pacing Control & Somatic Grounding: Dysfluency Acceptance & Vocal Ease');
-    expect(result.drillTitle).toContain('Breath Pause & Soft Articulation');
-    expect(result.drillCategory).toBe('Fluency Recovery • Somatic Pacing');
-    expect(result.drillPrompt).toContain('125 WPM');
-    expect(result.workshopTitle).toBe('Foundation Pacing & Vocal Liberation Circle');
+    expect(result.isAssignedByCoach).toBe(false);
+    expect(result.statusLabel).toBe('Awaiting Faculty Allocation');
+    expect(result.syllabusKicker).toBe('Foundation Track · Intake Completed');
+    expect(result.title).toBe('Awaiting Faculty Curriculum Allocation');
+    expect(result.disciplineLabel).toBe('Pacing Control & Somatic Grounding');
+    expect(result.focusLabel).toBe('Dysfluency Acceptance & Vocal Ease');
+    expect(result.drillTitle).toBe('Curriculum Allocation Pending');
+    expect(result.sessionTitle).toBe('Intake Review with Faculty Coach');
   });
 
-  test('should resolve custom write-in objective gracefully', () => {
+  test('should clean custom write-in objective labels gracefully when unassigned', () => {
     const profile: SpeakerOnboardingData = {
       branch: 'Academy',
       fullName: 'Farah Nour',
@@ -98,12 +77,10 @@ describe('Speaker Curriculum Dynamic Resolver Tests', () => {
     };
 
     const result = resolveSpeakerCurriculum(profile);
-    expect(result.syllabusKicker).toBe('Custom Tournament & Leadership Syllabus');
-    expect(result.title).toBe('Pan-African Climate Justice Advocacy: High-Stakes Treaty Negotiations');
+    expect(result.isAssignedByCoach).toBe(false);
     expect(result.disciplineLabel).toBe('Multilateral Diplomatic Protocol');
     expect(result.focusLabel).toBe('High-Stakes Treaty Negotiations');
-    expect(result.description).toContain('UN Environmental Assembly');
-    expect(result.drillPrompt).toContain('Pan-African Climate Justice Advocacy');
+    expect(result.statusLabel).toBe('Awaiting Faculty Allocation');
   });
 
   test('should prioritize database TrainingProgram as single source of truth when supplied', () => {

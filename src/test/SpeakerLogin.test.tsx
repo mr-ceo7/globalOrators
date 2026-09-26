@@ -275,7 +275,8 @@ describe('Speaker Login & Portal Integration Tests', () => {
 
     expect(screen.getByText('KASSIM MUSA')).toBeInTheDocument();
     expect(screen.getAllByText(/Maseno University/i).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText('Championship Debate & Pan-African Leadership')).toBeInTheDocument();
+    expect(screen.getByText('Awaiting Faculty Curriculum Allocation')).toBeInTheDocument();
+    expect(screen.getByText('Awaiting Faculty Allocation')).toBeInTheDocument();
     expect(screen.getByText('Decolonial Parliamentary Forensics')).toBeInTheDocument();
     expect(screen.getByText('Ideological Rigor & Rebuttal Depth')).toBeInTheDocument();
     // Open profile menu to access Sign Out
@@ -333,9 +334,18 @@ describe('Speaker Login & Portal Integration Tests', () => {
 
     expect(screen.getByText('Amina Kimani')).toBeInTheDocument();
     expect(screen.getAllByText(/Nairobi Tech Hub/i).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText('Executive Investor Pitch: High-Stakes Persuasion & Presence')).toBeInTheDocument();
-    expect(screen.getByText(/The 60-Second Venture Genesis/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/venture's founding conviction/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('Awaiting Faculty Curriculum Allocation')).toBeInTheDocument();
+    expect(screen.getByText('Executive Investor Pitch')).toBeInTheDocument();
+    expect(screen.getByText('High-Stakes Persuasion & Presence')).toBeInTheDocument();
+    expect(screen.getByText('No Rehearsal Rounds Assigned Yet')).toBeInTheDocument();
+    expect(screen.getByText('Curriculum Allocation Pending')).toBeInTheDocument();
+
+    // Switch to Daily Drill Studio tab to verify self-guided impromptu practice
+    const drillTabBtn = screen.getByRole('tab', { name: /Daily Drill Studio/i });
+    await act(async () => {
+      fireEvent.click(drillTabBtn);
+    });
+    expect(screen.getByText(/Self-Guided Impromptu Practice/i)).toBeInTheDocument();
   });
 
   test('requires authentication and renders SpeakerLoginPortal when unauthenticated (no guest access)', async () => {

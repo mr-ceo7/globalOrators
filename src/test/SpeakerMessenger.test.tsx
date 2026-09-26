@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
 import { AppProvider } from '../context/AppContext';
 import { SpeakerMessenger } from '../components/messenger/SpeakerMessenger';
+import { messagesApi } from '../services/apiClient';
 
 vi.mock('../services/apiClient', () => ({
   clearAuthSession: vi.fn(),
@@ -296,7 +297,7 @@ describe('SpeakerMessenger Component', () => {
     expect(screen.getAllByText('1x').length).toBeGreaterThan(0);
   });
 
-  test('allows typing and sending a text message with quick cues', async () => {
+  test('allows typing and sending a text message', async () => {
     render(
       <AppProvider>
         <SpeakerMessenger {...mockProps} />
@@ -307,12 +308,6 @@ describe('SpeakerMessenger Component', () => {
       expect(screen.getByText(/Welcome Geoffrey/i)).toBeInTheDocument();
     });
 
-    // Quick Cue clicked
-    const quickCue = screen.getByText(/Can you evaluate the hook and pacing/i);
-    expect(quickCue).toBeInTheDocument();
-    fireEvent.click(quickCue);
-
-    // Input populated or message sent
     const input = screen.getByPlaceholderText(/Message Head Coach Qassim/i) as HTMLInputElement;
     expect(input).toBeInTheDocument();
 
@@ -467,5 +462,25 @@ describe('SpeakerMessenger Component', () => {
     await waitFor(() => {
       expect(screen.queryByText('Establish Orator Syndicate')).not.toBeInTheDocument();
     });
+  });
+
+  test('dispatches typing indicator on input change and clears on blur in speaker chat', async () => {
+    render(
+      <AppProvider>
+        <SpeakerMessenger {...mockProps} />
+      </AppProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText(/Message Head Coach Qassim/i)).toBeInTheDocument();
+    });
+
+    const input = screen.getByPlaceholderText(/Message Head Coach Qassim/i);
+    fireEvent.change(input, { target: { value: 'Drafting my executive summary...' } });
+
+    expect(messagesApi.sendTyping).toHaveBeenCalledWith('client-1', true);
+
+    fireEvent.blur(input);
+    expect(messagesApi.sendTyping).toHaveBeenCalledWith('client-1', false);
   });
 });

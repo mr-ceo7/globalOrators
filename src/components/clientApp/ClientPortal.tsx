@@ -45,7 +45,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { BranchType, SpeakerOnboardingData, ScheduledWorkout } from '../../types';
-import { resolveSpeakerCurriculum } from '../../utils/curriculumResolver';
+import { resolveSpeakerCurriculum, formatCoachReviewer } from '../../utils/curriculumResolver';
 import { LiveRehearsalRoom } from '../live/LiveRehearsalRoom';
 import { SEOHead } from '../common/SEOHead';
 import { SpeakerMobileBottomNav } from './SpeakerMobileBottomNav';
@@ -163,6 +163,10 @@ export const ClientPortal: React.FC = () => {
     )
   );
   const assignedCoachName = assignedCoach?.name || (pairedClient?.coachId ? 'Faculty Coach' : 'Faculty Coaching Desk');
+  const headCoachUser = useMemo(() => {
+    return coaches.find(c => c.id === 'coach-1' || c.is_head_coach) || null;
+  }, [coaches]);
+  const headCoachName = headCoachUser?.name || 'Head Coach';
   const assignedCoachTitle = isAssignedHeadCoach
     ? 'Head Speech & Debate Coach'
     : (assignedCoach ? (assignedCoach.title || 'Faculty Coach') : 'Global Orators Faculty Desk');
@@ -255,6 +259,7 @@ export const ClientPortal: React.FC = () => {
 
   // Active Tab inside Client Portal
   const [speakerTab, setSpeakerTab] = useState<SpeakerTabType>('today');
+  const [messengerMobileView, setMessengerMobileView] = useState<'roster' | 'thread'>('thread');
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
 
@@ -638,29 +643,11 @@ export const ClientPortal: React.FC = () => {
     }));
   }, [currentClientHabitLog, profile.selectedHabits, habitLogs, pairedClient?.id, todayStr]);
 
-  // Client to Coach messages initialized from authoritative AppContext
-  const [clientMessageInput, setClientMessageInput] = useState('');
-
-  // Authoritative messages from shared AppContext
-  const displayedMessages = useMemo(() => {
-    if (!pairedClient?.id) return [];
-    return messages
-      .filter(m => m.clientId === pairedClient.id)
-      .map(m => ({
-        id: m.id,
-        sender: m.sender,
-        text: m.text,
-        time: formatMessageTime(m.timestamp),
-        isRead: m.isRead,
-        attachment: m.attachment
-      }));
+  // Real-time unread messages sent by coach/faculty to this speaker
+  const unreadCoachMessagesCount = useMemo(() => {
+    if (!pairedClient?.id) return 0;
+    return messages.filter(m => m.clientId === pairedClient.id && !m.isRead && m.sender !== 'client').length;
   }, [messages, pairedClient?.id]);
-
-  useEffect(() => {
-    if (pairedClient?.id && markMessagesRead) {
-      markMessagesRead(pairedClient.id);
-    }
-  }, [pairedClient?.id, displayedMessages.length, markMessagesRead]);
 
   // Toggle habit check via Backend (server-authoritative by stable habitId)
   const toggleHabit = (habitId: string) => {
@@ -670,35 +657,6 @@ export const ClientPortal: React.FC = () => {
     }
     const today = localDateString();
     toggleHabitCompletion(pairedClient.id, today, habitId);
-  };
-
-  // Timer and cleanup effects for MediaRecorder
-  useEffect(() => {
-    let interval: ReturnType<typeof setInterval> | undefined;
-    if (isRecording) {
-      interval = setInterval(() => {
-        setRecordingSeconds(s => s + 1);
-      }, 1000);
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isRecording]);
-
-  // Send message to coach
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    const textToSend = clientMessageInput.trim();
-    if (!textToSend) return;
-
-    if (pairedClient) {
-      sendMessage({
-        clientId: pairedClient.id,
-        sender: 'client',
-        text: textToSend
-      });
-    }
-    setClientMessageInput('');
   };
 
   const habitsRemainingCount = useMemo(() => {
@@ -760,7 +718,7 @@ export const ClientPortal: React.FC = () => {
         coachLabel={coachSidebarLabel}
         roadmapSessionsCount={roadmapSessions.length}
         habitsRemainingCount={habitsRemainingCount}
-        unreadMessagesCount={0}
+        unreadMessagesCount={unreadCoachMessagesCount}
         onResetOnboarding={resetOnboarding}
         onSignOut={handleSignOut}
         onOpenLiveChamber={handleOpenLiveChamber}
@@ -770,9 +728,11 @@ export const ClientPortal: React.FC = () => {
       />
 
       {/* Main Content Area Column */}
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        {/* Floating Top Header matching Coach OS Header */}
-        <header className="relative z-20 flex h-14 sm:h-16 items-center justify-between border border-slate-800/80 bg-slate-950/90 px-3.5 md:px-5 backdrop-blur-md rounded-xl mt-1.5 mx-1.5 shadow-lg shadow-slate-950/20 shrink-0">
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+        {/* Floating Top Header matching Coach OS Header (Hidden on mobile when in full-screen Messenger) */}
+        <header className={`relative z-20 flex h-14 sm:h-16 items-center justify-between border border-slate-800/80 bg-slate-950/90 px-3.5 md:px-5 backdrop-blur-md rounded-xl mt-1.5 mx-1.5 shadow-lg shadow-slate-950/20 shrink-0 ${
+          speakerTab === 'coach' ? 'hidden md:flex' : 'flex'
+        }`}>
           {/* Left: Mobile Brand or Desktop Breadcrumb */}
           <div className="flex items-center gap-3 min-w-0">
             <div className="md:hidden flex items-center gap-2">
@@ -909,12 +869,12 @@ export const ClientPortal: React.FC = () => {
         {/* Scrollable View Area with bottom padding for mobile bar */}
         <main className={`flex-1 ${
           speakerTab === 'coach' 
-            ? 'min-h-0 flex flex-col overflow-hidden px-2 sm:px-6 py-2 sm:py-3 pb-20 md:pb-3' 
+            ? 'min-h-0 h-full flex flex-col overflow-hidden p-0 m-0' 
             : 'overflow-y-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-28 md:pb-6 touch-pan-y'
         }`}>
           <div className={`mx-auto w-full ${
             speakerTab === 'coach' 
-              ? 'flex-1 min-h-0 flex flex-col max-w-6xl' 
+              ? 'flex-1 h-full min-h-0 flex flex-col max-w-full md:max-w-6xl' 
               : 'max-w-6xl space-y-6'
           }`}>
         {/* TAB 0: TODAY'S COMMAND CENTER */}
@@ -931,9 +891,9 @@ export const ClientPortal: React.FC = () => {
                   <span className={`text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded border ${
                     curriculum.isAssignedByCoach
                       ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
-                      : 'text-amber-400 bg-amber-500/10 border-amber-500/20'
+                      : 'text-slate-400 bg-slate-800 border-slate-700'
                   }`}>
-                    {curriculum.isAssignedByCoach ? 'Assigned Syllabus' : 'Recommendation Preview'}
+                    {curriculum.isAssignedByCoach ? 'Assigned Syllabus' : 'Awaiting Faculty Allocation'}
                   </span>
                   <span className="hidden xs:inline-block w-px h-3 bg-slate-800" />
                   <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
@@ -947,16 +907,6 @@ export const ClientPortal: React.FC = () => {
                   {curriculum.description}
                 </p>
 
-                {!curriculum.isAssignedByCoach && (
-                  <div className="mt-3 mb-2 bg-slate-950/80 border border-amber-500/20 rounded-2xl p-3 flex items-start gap-2.5 text-left max-w-2xl">
-                    <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                    <p className="text-[11px] text-slate-300 leading-relaxed font-sans">
-                      <strong className="text-amber-300 font-semibold font-mono uppercase tracking-wider text-[10px] block mb-0.5">Track Recommendation Preview</strong>
-                      This syllabus represents an authored training recommendation derived from your intake goals. An official active syllabus and assigned calendar will be confirmed by your faculty coach upon intake review.
-                    </p>
-                  </div>
-                )}
-
                 {/* Dynamic Curriculum Focus Tags */}
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-3 pt-3 border-t border-slate-800/80 text-[10px] font-mono text-slate-400 uppercase tracking-wider">
                   <span>Discipline: <strong className="text-slate-200 font-semibold">{curriculum.disciplineLabel}</strong></span>
@@ -964,6 +914,12 @@ export const ClientPortal: React.FC = () => {
                   <span>Focus: <strong className="text-brand-gold font-semibold">{curriculum.focusLabel}</strong></span>
                   <span className="hidden xs:inline-block w-1 h-1 rounded-full bg-slate-700" />
                   <span>Tier: <strong className="text-slate-200 font-semibold">{profile.experienceLevel || 'Calibrated'}</strong></span>
+                  {!curriculum.isAssignedByCoach && (
+                    <>
+                      <span className="hidden xs:inline-block w-1 h-1 rounded-full bg-slate-700" />
+                      <span className="text-amber-400 font-semibold">Status: Intake In Review</span>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -977,81 +933,144 @@ export const ClientPortal: React.FC = () => {
               </button>
             </div>
 
-            {/* 2. Dominant Next Action: Today's Rehearsal Command Center */}
-            <section className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                <div className="max-w-2xl">
-                  <div className="flex items-center gap-3 mb-2.5">
-                    <span className="text-[10px] font-mono uppercase tracking-widest text-brand-gold font-bold px-2.5 py-0.5 rounded bg-[#C89630]/10 border border-[#C89630]/30">
-                      {curriculum.isAssignedByCoach ? "Today's Rehearsal" : "Recommended Rehearsal Preview"}
-                    </span>
-                    <span className="text-xs font-mono text-slate-400 flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5 text-slate-500" />
-                      <span>{isExecutive ? '60 min executive protocol' : '45 min chamber drill'}</span>
-                    </span>
+            {/* 2. Dominant Next Action: Rehearsal Command Center or Pending State */}
+            {curriculum.isAssignedByCoach ? (
+              <section className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                  <div className="max-w-2xl">
+                    <div className="flex items-center gap-3 mb-2.5">
+                      <span className="text-[10px] font-mono uppercase tracking-widest text-brand-gold font-bold px-2.5 py-0.5 rounded bg-[#C89630]/10 border border-[#C89630]/30">
+                        Today's Rehearsal
+                      </span>
+                      <span className="text-xs font-mono text-slate-400 flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5 text-slate-500" />
+                        <span>{isExecutive ? '60 min executive protocol' : '45 min chamber drill'}</span>
+                      </span>
+                    </div>
+
+                    <h2 className="text-2xl sm:text-3xl font-serif font-bold text-white tracking-tight leading-tight">
+                      {curriculum.drillTitle}
+                    </h2>
+
+                    <p className="text-xs sm:text-sm text-slate-300 mt-2.5 leading-relaxed">
+                      {curriculum.drillPrompt}
+                    </p>
+
+                    {/* 3 Compact Objectives */}
+                    <div className="mt-5 space-y-2">
+                      <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-semibold">
+                        Session Objectives (3 Required Outcomes)
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs text-slate-300">
+                        <div className="flex items-start gap-2 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/80">
+                          <CheckCircle2 className="w-4 h-4 text-brand-gold shrink-0 mt-0.5" />
+                          <span>{isExecutive ? 'Open with high-conviction BLUF premise without hedging' : 'Establish uncontestable normative framework in 60s'}</span>
+                        </div>
+                        <div className="flex items-start gap-2 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/80">
+                          <CheckCircle2 className="w-4 h-4 text-brand-gold shrink-0 mt-0.5" />
+                          <span>{isExecutive ? 'Structure 3 quantified proof-points with explicit risk mitigations' : 'Anticipate and neutralize deepest opposition comparative'}</span>
+                        </div>
+                        <div className="flex items-start gap-2 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/80">
+                          <CheckCircle2 className="w-4 h-4 text-brand-gold shrink-0 mt-0.5" />
+                          <span>{isExecutive ? 'Deliver conclusive ask within calibrated 135–145 WPM cadence' : 'Synthesize debate round into decisive sovereign impact ballot'}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  <h2 className="text-2xl sm:text-3xl font-serif font-bold text-white tracking-tight leading-tight">
-                    {curriculum.drillTitle}
-                  </h2>
+                  {/* Primary Action Buttons */}
+                  <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0">
+                    <button
+                      onClick={() => {
+                        setActiveChamberTitle(isExecutive ? 'Executive Public Speaking Chamber' : 'Live Rehearsal Chamber');
+                        setIsLiveRehearsalOpen(true);
+                      }}
+                      className="min-h-[44px] px-6 py-3.5 rounded-2xl bg-[#C89630] hover:bg-[#d6a543] text-on-gold font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[#C89630]/25 transition-all cursor-pointer"
+                    >
+                      <Video className="w-4 h-4" />
+                      <span>Enter Live Chamber</span>
+                    </button>
 
-                  <p className="text-xs sm:text-sm text-slate-300 mt-2.5 leading-relaxed">
-                    {curriculum.drillPrompt}
-                  </p>
+                    <button
+                      onClick={() => setSpeakerTab('practice')}
+                      className="min-h-[44px] px-5 py-3 rounded-2xl bg-slate-950 hover:bg-slate-850 text-slate-200 border border-slate-800 text-xs font-mono uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                    >
+                      <Mic className="w-4 h-4 text-brand-gold" />
+                      <span>Solo Rehearsal</span>
+                    </button>
 
-                  {/* 3 Compact Objectives */}
-                  <div className="mt-5 space-y-2">
-                    <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-semibold">
-                      Session Objectives (3 Required Outcomes)
+                    <button
+                      onClick={() => setSpeakerTab('progress')}
+                      className="min-h-[44px] px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-850 text-slate-400 hover:text-slate-200 border border-slate-800 text-xs font-mono uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                    >
+                      <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Review Last Feedback</span>
+                    </button>
+                  </div>
+                </div>
+              </section>
+            ) : (
+              <section className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                  <div className="max-w-2xl">
+                    <div className="flex items-center gap-3 mb-2.5">
+                      <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400 font-bold px-2.5 py-0.5 rounded bg-slate-950 border border-slate-800">
+                        Curriculum Allocation Pending
+                      </span>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs text-slate-300">
-                      <div className="flex items-start gap-2 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/80">
-                        <CheckCircle2 className="w-4 h-4 text-brand-gold shrink-0 mt-0.5" />
-                        <span>{isExecutive ? 'Open with high-conviction BLUF premise without hedging' : 'Establish uncontestable normative framework in 60s'}</span>
+
+                    <h2 className="text-2xl sm:text-3xl font-serif font-bold text-white tracking-tight leading-tight">
+                      No Rehearsal Rounds Assigned Yet
+                    </h2>
+
+                    <p className="text-xs sm:text-sm text-slate-300 mt-2.5 leading-relaxed">
+                      {formatCoachReviewer(assignedCoachName)} is reviewing your intake dossier. Your structured curriculum sessions, live chamber dates, and floor drills will appear here once assigned.
+                    </p>
+
+                    <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs text-slate-300">
+                      <div className="flex items-start gap-2.5 bg-slate-950/80 p-3 rounded-xl border border-slate-800/80">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                        <div>
+                          <div className="font-mono text-[10px] uppercase text-slate-400 font-semibold">1. Speaker Intake</div>
+                          <div className="text-slate-200 text-xs mt-0.5">Dossier Completed</div>
+                        </div>
                       </div>
-                      <div className="flex items-start gap-2 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/80">
-                        <CheckCircle2 className="w-4 h-4 text-brand-gold shrink-0 mt-0.5" />
-                        <span>{isExecutive ? 'Structure 3 quantified proof-points with explicit risk mitigations' : 'Anticipate and neutralize deepest opposition comparative'}</span>
+                      <div className="flex items-start gap-2.5 bg-slate-950/80 p-3 rounded-xl border border-slate-800/80">
+                        <Clock className="w-4 h-4 text-brand-gold shrink-0 mt-0.5" />
+                        <div>
+                          <div className="font-mono text-[10px] uppercase text-slate-400 font-semibold">2. Coach Review</div>
+                          <div className="text-brand-gold text-xs mt-0.5 font-medium">In Faculty Queue</div>
+                        </div>
                       </div>
-                      <div className="flex items-start gap-2 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/80">
-                        <CheckCircle2 className="w-4 h-4 text-brand-gold shrink-0 mt-0.5" />
-                        <span>{isExecutive ? 'Deliver conclusive ask within calibrated 135–145 WPM cadence' : 'Synthesize debate round into decisive sovereign impact ballot'}</span>
+                      <div className="flex items-start gap-2.5 bg-slate-950/80 p-3 rounded-xl border border-slate-800/80">
+                        <Target className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
+                        <div>
+                          <div className="font-mono text-[10px] uppercase text-slate-400 font-semibold">3. Active Syllabus</div>
+                          <div className="text-slate-400 text-xs mt-0.5">Pending Assignment</div>
+                        </div>
                       </div>
                     </div>
                   </div>
+
+                  <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0">
+                    <button
+                      onClick={() => setSpeakerTab('vault')}
+                      className="min-h-[44px] px-6 py-3 rounded-2xl bg-[#C89630] hover:bg-[#d6a543] text-slate-950 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[#C89630]/25 transition-all cursor-pointer"
+                    >
+                      <Mic className="w-4 h-4" />
+                      <span>Record in Voice Vault</span>
+                    </button>
+                    <button
+                      onClick={() => setSpeakerTab('coach')}
+                      className="min-h-[44px] px-5 py-3 rounded-2xl bg-slate-950 hover:bg-slate-850 text-slate-200 border border-slate-800 text-xs font-mono uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                    >
+                      <MessageSquare className="w-4 h-4 text-brand-gold" />
+                      <span>Message Faculty Coach</span>
+                    </button>
+                  </div>
                 </div>
-
-                {/* Primary Action Buttons */}
-                <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0">
-                  <button
-                    onClick={() => {
-                      setActiveChamberTitle(isExecutive ? 'Executive Public Speaking Chamber' : 'Live Rehearsal Chamber');
-                      setIsLiveRehearsalOpen(true);
-                    }}
-                    className="min-h-[44px] px-6 py-3.5 rounded-2xl bg-[#C89630] hover:bg-[#d6a543] text-on-gold font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[#C89630]/25 transition-all cursor-pointer"
-                  >
-                    <Video className="w-4 h-4" />
-                    <span>Enter Live Chamber</span>
-                  </button>
-
-                  <button
-                    onClick={() => setSpeakerTab('practice')}
-                    className="min-h-[44px] px-5 py-3 rounded-2xl bg-slate-950 hover:bg-slate-850 text-slate-200 border border-slate-800 text-xs font-mono uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer"
-                  >
-                    <Mic className="w-4 h-4 text-brand-gold" />
-                    <span>Solo Rehearsal</span>
-                  </button>
-
-                  <button
-                    onClick={() => setSpeakerTab('progress')}
-                    className="min-h-[44px] px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-850 text-slate-400 hover:text-slate-200 border border-slate-800 text-xs font-mono uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer"
-                  >
-                    <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Review Last Feedback</span>
-                  </button>
-                </div>
-              </div>
-            </section>
+              </section>
+            )}
 
             {/* 3. Compact Cumulative Metrics Grid (Responsive 2-column mobile layout) */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4">
@@ -1124,7 +1143,9 @@ export const ClientPortal: React.FC = () => {
                   </div>
 
                   <p className="text-xs text-slate-300 leading-relaxed font-sans">
-                    {curriculum.drillPrompt || 'Awaiting personalized coach directive.'}
+                    {curriculum.isAssignedByCoach 
+                      ? (curriculum.drillPrompt || 'Awaiting personalized coach directive.')
+                      : `${formatCoachReviewer(assignedCoachName)} is reviewing your intake profile. Reach out via Faculty Direct Consultation below if you have immediate rehearsal priorities.`}
                   </p>
 
                   {/* Direct Faculty Communication */}
@@ -1279,10 +1300,10 @@ export const ClientPortal: React.FC = () => {
                   </span>
                   <div>
                     <span className="text-[10px] uppercase font-extrabold tracking-wider text-slate-400">
-                      Today's Featured Drill
+                      {curriculum.isAssignedByCoach ? "Today's Featured Drill" : "Self-Guided Impromptu Practice"}
                     </span>
                     <h2 className="text-base sm:text-lg font-bold text-white">
-                      {curriculum.drillTitle}
+                      {curriculum.isAssignedByCoach ? curriculum.drillTitle : "Baseline Speech Calibration"}
                     </h2>
                   </div>
                 </div>
@@ -1295,10 +1316,12 @@ export const ClientPortal: React.FC = () => {
               {/* Prompt Card */}
               <div className="bg-slate-950/80 border border-slate-850 rounded-2xl p-4 sm:p-5 mb-6">
                 <div className="text-[10px] uppercase font-bold text-slate-400 mb-1">
-                  {curriculum.drillCategory}
+                  {curriculum.isAssignedByCoach ? curriculum.drillCategory : "Voice Vault Conditioning"}
                 </div>
                 <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-medium">
-                  {curriculum.drillPrompt}
+                  {curriculum.isAssignedByCoach 
+                    ? curriculum.drillPrompt 
+                    : "Deliver a 3-minute impromptu response on a subject of your choice to calibrate your baseline delivery, pacing (WPM), and vocal resonance while awaiting coach syllabus assignment."}
                 </p>
               </div>
 
@@ -1687,13 +1710,15 @@ export const ClientPortal: React.FC = () => {
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
                 <div>
                   <div className="text-[10px] font-mono tracking-widest text-brand-gold uppercase mb-1">
-                    Executive Oratory Syllabus · Dynamic Roadmap
+                    {curriculum.isAssignedByCoach ? 'Executive Oratory Syllabus · Dynamic Roadmap' : 'Curriculum Allocation · Status'}
                   </div>
                   <h2 className="text-xl sm:text-2xl font-serif font-black tracking-tight text-white">
-                    {execProgram?.title || curriculum.title || 'Executive Oratory Protocol'}
+                    {curriculum.isAssignedByCoach ? (execProgram?.title || curriculum.title || 'Executive Oratory Protocol') : 'No Curriculum Assigned Currently'}
                   </h2>
                   <p className="text-xs text-slate-400 mt-1 max-w-2xl leading-relaxed">
-                    A rigorous 4-week, 8-session executive protocol. Live 1-on-1 consultations scheduled twice weekly on <span className="text-slate-200 font-semibold">Tuesdays & Thursdays (90 minutes each)</span>.
+                    {curriculum.isAssignedByCoach
+                      ? 'A rigorous 4-week, 8-session executive protocol. Live 1-on-1 consultations scheduled twice weekly on Tuesdays & Thursdays (90 minutes each).'
+                      : `${formatCoachReviewer(assignedCoachName)} is reviewing your intake dossier. Once your curriculum is allocated, your live consultation sessions and rehearsal calendar will be scheduled here.`}
                   </p>
                 </div>
 
@@ -1836,9 +1861,13 @@ export const ClientPortal: React.FC = () => {
                 ) : (
                   <div className="bg-slate-950 border border-slate-800/90 rounded-2xl p-8 text-center">
                     <Calendar className="w-8 h-8 text-slate-600 mx-auto mb-3" />
-                    <h3 className="text-sm font-serif font-bold text-white">No Scheduled Rehearsal Sessions</h3>
+                    <h3 className="text-sm font-serif font-bold text-white">
+                      {curriculum.isAssignedByCoach ? 'No Scheduled Rehearsal Sessions' : 'Curriculum Allocation Pending'}
+                    </h3>
                     <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto font-sans">
-                      Your coach has not yet scheduled upcoming chamber sessions for your profile. When new consultation or rehearsal rounds are added to the roster, they will appear here with calendar sync.
+                      {curriculum.isAssignedByCoach
+                        ? 'Your coach has not yet scheduled upcoming chamber sessions for your profile. When new consultation or rehearsal rounds are added to the roster, they will appear here with calendar sync.'
+                        : `${formatCoachReviewer(assignedCoachName)} is reviewing your profile to allocate your syllabus. Consultation dates and rehearsal sessions will appear here once confirmed.`}
                     </p>
                   </div>
                 )}
@@ -2116,14 +2145,14 @@ export const ClientPortal: React.FC = () => {
 
         {/* TAB 6: Messenger */}
         {speakerTab === 'coach' && (
-          <div className="flex-1 min-h-0 flex flex-col space-y-3 animate-fadeIn">
+          <div className="flex-1 min-h-0 h-full flex flex-col animate-fadeIn">
             {!assignedCoach && (
-              <div className="bg-slate-950/80 border border-amber-500/30 rounded-2xl p-3.5 text-left flex items-start gap-3 shrink-0">
+              <div className="hidden md:flex bg-slate-950/80 border border-amber-500/30 rounded-2xl p-3.5 mb-3 text-left items-start gap-3 shrink-0">
                 <AlertTriangle className="w-4 h-4 text-brand-gold shrink-0 mt-0.5" />
                 <div>
                   <h4 className="text-[11px] font-bold text-amber-300 uppercase tracking-wider font-mono">Faculty Triage & Allocation</h4>
                   <p className="text-xs text-slate-300 mt-0.5 leading-relaxed">
-                    A faculty coach is being assigned to your account. Your inquiries and practice submissions route directly to Head Coach Qassim and the Global Orators Faculty Desk.
+                    A faculty coach is being assigned to your account. Your inquiries and practice submissions route directly to {headCoachName} and the Global Orators Faculty Desk.
                   </p>
                 </div>
               </div>
@@ -2139,6 +2168,7 @@ export const ClientPortal: React.FC = () => {
                 setActiveChamberTitle(isExecutive ? 'Executive Public Speaking Chamber' : 'Live Rehearsal Chamber');
                 setIsLiveRehearsalOpen(true);
               }}
+              onMobileViewChange={(view) => setMessengerMobileView(view)}
             />
           </div>
         )}
@@ -2146,24 +2176,26 @@ export const ClientPortal: React.FC = () => {
         </main>
       </div>
 
-      {/* Mobile Bottom Navigation (Visible on mobile screens < md) */}
-      <SpeakerMobileBottomNav
-        speakerTab={speakerTab}
-        setSpeakerTab={setSpeakerTab}
-        onOpenLiveRehearsal={() => {
-          setActiveChamberTitle(
-            isExecutive
-              ? 'The 60-Second Venture Genesis'
-              : isAcademy
-                ? 'Syllogistic Framing & Whip Extension'
-                : 'Unfiltered Cathartic Voice Journaling'
-          );
-          setIsLiveRehearsalOpen(true);
-        }}
-        isExecutive={isExecutive}
-        isAcademy={isAcademy}
-        unreadCount={0}
-      />
+      {/* Mobile Bottom Navigation (Visible on mobile screens < md, hidden when inside WhatsApp active thread) */}
+      {!(speakerTab === 'coach' && messengerMobileView === 'thread') && (
+        <SpeakerMobileBottomNav
+          speakerTab={speakerTab}
+          setSpeakerTab={setSpeakerTab}
+          onOpenLiveRehearsal={() => {
+            setActiveChamberTitle(
+              isExecutive
+                ? 'The 60-Second Venture Genesis'
+                : isAcademy
+                  ? 'Syllogistic Framing & Whip Extension'
+                  : 'Unfiltered Cathartic Voice Journaling'
+            );
+            setIsLiveRehearsalOpen(true);
+          }}
+          isExecutive={isExecutive}
+          isAcademy={isAcademy}
+          unreadCount={unreadCoachMessagesCount}
+        />
+      )}
 
       {/* Embedded Live Rehearsal Studio Modal */}
       <LiveRehearsalRoom

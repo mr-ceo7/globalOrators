@@ -21,7 +21,14 @@ import {
   PhoneCall,
   UserCheck,
   Radio,
-  Hash
+  Hash,
+  Download,
+  Image as ImageIcon,
+  Maximize2,
+  Camera,
+  Smile,
+  Lock,
+  MoreVertical
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { ChatMessage, Client, ChatGroup, DirectoryOrator } from '../../types';
@@ -29,6 +36,8 @@ import { RecordingResponse } from '../../services/apiClient';
 import { LiveRehearsalRoom } from '../live/LiveRehearsalRoom';
 import { OratorAvatar } from '../common/OratorAvatar';
 import { formatMessageTime } from '../../utils/date';
+import { openOrDownloadFile, readFileAsDataUrl, isImageFile } from '../../utils/fileViewer';
+import { WhatsAppImageLightbox } from './WhatsAppImageLightbox';
 
 const WHATSAPP_REACTIONS = ['👍', '🎙️', '🔥', '👏', '💡', '❤️'];
 
@@ -40,6 +49,8 @@ interface SpeakerMessengerProps {
   isAcademy: boolean;
   persistedRecordings?: RecordingResponse[];
   onOpenLiveRehearsal: () => void;
+  onMobileViewChange?: (view: 'roster' | 'thread') => void;
+  initialMobileView?: 'roster' | 'thread';
 }
 
 type ConversationType = 'coach' | 'group' | 'orator';
@@ -68,6 +79,8 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
   isAcademy,
   persistedRecordings = [],
   onOpenLiveRehearsal,
+  onMobileViewChange,
+  initialMobileView = 'thread'
 }) => {
   const { 
     messages, 
@@ -91,7 +104,12 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
   const [selectedConversationId, setSelectedConversationId] = useState<string>('assigned-coach');
   const [activeTab, setActiveTab] = useState<'all' | 'groups' | 'coaches' | 'orators'>('all');
   const [sidebarSearch, setSidebarSearch] = useState('');
-  const [mobileView, setMobileView] = useState<'roster' | 'thread'>('thread');
+  const [mobileView, setMobileView] = useState<'roster' | 'thread'>(initialMobileView);
+
+  const updateMobileView = (newView: 'roster' | 'thread') => {
+    setMobileView(newView);
+    onMobileViewChange?.(newView);
+  };
 
   // Chat stream controls
   const [inputMessage, setInputMessage] = useState('');
@@ -130,10 +148,51 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
   const playbackTimerRef = useRef<any>(null);
   const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
   const typingDebounceTimeoutRef = useRef<any>(null);
+  const acousticOscRef = useRef<any>(null);
 
-  // Helper: check if coach is Head Coach Qassim
+  // Staged image and Lightbox modal state
+  const [stagedImage, setStagedImage] = useState<{ file: File; dataUrl: string; name: string; size: string } | null>(null);
+  const [activeLightboxImage, setActiveLightboxImage] = useState<{ url: string; fileName: string; senderName: string; timestamp?: string; caption?: string } | null>(null);
+  const [isDraggingFile, setIsDraggingFile] = useState<boolean>(false);
+
+  const stopAcousticPlayback = () => {
+    try {
+      if (acousticOscRef.current) {
+        acousticOscRef.current.stop();
+        acousticOscRef.current.disconnect();
+        acousticOscRef.current = null;
+      }
+    } catch {}
+  };
+
+  const playSyntheticSpeechTone = (durationSec: number) => {
+    try {
+      stopAcousticPlayback();
+      const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(140, ctx.currentTime);
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + durationSec);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + durationSec);
+      acousticOscRef.current = osc;
+    } catch {}
+  };
+
+  // Helper: check if coach is Head Coach
   const isHeadCoachUser = (coach?: any, coachId?: string) => {
     const id = coach?.id || coachId;
     const email = coach?.email?.toLowerCase();
@@ -150,25 +209,21 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
 
   // Helper: resolve author coach entity for any message
   const resolveMsgCoach = (msgCoachId?: string) => {
+    const headCoachObj = coaches.find(c => c.id === 'coach-1' || isHeadCoachUser(c));
+    const fallbackHead = headCoachObj || { 
+      id: 'coach-1', 
+      name: 'Head Coach', 
+      title: 'Head Speech & Debate Coach',
+      email: 'coach@globalorators.com',
+      role: 'Head Coach'
+    };
     if (!msgCoachId) {
-      return assignedCoach || { 
-        id: 'coach-1', 
-        name: 'Head Coach Qassim', 
-        title: 'Head Speech & Debate Coach',
-        email: 'kassimmusa322@gmail.com',
-        role: 'Head Coach'
-      };
+      return assignedCoach || fallbackHead;
     }
     const matched = coaches.find(c => c.id === msgCoachId);
     if (matched) return matched;
     if (isHeadCoachUser(null, msgCoachId)) {
-      return { 
-        id: msgCoachId, 
-        name: 'Head Coach Qassim', 
-        title: 'Head Speech & Debate Coach',
-        email: 'kassimmusa322@gmail.com',
-        role: 'Head Coach'
-      };
+      return fallbackHead;
     }
     if (assignedCoach?.id === msgCoachId) return assignedCoach;
     return { 
@@ -222,7 +277,8 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
   };
 
   // Primary Coach Information
-  const coachName = assignedCoach?.name || 'Head Coach Qassim';
+  const headCoach = coaches.find(c => c.id === 'coach-1' || isHeadCoachUser(c));
+  const coachName = assignedCoach?.name || headCoach?.name || 'Faculty Coach';
   const coachTitle = assignedCoach?.title || 'Faculty Speech & Debate Coach';
   const coachInitials = isHeadCoachUser(assignedCoach) 
     ? 'HQ' 
@@ -427,28 +483,62 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
     return destinationClientId;
   }, [destinationClientId]);
 
-  // Mark messages as read on view
+  // Mark messages as read when recipient is actively in the chat AND window/tab is visible
   useEffect(() => {
-    if (destinationClientId && markMessagesRead) {
-      markMessagesRead(destinationClientId);
+    if (!destinationClientId || !markMessagesRead) return;
+
+    const tryMarkRead = () => {
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
+        return;
+      }
+      const hasUnread = activeMessages.some(m => !m.isRead && m.sender !== 'client');
+      if (hasUnread) {
+        markMessagesRead(destinationClientId);
+      }
+    };
+
+    tryMarkRead();
+
+    const handleVisibilityOrFocus = () => {
+      tryMarkRead();
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('focus', handleVisibilityOrFocus);
+      document.addEventListener('visibilitychange', handleVisibilityOrFocus);
+      return () => {
+        window.removeEventListener('focus', handleVisibilityOrFocus);
+        document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+      };
     }
-  }, [destinationClientId, activeMessages.length, markMessagesRead]);
+  }, [destinationClientId, activeMessages, markMessagesRead]);
 
-  // Auto-scroll to latest message
+  // Auto-scroll to latest message within the messages container only
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView?.({ behavior: 'smooth' });
-  }, [displayedMessages.length]);
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    } else {
+      messagesEndRef.current?.scrollIntoView?.({ behavior: 'smooth' });
+    }
+  }, [displayedMessages.length, activeConversation?.id]);
 
-  // Cleanup timers & audio on unmount
+  // Cleanup timers, audio & typing on unmount
   useEffect(() => {
     return () => {
       if (audioPlayerRef.current) {
         audioPlayerRef.current.pause();
       }
+      stopAcousticPlayback();
       clearInterval(playbackTimerRef.current);
       clearInterval(recordingTimerRef.current);
+      if (typingDebounceTimeoutRef.current) {
+        clearTimeout(typingDebounceTimeoutRef.current);
+      }
+      if (destinationClientId && sendTypingIndicator) {
+        sendTypingIndicator(destinationClientId, false);
+      }
     };
-  }, []);
+  }, [destinationClientId, sendTypingIndicator]);
 
   // Voice note recording
   const startRecordingAudio = async () => {
@@ -459,13 +549,23 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+      const preferredMime = (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported)
+        ? (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+            ? 'audio/webm;codecs=opus'
+            : MediaRecorder.isTypeSupported('audio/webm')
+              ? 'audio/webm'
+              : MediaRecorder.isTypeSupported('audio/mp4')
+                ? 'audio/mp4'
+                : '')
+        : '';
+      const options = preferredMime ? { mimeType: preferredMime } : undefined;
+      const mediaRecorder = new MediaRecorder(stream, options);
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
       recordingStartTimeRef.current = Date.now();
 
       mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
+        if (event.data && event.data.size > 0) {
           audioChunksRef.current.push(event.data);
         }
       };
@@ -473,9 +573,21 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
       mediaRecorder.onstop = () => {
         const elapsedSec = Math.max(1, Math.round((Date.now() - recordingStartTimeRef.current) / 1000));
         const finalDurationSec = elapsedSec > 0 ? elapsedSec : (recordingDurationRef.current || 15);
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        const audioUrl = URL.createObjectURL(audioBlob);
-        sendVoiceNote(audioUrl, finalDurationSec);
+        const resolvedMime = mediaRecorder.mimeType || preferredMime || 'audio/webm';
+        const audioBlob = new Blob(audioChunksRef.current, { type: resolvedMime });
+
+        // Convert audio blob to permanent Base64 Data URL so it is playable across devices and persistent
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64Audio = reader.result as string;
+          sendVoiceNote(base64Audio, finalDurationSec);
+        };
+        reader.onerror = () => {
+          const fallbackUrl = URL.createObjectURL(audioBlob);
+          sendVoiceNote(fallbackUrl, finalDurationSec);
+        };
+        reader.readAsDataURL(audioBlob);
+
         stream.getTracks().forEach(track => track.stop());
       };
 
@@ -582,6 +694,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
       if (audioPlayerRef.current) {
         audioPlayerRef.current.pause();
       }
+      stopAcousticPlayback();
       clearInterval(playbackTimerRef.current);
       setIsPlayingAudio(null);
       return;
@@ -590,13 +703,15 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
     if (audioPlayerRef.current) {
       audioPlayerRef.current.pause();
     }
+    stopAcousticPlayback();
     clearInterval(playbackTimerRef.current);
 
     setIsPlayingAudio(msg.id);
     setPlaybackProgress(0);
 
     const audioUrl = getVoiceAudioUrl(msg);
-    if (audioUrl) {
+    const isPlayableUrl = Boolean(audioUrl && !audioUrl.startsWith('blob:'));
+    if (isPlayableUrl && audioUrl) {
       if (!audioPlayerRef.current) {
         audioPlayerRef.current = new Audio();
       }
@@ -627,10 +742,13 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
     const intervalMs = 100;
     const stepPercent = (intervalMs / (effectiveSecs * 1000)) * 100;
 
+    playSyntheticSpeechTone(effectiveSecs);
+
     let current = 0;
     playbackTimerRef.current = setInterval(() => {
       current += stepPercent;
       if (current >= 100) {
+        stopAcousticPlayback();
         clearInterval(playbackTimerRef.current);
         setIsPlayingAudio(null);
         setPlaybackProgress(0);
@@ -662,7 +780,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
       }
       typingDebounceTimeoutRef.current = setTimeout(() => {
         sendTypingIndicator(targetClientId, false);
-      }, 3000);
+      }, 2500);
     } else {
       if (typingDebounceTimeoutRef.current) {
         clearTimeout(typingDebounceTimeoutRef.current);
@@ -671,9 +789,55 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
     }
   };
 
-  // Text message send
+  // Text message, quoted reply, or staged image send
   const handleSendText = async (textToSend?: string) => {
     if (isSending) return;
+
+    if (stagedImage) {
+      if (typingDebounceTimeoutRef.current) {
+        clearTimeout(typingDebounceTimeoutRef.current);
+      }
+      const targetClientId = getDestinationClientId();
+      if (sendTypingIndicator) {
+        sendTypingIndicator(targetClientId, false);
+      }
+
+      setIsSending(true);
+      const captionText = (textToSend || inputMessage).trim();
+      setInputMessage('');
+      const imgPayload = { ...stagedImage };
+      setStagedImage(null);
+      setReplyingToMessage(null);
+      setShowAttachmentMenu(false);
+
+      try {
+        await sendMessage({
+          clientId: targetClientId,
+          sender: 'client',
+          messageType: 'image',
+          text: captionText,
+          content: captionText,
+          attachmentData: {
+            type: 'image',
+            title: imgPayload.name,
+            fileName: imgPayload.name,
+            fileSize: imgPayload.size,
+            url: imgPayload.dataUrl,
+            imageUrl: imgPayload.dataUrl,
+            caption: captionText,
+            senderName: profile.fullName || pairedClient?.name || 'Speaker',
+            senderRole: 'client',
+            senderId: pairedClient?.id || 'speaker'
+          }
+        });
+      } catch (err) {
+        console.error('Failed to send image:', err);
+      } finally {
+        setIsSending(false);
+      }
+      return;
+    }
+
     const text = (textToSend || inputMessage).trim();
     if (!text) return;
 
@@ -751,28 +915,118 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
     setShowAttachmentMenu(false);
   };
 
-  // Attach document file
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Attach document file with persistent base64 data URL
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const targetClientId = getDestinationClientId();
 
-    sendMessage({
-      clientId: targetClientId,
-      sender: 'client',
-      messageType: 'document',
-      content: `Attached speech document: ${file.name}`,
-      attachmentData: {
-        type: 'document',
-        title: file.name,
-        fileName: file.name,
-        fileSize: `${(file.size / 1024).toFixed(1)} KB`,
-        senderName: profile.fullName || pairedClient?.name || 'Speaker',
-        senderRole: 'client'
-      }
-    });
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      await sendMessage({
+        clientId: targetClientId,
+        sender: 'client',
+        messageType: 'document',
+        text: `Attached speech document: ${file.name}`,
+        content: `Attached speech document: ${file.name}`,
+        attachmentData: {
+          type: 'document',
+          title: file.name,
+          fileName: file.name,
+          fileSize: `${(file.size / 1024).toFixed(1)} KB`,
+          fileUrl: dataUrl,
+          url: dataUrl,
+          senderName: profile.fullName || pairedClient?.name || 'Speaker',
+          senderRole: 'client',
+          senderId: pairedClient?.id || 'speaker'
+        }
+      });
+    } catch (err) {
+      console.error('Failed to read document:', err);
+    }
     setShowAttachmentMenu(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      setStagedImage({
+        file,
+        dataUrl,
+        name: file.name,
+        size: `${(file.size / 1024).toFixed(1)} KB`
+      });
+    } catch (err) {
+      console.error('Failed to read image:', err);
+    }
+    setShowAttachmentMenu(false);
+    if (imageInputRef.current) imageInputRef.current.value = '';
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith('image/')) {
+        const file = items[i].getAsFile();
+        if (file) {
+          readFileAsDataUrl(file).then(dataUrl => {
+            setStagedImage({
+              file,
+              dataUrl,
+              name: `Pasted_Image_${new Date().toISOString().slice(11, 19).replace(/:/g, '-')}.png`,
+              size: `${(file.size / 1024).toFixed(1)} KB`
+            });
+          });
+          e.preventDefault();
+          break;
+        }
+      }
+    }
+  };
+
+  const handleDropFile = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingFile(false);
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+    const targetClientId = getDestinationClientId();
+
+    if (file.type.startsWith('image/')) {
+      readFileAsDataUrl(file).then(dataUrl => {
+        setStagedImage({
+          file,
+          dataUrl,
+          name: file.name,
+          size: `${(file.size / 1024).toFixed(1)} KB`
+        });
+      });
+    } else {
+      readFileAsDataUrl(file).then(dataUrl => {
+        sendMessage({
+          clientId: targetClientId,
+          sender: 'client',
+          messageType: 'document',
+          text: `Attached speech document: ${file.name}`,
+          content: `Attached speech document: ${file.name}`,
+          attachmentData: {
+            type: 'document',
+            title: file.name,
+            fileName: file.name,
+            fileSize: `${(file.size / 1024).toFixed(1)} KB`,
+            fileUrl: dataUrl,
+            url: dataUrl,
+            senderName: profile.fullName || pairedClient?.name || 'Speaker',
+            senderRole: 'client',
+            senderId: pairedClient?.id || 'speaker'
+          }
+        });
+      });
+    }
   };
 
   const handleToggleReaction = (messageId: string, emoji: string) => {
@@ -833,36 +1087,11 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
     }
   };
 
-  // Quick Rhetoric & Practice Cues
-  const speakerQuickCues = useMemo(() => {
-    if (isExecutive) {
-      return [
-        'Can you evaluate the hook and pacing of my executive keynote?',
-        'Reviewing my 60-second venture pitch rehearsal.',
-        'Would like calibration on executive cadence (target: 145 WPM).',
-        'Requesting 1-on-1 board presentation rehearsal in the live chamber.'
-      ];
-    }
-    if (isAcademy) {
-      return [
-        'How was my Parliamentary rebuttal structure on that round?',
-        'Reviewing my cross-examination flow and clarity.',
-        'Targeting 160 WPM cadence with strict articulation.',
-        'Requesting live chamber debate spar session.'
-      ];
-    }
-    return [
-      'Submitted my cathartic voice journal for your feedback.',
-      'Working on pausing comfortably before my main thesis.',
-      'Reflecting on vocal presence and somatic grounding.',
-      'Ready for our next live consultation.'
-    ];
-  }, [isExecutive, isAcademy]);
 
   const activeRecipientName = activeConversation?.title || coachName;
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col md:flex-row rounded-3xl bg-slate-900/95 border border-slate-800 overflow-hidden shadow-2xl animate-fadeIn">
+    <div className="flex-1 h-full min-h-0 flex flex-col md:flex-row bg-[#0b141a] md:rounded-3xl md:border md:border-slate-800 overflow-hidden shadow-2xl animate-fadeIn">
       {/* Hidden file input */}
       <input 
         type="file" 
@@ -870,6 +1099,14 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
         onChange={handleFileUpload} 
         className="hidden" 
         accept=".pdf,.doc,.docx,.txt,.mp3,.wav,.webm" 
+      />
+      {/* Hidden image input */}
+      <input 
+        type="file" 
+        ref={imageInputRef} 
+        onChange={handleImageUpload} 
+        className="hidden" 
+        accept="image/*" 
       />
 
       {/* LEFT COLUMN: WhatsApp-Style Conversation Roster */}
@@ -951,7 +1188,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
                   key={conv.id}
                   onClick={() => {
                     setSelectedConversationId(conv.id);
-                    setMobileView('thread');
+                    updateMobileView('thread');
                   }}
                   className={`p-3 rounded-2xl flex items-center gap-3 cursor-pointer transition-all ${
                     isSelected 
@@ -1020,30 +1257,34 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
       </div>
 
       {/* RIGHT COLUMN: Active Chat Stream Container */}
-      <div className={`flex-1 flex flex-col bg-slate-900/50 min-w-0 ${
+      <div className={`flex-1 min-h-0 h-full flex flex-col bg-[#0b141a] min-w-0 overflow-hidden ${
         mobileView === 'roster' ? 'hidden md:flex' : 'flex'
       }`}>
         {/* WhatsApp Modern Chat Header */}
-        <div className="p-3.5 sm:p-4 bg-slate-950/95 border-b border-slate-800 flex items-center justify-between gap-3 shrink-0">
-          <div className="flex items-center gap-3 min-w-0">
+        <div className="h-14 sm:h-16 px-2.5 sm:px-4 bg-[#202c33] border-b border-slate-800/80 flex items-center justify-between gap-2 shrink-0 z-10 shadow-xs">
+          <div className="flex items-center gap-2 min-w-0">
             {/* Back to roster on mobile */}
             <button
-              onClick={() => setMobileView('roster')}
-              className="md:hidden p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 transition-colors cursor-pointer"
+              onClick={() => updateMobileView('roster')}
+              className="md:hidden -ml-1 p-2 rounded-full hover:bg-slate-700/60 text-slate-200 transition-colors cursor-pointer flex items-center"
               title="Back to Conversation List"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft className="w-5 h-5" />
             </button>
 
-            <div className="relative shrink-0">
+            {/* Circular Avatar */}
+            <div 
+              onClick={() => updateMobileView('roster')}
+              className="relative shrink-0 cursor-pointer"
+            >
               {activeConversation?.type === 'group' ? (
-                <div className="h-11 w-11 rounded-2xl bg-cyan-950 border border-cyan-500/50 flex items-center justify-center text-cyan-400 font-bold text-sm shadow-md">
-                  <Users className="w-6 h-6" />
+                <div className="h-10 w-10 rounded-full bg-cyan-950 border border-cyan-500/50 flex items-center justify-center text-cyan-400 font-bold text-sm shadow-md">
+                  <Users className="w-5 h-5" />
                 </div>
               ) : activeConversation?.avatar ? (
-                <OratorAvatar src={activeConversation.avatar} name={activeRecipientName} className="h-11 w-11 rounded-2xl" />
+                <OratorAvatar src={activeConversation.avatar} name={activeRecipientName} className="h-10 w-10 rounded-full object-cover" />
               ) : (
-                <div className={`h-11 w-11 rounded-2xl flex items-center justify-center font-bold text-on-gold text-sm shadow-md border ${
+                <div className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-on-gold text-sm shadow-md border ${
                   isExecutive ? 'bg-[#C89630] border-[#C89630]' : 'bg-emerald-500 border-emerald-400'
                 }`}>
                   {activeConversation?.initials || coachInitials}
@@ -1052,7 +1293,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
 
               {activeConversation?.isOnline !== undefined && (
                 <span 
-                  className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-slate-950 ${
+                  className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#202c33] ${
                     activeConversation.isOnline ? 'bg-emerald-400' : 'bg-slate-500'
                   }`}
                   title={activeConversation.isOnline ? 'Recipient is currently online' : 'Recipient is offline'}
@@ -1060,81 +1301,77 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
               )}
             </div>
 
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <h3 className="font-bold text-sm text-white truncate">{activeRecipientName}</h3>
-                <span className={`hidden sm:inline text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-md border ${
-                  activeConversation?.type === 'group'
-                    ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
-                    : isExecutive 
-                      ? 'bg-[#C89630]/10 text-brand-gold border-[#C89630]/30' 
-                      : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                }`}>
-                  {activeConversation?.type === 'group' 
-                    ? 'ORATOR SYNDICATE' 
-                    : activeConversation?.subtitle || coachTitle}
-                </span>
+            {/* Contact Name & Subtitle */}
+            <div className="min-w-0 cursor-pointer" onClick={() => updateMobileView('roster')}>
+              <div className="flex items-center gap-1.5">
+                <h3 className="font-semibold text-sm sm:text-base text-white truncate leading-tight">
+                  {activeRecipientName}
+                </h3>
+                {activeConversation?.type === 'group' && (
+                  <span className="text-[9px] font-mono uppercase px-1.5 py-0.2 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+                    ORATOR SYNDICATE
+                  </span>
+                )}
               </div>
-              
-              {/* Online Presence & Syndicate Status */}
-              <div className="text-[10px] font-mono tracking-wider flex items-center gap-2 mt-0.5">
+
+              <div className="text-[11px] font-mono leading-tight flex items-center gap-1.5 mt-0.5 truncate">
                 {activeConversation?.type === 'group' ? (
                   <span className="text-cyan-400 font-bold">
                     {activeConversation.data?.member_ids?.length || 0} MEMBERS · ENCRYPTED SYNDICATE
                   </span>
+                ) : typingUsers?.[destinationClientId] ? (
+                  <span className="text-emerald-400 font-medium italic animate-pulse">
+                    typing...
+                  </span>
+                ) : activeConversation?.isOnline ? (
+                  <span className="text-emerald-400 font-bold">
+                    ONLINE • SSE ACTIVE
+                  </span>
                 ) : (
-                  <span className={activeConversation?.isOnline ? 'text-emerald-400 font-bold' : 'text-slate-400'}>
-                    {activeConversation?.isOnline ? 'ONLINE • SSE ACTIVE' : 'OFFLINE • DIRECT FACULTY THREAD'}
+                  <span className="text-slate-400">
+                    OFFLINE • DIRECT FACULTY THREAD
                   </span>
                 )}
-                <span className="text-slate-600 hidden sm:inline">|</span>
-                <span className="text-slate-400 hidden sm:inline truncate">
-                  {profile.branch || 'Executive'} Scholar Protocol
-                </span>
               </div>
             </div>
           </div>
 
           {/* Action Buttons in Header */}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             {/* Search conversation toggle */}
             <button
               onClick={() => {
                 setIsSearchingInChat(!isSearchingInChat);
                 if (isSearchingInChat) setInChatSearch('');
               }}
-              className={`p-2 rounded-xl border transition-colors cursor-pointer ${
+              className={`p-2 rounded-full hover:bg-slate-700/60 transition-colors cursor-pointer ${
                 isSearchingInChat 
-                  ? 'bg-amber-500/20 border-amber-500/40 text-amber-300' 
-                  : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+                  ? 'bg-amber-500/20 text-amber-300' 
+                  : 'text-slate-300 hover:text-white'
               }`}
               title="Search conversation messages"
             >
-              <Search className="w-4 h-4" />
+              <Search className="w-5 h-5" />
             </button>
 
             {/* Group Call / Live Chamber Button */}
             {activeConversation?.type === 'group' ? (
               <button
                 onClick={() => handleInitiateGroupCall(activeConversation.rawId)}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-slate-950 text-xs font-bold transition-all shadow-md cursor-pointer bg-cyan-400 hover:bg-cyan-300 shadow-cyan-500/20"
+                className="p-2 sm:px-3 sm:py-1.5 rounded-full hover:bg-slate-700/60 text-cyan-400 transition-all cursor-pointer flex items-center gap-1.5"
                 title="Start Syndicate Chamber Call"
               >
-                <PhoneCall className="w-4 h-4" />
-                <span className="hidden sm:inline">Group Chamber</span>
+                <PhoneCall className="w-5 h-5" />
+                <span className="hidden sm:inline text-xs font-bold">Group Call</span>
               </button>
             ) : (
               <button
                 onClick={onOpenLiveRehearsal}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-on-gold text-xs font-bold transition-all shadow-md cursor-pointer ${
-                  isExecutive 
-                    ? 'bg-[#C89630] hover:bg-[#d6a543] shadow-[#C89630]/20' 
-                    : 'bg-emerald-500 hover:bg-emerald-400 shadow-emerald-500/20'
-                }`}
+                className="p-2 sm:px-3 sm:py-1.5 rounded-full hover:bg-slate-700/60 text-emerald-400 transition-all cursor-pointer flex items-center gap-1.5"
                 title="Launch Live Rehearsal Chamber"
               >
-                <Video className="w-4 h-4" />
-                <span className="hidden sm:inline">Live Chamber</span>
+                <Video className="w-5 h-5" />
+                <span className="hidden sm:inline text-xs font-bold">Live Chamber</span>
               </button>
             )}
           </div>
@@ -1169,14 +1406,42 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
           </div>
         )}
 
-        {/* Messages Stream Container */}
-        <div className="flex-1 p-3 sm:p-6 overflow-y-auto space-y-3.5 text-xs">
+        {/* Messages Stream Container with Drag and Drop */}
+        <div 
+          ref={messagesContainerRef}
+          onDragOver={(e) => { e.preventDefault(); setIsDraggingFile(true); }}
+          onDragLeave={() => setIsDraggingFile(false)}
+          onDrop={handleDropFile}
+          className={`flex-1 min-h-0 p-3 sm:p-4 overflow-y-auto space-y-3 text-xs relative bg-[#0b141a] ${
+            isDraggingFile ? 'ring-2 ring-emerald-500 bg-emerald-950/20' : ''
+          }`}
+        >
+          {isDraggingFile && (
+            <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-xs flex flex-col items-center justify-center gap-2 z-40 border-2 border-dashed border-emerald-500 pointer-events-none">
+              <Paperclip className="h-8 w-8 text-emerald-400 animate-bounce" />
+              <div className="font-bold text-sm text-white">Drop photo or document here</div>
+              <div className="text-[10px] font-mono text-emerald-400 uppercase tracking-widest">Instant WhatsApp attachment</div>
+            </div>
+          )}
+
           {/* Thread Header pill */}
           <div className="flex justify-center my-2">
             <span className="px-3 py-0.5 rounded-full bg-slate-950/80 border border-slate-800 text-[10px] font-mono text-slate-400 uppercase tracking-widest shadow-inner">
               TODAY · {activeConversation?.type === 'group' ? 'SYNDICATE FORUM' : 'FACULTY THREAD'}
             </span>
           </div>
+
+          {/* WhatsApp Style In-Stream Faculty Triage Notice */}
+          {!assignedCoach && activeConversation?.type === 'coach' && (
+            <div className="flex justify-center my-2 animate-fadeIn">
+              <div className="px-3.5 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center max-w-sm flex items-center gap-2 shadow-xs">
+                <Lock className="w-3.5 h-3.5 text-brand-gold shrink-0" />
+                <p className="text-[10px] text-amber-200/90 font-mono leading-tight">
+                  Faculty Triage: Inquiries route directly to Head Coach & Faculty Desk.
+                </p>
+              </div>
+            </div>
+          )}
 
           {displayedMessages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-48 text-center space-y-3 p-6 text-slate-400">
@@ -1235,7 +1500,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
                   onMouseEnter={() => setHoveredMessageId(msg.id)}
                   onMouseLeave={() => setHoveredMessageId(null)}
                   className={`group relative flex gap-2 max-w-[88%] sm:max-w-[75%] transition-all ${
-                    isSpeaker ? 'ml-auto flex-row-reverse' : 'mr-auto'
+                    isSpeaker ? 'ml-auto justify-end' : 'mr-auto'
                   }`}
                 >
                   {/* Floating Action Bar on Hover */}
@@ -1275,18 +1540,10 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
                     </div>
                   )}
 
-                  {/* Avatar Icon */}
-                  {isSpeaker ? (
-                    <div className={`h-7 w-7 rounded-xl flex items-center justify-center font-bold text-[10px] shrink-0 self-end border ${
-                      isExecutive 
-                        ? 'bg-[#C89630]/20 border-[#C89630]/60 text-brand-gold' 
-                        : 'bg-emerald-950 border-emerald-500/60 text-emerald-400'
-                    }`}>
-                      {(profile.fullName || 'Speaker').slice(0, 2).toUpperCase()}
-                    </div>
-                  ) : (
+                  {/* Incoming Coach Avatar (WhatsApp native style: no avatar on outgoing speaker bubbles) */}
+                  {!isSpeaker && (
                     <div 
-                      className={`h-7 w-7 rounded-xl flex items-center justify-center font-bold text-[10px] shrink-0 self-end border transition-colors ${
+                      className={`h-7 w-7 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 self-end border transition-colors ${
                         isHeadCoachSender
                           ? 'bg-[#C89630]/20 border-[#C89630]/70 text-brand-gold shadow-sm'
                           : 'bg-slate-800 border-slate-700 text-slate-200'
@@ -1301,12 +1558,10 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
                     {/* Message Bubble */}
                     <div 
                       onClick={() => setActiveReactionMenuId(activeReactionMenuId === msg.id ? null : msg.id)}
-                      className={`relative px-4 py-3 rounded-2xl shadow-sm cursor-pointer ${
+                      className={`relative px-3.5 py-2.5 rounded-2xl shadow-xs cursor-pointer ${
                       isSpeaker
-                        ? isExecutive
-                          ? 'bg-[#C89630]/25 border border-[#C89630]/60 text-slate-100 rounded-br-xs'
-                          : 'bg-emerald-950/80 border border-emerald-500/50 text-slate-100 rounded-br-xs'
-                        : 'bg-slate-900 border border-slate-800 text-slate-100 rounded-bl-xs'
+                        ? 'bg-[#005c4b] text-white rounded-tr-xs'
+                        : 'bg-[#202c33] text-slate-100 rounded-tl-xs'
                     }`}>
                       {/* Author Attribution Header */}
                       {!isSpeaker && (
@@ -1384,22 +1639,89 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
                       ) : (
                         <>
                           {/* Standard Message Text */}
-                          {(!isVoiceNote(msg) || (msg.text && !msg.text.startsWith('🎙️') && !msg.text.includes('Voice Rehearsal') && !msg.text.includes('Voice critique'))) && (
+                          {(!isVoiceNote(msg) || (msg.text && !msg.text.startsWith('🎙️') && !msg.text.includes('Voice Rehearsal') && !msg.text.includes('Voice critique'))) &&
+                           (!msg.attachment || msg.attachment.type !== 'document' || (!msg.text?.startsWith('Attached speech document:') && !(msg as any).content?.startsWith('Attached speech document:'))) && (
                             <p className="leading-relaxed text-xs break-words text-slate-100 font-medium">{msg.text || (msg as any).content}</p>
                           )}
                         </>
                       )}
 
-                      {/* Document File Attachment Card */}
-                      {msg.attachment?.fileName && (
-                        <div className="mt-2 p-2.5 rounded-xl bg-black/40 border border-slate-700 flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-lg bg-slate-800 flex items-center justify-center text-amber-400 shrink-0">
-                            <FileText className="h-4 w-4" />
+                      {/* Image Message Photo Card (WhatsApp Photo Bubble) */}
+                      {(msg.messageType === 'image' || msg.attachment?.type === 'image' || msg.attachment?.imageUrl || (msg.attachment?.url && isImageFile(msg.attachment?.fileName, msg.attachment?.fileType, msg.attachment?.url))) && (
+                        <div 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveLightboxImage({
+                              url: msg.attachment?.imageUrl || msg.attachment?.url || '',
+                              fileName: msg.attachment?.fileName || msg.attachment?.title || 'Speech_Photo.jpg',
+                              senderName: isSpeaker ? (profile.fullName || 'Speaker') : (senderDisplayName || coachName),
+                              timestamp: formatMessageTime(msg.timestamp),
+                              caption: msg.text || msg.attachment?.caption
+                            });
+                          }}
+                          className="mt-1 relative overflow-hidden rounded-2xl cursor-pointer max-w-[320px] sm:max-w-[360px] border border-white/10 group shadow-md"
+                          title="Click to view full photo (WhatsApp Lightbox)"
+                        >
+                          <img
+                            src={msg.attachment?.imageUrl || msg.attachment?.url}
+                            alt={msg.attachment?.fileName || 'Attached Image'}
+                            className="w-full max-h-[320px] object-cover rounded-2xl transition-transform duration-300 group-hover:scale-102"
+                            loading="lazy"
+                          />
+                          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <div className="p-2 rounded-full bg-black/60 text-white backdrop-blur-xs flex items-center gap-1.5 text-xs font-mono">
+                              <Maximize2 className="w-4 h-4 text-emerald-400" />
+                              <span>View Photo</span>
+                            </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="font-bold text-[11px] text-white truncate">{msg.attachment.fileName}</div>
-                            <div className="text-[9px] font-mono text-slate-400">{msg.attachment.fileSize || 'Document'}</div>
+                        </div>
+                      )}
+
+                      {/* Document File Attachment Card (WhatsApp Interactive Document Card) */}
+                      {(msg.attachment?.fileName || msg.attachment?.type === 'document') && msg.attachment?.type !== 'image' && !isImageFile(msg.attachment?.fileName, undefined, msg.attachment?.url) && (
+                        <div 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openOrDownloadFile(
+                              msg.attachment?.fileUrl || msg.attachment?.url || (msg.attachmentData?.fileUrl || msg.attachmentData?.url),
+                              msg.attachment?.fileName || msg.attachment?.title || 'Document.pdf',
+                              { title: msg.attachment?.title, sender: isSpeaker ? (profile.fullName || 'Speaker') : (senderDisplayName || coachName) }
+                            );
+                          }}
+                          className="mt-2 p-3 rounded-2xl bg-black/50 hover:bg-black/70 border border-slate-700/80 hover:border-emerald-500/50 flex items-center justify-between gap-3 cursor-pointer transition-all group shadow-sm"
+                          title="Click to open or download document"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="h-9 w-9 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0 group-hover:scale-105 transition-transform">
+                              <FileText className="h-4.5 w-4.5" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="font-bold text-xs text-white truncate group-hover:text-emerald-300 transition-colors">
+                                {msg.attachment?.fileName || msg.attachment?.title || 'Document'}
+                              </div>
+                              <div className="text-[10px] font-mono text-slate-400 flex items-center gap-1.5 mt-0.5">
+                                <span>{msg.attachment?.fileSize || 'PDF Document'}</span>
+                                <span>•</span>
+                                <span className="uppercase text-emerald-400/90 font-bold">PDF / File</span>
+                              </div>
+                            </div>
                           </div>
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openOrDownloadFile(
+                                msg.attachment?.fileUrl || msg.attachment?.url || (msg.attachmentData?.fileUrl || msg.attachmentData?.url),
+                                msg.attachment?.fileName || msg.attachment?.title || 'Document.pdf',
+                                { title: msg.attachment?.title, sender: isSpeaker ? (profile.fullName || 'Speaker') : (senderDisplayName || coachName) }
+                              );
+                            }}
+                            className="p-2 rounded-xl bg-slate-800 hover:bg-emerald-500 hover:text-slate-950 text-slate-300 transition-all cursor-pointer shrink-0 shadow-xs"
+                            title="Open or Download"
+                          >
+                            <Download className="w-4 h-4" />
+                          </button>
                         </div>
                       )}
 
@@ -1472,11 +1794,11 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
                       })()}
 
                       {/* Message Footer: Timestamp & Delivery Status */}
-                      <div className="flex items-center justify-end gap-1 mt-1 text-[9px] text-slate-400">
-                        <span>{formatMessageTime(msg.timestamp)}</span>
+                      <div className="flex items-center justify-end gap-1 mt-1 text-[9px]">
+                        <span className={isSpeaker ? 'text-emerald-200/70' : 'text-slate-400'}>{formatMessageTime(msg.timestamp)}</span>
                         {isSpeaker && (
                           <CheckCheck 
-                            className={`h-3 w-3 ${msg.isRead ? 'text-cyan-400' : 'text-slate-400'}`}
+                            className={`h-3 w-3 ${msg.isRead ? 'text-[#53bdeb]' : 'text-emerald-200/70'}`}
                             title={msg.isRead ? (activeConversation?.type === 'coach' ? 'Read by Coach' : 'Read') : 'Delivered'}
                           />
                         )}
@@ -1525,61 +1847,96 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Quick Rhetoric & Practice Cues Bar for Speakers */}
-        <div className="px-4 py-2 bg-slate-950/80 border-t border-slate-800/80 flex items-center gap-2 overflow-x-auto text-[11px] no-scrollbar shrink-0">
-          <span className={`text-[10px] font-mono uppercase tracking-widest shrink-0 flex items-center gap-1 ${
-            isExecutive ? 'text-brand-gold' : 'text-emerald-400'
-          }`}>
-            <Zap className="h-3 w-3" />
-            SPEAKER CUES:
-          </span>
-          {speakerQuickCues.map((cue, idx) => (
-            <button
-              key={idx}
-              onClick={() => handleSendText(cue)}
-              className="shrink-0 px-3 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 whitespace-nowrap transition-colors cursor-pointer text-xs"
-            >
-              {cue}
-            </button>
-          ))}
-        </div>
 
-        {/* Input & Voice Note Composer */}
-        <div className="p-3 sm:p-4 bg-slate-950 border-t border-slate-800 relative shrink-0">
-          {/* Attachment Menu Popup */}
+        {/* WhatsApp Mobile & Desktop Native Input & Voice Note Composer */}
+        <div className="p-2 sm:p-3 bg-[#111b21] border-t border-[#202c33] relative shrink-0">
+          {/* WhatsApp Style Attachment Menu Grid */}
           {showAttachmentMenu && (
-            <div className="absolute bottom-16 left-4 p-2 rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl space-y-1 text-xs animate-in slide-in-from-bottom-2 z-30 min-w-[220px]">
-              {persistedRecordings.length > 0 && (
+            <div className="absolute bottom-18 left-3 sm:left-4 p-4 rounded-3xl bg-[#202c33] border border-[#2a3942] shadow-2xl z-30 animate-in slide-in-from-bottom-2 duration-150">
+              <div className="grid grid-cols-3 gap-4 text-center">
                 <button
+                  type="button"
                   onClick={() => {
-                    setShowRecordingsPicker(true);
+                    fileInputRef.current?.click();
                     setShowAttachmentMenu(false);
                   }}
-                  className="w-full px-3 py-2 rounded-xl text-left font-bold text-slate-200 hover:bg-slate-800 hover:text-amber-400 flex items-center gap-2 transition-colors cursor-pointer"
+                  className="flex flex-col items-center gap-1.5 group cursor-pointer"
                 >
-                  <Award className="h-4 w-4 text-amber-400" />
-                  <span>Share Saved Rehearsal ({persistedRecordings.length})</span>
+                  <div className="w-12 h-12 rounded-full bg-[#7f66ff] flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <span className="text-[11px] text-[#d1d7db] font-medium">Document</span>
                 </button>
-              )}
-              <button
-                onClick={() => {
-                  fileInputRef.current?.click();
-                  setShowAttachmentMenu(false);
-                }}
-                className="w-full px-3 py-2 rounded-xl text-left font-bold text-slate-200 hover:bg-slate-800 hover:text-cyan-400 flex items-center gap-2 transition-colors cursor-pointer"
-              >
-                <FileText className="h-4 w-4 text-cyan-400" />
-                <span>Attach Speech Document / PDF</span>
-              </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    imageInputRef.current?.click();
+                    setShowAttachmentMenu(false);
+                  }}
+                  className="flex flex-col items-center gap-1.5 group cursor-pointer"
+                >
+                  <div className="w-12 h-12 rounded-full bg-[#ac44cf] flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform">
+                    <ImageIcon className="w-5 h-5" />
+                  </div>
+                  <span className="text-[11px] text-[#d1d7db] font-medium">Photos</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    imageInputRef.current?.click();
+                    setShowAttachmentMenu(false);
+                  }}
+                  className="flex flex-col items-center gap-1.5 group cursor-pointer"
+                >
+                  <div className="w-12 h-12 rounded-full bg-[#ff2e74] flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform">
+                    <Camera className="w-5 h-5" />
+                  </div>
+                  <span className="text-[11px] text-[#d1d7db] font-medium">Camera</span>
+                </button>
+
+                {persistedRecordings.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowRecordingsPicker(true);
+                      setShowAttachmentMenu(false);
+                    }}
+                    className="flex flex-col items-center gap-1.5 group cursor-pointer"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-[#ff8c00] flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform">
+                      <Award className="w-5 h-5" />
+                    </div>
+                    <span className="text-[11px] text-[#d1d7db] font-medium">Rehearsal</span>
+                  </button>
+                )}
+
+                {selectedGroupId && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAttachmentMenu(false);
+                      handleStartChamberCall();
+                    }}
+                    className="flex flex-col items-center gap-1.5 group cursor-pointer"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-[#00b0ff] flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform">
+                      <Video className="w-5 h-5" />
+                    </div>
+                    <span className="text-[11px] text-[#d1d7db] font-medium">Live Room</span>
+                  </button>
+                )}
+              </div>
             </div>
           )}
 
           {/* Saved Rehearsal Recordings Picker Modal */}
           {showRecordingsPicker && (
-            <div className="absolute bottom-16 left-4 p-3 rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl space-y-2 text-xs z-30 max-h-64 overflow-y-auto w-80">
-              <div className="flex items-center justify-between pb-1 border-b border-slate-800">
+            <div className="absolute bottom-18 left-3 sm:left-4 p-3 rounded-2xl bg-[#202c33] border border-[#2a3942] shadow-2xl space-y-2 text-xs z-30 max-h-64 overflow-y-auto w-80">
+              <div className="flex items-center justify-between pb-1 border-b border-[#2a3942]">
                 <span className="font-bold text-xs text-white">Select Saved Rehearsal</span>
-                <button onClick={() => setShowRecordingsPicker(false)} className="text-slate-400 hover:text-white cursor-pointer">
+                <button onClick={() => setShowRecordingsPicker(false)} className="text-[#8696a0] hover:text-white cursor-pointer">
                   <X className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -1587,7 +1944,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
                 <div 
                   key={rec.id}
                   onClick={() => handleAttachRecording(rec)}
-                  className="p-2 rounded-xl bg-slate-950/80 hover:bg-slate-800 border border-slate-800 cursor-pointer flex items-center justify-between gap-2 transition-colors"
+                  className="p-2 rounded-xl bg-[#111b21] hover:bg-[#2a3942] border border-[#2a3942] cursor-pointer flex items-center justify-between gap-2 transition-colors"
                 >
                   <div className="truncate min-w-0">
                     <div className="font-bold text-slate-200 truncate">{rec.title}</div>
@@ -1601,6 +1958,33 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
             </div>
           )}
 
+          {/* WhatsApp Staged Image Preview Bar */}
+          {stagedImage && (
+            <div className="mb-2 p-2.5 rounded-2xl bg-[#202c33] border border-[#00a884]/40 flex items-center justify-between gap-3 animate-in slide-in-from-bottom-2">
+              <div className="flex items-center gap-3 min-w-0">
+                <img 
+                  src={stagedImage.dataUrl} 
+                  alt={stagedImage.name} 
+                  className="h-12 w-12 rounded-xl object-cover border border-[#00a884]/30 shrink-0" 
+                />
+                <div className="min-w-0">
+                  <div className="font-bold text-xs text-[#e9edef] truncate">{stagedImage.name}</div>
+                  <div className="text-[10px] font-mono text-[#00a884]">
+                    {stagedImage.size} · Photo staged. Add caption and tap Send.
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setStagedImage(null)}
+                className="p-1.5 rounded-xl hover:bg-[#2a3942] text-[#8696a0] hover:text-white transition-colors cursor-pointer shrink-0"
+                title="Remove Photo"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
           {/* Quoted Reply Banner */}
           {replyingToMessage && (() => {
             const replyingCoach = replyingToMessage.sender !== 'client' 
@@ -1610,9 +1994,9 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
               ? 'Yourself' 
               : (replyingCoach?.name || coachName);
             return (
-              <div className="mb-2 p-2.5 rounded-xl bg-slate-900 border-l-4 border-amber-500 flex items-center justify-between gap-2 animate-in fade-in">
+              <div className="mb-2 p-2.5 rounded-xl bg-[#202c33] border-l-4 border-[#00a884] flex items-center justify-between gap-2 animate-in fade-in">
                 <div className="min-w-0 flex-1">
-                  <div className="font-bold text-[10px] text-amber-400">
+                  <div className="font-bold text-[10px] text-[#00a884]">
                     Replying to {replyingAuthor}
                   </div>
                   <div className="text-[11px] text-slate-300 truncate">
@@ -1621,7 +2005,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
                 </div>
                 <button
                   onClick={() => setReplyingToMessage(null)}
-                  className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white cursor-pointer"
+                  className="p-1 rounded-lg hover:bg-[#2a3942] text-[#8696a0] hover:text-white cursor-pointer"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -1629,39 +2013,41 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
             );
           })()}
 
-          {/* Live Audio Recording Toolbar OR Standard Input */}
+          {/* Live Audio Recording Toolbar OR WhatsApp Input Capsule + Circular Action Button */}
           {isRecordingAudio ? (
-            <div className="flex items-center gap-3 p-2 rounded-xl bg-rose-950/40 border border-rose-500/40 animate-in fade-in">
-              <div className="flex items-center gap-2 flex-1 pl-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-rose-500 animate-ping" />
-                <span className="font-mono text-xs font-bold text-rose-300">
-                  RECORDING: {Math.floor(recordingDuration / 60)}:{(recordingDuration % 60).toString().padStart(2, '0')}
-                </span>
-                <div className="flex-1 flex items-center gap-0.5 h-4 ml-3">
-                  {[12, 20, 16, 24, 18, 28, 14, 22, 16, 20].map((h, i) => (
-                    <div key={i} className="w-1 bg-rose-400 rounded-full animate-pulse" style={{ height: `${h}px` }} />
-                  ))}
+            <div className="flex items-center gap-2.5">
+              <div className="flex-1 min-h-[46px] bg-[#202c33] rounded-3xl flex items-center px-4 py-2 gap-3 border border-rose-500/40 animate-in fade-in">
+                <button
+                  type="button"
+                  onClick={cancelRecording}
+                  className="p-1 text-[#8696a0] hover:text-rose-400 transition-colors cursor-pointer"
+                  title="Cancel Recording"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+
+                <div className="flex items-center gap-2 flex-1">
+                  <span className="h-2.5 w-2.5 rounded-full bg-rose-500 animate-ping" />
+                  <span className="font-mono text-xs font-bold text-rose-300">
+                    {Math.floor(recordingDuration / 60)}:{(recordingDuration % 60).toString().padStart(2, '0')}
+                  </span>
+                  <div className="flex-1 flex items-center gap-0.5 h-4 ml-2">
+                    {[10, 18, 14, 22, 16, 26, 12, 20, 15, 22, 12, 18].map((h, i) => (
+                      <div key={i} className="w-1 bg-rose-400 rounded-full animate-pulse" style={{ height: `${h}px` }} />
+                    ))}
+                  </div>
                 </div>
               </div>
 
               <button
                 type="button"
-                onClick={cancelRecording}
-                className="p-2 rounded-xl bg-slate-900 hover:bg-rose-900/50 text-slate-400 hover:text-rose-300 transition-colors cursor-pointer"
-                title="Cancel Recording"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-
-              <button
-                type="button"
                 onClick={stopAndSendRecording}
-                className={`px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer text-on-gold ${
-                  isExecutive ? 'bg-[#C89630] hover:bg-[#d6a543]' : 'bg-emerald-500 hover:bg-emerald-400'
-                }`}
+                aria-label="Send Voice Memo"
+                className="w-11 h-11 rounded-full bg-[#00a884] hover:bg-[#008f70] text-white flex items-center justify-center shadow-lg transition-transform active:scale-95 cursor-pointer shrink-0"
+                title="Send Voice Memo"
               >
-                <span>Send Memo</span>
-                <Send className="w-3.5 h-3.5" />
+                <span className="sr-only">Send Voice Memo</span>
+                <Send className="w-5 h-5 ml-0.5 fill-current" />
               </button>
             </div>
           ) : (
@@ -1672,49 +2058,74 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
               }}
               className="flex items-center gap-2"
             >
-              <button
-                type="button"
-                onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
-                className="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer"
-                title="Attach Rehearsal or Document"
-              >
-                <Paperclip className="w-4 h-4" />
-              </button>
+              {/* WhatsApp Left Input Capsule */}
+              <div className="flex-1 min-h-[46px] bg-[#202c33] rounded-3xl flex items-center px-3 py-1 gap-1.5 shadow-xs border border-transparent focus-within:border-[#00a884]/40">
+                <button
+                  type="button"
+                  className="p-1.5 text-[#8696a0] hover:text-[#d1d7db] transition-colors cursor-pointer shrink-0"
+                  title="Emojis"
+                >
+                  <Smile className="w-5 h-5" />
+                </button>
 
-              <input
-                type="text"
-                value={inputMessage}
-                onChange={handleInputChange}
-                onBlur={() => {
-                  if (sendTypingIndicator) {
-                    sendTypingIndicator(getDestinationClientId(), false);
-                  }
-                }}
-                placeholder={`Message ${activeRecipientName} about your presentation, speech delivery, or pacing...`}
-                className="flex-1 h-10 px-4 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-hidden focus:border-[#C89630]"
-              />
+                <input
+                  type="text"
+                  value={inputMessage}
+                  onChange={handleInputChange}
+                  onPaste={handlePaste}
+                  onBlur={() => {
+                    if (sendTypingIndicator) {
+                      sendTypingIndicator(getDestinationClientId(), false);
+                    }
+                  }}
+                  placeholder={stagedImage ? "Add an optional photo caption..." : `Message ${activeRecipientName} about your presentation, speech delivery, or pacing...`}
+                  className="flex-1 bg-transparent border-0 text-[13px] text-[#e9edef] placeholder-[#8696a0] focus:outline-hidden min-w-0"
+                />
 
-              {inputMessage.trim() ? (
+                <button
+                  type="button"
+                  onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
+                  className={`p-1.5 transition-colors cursor-pointer shrink-0 ${
+                    showAttachmentMenu ? 'text-[#00a884]' : 'text-[#8696a0] hover:text-[#d1d7db]'
+                  }`}
+                  title="Attach Photos, Rehearsal or Document"
+                >
+                  <Paperclip className="w-5 h-5" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => imageInputRef.current?.click()}
+                  className="p-1.5 text-[#8696a0] hover:text-[#d1d7db] transition-colors cursor-pointer shrink-0"
+                  title="Camera / Photos"
+                >
+                  <Camera className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* WhatsApp Right Action Circle Button: Send OR Mic */}
+              {(inputMessage.trim() || stagedImage) ? (
                 <button
                   type="submit"
                   disabled={isSending}
-                  className={`h-10 px-4 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer text-on-gold transition-all ${
-                    isExecutive
-                      ? 'bg-[#C89630] hover:bg-[#d6a543] shadow-[#C89630]/20'
-                      : 'bg-emerald-500 hover:bg-emerald-400 shadow-emerald-500/20'
-                  } ${isSending ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  aria-label={isSending ? "Sending" : "Send"}
+                  title="Send message"
+                  className={`w-11 h-11 rounded-full bg-[#00a884] hover:bg-[#008f70] text-white flex items-center justify-center shadow-lg transition-transform active:scale-95 cursor-pointer shrink-0 ${
+                    isSending ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
                 >
-                  <span>{isSending ? 'Sending...' : 'Send'}</span>
-                  <Send className="w-3.5 h-3.5" />
+                  <span className="sr-only">{isSending ? 'Sending...' : 'Send'}</span>
+                  <Send className="w-5 h-5 ml-0.5 fill-current" />
                 </button>
               ) : (
                 <button
                   type="button"
                   onClick={startRecordingAudio}
-                  className="h-10 w-10 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                  aria-label="Record Voice Rehearsal Memo"
+                  className="w-11 h-11 rounded-full bg-[#00a884] hover:bg-[#008f70] text-white flex items-center justify-center shadow-lg transition-transform active:scale-95 cursor-pointer shrink-0"
                   title="Record Voice Rehearsal Memo"
                 >
-                  <Mic className="w-4 h-4" />
+                  <Mic className="w-5 h-5" />
                 </button>
               )}
             </form>
@@ -1871,6 +2282,19 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
         branch={profile.branch || 'Executive'}
         customRoomId={chamberCustomRoomId}
       />
+
+      {/* WhatsApp Full-Screen Image Lightbox */}
+      {activeLightboxImage && (
+        <WhatsAppImageLightbox
+          isOpen={Boolean(activeLightboxImage)}
+          onClose={() => setActiveLightboxImage(null)}
+          imageUrl={activeLightboxImage.url}
+          fileName={activeLightboxImage.fileName}
+          senderName={activeLightboxImage.senderName}
+          timestamp={activeLightboxImage.timestamp}
+          caption={activeLightboxImage.caption}
+        />
+      )}
     </div>
   );
 };
