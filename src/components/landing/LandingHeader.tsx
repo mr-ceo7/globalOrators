@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   ArrowRight, 
   ChevronDown, 
@@ -140,72 +141,78 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
               <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${portalsDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
-            {portalsDropdownOpen && (
-              <div 
-                id="portals-menu"
-                className="absolute right-0 mt-2 w-56 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl p-1.5 z-50 animate-fadeIn text-left"
-                onMouseLeave={() => setPortalsDropdownOpen(false)}
-              >
-                <div className="text-[9px] uppercase font-mono tracking-widest text-slate-400 px-3 py-1 border-b border-slate-800 mb-1">
-                  Access Platform
-                </div>
-                <button
-                  onClick={() => {
-                    setPortalsDropdownOpen(false);
-                    setCurrentPortal('speaker_app');
-                  }}
-                  className="w-full px-3 py-2 rounded-lg hover:bg-slate-800 flex items-center gap-2.5 text-xs text-slate-200 transition-colors cursor-pointer"
+            <AnimatePresence>
+              {portalsDropdownOpen && (
+                <motion.div 
+                  id="portals-menu"
+                  initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                  transition={{ duration: 0.18, ease: 'easeOut' }}
+                  className="absolute right-0 mt-2 w-56 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl p-1.5 z-50 text-left"
+                  onMouseLeave={() => setPortalsDropdownOpen(false)}
                 >
-                  <Mic className="w-3.5 h-3.5 text-emerald-500" />
-                  <div className="text-left">
-                    <div className="font-semibold text-slate-100">For Speakers</div>
-                    <div className="text-[10px] text-slate-400 font-mono">Speech drills & catharsis vault</div>
+                  <div className="text-[9px] uppercase font-mono tracking-widest text-slate-400 px-3 py-1 border-b border-slate-800 mb-1">
+                    Access Platform
                   </div>
-                </button>
+                  <button
+                    onClick={() => {
+                      setPortalsDropdownOpen(false);
+                      setCurrentPortal('speaker_app');
+                    }}
+                    className="w-full px-3 py-2 rounded-lg hover:bg-slate-800 flex items-center gap-2.5 text-xs text-slate-200 transition-colors cursor-pointer"
+                  >
+                    <Mic className="w-3.5 h-3.5 text-emerald-500" />
+                    <div className="text-left">
+                      <div className="font-semibold text-slate-100">For Speakers</div>
+                      <div className="text-[10px] text-slate-400 font-mono">Speech drills & catharsis vault</div>
+                    </div>
+                  </button>
 
-                <button
-                  onClick={() => {
-                    setPortalsDropdownOpen(false);
-                    setCurrentPortal('coach_os');
-                  }}
-                  className="w-full px-3 py-2 rounded-lg hover:bg-slate-800 flex items-center gap-2.5 text-xs text-slate-200 transition-colors cursor-pointer"
-                >
-                  <ShieldCheck className="w-3.5 h-3.5 text-brand-gold" />
-                  <div className="text-left">
-                    <div className="font-semibold text-slate-100">For Coaches</div>
-                    <div className="text-[10px] text-slate-400 font-mono">Curriculums & speaker reviews</div>
-                  </div>
-                </button>
+                  <button
+                    onClick={() => {
+                      setPortalsDropdownOpen(false);
+                      setCurrentPortal('coach_os');
+                    }}
+                    className="w-full px-3 py-2 rounded-lg hover:bg-slate-800 flex items-center gap-2.5 text-xs text-slate-200 transition-colors cursor-pointer"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5 text-brand-gold" />
+                    <div className="text-left">
+                      <div className="font-semibold text-slate-100">For Coaches</div>
+                      <div className="text-[10px] text-slate-400 font-mono">Curriculums & speaker reviews</div>
+                    </div>
+                  </button>
 
-                <button
-                  onClick={() => {
-                    setPortalsDropdownOpen(false);
-                    onOpenPartner('Academy');
-                  }}
-                  className="w-full px-3 py-2 rounded-lg hover:bg-slate-800 flex items-center gap-2.5 text-xs text-slate-200 transition-colors cursor-pointer"
-                >
-                  <Building2 className="w-3.5 h-3.5 text-amber-500" />
-                  <div className="text-left">
-                    <div className="font-semibold text-slate-100">For Institutions</div>
-                    <div className="text-[10px] text-slate-400 font-mono">School & charity partnerships</div>
-                  </div>
-                </button>
+                  <button
+                    onClick={() => {
+                      setPortalsDropdownOpen(false);
+                      onOpenPartner('Academy');
+                    }}
+                    className="w-full px-3 py-2 rounded-lg hover:bg-slate-800 flex items-center gap-2.5 text-xs text-slate-200 transition-colors cursor-pointer"
+                  >
+                    <Building2 className="w-3.5 h-3.5 text-amber-500" />
+                    <div className="text-left">
+                      <div className="font-semibold text-slate-100">For Institutions</div>
+                      <div className="text-[10px] text-slate-400 font-mono">School & charity partnerships</div>
+                    </div>
+                  </button>
 
-                <button
-                  onClick={() => {
-                    setPortalsDropdownOpen(false);
-                    setSpeakerLoginOpen(true);
-                  }}
-                  className="w-full px-3 py-2 rounded-lg hover:bg-slate-800 flex items-center gap-2.5 text-xs text-slate-200 transition-colors cursor-pointer border-t border-slate-800 mt-1 pt-1.5"
-                >
-                  <LogIn className="w-3.5 h-3.5 text-brand-gold" />
-                  <div className="text-left">
-                    <div className="font-semibold text-slate-100">Sign In to Profile</div>
-                    <div className="text-[10px] text-slate-400 font-mono">Existing speaker re-entry</div>
-                  </div>
-                </button>
-              </div>
-            )}
+                  <button
+                    onClick={() => {
+                      setPortalsDropdownOpen(false);
+                      setSpeakerLoginOpen(true);
+                    }}
+                    className="w-full px-3 py-2 rounded-lg hover:bg-slate-800 flex items-center gap-2.5 text-xs text-slate-200 transition-colors cursor-pointer border-t border-slate-800 mt-1 pt-1.5"
+                  >
+                    <LogIn className="w-3.5 h-3.5 text-brand-gold" />
+                    <div className="text-left">
+                      <div className="font-semibold text-slate-100">Sign In to Profile</div>
+                      <div className="text-[10px] text-slate-400 font-mono">Existing speaker re-entry</div>
+                    </div>
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Speaker Sign In Button (Desktop) */}
@@ -242,8 +249,16 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
       </div>
 
       {/* Mobile Standard Navigation Drawer */}
-      {mobileMenuOpen && (
-        <div id="mobile-nav-drawer" className="lg:hidden mt-3 pt-3 border-t border-slate-800 bg-slate-950 text-left animate-fadeIn">
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div 
+            id="mobile-nav-drawer" 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            className="lg:hidden mt-3 pt-3 border-t border-slate-800 bg-slate-950 text-left overflow-hidden"
+          >
           <div className="flex flex-col gap-0.5 text-sm font-medium">
             <a 
               href="/"
@@ -384,8 +399,9 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
               </button>
             </div>
           </div>
-        </div>
+        </motion.div>
       )}
+    </AnimatePresence>
 
       {/* Speaker Re-Entry Login Modal */}
       <SpeakerLoginModal

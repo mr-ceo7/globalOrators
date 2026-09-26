@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircle, AlertCircle, Mail, Loader2, ArrowRight, X } from 'lucide-react';
 import { inquiriesApi, InquiryResponse } from '../../services/apiClient';
 import {
@@ -50,8 +51,6 @@ export const PartnerModal: React.FC<PartnerModalProps> = ({ isOpen, onClose, bra
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
-
-  if (!isOpen) return null;
 
   const validateField = (fieldName: string, value: string): string => {
     let err = '';
@@ -113,14 +112,33 @@ export const PartnerModal: React.FC<PartnerModalProps> = ({ isOpen, onClose, bra
   )}`;
 
   return (
-    <div 
-      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="partner-dialog-title"
-      ref={modalRef}
-    >
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 text-left shadow-2xl relative">
+    <AnimatePresence>
+      {isOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="partner-dialog-title"
+          ref={modalRef}
+        >
+          {/* Backdrop with fade animation */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/75 backdrop-blur-xs cursor-pointer"
+            onClick={onClose}
+          />
+
+          {/* Modal card with smooth scale and drift animation */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 16 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 16 }}
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 text-left shadow-2xl relative z-10 my-8"
+          >
         <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
           <div>
             <h3 id="partner-dialog-title" className="text-base font-serif font-bold text-slate-100">
@@ -372,7 +390,9 @@ export const PartnerModal: React.FC<PartnerModalProps> = ({ isOpen, onClose, bra
             </form>
           </div>
         )}
-      </div>
+      </motion.div>
     </div>
+  )}
+</AnimatePresence>
   );
 };

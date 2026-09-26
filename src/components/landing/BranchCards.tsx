@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowRight, GraduationCap, Heart, Check, Building2 } from 'lucide-react';
+import { RevealOnScroll } from '../common/MotionWrapper';
 
 interface BranchCardsProps {
   onStartOnboarding: (branch: 'Academy' | 'Foundation') => void;
@@ -13,7 +14,7 @@ export const BranchCards: React.FC<BranchCardsProps> = ({
   return (
     <section id="branches" className="py-14 sm:py-20 px-4 sm:px-8 bg-slate-950 border-b border-slate-800">
       <div className="max-w-7xl 2xl:max-w-[1440px] mx-auto text-left">
-        <div className="mb-10">
+        <RevealOnScroll className="mb-10">
           <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
             Chapter II • The Functional Structure
           </div>
@@ -23,27 +24,28 @@ export const BranchCards: React.FC<BranchCardsProps> = ({
           <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-xl font-normal">
             An ecosystem balancing world-class competitive parliamentary debate with radical philanthropic accessibility.
           </p>
-        </div>
+        </RevealOnScroll>
 
         {/* 2-Column Responsive Card Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
           {/* Branch 1: Global Orators Academy */}
-          <div id="academy" className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-7 flex flex-col justify-between shadow-lg">
-            <div>
-              <figure className="rounded-xl overflow-hidden mb-5 border border-slate-800 bg-slate-950/40">
-                <picture>
-                  <source srcSet="/images/geoffrey-youth-assembly.webp" type="image/webp" />
-                  <img 
-                    src="/images/geoffrey-youth-assembly.jpg" 
-                    alt="Geoffrey Anyona and youth scholars in training assembly at Global Orators Academy" 
-                    className="w-full h-44 sm:h-52 object-cover object-[center_35%]"
-                    loading="lazy"
-                    decoding="async"
-                    width={600}
-                    height={350}
-                  />
-                </picture>
-              </figure>
+          <RevealOnScroll delay={0.05} className="h-full">
+            <div id="academy" className="bg-slate-900 border border-slate-800 hover:border-[#C89630]/60 hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 rounded-2xl p-5 sm:p-7 flex flex-col justify-between shadow-lg h-full group">
+              <div>
+                <figure className="rounded-xl overflow-hidden mb-5 border border-slate-800 bg-slate-950/40">
+                  <picture className="w-full h-full overflow-hidden block">
+                    <source srcSet="/images/geoffrey-youth-assembly.webp" type="image/webp" />
+                    <img 
+                      src="/images/geoffrey-youth-assembly.jpg" 
+                      alt="Geoffrey Anyona and youth scholars in training assembly at Global Orators Academy" 
+                      className="w-full h-44 sm:h-52 object-cover object-[center_35%] group-hover:scale-[1.03] transition-transform duration-700 ease-out"
+                      loading="lazy"
+                      decoding="async"
+                      width={600}
+                      height={350}
+                    />
+                  </picture>
+                </figure>
 
               <div className="text-[10px] font-mono tracking-widest uppercase text-[#7A4B06] dark:text-[#E3B95C] font-bold">
                 Professional Fee & School Accreditations
@@ -113,17 +115,19 @@ export const BranchCards: React.FC<BranchCardsProps> = ({
               </button>
             </div>
           </div>
+        </RevealOnScroll>
 
-          {/* Branch 2: Global Orators Foundation */}
-          <div id="foundation" className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-7 flex flex-col justify-between shadow-lg">
+        {/* Branch 2: Global Orators Foundation */}
+        <RevealOnScroll delay={0.12} className="h-full">
+          <div id="foundation" className="bg-slate-900 border border-slate-800 hover:border-emerald-500/60 hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 rounded-2xl p-5 sm:p-7 flex flex-col justify-between shadow-lg h-full group">
             <div>
               <figure className="rounded-xl overflow-hidden mb-5 border border-slate-800 bg-slate-950/40">
-                <picture>
+                <picture className="w-full h-full overflow-hidden block">
                   <source srcSet="/images/obed-deliberation.webp" type="image/webp" />
                   <img 
                     src="/images/obed-deliberation.jpg" 
                     alt="Debaters and scholars in motion deliberation chamber at Global Orators Foundation" 
-                    className="w-full h-44 sm:h-52 object-cover object-[center_35%]"
+                    className="w-full h-44 sm:h-52 object-cover object-[center_35%] group-hover:scale-[1.03] transition-transform duration-700 ease-out"
                     loading="lazy"
                     decoding="async"
                     width={600}
@@ -200,6 +204,7 @@ export const BranchCards: React.FC<BranchCardsProps> = ({
               </button>
             </div>
           </div>
+        </RevealOnScroll>
         </div>
       </div>
     </section>

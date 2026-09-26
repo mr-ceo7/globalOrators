@@ -1,5 +1,6 @@
 import React from 'react';
 import { ArrowRight, Quote } from 'lucide-react';
+import { RevealOnScroll } from '../common/MotionWrapper';
 
 interface SpeakerSpotlightProps {
   onStartOnboarding: (branch?: 'Academy' | 'Foundation') => void;
@@ -10,7 +11,7 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
     <section className="py-14 sm:py-20 px-4 sm:px-8 bg-slate-950/60 border-b border-slate-800 text-left">
       <div className="max-w-7xl 2xl:max-w-[1440px] mx-auto space-y-14 sm:space-y-20">
         {/* Editorial Section Header */}
-        <div className="max-w-3xl space-y-2">
+        <RevealOnScroll className="max-w-3xl space-y-2">
           <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
             Speaker Spotlight • The Living Movement
           </div>
@@ -20,12 +21,12 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
           <p className="text-xs sm:text-sm text-slate-300 font-normal leading-relaxed">
             Debaters, legal scholars, and philosophers defining the Global Orators standard—transforming classrooms, courtrooms, and championship podiums across the continent.
           </p>
-        </div>
+        </RevealOnScroll>
 
         {/* ========================================================================= */}
         {/* Spotlight 1: Imani (Public Speaker & Philosopher) */}
         {/* ========================================================================= */}
-        <div className="space-y-6">
+        <RevealOnScroll delay={0.06} className="space-y-6">
           <div className="flex items-center gap-3">
             <span className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
               Dispatch 01 · Philosophy & Voice
@@ -35,7 +36,7 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
             {/* Left Column: Imani's Philosophy Card */}
-            <div className="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 flex flex-col justify-between space-y-6 shadow-xl">
+            <div className="lg:col-span-5 bg-slate-900 border border-slate-800 hover:border-[#C89630]/50 hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 rounded-2xl p-6 sm:p-8 flex flex-col justify-between space-y-6 shadow-xl">
               <div className="space-y-4">
                 <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#C89630]/10 border border-[#C89630]/20 text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
                   Philosophy & Rhetoric
@@ -117,7 +118,7 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
               </figure>
             </div>
           </div>
-        </div>
+        </RevealOnScroll>
 
         {/* Architectural Divider */}
         <div className="border-t border-slate-800/80" />
@@ -125,7 +126,7 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
         {/* ========================================================================= */}
         {/* Spotlight 2: Milo Brian (Legal Scholar, Award-Winning Debater & Poet) */}
         {/* ========================================================================= */}
-        <div className="space-y-6">
+        <RevealOnScroll delay={0.06} className="space-y-6">
           <div className="flex items-center gap-3">
             <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-700 dark:text-emerald-400 font-bold">
               Dispatch 02 · Law, Forensics & Poetics
@@ -217,12 +218,12 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
               </figure>
             </div>
           </div>
-        </div>
+        </RevealOnScroll>
 
         {/* ========================================================================= */}
         {/* Spotlight 3: Valerie Wanjiku (Debate Coach & Storytelling Specialist) */}
         {/* ========================================================================= */}
-        <div className="space-y-6">
+        <RevealOnScroll delay={0.06} className="space-y-6">
           <div className="flex items-center gap-3">
             <span className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
               Dispatch 03 · Narrative Forensics & African Voices
@@ -314,7 +315,7 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
               </figure>
             </div>
           </div>
-        </div>
+        </RevealOnScroll>
       </div>
     </section>
   );

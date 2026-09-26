@@ -9,6 +9,7 @@ import {
   ArrowRight,
   ShieldCheck
 } from 'lucide-react';
+import { RevealOnScroll } from '../common/MotionWrapper';
 import { inquiriesApi, InquiryResponse } from '../../services/apiClient';
 import { 
   sanitizeText, 
@@ -114,7 +115,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
     <section id={id} className={`bg-slate-950 text-slate-100 ${isStandalone ? 'py-16 sm:py-24' : 'py-20 sm:py-28 border-t border-slate-800'}`}>
       <div className="max-w-7xl 2xl:max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12">
         {/* Editorial Section Kicker & Header */}
-        <div className="max-w-3xl mb-12 sm:mb-16 text-left">
+        <RevealOnScroll className="max-w-3xl mb-12 sm:mb-16 text-left">
           <div className="text-[10px] sm:text-xs font-mono tracking-widest uppercase text-[#7A4B06] dark:text-[#E3B95C] font-bold mb-3">
             Direct Faculty Dispatch & Platform Governance
           </div>
@@ -125,12 +126,12 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
             Reach out for institutional partnerships, tournament adjudications, or admissions counseling. Every inquiry enters our faculty queue with a 24-hour response protocol.
           </p>
           <div className="w-16 h-0.5 bg-[#C89630] mt-6"></div>
-        </div>
+        </RevealOnScroll>
 
         {/* 2-Column Content Grid: Left Contact Dossier / Right Interactive Form */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start text-left">
           {/* Left Column: Direct Communication Channels & Regional Hubs */}
-          <div className="lg:col-span-5 space-y-8">
+          <RevealOnScroll direction="up" delay={0.05} className="lg:col-span-5 space-y-8">
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 space-y-6">
               <h3 className="font-serif font-bold text-lg text-slate-100 border-b border-slate-800 pb-3">
                 Official Correspondence Channels
@@ -184,10 +185,10 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                 </div>
               </div>
             </div>
-          </div>
+          </RevealOnScroll>
 
           {/* Right Column: Direct Interactive Inquiry Form */}
-          <div className="lg:col-span-7">
+          <RevealOnScroll direction="up" delay={0.1} className="lg:col-span-7">
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-10 shadow-2xl">
               {successData ? (
                 <div className="py-8 text-center space-y-5 animate-fadeIn">
@@ -387,7 +388,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-3.5 bg-[#C89630] hover:bg-[#D9A741] text-[#181B1F] font-serif font-black text-sm rounded-xl transition-all shadow-lg hover:shadow-xl hover:shadow-[#C89630]/20 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-3.5 bg-[#C89630] hover:bg-[#D9A741] text-[#181B1F] font-serif font-black text-sm rounded-xl transition-all shadow-lg hover:shadow-xl hover:shadow-[#C89630]/20 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
                     >
                       {loading ? (
                         <>
@@ -408,7 +409,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                 </form>
               )}
             </div>
-          </div>
+          </RevealOnScroll>
         </div>
       </div>
     </section>

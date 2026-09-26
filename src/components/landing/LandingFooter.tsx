@@ -238,7 +238,19 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
 
         <div className="pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] text-slate-400">
           <div>© {new Date().getFullYear()} Global Orators Project (GOP). All Rights Reserved.</div>
-          <div className="font-serif italic text-slate-400">"speak with impact"</div>
+          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-3 sm:gap-4">
+            <a
+              href="https://galvaniytechnologies.xn--jhb4c.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[10px] font-mono tracking-wider text-slate-400 hover:text-brand-gold transition-colors"
+              title="Galvaniy Technologies"
+            >
+              Powered by <span className="font-semibold text-slate-300 hover:text-brand-gold">Galvaniy Technologies</span>
+            </a>
+            <span className="hidden sm:inline text-slate-700">·</span>
+            <div className="font-serif italic text-slate-400">"speak with impact"</div>
+          </div>
         </div>
       </div>
     </footer>

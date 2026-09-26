@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useApp } from '../../context/AppContext';
 import { LandingHeader } from './LandingHeader';
 import { LandingFooter } from './LandingFooter';
@@ -115,7 +116,14 @@ export const LandingPage: React.FC = () => {
 
       {/* Main Editorial Content Routed View */}
       <main>
-        {renderActivePage()}
+        <motion.div
+          key={currentPath.toLowerCase().replace(/\/$/, '') || '/'}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+        >
+          {renderActivePage()}
+        </motion.div>
       </main>
 
       {/* Architectural Editorial Footer */}

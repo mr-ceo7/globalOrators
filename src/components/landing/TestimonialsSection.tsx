@@ -1,5 +1,6 @@
 import React from 'react';
 import { ArrowRight, ShieldCheck, Mail } from 'lucide-react';
+import { RevealOnScroll } from '../common/MotionWrapper';
 
 interface TestimonialsSectionProps {
   onStartOnboarding: (branch?: 'Academy' | 'Foundation') => void;
@@ -15,17 +16,17 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
       {/* 6. Human Catharsis Testimonials */}
       <section id="testimonials" className="py-14 sm:py-20 px-4 sm:px-8 bg-slate-950 border-b border-slate-800 text-left">
         <div className="max-w-7xl 2xl:max-w-[1440px] mx-auto">
-          <div className="mb-8">
+          <RevealOnScroll className="mb-8">
             <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
               Chapter IV • Living Proof & Safeguarding
             </div>
             <h2 className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight mt-1">
               "The Day I Spoke, The Heaviness Lifted."
             </h2>
-          </div>
+          </RevealOnScroll>
 
           {/* Explicit Safeguarding & Clinical Disclaimer Banner */}
-          <div className="mb-8 p-4 rounded-xl bg-slate-900 border border-slate-800 flex items-start gap-3">
+          <RevealOnScroll delay={0.05} className="mb-8 p-4 rounded-xl bg-slate-900 border border-slate-800 flex items-start gap-3">
             <ShieldCheck className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
             <div className="text-xs text-slate-300 leading-relaxed space-y-1">
               <div className="font-serif font-bold text-slate-100">
@@ -35,26 +36,28 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
                 Global Orators speech circles and debate workshops provide educational rhetoric, peer expression, and youth leadership mentorship. They are supportive spaces and <strong className="text-slate-200 font-semibold">do not replace licensed psychotherapy, psychiatric evaluation, or clinical mental health crisis care</strong>. All participant testimonials and dispatches appear with documented informed consent and verified privacy protections.
               </p>
             </div>
-          </div>
+          </RevealOnScroll>
 
           {/* Featured Community Storytelling Dispatch */}
-          <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl mb-8">
-            <picture>
-              <source srcSet="/images/mentorship-circle.webp" type="image/webp" />
-              <img 
-                src="/images/mentorship-circle.jpg" 
-                alt="African youth mentor coaching children and teenagers in a community storytelling circle in Nairobi" 
-                className="w-full h-56 sm:h-72 md:h-80 object-cover object-[center_35%] filter contrast-[1.05]" 
-                loading="lazy" 
-                decoding="async"
-                width={1000}
-                height={500}
-              />
-            </picture>
-          </figure>
+          <RevealOnScroll delay={0.08} className="mb-8">
+            <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl group">
+              <picture className="w-full h-full overflow-hidden block">
+                <source srcSet="/images/mentorship-circle.webp" type="image/webp" />
+                <img 
+                  src="/images/mentorship-circle.jpg" 
+                  alt="African youth mentor coaching children and teenagers in a community storytelling circle in Nairobi" 
+                  className="w-full h-56 sm:h-72 md:h-80 object-cover object-[center_35%] filter contrast-[1.05] group-hover:scale-[1.02] transition-transform duration-700 ease-out" 
+                  loading="lazy" 
+                  decoding="async"
+                  width={1000}
+                  height={500}
+                />
+              </picture>
+            </figure>
+          </RevealOnScroll>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-7 space-y-4 shadow-sm">
+          <RevealOnScroll delay={0.1} className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+            <div className="bg-slate-900 border border-slate-800 hover:border-[#C89630]/50 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 rounded-2xl p-5 sm:p-7 space-y-4 shadow-sm">
               <p className="text-xs sm:text-sm text-slate-300 italic leading-relaxed font-serif">
                 "A public speaker and philosopher passionately enthusiastic about giving a voice to the leaders of tomorrow, believing in the power of structured arguments and eloquent communication to better shape associations amongst future leaders. Global Orators gave me the platform to sharpen rigorous rhetoric while creating safe rooms for others to find their voice."
               </p>
@@ -83,7 +86,7 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
               </div>
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-7 space-y-4 shadow-sm">
+            <div className="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 rounded-2xl p-5 sm:p-7 space-y-4 shadow-sm">
               <p className="text-xs sm:text-sm text-slate-300 italic leading-relaxed font-serif">
                 "A legal scholar, award-winning debater, poet and a firm believer in not limiting oneself regardless of the underlying circumstances. Global Orators provides the arena where forensic legal precision and poetic voice converge—empowering young advocates to dismantle institutional barriers and argue without fear or concession."
               </p>
@@ -111,13 +114,13 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
                 </div>
               </div>
             </div>
-          </div>
+          </RevealOnScroll>
         </div>
       </section>
 
       {/* 7. Conversion Section: Specific Operational Actions */}
       <section className="py-14 sm:py-20 px-4 sm:px-8 border-b border-slate-800 text-center">
-        <div className="max-w-3xl mx-auto space-y-5">
+        <RevealOnScroll delay={0.06} className="max-w-3xl mx-auto space-y-5">
           <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
             Applications & Partnerships
           </div>
@@ -131,7 +134,7 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
             <button
               onClick={() => onStartOnboarding()}
-              className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-[#181B1F] font-serif font-bold text-xs shadow-xl shadow-[#C89630]/25 flex items-center justify-center gap-2 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[#C89630] focus-visible:outline-hidden"
+              className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#C89630] hover:bg-[#B37D22] text-[#181B1F] font-serif font-bold text-xs shadow-xl shadow-[#C89630]/25 flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer focus-visible:ring-2 focus-visible:ring-[#C89630] focus-visible:outline-hidden"
             >
               <span>Start Your Application</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -139,7 +142,7 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
 
             <button
               onClick={() => onOpenPartner('Foundation')}
-              className="w-full sm:w-auto px-6 py-3.5 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 text-slate-100 font-serif font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer hover:border-slate-700 focus-visible:ring-2 focus-visible:ring-[#C89630] focus-visible:outline-hidden"
+              className="w-full sm:w-auto px-6 py-3.5 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 text-slate-100 font-serif font-bold text-xs flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer hover:border-slate-700 focus-visible:ring-2 focus-visible:ring-[#C89630] focus-visible:outline-hidden"
             >
               <span>Book Institutional Call / Partnership</span>
             </button>
@@ -148,7 +151,7 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
           <div className="pt-2 text-[11px] font-mono text-slate-400">
             Direct Director Governance Inquiries: <a href="mailto:director@globaloratorsproject.com" className="text-[#7A4B06] dark:text-[#E3B95C] underline hover:text-[#B37D22]">director@globaloratorsproject.com</a>
           </div>
-        </div>
+        </RevealOnScroll>
       </section>
     </>
   );

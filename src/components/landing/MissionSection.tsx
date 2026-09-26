@@ -1,11 +1,12 @@
 import React from 'react';
 import { Quote } from 'lucide-react';
 import { VoiceDispatchPlayer } from './VoiceDispatchPlayer';
+import { RevealOnScroll } from '../common/MotionWrapper';
 
 export const MissionSection: React.FC = () => {
   return (
     <section id="mission" className="py-14 sm:py-20 px-4 sm:px-8 max-w-5xl mx-auto border-b border-slate-800">
-      <div className="text-left space-y-3 mb-12">
+      <RevealOnScroll className="text-left space-y-3 mb-12">
         <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
           Chapter I • The Diagnosis & The Remedy
         </div>
@@ -13,10 +14,11 @@ export const MissionSection: React.FC = () => {
           What is the Root Crisis Facing African Society?
         </h2>
         <div className="w-16 h-0.5 bg-[#C89630]" />
-      </div>
+      </RevealOnScroll>
 
       {/* Founder's Note: Geoffrey Anyona */}
-      <div className="p-6 sm:p-7 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-4 mb-10 text-left">
+      <RevealOnScroll delay={0.06} className="mb-10">
+        <div className="p-6 sm:p-7 rounded-2xl bg-slate-900 border border-slate-800 hover:border-[#C89630]/40 transition-colors shadow-xl space-y-4 text-left">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
           <div className="flex items-center gap-3.5">
             <picture>
@@ -51,9 +53,11 @@ export const MissionSection: React.FC = () => {
           We are working to build a generation that is not simply articulate, but aware, intellectually curious, and courageous enough to participate in shaping its future. Our movement dismantles cognitive conditioning by combining parliamentary forensic discipline with authentic, trauma-informed vocal release.
         </p>
       </div>
+    </RevealOnScroll>
 
-      {/* Co-Founder's Note & Forensic Track Record: Tyrese King’ori Nyawira */}
-      <div className="p-6 sm:p-7 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-5 mb-10 text-left">
+    {/* Co-Founder's Note & Forensic Track Record: Tyrese King’ori Nyawira */}
+    <RevealOnScroll delay={0.08} className="mb-10">
+      <div className="p-6 sm:p-7 rounded-2xl bg-slate-900 border border-slate-800 hover:border-[#C89630]/40 transition-colors shadow-xl space-y-5 text-left">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
           <div className="flex items-center gap-3.5">
             <picture>
@@ -144,43 +148,45 @@ export const MissionSection: React.FC = () => {
           </div>
         </div>
       </div>
+    </RevealOnScroll>
 
-      {/* Editorial 2-Column Split */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 text-left">
-        {/* Pillar 1 */}
-        <div className="space-y-4 text-xs sm:text-sm text-slate-300 leading-relaxed">
-          <div className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
-            The First Pillar • Deconditioning & Pan-African Enlightenment
-          </div>
-          <h3 className="text-xl sm:text-2xl font-serif font-bold text-slate-100">
-            Cognitive Sovereignty & Deconditioning
-          </h3>
-
-          <figure className="rounded-xl overflow-hidden border border-slate-800 bg-slate-900 shadow-sm my-3">
-            <img 
-              src="/images/geoffrey-contemplation.jpg" 
-              alt="Geoffrey Anyona reflecting with pen in hand during an international debate assembly"
-              className="w-full h-44 sm:h-52 object-cover object-[center_25%] filter contrast-[1.03]"
-              loading="lazy"
-              decoding="async"
-              width={600}
-              height={350}
-            />
-          </figure>
-
-          <p className="font-serif text-sm sm:text-base text-slate-100 italic leading-snug">
-            "A lack of information stemming from colonial social conditioning has conditioned the mentalities of our populace—creating social mediocrity that still struggles with ethnic division, western dependency, and self-doubt."
-          </p>
-          <p>
-            When a generation is deprived of cognitive familiarity with the economic, political, and historical mechanisms governing their lives, leadership default becomes imitation. We settle for the status quo and wait for external validation.
-          </p>
-          <p>
-            The primary mission of Global Orators is to dismantle this intellectual inertia. We teach young Africans to deconstruct policy, debate foundational constitutional and economic dilemmas, and manifest self-development through uncompromising action.
-          </p>
+    {/* Editorial 2-Column Split */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 text-left">
+      {/* Pillar 1 */}
+      <RevealOnScroll delay={0.06} className="space-y-4 text-xs sm:text-sm text-slate-300 leading-relaxed">
+        <div className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
+          The First Pillar • Deconditioning & Pan-African Enlightenment
         </div>
+        <h3 className="text-xl sm:text-2xl font-serif font-bold text-slate-100">
+          Cognitive Sovereignty & Deconditioning
+        </h3>
 
-        {/* Pillar 2: Speaking as Escapism & Catharsis */}
-        <div id="escapism" className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-7 space-y-4 shadow-xs flex flex-col justify-between">
+        <figure className="rounded-xl overflow-hidden border border-slate-800 bg-slate-900 shadow-sm my-3 group">
+          <img 
+            src="/images/geoffrey-contemplation.jpg" 
+            alt="Geoffrey Anyona reflecting with pen in hand during an international debate assembly"
+            className="w-full h-44 sm:h-52 object-cover object-[center_25%] filter contrast-[1.03] group-hover:scale-[1.03] transition-transform duration-700 ease-out"
+            loading="lazy"
+            decoding="async"
+            width={600}
+            height={350}
+          />
+        </figure>
+
+        <p className="font-serif text-sm sm:text-base text-slate-100 italic leading-snug">
+          "A lack of information stemming from colonial social conditioning has conditioned the mentalities of our populace—creating social mediocrity that still struggles with ethnic division, western dependency, and self-doubt."
+        </p>
+        <p>
+          When a generation is deprived of cognitive familiarity with the economic, political, and historical mechanisms governing their lives, leadership default becomes imitation. We settle for the status quo and wait for external validation.
+        </p>
+        <p>
+          The primary mission of Global Orators is to dismantle this intellectual inertia. We teach young Africans to deconstruct policy, debate foundational constitutional and economic dilemmas, and manifest self-development through uncompromising action.
+        </p>
+      </RevealOnScroll>
+
+      {/* Pillar 2: Speaking as Escapism & Catharsis */}
+      <RevealOnScroll delay={0.12} className="h-full">
+        <div id="escapism" className="bg-slate-900 border border-slate-800 hover:border-[#C89630]/40 transition-colors rounded-2xl p-5 sm:p-7 space-y-4 shadow-xs flex flex-col justify-between h-full">
           <div className="space-y-3.5">
             <div className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
               The Second Pillar • Mental Health & Voice
@@ -204,7 +210,8 @@ export const MissionSection: React.FC = () => {
             <span>"To speak your truth is not a performance—it is your liberation."</span>
           </div>
         </div>
-      </div>
+      </RevealOnScroll>
+    </div>
     </section>
   );
 };
