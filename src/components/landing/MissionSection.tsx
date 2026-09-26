@@ -108,10 +108,6 @@ export const MissionSection: React.FC = () => {
                   />
                 </picture>
               </div>
-              <figcaption className="p-2 sm:p-2.5 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono">
-                <span className="text-[#7A4B06] dark:text-[#E3B95C] font-semibold">Rostrum Address</span>
-                <span className="text-slate-400">Nairobi</span>
-              </figcaption>
             </figure>
 
             {/* Visual 2: Solo Championship Laureate with Trophy & Medals (tyrese2.jpeg) */}
@@ -128,10 +124,6 @@ export const MissionSection: React.FC = () => {
                   />
                 </picture>
               </div>
-              <figcaption className="p-2 sm:p-2.5 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono">
-                <span className="text-[#7A4B06] dark:text-[#E3B95C] font-semibold">Trophy & Medals</span>
-                <span className="text-slate-400">Forensic Laureate</span>
-              </figcaption>
             </figure>
 
             {/* Visual 3: Championship Delegation Victory (tyrese1.jpeg) */}
@@ -148,10 +140,6 @@ export const MissionSection: React.FC = () => {
                   />
                 </picture>
               </div>
-              <figcaption className="p-2 sm:p-2.5 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono">
-                <span className="text-slate-200 font-semibold">Championship Delegation</span>
-                <span className="text-slate-400">Team Victory</span>
-              </figcaption>
             </figure>
           </div>
         </div>
@@ -178,10 +166,6 @@ export const MissionSection: React.FC = () => {
               width={600}
               height={350}
             />
-            <figcaption className="px-3.5 py-2 bg-slate-950/80 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono">
-              <span className="text-slate-300 uppercase tracking-wider font-semibold">Founding Inquiry</span>
-              <span className="text-[#7A4B06] dark:text-[#E3B95C] uppercase tracking-widest font-semibold">Cognitive Sovereignty</span>
-            </figcaption>
           </figure>
 
           <p className="font-serif text-sm sm:text-base text-slate-100 italic leading-snug">

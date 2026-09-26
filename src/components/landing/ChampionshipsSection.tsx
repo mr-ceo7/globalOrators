@@ -2,7 +2,7 @@ import React from 'react';
 
 export const ChampionshipsSection: React.FC = () => {
   return (
-    <section id="championships" className="py-14 sm:py-20 px-4 sm:px-8 max-w-6xl mx-auto text-left border-b border-slate-800">
+    <section id="championships" className="py-14 sm:py-20 px-4 sm:px-8 max-w-7xl 2xl:max-w-[1440px] mx-auto text-left border-b border-slate-800">
       <div className="flex flex-col md:flex-row md:items-end justify-between mb-10">
         <div>
           <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
@@ -31,13 +31,6 @@ export const ChampionshipsSection: React.FC = () => {
             height={600}
           />
         </picture>
-        <figcaption className="px-4 py-2.5 sm:py-3 bg-slate-900 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] font-mono">
-          <div className="flex items-center gap-2">
-            <span className="text-[#7A4B06] dark:text-[#E3B95C] font-semibold uppercase tracking-wider">Tournament Championship Delegation · Team Victory</span>
-            <span className="text-slate-400">Continental Circuit</span>
-          </div>
-          <div className="text-slate-400">Trophy & Gold Medal Laureates • British Parliamentary Excellence</div>
-        </figcaption>
       </figure>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">

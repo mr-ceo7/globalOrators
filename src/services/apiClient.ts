@@ -430,6 +430,8 @@ export interface InquiryPayload {
 export interface InquiryResponse {
   status: string;
   inquiryId: string;
+  inquiry_id?: string;
+  id?: string;
   organization: string;
   email: string;
   branch: string;

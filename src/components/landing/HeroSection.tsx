@@ -10,7 +10,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onStartOnboarding }) =
 
   return (
     <section className="relative pt-8 sm:pt-14 pb-12 sm:pb-20 px-4 sm:px-8 border-b border-slate-800">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-7xl 2xl:max-w-[1440px] mx-auto">
         {/* Mobile: 1-Column sequential rhythm (Headline -> Value Prop -> Image -> Paragraph -> CTAs -> Proof Points)
             Desktop (lg:): 2-Column editorial split (Col 1-7 Left narrative rows 1-5, Col 8-12 Right Image spanning rows 1-5) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-y-4 sm:gap-y-5 lg:gap-x-12 lg:items-center">
@@ -55,10 +55,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onStartOnboarding }) =
                 </div>
               </div>
             )}
-            <figcaption className="border-t border-slate-800 px-3.5 py-2 sm:py-2.5 text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] flex items-center justify-between shrink-0 bg-slate-900">
-              <span className="font-semibold">Imani · Public Speaker & Philosopher</span>
-              <span className="text-slate-400 font-normal">Nairobi Assembly Floor</span>
-            </figcaption>
           </figure>
 
           {/* 4. One short supporting paragraph */}

@@ -62,7 +62,7 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({
       />
 
       {/* Breadcrumb Navigation */}
-      <nav aria-label="Breadcrumb" className="max-w-6xl mx-auto pt-6 px-4 sm:px-8">
+      <nav aria-label="Breadcrumb" className="max-w-7xl 2xl:max-w-[1440px] mx-auto pt-6 px-4 sm:px-8">
         <ol className="flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-widest text-slate-400">
           <li>
             <a 
@@ -79,7 +79,7 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({
       </nav>
 
       {/* Hero Header */}
-      <section className="py-10 sm:py-16 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800">
+      <section className="py-10 sm:py-16 px-4 sm:px-8 max-w-7xl 2xl:max-w-[1440px] mx-auto border-b border-slate-800">
         <div className="max-w-3xl space-y-4">
           <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
             Competitive & Executive Wing • Professional Fee & Accreditations
@@ -110,7 +110,7 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({
       </section>
 
       {/* Featured Arena Dispatch: Authentic Documentary Visuals */}
-      <section className="py-8 sm:py-12 px-4 sm:px-8 max-w-6xl mx-auto">
+      <section className="py-8 sm:py-12 px-4 sm:px-8 max-w-7xl 2xl:max-w-[1440px] mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl flex flex-col justify-between">
             <div className="h-64 sm:h-80 w-full overflow-hidden bg-slate-950">
@@ -121,10 +121,6 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({
                 loading="lazy" 
               />
             </div>
-            <figcaption className="px-4 py-3 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-[11px] font-mono uppercase tracking-widest text-slate-400">
-              <span className="text-[#7A4B06] dark:text-[#E3B95C] font-semibold">Chamber Point of Information</span>
-              <span>Parliamentary Floor Action</span>
-            </figcaption>
           </figure>
 
           <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl flex flex-col justify-between">
@@ -136,16 +132,12 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({
                 loading="lazy" 
               />
             </div>
-            <figcaption className="px-4 py-3 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-[11px] font-mono uppercase tracking-widest text-slate-400">
-              <span className="text-emerald-500 font-semibold">15-Minute Deliberation Room</span>
-              <span>Collaborative Case Prep</span>
-            </figcaption>
           </figure>
         </div>
       </section>
 
       {/* Program Specifications Matrix */}
-      <section className="py-8 sm:py-12 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800">
+      <section className="py-8 sm:py-12 px-4 sm:px-8 max-w-7xl 2xl:max-w-[1440px] mx-auto border-b border-slate-800">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
             <div className="text-[10px] font-mono uppercase text-slate-400">Cohort Duration</div>
@@ -171,7 +163,7 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({
       </section>
 
       {/* 12-Week Curriculum Modules */}
-      <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800">
+      <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-7xl 2xl:max-w-[1440px] mx-auto border-b border-slate-800">
         <div className="mb-10 text-left">
           <div className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
             Curriculum Structure
@@ -206,7 +198,7 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({
       </section>
 
       {/* Academy Scholar in Focus: Obed */}
-      <section className="py-12 sm:py-16 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800 text-left">
+      <section className="py-12 sm:py-16 px-4 sm:px-8 max-w-7xl 2xl:max-w-[1440px] mx-auto border-b border-slate-800 text-left">
         <div className="p-6 sm:p-10 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-6">
           <div className="flex items-center gap-3">
             <span className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
@@ -269,7 +261,7 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({
       </section>
 
       {/* Academy Faculty in Focus: Valerie Wanjiku */}
-      <section className="py-12 sm:py-16 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800 text-left">
+      <section className="py-12 sm:py-16 px-4 sm:px-8 max-w-7xl 2xl:max-w-[1440px] mx-auto border-b border-slate-800 text-left">
         <div className="p-6 sm:p-10 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-6">
           <div className="flex items-center gap-3">
             <span className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">

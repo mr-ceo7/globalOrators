@@ -8,7 +8,7 @@ interface SpeakerSpotlightProps {
 export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboarding }) => {
   return (
     <section className="py-14 sm:py-20 px-4 sm:px-8 bg-slate-950/60 border-b border-slate-800 text-left">
-      <div className="max-w-6xl mx-auto space-y-14 sm:space-y-20">
+      <div className="max-w-7xl 2xl:max-w-[1440px] mx-auto space-y-14 sm:space-y-20">
         {/* Editorial Section Header */}
         <div className="max-w-3xl space-y-2">
           <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
@@ -85,57 +85,35 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
             {/* Right Column: Dual Authentic Documentary Images for Imani */}
             <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-5">
               {/* Card 1: Debate Preparation (imani-prep.jpg) */}
-              <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl flex flex-col justify-between">
-                <div className="h-64 sm:h-72 w-full overflow-hidden bg-slate-950">
-                  <picture>
-                    <source srcSet="/images/imani-prep.webp" type="image/webp" />
-                    <img 
-                      src="/images/imani-prep.jpg" 
-                      alt="Imani studying and drafting philosophical debate arguments in her notebook" 
-                      className="w-full h-full object-cover object-[center_20%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500" 
-                      loading="lazy" 
-                      decoding="async"
-                      width={500}
-                      height={350}
-                    />
-                  </picture>
-                </div>
-                <figcaption className="p-3.5 bg-slate-900 border-t border-slate-800 space-y-1">
-                  <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
-                    <span>Argument Architecture</span>
-                    <span className="text-slate-600 dark:text-slate-400 font-normal">Fahari Session</span>
-                  </div>
-                  <p className="text-[11px] text-slate-300 leading-snug font-normal">
-                    Imani drafting motion points and counter-theses prior to the parliamentary division.
-                  </p>
-                </figcaption>
+              <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 shadow-xl h-64 sm:h-80 w-full">
+                <picture>
+                  <source srcSet="/images/imani-prep.webp" type="image/webp" />
+                  <img 
+                    src="/images/imani-prep.jpg" 
+                    alt="Imani studying and drafting philosophical debate arguments in her notebook" 
+                    className="w-full h-full object-cover object-[center_20%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500" 
+                    loading="lazy" 
+                    decoding="async"
+                    width={500}
+                    height={350}
+                  />
+                </picture>
               </figure>
 
               {/* Card 2: Assembly Circle Dialogue (imani-dialogue.jpg) */}
-              <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl flex flex-col justify-between">
-                <div className="h-64 sm:h-72 w-full overflow-hidden bg-slate-950">
-                  <picture>
-                    <source srcSet="/images/imani-dialogue.webp" type="image/webp" />
-                    <img 
-                      src="/images/imani-dialogue.jpg" 
-                      alt="Imani passionately dialoguing and smiling with fellow debaters during an assembly circle" 
-                      className="w-full h-full object-cover object-[center_25%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500" 
-                      loading="lazy" 
-                      decoding="async"
-                      width={500}
-                      height={350}
-                    />
-                  </picture>
-                </div>
-                <figcaption className="p-3.5 bg-slate-900 border-t border-slate-800 space-y-1">
-                  <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
-                    <span>Forensic Dialogue</span>
-                    <span className="text-slate-600 dark:text-slate-400 font-normal">Nairobi Circle</span>
-                  </div>
-                  <p className="text-[11px] text-slate-300 leading-snug font-normal">
-                    Collaborative peer critique: sharpening rhetoric through respectful interrogation.
-                  </p>
-                </figcaption>
+              <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 shadow-xl h-64 sm:h-80 w-full">
+                <picture>
+                  <source srcSet="/images/imani-dialogue.webp" type="image/webp" />
+                  <img 
+                    src="/images/imani-dialogue.jpg" 
+                    alt="Imani passionately dialoguing and smiling with fellow debaters during an assembly circle" 
+                    className="w-full h-full object-cover object-[center_25%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500" 
+                    loading="lazy" 
+                    decoding="async"
+                    width={500}
+                    height={350}
+                  />
+                </picture>
               </figure>
             </div>
           </div>
@@ -207,57 +185,35 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
             {/* Right Column: Dual Authentic Documentary Images for Milo */}
             <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-5">
               {/* Card 1: Championship Podium (milo-podium.jpg) */}
-              <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl flex flex-col justify-between">
-                <div className="h-64 sm:h-72 w-full overflow-hidden bg-slate-950">
-                  <picture>
-                    <source srcSet="/images/milo-podium.webp" type="image/webp" />
-                    <img 
-                      src="/images/milo-podium.jpg" 
-                      alt="Milo Brian delivering an award-winning speech at the podium with microphone" 
-                      className="w-full h-full object-cover object-[center_15%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500" 
-                      loading="lazy" 
-                      decoding="async"
-                      width={500}
-                      height={350}
-                    />
-                  </picture>
-                </div>
-                <figcaption className="p-3.5 bg-slate-900 border-t border-slate-800 space-y-1">
-                  <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-emerald-700 dark:text-emerald-400 font-bold">
-                    <span>Parliamentary Division</span>
-                    <span className="text-slate-600 dark:text-slate-400 font-normal">Tournament Circuit</span>
-                  </div>
-                  <p className="text-[11px] text-slate-300 leading-snug font-normal">
-                    Milo commanding the assembly floor with forensic precision, proving that intellect recognizes no artificial bounds.
-                  </p>
-                </figcaption>
+              <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 shadow-xl h-64 sm:h-80 w-full">
+                <picture>
+                  <source srcSet="/images/milo-podium.webp" type="image/webp" />
+                  <img 
+                    src="/images/milo-podium.jpg" 
+                    alt="Milo Brian delivering an award-winning speech at the podium with microphone" 
+                    className="w-full h-full object-cover object-[center_15%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500" 
+                    loading="lazy" 
+                    decoding="async"
+                    width={500}
+                    height={350}
+                  />
+                </picture>
               </figure>
 
               {/* Card 2: Poetics & Case Construction (milo-prep.jpg) */}
-              <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl flex flex-col justify-between">
-                <div className="h-64 sm:h-72 w-full overflow-hidden bg-slate-950">
-                  <picture>
-                    <source srcSet="/images/milo-prep.webp" type="image/webp" />
-                    <img 
-                      src="/images/milo-prep.jpg" 
-                      alt="Milo Brian reviewing debate frameworks and poetry in front of a green chalkboard" 
-                      className="w-full h-full object-cover object-[center_30%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500" 
-                      loading="lazy" 
-                      decoding="async"
-                      width={500}
-                      height={350}
-                    />
-                  </picture>
-                </div>
-                <figcaption className="p-3.5 bg-slate-900 border-t border-slate-800 space-y-1">
-                  <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-emerald-700 dark:text-emerald-400 font-bold">
-                    <span>Poetics & Jurisprudence</span>
-                    <span className="text-slate-600 dark:text-slate-400 font-normal">Assembly Room</span>
-                  </div>
-                  <p className="text-[11px] text-slate-300 leading-snug font-normal">
-                    Analyzing constitutional jurisprudence and rhetorical rhythm: constructing arguments that withstand cross-examination.
-                  </p>
-                </figcaption>
+              <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 shadow-xl h-64 sm:h-80 w-full">
+                <picture>
+                  <source srcSet="/images/milo-prep.webp" type="image/webp" />
+                  <img 
+                    src="/images/milo-prep.jpg" 
+                    alt="Milo Brian reviewing debate frameworks and poetry in front of a green chalkboard" 
+                    className="w-full h-full object-cover object-[center_30%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500" 
+                    loading="lazy" 
+                    decoding="async"
+                    width={500}
+                    height={350}
+                  />
+                </picture>
               </figure>
             </div>
           </div>
@@ -326,57 +282,35 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
             {/* Right Column: Dual Authentic Documentary Images for Valerie */}
             <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-5">
               {/* Card 1: Assembly Rostrum (valerie-assembly.jpg) */}
-              <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl flex flex-col justify-between">
-                <div className="h-64 sm:h-72 w-full overflow-hidden bg-slate-950">
-                  <picture>
-                    <source srcSet="/images/valerie-assembly.webp" type="image/webp" />
-                    <img 
-                      src="/images/valerie-assembly.jpg" 
-                      alt="Valerie Wanjiku addressing the continental assembly forum at the rostrum in Maseru, Lesotho" 
-                      className="w-full h-full object-cover object-[center_20%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500" 
-                      loading="lazy" 
-                      decoding="async" 
-                      width={500}
-                      height={350}
-                    />
-                  </picture>
-                </div>
-                <figcaption className="p-3.5 bg-slate-900 border-t border-slate-800 space-y-1">
-                  <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
-                    <span>Continental Assembly</span>
-                    <span className="text-slate-600 dark:text-slate-400 font-normal">Maseru, Lesotho</span>
-                  </div>
-                  <p className="text-[11px] text-slate-300 leading-snug font-normal">
-                    Valerie presenting on youth oratorical agency and the vital imperative of centering African narratives on global platforms.
-                  </p>
-                </figcaption>
+              <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 shadow-xl h-64 sm:h-80 w-full">
+                <picture>
+                  <source srcSet="/images/valerie-assembly.webp" type="image/webp" />
+                  <img 
+                    src="/images/valerie-assembly.jpg" 
+                    alt="Valerie Wanjiku addressing the continental assembly forum at the rostrum in Maseru, Lesotho" 
+                    className="w-full h-full object-cover object-[center_20%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500" 
+                    loading="lazy" 
+                    decoding="async" 
+                    width={500}
+                    height={350}
+                  />
+                </picture>
               </figure>
 
               {/* Card 2: Podium Delivery & Forensics (valerie-podium.jpg) */}
-              <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl flex flex-col justify-between">
-                <div className="h-64 sm:h-72 w-full overflow-hidden bg-slate-950">
-                  <picture>
-                    <source srcSet="/images/valerie-podium.webp" type="image/webp" />
-                    <img 
-                      src="/images/valerie-podium.jpg" 
-                      alt="Valerie Wanjiku in oratorical delivery at the International Sports and Olympism podium" 
-                      className="w-full h-full object-cover object-[center_25%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500" 
-                      loading="lazy" 
-                      decoding="async" 
-                      width={500}
-                      height={350}
-                    />
-                  </picture>
-                </div>
-                <figcaption className="p-3.5 bg-slate-900 border-t border-slate-800 space-y-1">
-                  <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
-                    <span>Forensics & Stage Command</span>
-                    <span className="text-slate-600 dark:text-slate-400 font-normal">Assembly Chamber</span>
-                  </div>
-                  <p className="text-[11px] text-slate-300 leading-snug font-normal">
-                    Delivering structured argument and rhetorical poise before continental delegates and international sports leadership.
-                  </p>
-                </figcaption>
+              <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 shadow-xl h-64 sm:h-80 w-full">
+                <picture>
+                  <source srcSet="/images/valerie-podium.webp" type="image/webp" />
+                  <img 
+                    src="/images/valerie-podium.jpg" 
+                    alt="Valerie Wanjiku in oratorical delivery at the International Sports and Olympism podium" 
+                    className="w-full h-full object-cover object-[center_25%] filter contrast-[1.03] hover:scale-102 transition-transform duration-500" 
+                    loading="lazy" 
+                    decoding="async" 
+                    width={500}
+                    height={350}
+                  />
+                </picture>
               </figure>
             </div>
           </div>

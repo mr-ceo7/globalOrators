@@ -152,7 +152,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
       />
 
       {/* Breadcrumb Navigation */}
-      <nav aria-label="Breadcrumb" className="max-w-6xl mx-auto pt-6 px-4 sm:px-8">
+      <nav aria-label="Breadcrumb" className="max-w-7xl 2xl:max-w-[1440px] mx-auto pt-6 px-4 sm:px-8">
         <ol className="flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-widest text-slate-400">
           <li>
             <a 
@@ -169,7 +169,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
       </nav>
 
       {/* Editorial Hero Header */}
-      <section className="py-10 sm:py-16 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800">
+      <section className="py-10 sm:py-16 px-4 sm:px-8 max-w-7xl 2xl:max-w-[1440px] mx-auto border-b border-slate-800">
         <div className="max-w-3xl space-y-4">
           <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
             Chapter I • Intellectual Genesis & Movement Manifesto
@@ -218,15 +218,11 @@ export const AboutPage: React.FC<AboutPageProps> = ({
             className="w-full h-60 sm:h-80 md:h-96 object-cover object-[center_35%] filter contrast-[1.03]" 
             loading="lazy" 
           />
-          <figcaption className="px-4 py-2.5 bg-slate-900 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] font-mono uppercase tracking-widest text-slate-400">
-            <span className="text-[#7A4B06] dark:text-[#E3B95C] font-semibold">Proposition Deliberation · Continental Assembly Forum · Maseru</span>
-            <span>Policy Deconstruction & International Debate</span>
-          </figcaption>
         </figure>
       </section>
 
       {/* Chapter 2: The Founder's Conviction & Leadership */}
-      <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800 text-left">
+      <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-7xl 2xl:max-w-[1440px] mx-auto border-b border-slate-800 text-left">
         <div className="mb-10 text-left">
           <div className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
             Chapter II • Leadership & Founding Conviction
@@ -251,10 +247,6 @@ export const AboutPage: React.FC<AboutPageProps> = ({
                   loading="lazy" 
                 />
               </div>
-              <figcaption className="p-3 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-slate-400">
-                <span className="text-[#7A4B06] dark:text-[#E3B95C] font-bold">Geoffrey Anyona</span>
-                <span>Founder & Forensics Director</span>
-              </figcaption>
             </figure>
 
             <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl flex flex-col justify-between">
@@ -266,10 +258,6 @@ export const AboutPage: React.FC<AboutPageProps> = ({
                   loading="lazy" 
                 />
               </div>
-              <figcaption className="p-3 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-slate-400">
-                <span className="text-emerald-500 font-bold">Keynote Dispatch</span>
-                <span>Maseru, Lesotho</span>
-              </figcaption>
             </figure>
           </div>
 
@@ -321,7 +309,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
       </section>
 
       {/* Chapter 3: Movement Directorate & Faculty */}
-      <section id="team" className="py-12 sm:py-18 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800 text-left">
+      <section id="team" className="py-12 sm:py-18 px-4 sm:px-8 max-w-7xl 2xl:max-w-[1440px] mx-auto border-b border-slate-800 text-left">
         <div className="mb-10 text-left">
           <div className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
             Chapter III • Directorate & Movement Faculty
@@ -395,7 +383,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
       </section>
 
       {/* Chapter 4: The Two Sovereign Pillars */}
-      <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800">
+      <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-7xl 2xl:max-w-[1440px] mx-auto border-b border-slate-800">
         <div className="mb-10 text-left">
           <div className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
             Chapter IV • The Structural Architecture
@@ -468,7 +456,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
       </section>
 
       {/* Chapter 5: Pan-African Footprint */}
-      <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800">
+      <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-7xl 2xl:max-w-[1440px] mx-auto border-b border-slate-800">
         <div className="mb-8 text-left">
           <div className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
             Chapter V • Regional Hubs

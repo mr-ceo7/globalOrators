@@ -12,7 +12,7 @@ export const BranchCards: React.FC<BranchCardsProps> = ({
 }) => {
   return (
     <section id="branches" className="py-14 sm:py-20 px-4 sm:px-8 bg-slate-950 border-b border-slate-800">
-      <div className="max-w-6xl mx-auto text-left">
+      <div className="max-w-7xl 2xl:max-w-[1440px] mx-auto text-left">
         <div className="mb-10">
           <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
             Chapter II • The Functional Structure
@@ -32,10 +32,10 @@ export const BranchCards: React.FC<BranchCardsProps> = ({
             <div>
               <figure className="rounded-xl overflow-hidden mb-5 border border-slate-800 bg-slate-950/40">
                 <picture>
-                  <source srcSet="/images/obed-deliberation.webp" type="image/webp" />
+                  <source srcSet="/images/geoffrey-youth-assembly.webp" type="image/webp" />
                   <img 
-                    src="/images/obed-deliberation.jpg" 
-                    alt="Obed and debaters in the motion preparation chamber at Global Orators Academy" 
+                    src="/images/geoffrey-youth-assembly.jpg" 
+                    alt="Geoffrey Anyona and youth scholars in training assembly at Global Orators Academy" 
                     className="w-full h-44 sm:h-52 object-cover object-[center_35%]"
                     loading="lazy"
                     decoding="async"
@@ -43,10 +43,6 @@ export const BranchCards: React.FC<BranchCardsProps> = ({
                     height={350}
                   />
                 </picture>
-                <figcaption className="px-3.5 py-2 bg-slate-950/80 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono">
-                  <span className="text-slate-300 uppercase tracking-wider font-semibold">Motion Deliberation Chamber</span>
-                  <span className="text-[#7A4B06] dark:text-[#E3B95C] uppercase tracking-widest font-semibold">Competitive Wing</span>
-                </figcaption>
               </figure>
 
               <div className="text-[10px] font-mono tracking-widest uppercase text-[#7A4B06] dark:text-[#E3B95C] font-bold">
@@ -123,10 +119,10 @@ export const BranchCards: React.FC<BranchCardsProps> = ({
             <div>
               <figure className="rounded-xl overflow-hidden mb-5 border border-slate-800 bg-slate-950/40">
                 <picture>
-                  <source srcSet="/images/geoffrey-youth-assembly.webp" type="image/webp" />
+                  <source srcSet="/images/obed-deliberation.webp" type="image/webp" />
                   <img 
-                    src="/images/geoffrey-youth-assembly.jpg" 
-                    alt="Geoffrey Anyona and youth scholars in community mentorship assembly" 
+                    src="/images/obed-deliberation.jpg" 
+                    alt="Debaters and scholars in motion deliberation chamber at Global Orators Foundation" 
                     className="w-full h-44 sm:h-52 object-cover object-[center_35%]"
                     loading="lazy"
                     decoding="async"
@@ -134,10 +130,6 @@ export const BranchCards: React.FC<BranchCardsProps> = ({
                     height={350}
                   />
                 </picture>
-                <figcaption className="px-3.5 py-2 bg-slate-950/80 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono">
-                  <span className="text-slate-300 uppercase tracking-wider font-semibold">Youth Outreach Assembly</span>
-                  <span className="text-emerald-700 dark:text-emerald-400 uppercase tracking-widest font-semibold">100% Grant-Funded</span>
-                </figcaption>
               </figure>
 
               <div className="text-[10px] font-mono tracking-widest uppercase text-emerald-700 dark:text-emerald-400 font-bold">

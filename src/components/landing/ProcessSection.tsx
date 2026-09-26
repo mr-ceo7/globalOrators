@@ -30,7 +30,7 @@ export const ProcessSection: React.FC = () => {
   ];
 
   return (
-    <section className="py-12 sm:py-16 px-4 sm:px-8 max-w-6xl mx-auto text-left border-b border-slate-800">
+    <section className="py-12 sm:py-16 px-4 sm:px-8 max-w-7xl 2xl:max-w-[1440px] mx-auto text-left border-b border-slate-800">
       <div className="mb-10">
         <div className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
           Methodology & Development Model

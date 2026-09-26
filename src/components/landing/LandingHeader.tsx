@@ -30,8 +30,8 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
   const [speakerLoginOpen, setSpeakerLoginOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 bg-slate-950/95 backdrop-blur-xl border-b border-slate-800 px-4 sm:px-8 lg:px-12 py-3 transition-colors duration-200">
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
+    <header className="sticky top-0 z-50 bg-slate-950/95 backdrop-blur-xl border-b border-slate-800 px-4 sm:px-8 lg:px-12 2xl:px-16 py-3 transition-colors duration-200">
+      <div className="w-full flex items-center justify-between">
         {/* Brand Wordmark */}
         <div 
           onClick={() => {

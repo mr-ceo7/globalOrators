@@ -158,7 +158,7 @@ export const PartnerModal: React.FC<PartnerModalProps> = ({ isOpen, onClose, bra
             <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-left text-xs space-y-1.5 font-mono">
               <div className="text-slate-400 flex justify-between">
                 <span>Reference ID:</span>
-                <span className="text-[#7A4B06] dark:text-[#E3B95C] font-bold">{successData.inquiryId}</span>
+                <span className="text-[#7A4B06] dark:text-[#E3B95C] font-bold">{successData.inquiryId || successData.id || successData.inquiry_id}</span>
               </div>
               <div className="text-slate-400 flex justify-between">
                 <span>Institution:</span>

@@ -14,7 +14,7 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
     <>
       {/* 6. Human Catharsis Testimonials */}
       <section id="testimonials" className="py-14 sm:py-20 px-4 sm:px-8 bg-slate-950 border-b border-slate-800 text-left">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-7xl 2xl:max-w-[1440px] mx-auto">
           <div className="mb-8">
             <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
               Chapter IV • Living Proof & Safeguarding
@@ -51,10 +51,6 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
                 height={500}
               />
             </picture>
-            <figcaption className="px-4 py-2.5 bg-slate-900 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[10px] font-mono uppercase tracking-widest text-slate-400">
-              <span className="text-[#7A4B06] dark:text-[#E3B95C] font-semibold">Community Storytelling Circle · Nairobi Shelter Network</span>
-              <span>Informed Consent Documented • Peer Mentorship</span>
-            </figcaption>
           </figure>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">

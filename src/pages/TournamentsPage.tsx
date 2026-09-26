@@ -63,7 +63,7 @@ export const TournamentsPage: React.FC<TournamentsPageProps> = ({
       />
 
       {/* Breadcrumb Navigation */}
-      <nav aria-label="Breadcrumb" className="max-w-6xl mx-auto pt-6 px-4 sm:px-8">
+      <nav aria-label="Breadcrumb" className="max-w-7xl 2xl:max-w-[1440px] mx-auto pt-6 px-4 sm:px-8">
         <ol className="flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-widest text-slate-400">
           <li>
             <a 
@@ -80,7 +80,7 @@ export const TournamentsPage: React.FC<TournamentsPageProps> = ({
       </nav>
 
       {/* Hero Header */}
-      <section className="py-10 sm:py-16 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800">
+      <section className="py-10 sm:py-16 px-4 sm:px-8 max-w-7xl 2xl:max-w-[1440px] mx-auto border-b border-slate-800">
         <div className="max-w-3xl space-y-4">
           <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
             Chapter III • The Global Arena & Forensic Podiums
@@ -105,7 +105,7 @@ export const TournamentsPage: React.FC<TournamentsPageProps> = ({
       </section>
 
       {/* Featured Arena Visual Dispatch: Authentic Championship Photography */}
-      <section className="py-8 sm:py-12 px-4 sm:px-8 max-w-6xl mx-auto">
+      <section className="py-8 sm:py-12 px-4 sm:px-8 max-w-7xl 2xl:max-w-[1440px] mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl flex flex-col justify-between">
             <div className="h-60 sm:h-72 md:h-80 w-full overflow-hidden bg-slate-950">
@@ -119,10 +119,6 @@ export const TournamentsPage: React.FC<TournamentsPageProps> = ({
                 />
               </picture>
             </div>
-            <figcaption className="px-4 py-3 bg-slate-900 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] font-mono uppercase tracking-widest text-slate-400">
-              <span className="text-[#7A4B06] dark:text-[#E3B95C] font-semibold">Adjudication Chamber</span>
-              <span>Continental Flags</span>
-            </figcaption>
           </figure>
 
           <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl flex flex-col justify-between">
@@ -137,10 +133,6 @@ export const TournamentsPage: React.FC<TournamentsPageProps> = ({
                 />
               </picture>
             </div>
-            <figcaption className="px-4 py-3 bg-slate-900 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] font-mono uppercase tracking-widest text-slate-400">
-              <span className="text-[#7A4B06] dark:text-[#E3B95C] font-semibold">Assembly Podium · Maseru</span>
-              <span>Valerie Wanjiku</span>
-            </figcaption>
           </figure>
 
           <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl flex flex-col justify-between">
@@ -155,16 +147,12 @@ export const TournamentsPage: React.FC<TournamentsPageProps> = ({
                 />
               </picture>
             </div>
-            <figcaption className="px-4 py-3 bg-slate-900 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] font-mono uppercase tracking-widest text-slate-400">
-              <span className="text-emerald-500 font-semibold">15-Min Prep Room</span>
-              <span>Case Construction</span>
-            </figcaption>
           </figure>
         </div>
       </section>
 
       {/* Major Championships Grid */}
-      <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800">
+      <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-7xl 2xl:max-w-[1440px] mx-auto border-b border-slate-800">
         <div className="mb-10 text-left">
           <div className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
             Podium Track Record
@@ -223,7 +211,7 @@ export const TournamentsPage: React.FC<TournamentsPageProps> = ({
       </section>
 
       {/* Debated Motions Archive */}
-      <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800">
+      <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-7xl 2xl:max-w-[1440px] mx-auto border-b border-slate-800">
         <div className="mb-8 text-left">
           <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
             The Motions • Real British Parliamentary Clashes

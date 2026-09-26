@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { 
   Mail, 
-  MapPin, 
   Phone, 
   Clock, 
   Send, 
@@ -113,7 +112,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
 
   return (
     <section id={id} className={`bg-slate-950 text-slate-100 ${isStandalone ? 'py-16 sm:py-24' : 'py-20 sm:py-28 border-t border-slate-800'}`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12">
+      <div className="max-w-7xl 2xl:max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12">
         {/* Editorial Section Kicker & Header */}
         <div className="max-w-3xl mb-12 sm:mb-16 text-left">
           <div className="text-[10px] sm:text-xs font-mono tracking-widest uppercase text-[#7A4B06] dark:text-[#E3B95C] font-bold mb-3">
@@ -185,34 +184,6 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                 </div>
               </div>
             </div>
-
-            {/* Regional Hubs Card */}
-            <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6 sm:p-8 space-y-4">
-              <div className="flex items-center gap-2.5 text-brand-gold">
-                <MapPin className="w-4 h-4" />
-                <h4 className="font-mono text-xs uppercase tracking-wider font-bold text-slate-200">
-                  Headquarters & Regional Chapters
-                </h4>
-              </div>
-              <div className="grid grid-cols-2 gap-4 text-xs text-slate-300">
-                <div className="border-l-2 border-[#C89630]/60 pl-3">
-                  <div className="font-bold text-slate-100">Nairobi Main Campus</div>
-                  <div className="text-[11px] text-slate-400">Pan-African Forensics HQ</div>
-                </div>
-                <div className="border-l-2 border-slate-700 pl-3">
-                  <div className="font-bold text-slate-100">London Chapter</div>
-                  <div className="text-[11px] text-slate-400">European Parliamentary Liaison</div>
-                </div>
-                <div className="border-l-2 border-slate-700 pl-3">
-                  <div className="font-bold text-slate-100">Johannesburg</div>
-                  <div className="text-[11px] text-slate-400">Southern Africa Oratory Hub</div>
-                </div>
-                <div className="border-l-2 border-slate-700 pl-3">
-                  <div className="font-bold text-slate-100">Dakar Hub</div>
-                  <div className="text-[11px] text-slate-400">Francophone Debate Outreach</div>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Right Column: Direct Interactive Inquiry Form */}
@@ -234,7 +205,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                       Your inquiry has been cataloged under reference code:
                     </p>
                     <div className="font-mono text-sm sm:text-base font-bold text-brand-gold bg-slate-950 px-4 py-2 rounded-lg border border-slate-800 inline-block">
-                      {successData.id}
+                      {successData.inquiryId || successData.id || successData.inquiry_id}
                     </div>
                     <p className="text-slate-400 text-xs max-w-md mx-auto pt-2">
                       An alert has been dispatched to Faculty Coach Qassim. You will receive an official response at <strong className="text-slate-200">{successData.email}</strong> within 24 hours.

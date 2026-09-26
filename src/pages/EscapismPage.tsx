@@ -56,7 +56,7 @@ export const EscapismPage: React.FC<EscapismPageProps> = ({
       />
 
       {/* Breadcrumb Navigation */}
-      <nav aria-label="Breadcrumb" className="max-w-6xl mx-auto pt-6 px-4 sm:px-8">
+      <nav aria-label="Breadcrumb" className="max-w-7xl 2xl:max-w-[1440px] mx-auto pt-6 px-4 sm:px-8">
         <ol className="flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-widest text-slate-400">
           <li>
             <a 
@@ -73,7 +73,7 @@ export const EscapismPage: React.FC<EscapismPageProps> = ({
       </nav>
 
       {/* Hero Header */}
-      <section className="py-10 sm:py-16 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800">
+      <section className="py-10 sm:py-16 px-4 sm:px-8 max-w-7xl 2xl:max-w-[1440px] mx-auto border-b border-slate-800">
         <div className="max-w-3xl space-y-4">
           <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
             Chapter II • The Physiology of Speech & Mental Health
@@ -132,7 +132,7 @@ export const EscapismPage: React.FC<EscapismPageProps> = ({
       </section>
 
       {/* Chapter 3: The 4 Therapeutic Vocal Protocols */}
-      <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800">
+      <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-7xl 2xl:max-w-[1440px] mx-auto border-b border-slate-800">
         <div className="mb-10 text-left">
           <div className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
             Methodology

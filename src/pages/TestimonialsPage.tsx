@@ -89,7 +89,7 @@ export const TestimonialsPage: React.FC<TestimonialsPageProps> = ({
       />
 
       {/* Breadcrumb Navigation */}
-      <nav aria-label="Breadcrumb" className="max-w-6xl mx-auto pt-6 px-4 sm:px-8">
+      <nav aria-label="Breadcrumb" className="max-w-7xl 2xl:max-w-[1440px] mx-auto pt-6 px-4 sm:px-8">
         <ol className="flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-widest text-slate-400">
           <li>
             <a 
@@ -106,7 +106,7 @@ export const TestimonialsPage: React.FC<TestimonialsPageProps> = ({
       </nav>
 
       {/* Hero Header */}
-      <section className="py-10 sm:py-16 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800">
+      <section className="py-10 sm:py-16 px-4 sm:px-8 max-w-7xl 2xl:max-w-[1440px] mx-auto border-b border-slate-800">
         <div className="max-w-3xl space-y-4">
           <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
             Chapter IV • Living Proof & Ethical Safeguarding
@@ -136,7 +136,7 @@ export const TestimonialsPage: React.FC<TestimonialsPageProps> = ({
       </section>
 
       {/* Featured Community Photo Dispatch */}
-      <section className="py-8 sm:py-12 px-4 sm:px-8 max-w-6xl mx-auto">
+      <section className="py-8 sm:py-12 px-4 sm:px-8 max-w-7xl 2xl:max-w-[1440px] mx-auto">
         <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl">
           <img 
             src="/images/mentorship-circle.jpg" 
@@ -144,15 +144,11 @@ export const TestimonialsPage: React.FC<TestimonialsPageProps> = ({
             className="w-full h-64 sm:h-80 md:h-96 object-cover object-[center_35%] filter contrast-[1.05]" 
             loading="lazy" 
           />
-          <figcaption className="px-4 py-3 bg-slate-900 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] font-mono uppercase tracking-widest text-slate-400">
-            <span className="text-[#7A4B06] dark:text-[#E3B95C] font-semibold">Community Storytelling Circle · Nairobi Shelter Network</span>
-            <span>Documented Consent • Trauma-Informed Peer Mentorship</span>
-          </figcaption>
         </figure>
       </section>
 
       {/* 2-Column Responsive Testimonials Grid */}
-      <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800">
+      <section className="py-12 sm:py-18 px-4 sm:px-8 max-w-7xl 2xl:max-w-[1440px] mx-auto border-b border-slate-800">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {stories.map((s, i) => (
             <div key={i} className="p-6 sm:p-7 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col justify-between space-y-4 shadow-xs">
@@ -183,7 +179,7 @@ export const TestimonialsPage: React.FC<TestimonialsPageProps> = ({
       </section>
 
       {/* Audited Impact Metrics */}
-      <section className="py-12 sm:py-16 px-4 sm:px-8 max-w-6xl mx-auto border-b border-slate-800">
+      <section className="py-12 sm:py-16 px-4 sm:px-8 max-w-7xl 2xl:max-w-[1440px] mx-auto border-b border-slate-800">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-center">
           <div className="p-5 rounded-xl bg-slate-900 border border-slate-800">
             <div className="text-2xl sm:text-3xl font-serif font-black text-slate-100">1,450+</div>

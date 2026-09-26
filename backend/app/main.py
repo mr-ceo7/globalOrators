@@ -50,7 +50,7 @@ logger = logging.getLogger("globalorators")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan manager: Initialize DB tables and seed mock data."""
+    """Application lifespan manager: Initialize DB tables and seed database fixtures."""
     logger.info("Initializing database tables...")
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
