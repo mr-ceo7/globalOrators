@@ -150,7 +150,7 @@ describe('CoachMessenger Component (WhatsApp-style Modern Chat)', () => {
     });
   });
 
-  test('allows typing and sending a message with Quick Cues', async () => {
+  test('allows typing and sending a message', async () => {
     render(
       <AppProvider>
         <CoachMessenger />
@@ -160,11 +160,6 @@ describe('CoachMessenger Component (WhatsApp-style Modern Chat)', () => {
     await waitFor(() => {
       expect(screen.getByText(/Hello Coach, I have practiced/i)).toBeInTheDocument();
     });
-
-    // Click a quick cue
-    const quickCueBtn = screen.getByText(/Sharp argument structure!/i);
-    expect(quickCueBtn).toBeInTheDocument();
-    fireEvent.click(quickCueBtn);
 
     // Input field is present
     const input = screen.getByPlaceholderText(/Message Geoffrey Anyona/i) as HTMLInputElement;

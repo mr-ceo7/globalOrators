@@ -2015,25 +2015,25 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
 
           {/* Live Audio Recording Toolbar OR WhatsApp Input Capsule + Circular Action Button */}
           {isRecordingAudio ? (
-            <div className="flex items-center gap-2.5">
-              <div className="flex-1 min-h-[46px] bg-[#202c33] rounded-3xl flex items-center px-4 py-2 gap-3 border border-rose-500/40 animate-in fade-in">
+            <div className="flex items-center gap-1.5 sm:gap-2 w-full max-w-full">
+              <div className="flex-1 min-w-0 min-h-[42px] sm:min-h-[46px] bg-[#202c33] rounded-3xl flex items-center px-3 sm:px-4 py-1.5 sm:py-2 gap-2 sm:gap-3 border border-rose-500/40 animate-in fade-in">
                 <button
                   type="button"
                   onClick={cancelRecording}
-                  className="p-1 text-[#8696a0] hover:text-rose-400 transition-colors cursor-pointer"
+                  className="p-1 text-[#8696a0] hover:text-rose-400 transition-colors cursor-pointer shrink-0"
                   title="Cancel Recording"
                 >
-                  <Trash2 className="w-5 h-5" />
+                  <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
 
-                <div className="flex items-center gap-2 flex-1">
-                  <span className="h-2.5 w-2.5 rounded-full bg-rose-500 animate-ping" />
-                  <span className="font-mono text-xs font-bold text-rose-300">
+                <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
+                  <span className="h-2 sm:h-2.5 w-2 sm:w-2.5 rounded-full bg-rose-500 animate-ping shrink-0" />
+                  <span className="font-mono text-xs font-bold text-rose-300 shrink-0">
                     {Math.floor(recordingDuration / 60)}:{(recordingDuration % 60).toString().padStart(2, '0')}
                   </span>
-                  <div className="flex-1 flex items-center gap-0.5 h-4 ml-2">
+                  <div className="flex-1 min-w-0 flex items-center gap-0.5 h-4 ml-1 sm:ml-2 overflow-hidden">
                     {[10, 18, 14, 22, 16, 26, 12, 20, 15, 22, 12, 18].map((h, i) => (
-                      <div key={i} className="w-1 bg-rose-400 rounded-full animate-pulse" style={{ height: `${h}px` }} />
+                      <div key={i} className="w-1 bg-rose-400 rounded-full animate-pulse shrink-0" style={{ height: `${h}px` }} />
                     ))}
                   </div>
                 </div>
@@ -2043,11 +2043,11 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
                 type="button"
                 onClick={stopAndSendRecording}
                 aria-label="Send Voice Memo"
-                className="w-11 h-11 rounded-full bg-[#00a884] hover:bg-[#008f70] text-white flex items-center justify-center shadow-lg transition-transform active:scale-95 cursor-pointer shrink-0"
+                className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#00a884] hover:bg-[#008f70] text-white flex items-center justify-center shadow-lg transition-transform active:scale-95 cursor-pointer shrink-0"
                 title="Send Voice Memo"
               >
                 <span className="sr-only">Send Voice Memo</span>
-                <Send className="w-5 h-5 ml-0.5 fill-current" />
+                <Send className="w-4 h-4 sm:w-5 sm:h-5 ml-0.5 fill-current" />
               </button>
             </div>
           ) : (
@@ -2056,13 +2056,13 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
                 e.preventDefault();
                 handleSendText();
               }}
-              className="flex items-center gap-2"
+              className="flex items-center gap-1.5 sm:gap-2 w-full max-w-full"
             >
               {/* WhatsApp Left Input Capsule */}
-              <div className="flex-1 min-h-[46px] bg-[#202c33] rounded-3xl flex items-center px-3 py-1 gap-1.5 shadow-xs border border-transparent focus-within:border-[#00a884]/40">
+              <div className="flex-1 min-w-0 min-h-[42px] sm:min-h-[46px] bg-[#202c33] rounded-3xl flex items-center px-2 sm:px-3 py-1 gap-1 sm:gap-1.5 shadow-xs border border-transparent focus-within:border-[#00a884]/40">
                 <button
                   type="button"
-                  className="p-1.5 text-[#8696a0] hover:text-[#d1d7db] transition-colors cursor-pointer shrink-0"
+                  className="p-1 sm:p-1.5 text-[#8696a0] hover:text-[#d1d7db] transition-colors cursor-pointer shrink-0"
                   title="Emojis"
                 >
                   <Smile className="w-5 h-5" />
@@ -2078,14 +2078,14 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
                       sendTypingIndicator(getDestinationClientId(), false);
                     }
                   }}
-                  placeholder={stagedImage ? "Add an optional photo caption..." : `Message ${activeRecipientName} about your presentation, speech delivery, or pacing...`}
-                  className="flex-1 bg-transparent border-0 text-[13px] text-[#e9edef] placeholder-[#8696a0] focus:outline-hidden min-w-0"
+                  placeholder={stagedImage ? "Add an optional photo caption..." : `Message ${activeRecipientName}...`}
+                  className="flex-1 w-0 min-w-0 bg-transparent border-0 text-[13px] sm:text-sm text-[#e9edef] placeholder-[#8696a0] focus:outline-hidden"
                 />
 
                 <button
                   type="button"
                   onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
-                  className={`p-1.5 transition-colors cursor-pointer shrink-0 ${
+                  className={`p-1 sm:p-1.5 transition-colors cursor-pointer shrink-0 ${
                     showAttachmentMenu ? 'text-[#00a884]' : 'text-[#8696a0] hover:text-[#d1d7db]'
                   }`}
                   title="Attach Photos, Rehearsal or Document"
@@ -2096,7 +2096,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
                 <button
                   type="button"
                   onClick={() => imageInputRef.current?.click()}
-                  className="p-1.5 text-[#8696a0] hover:text-[#d1d7db] transition-colors cursor-pointer shrink-0"
+                  className="p-1 sm:p-1.5 text-[#8696a0] hover:text-[#d1d7db] transition-colors cursor-pointer shrink-0"
                   title="Camera / Photos"
                 >
                   <Camera className="w-5 h-5" />
@@ -2110,19 +2110,19 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
                   disabled={isSending}
                   aria-label={isSending ? "Sending" : "Send"}
                   title="Send message"
-                  className={`w-11 h-11 rounded-full bg-[#00a884] hover:bg-[#008f70] text-white flex items-center justify-center shadow-lg transition-transform active:scale-95 cursor-pointer shrink-0 ${
+                  className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#00a884] hover:bg-[#008f70] text-white flex items-center justify-center shadow-lg transition-transform active:scale-95 cursor-pointer shrink-0 ${
                     isSending ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
                 >
                   <span className="sr-only">{isSending ? 'Sending...' : 'Send'}</span>
-                  <Send className="w-5 h-5 ml-0.5 fill-current" />
+                  <Send className="w-4 h-4 sm:w-5 sm:h-5 ml-0.5 fill-current" />
                 </button>
               ) : (
                 <button
                   type="button"
                   onClick={startRecordingAudio}
                   aria-label="Record Voice Rehearsal Memo"
-                  className="w-11 h-11 rounded-full bg-[#00a884] hover:bg-[#008f70] text-white flex items-center justify-center shadow-lg transition-transform active:scale-95 cursor-pointer shrink-0"
+                  className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#00a884] hover:bg-[#008f70] text-white flex items-center justify-center shadow-lg transition-transform active:scale-95 cursor-pointer shrink-0"
                   title="Record Voice Rehearsal Memo"
                 >
                   <Mic className="w-5 h-5" />

@@ -38,6 +38,7 @@ const MainLayout: React.FC = () => {
   const [isAddClientModalOpen, setIsAddClientModalOpen] = useState(false);
   const [isAddExerciseModalOpen, setIsAddExerciseModalOpen] = useState(false);
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
+  const [coachMessengerMobileView, setCoachMessengerMobileView] = useState<'roster' | 'thread'>('thread');
 
   // Allow ESC key to skip splash screen immediately
   useEffect(() => {
@@ -51,7 +52,7 @@ const MainLayout: React.FC = () => {
   }, [isLoadingApp]);
 
   return (
-    <div className="flex-1 min-h-0 bg-slate-950 text-slate-100 flex font-sans antialiased selection:bg-emerald-500 selection:text-slate-950 h-full overflow-hidden">
+    <div className="flex-1 min-h-0 bg-slate-950 text-slate-100 flex font-sans antialiased selection:bg-emerald-500 selection:text-slate-950 overflow-hidden">
       <SEOHead
         title="Coach App"
         description="Private coaching dashboard and forensics workbench for Global Orators speech and debate coaches."
@@ -74,7 +75,7 @@ const MainLayout: React.FC = () => {
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 min-w-0 min-h-0 flex flex-col h-full overflow-hidden">
+      <div className="flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden">
         {/* Global Header */}
         <Header 
           onOpenNewClient={() => setIsAddClientModalOpen(true)}
@@ -86,7 +87,7 @@ const MainLayout: React.FC = () => {
         {/* Scrollable View Area with bottom padding for mobile bar */}
         <main className={`flex-1 min-h-0 ${
           activeTab === 'messenger' 
-            ? 'flex flex-col overflow-hidden px-2 sm:px-6 py-2 sm:py-3 pb-20 md:pb-3' 
+            ? 'flex flex-col overflow-hidden p-2 sm:p-3 md:p-3 pb-20 md:pb-3' 
             : 'overflow-y-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-28 md:pb-6 touch-pan-y'
         }`}>
           <div className={`mx-auto w-full ${
@@ -127,7 +128,10 @@ const MainLayout: React.FC = () => {
             )}
 
             {activeTab === 'messenger' && (
-              <CoachMessenger />
+              <CoachMessenger 
+                onMobileViewChange={setCoachMessengerMobileView}
+                initialMobileView={coachMessengerMobileView}
+              />
             )}
 
             {activeTab === 'coaches' && (
@@ -141,11 +145,13 @@ const MainLayout: React.FC = () => {
         </main>
       </div>
 
-      {/* Native Mobile Bottom Navigation (Visible on mobile/tablets < md) */}
-      <MobileBottomNav 
-        onOpenNewClient={() => setIsAddClientModalOpen(true)}
-        onOpenInstallModal={() => setIsInstallModalOpen(true)}
-      />
+      {/* Native Mobile Bottom Navigation (Visible on mobile/tablets < md, hidden when viewing active chat thread) */}
+      {!(activeTab === 'messenger' && coachMessengerMobileView === 'thread') && (
+        <MobileBottomNav 
+          onOpenNewClient={() => setIsAddClientModalOpen(true)}
+          onOpenInstallModal={() => setIsInstallModalOpen(true)}
+        />
+      )}
 
       {/* PWA Home Screen Installation Modal */}
       <PwaInstallPrompt 

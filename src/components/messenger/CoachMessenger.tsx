@@ -10,7 +10,7 @@ import {
   Check,
   Search, 
   Video, 
-  Zap, 
+  Camera, 
   Mic, 
   MicOff,
   User, 
@@ -42,7 +42,15 @@ import { WhatsAppImageLightbox } from './WhatsAppImageLightbox';
 // WhatsApp Standard Quick Reactions
 const WHATSAPP_REACTIONS = ['👍', '🎙️', '🔥', '👏', '💡', '❤️'];
 
-export const CoachMessenger: React.FC = () => {
+interface CoachMessengerProps {
+  onMobileViewChange?: (view: 'roster' | 'thread') => void;
+  initialMobileView?: 'roster' | 'thread';
+}
+
+export const CoachMessenger: React.FC<CoachMessengerProps> = ({
+  onMobileViewChange,
+  initialMobileView = 'thread'
+}) => {
   const { 
     clients, 
     selectedClientId, 
@@ -76,7 +84,12 @@ export const CoachMessenger: React.FC = () => {
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
   const [activeReactionMenuId, setActiveReactionMenuId] = useState<string | null>(null);
   const [replyingToMessage, setReplyingToMessage] = useState<ChatMessage | null>(null);
-  const [mobileView, setMobileView] = useState<'roster' | 'thread'>('thread');
+  const [mobileView, setMobileView] = useState<'roster' | 'thread'>(initialMobileView);
+
+  const updateMobileView = (view: 'roster' | 'thread') => {
+    setMobileView(view);
+    onMobileViewChange?.(view);
+  };
 
   const [isRecordingAudio, setIsRecordingAudio] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
@@ -88,6 +101,7 @@ export const CoachMessenger: React.FC = () => {
   const recordingDurationRef = useRef<number>(0);
   const playbackTimerRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
   const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
   const acousticOscRef = useRef<any>(null);
 
@@ -215,15 +229,18 @@ export const CoachMessenger: React.FC = () => {
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView?.({ behavior: 'smooth' });
-  }, [activeMessages.length]);
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
+  }, [activeMessages.length, selectedClientId]);
 
-  const quickSnippets = [
-    "Sharp argument structure! Notice how the 2-second pause before your rebuttal captivated the room.",
-    "Remember to maintain diaphragmatic breath support on long clauses today!",
-    "Your weekly speech review is logged with excellent vocal projection. Keep it up!",
-    "Pacing check: let's slow down the opening hook to ~135 WPM for maximum gravitas."
-  ];
+  // Ensure window scroll is always pinned to top on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.scrollY > 0) {
+      window.scrollTo(0, 0);
+    }
+  }, []);
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -740,7 +757,7 @@ export const CoachMessenger: React.FC = () => {
   );
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col md:flex-row rounded-3xl bg-slate-900/95 border border-slate-800 overflow-hidden shadow-2xl">
+    <div className="flex-1 min-h-0 flex flex-col md:flex-row rounded-3xl bg-[#0b141a] border border-[#202c33] overflow-hidden shadow-2xl">
       {/* Hidden document file input */}
       <input 
         type="file" 
@@ -760,35 +777,35 @@ export const CoachMessenger: React.FC = () => {
       />
 
       {/* Left Sidebar: Conversations List */}
-      <div className={`w-full md:w-80 border-r border-slate-800 flex flex-col bg-slate-950/60 shrink-0 ${
+      <div className={`w-full md:w-80 border-r border-[#202c33] flex flex-col bg-[#111b21] shrink-0 min-h-0 ${
         mobileView === 'thread' ? 'hidden md:flex' : 'flex'
       }`}>
         {/* Header & Search */}
-        <div className="p-4 border-b border-slate-800 space-y-3">
+        <div className="p-3.5 sm:p-4 border-b border-[#202c33] space-y-3 bg-[#111b21] shrink-0">
           <div className="flex items-center justify-between">
-            <h3 className="font-extrabold text-sm text-white flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 text-emerald-400" />
+            <h3 className="font-extrabold text-sm text-[#e9edef] flex items-center gap-2">
+              <MessageSquare className="h-4 w-4 text-[#00a884]" />
               <span>Messenger</span>
             </h3>
-            <span className="text-[10px] font-mono tracking-widest uppercase px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <span className="text-[10px] font-mono tracking-widest uppercase px-2 py-0.5 rounded-md bg-[#00a884]/10 text-[#00a884] border border-[#00a884]/20">
               {clients.length} ORATORS
             </span>
           </div>
 
           <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
+            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-[#8696a0]" />
             <input
               type="text"
               placeholder="Search conversations..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full h-8 pl-8 pr-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-400 focus:outline-hidden focus:border-emerald-500"
+              className="w-full h-8 pl-8 pr-3 rounded-xl bg-[#202c33] border border-[#2a3942] text-xs text-[#e9edef] placeholder-[#8696a0] focus:outline-hidden focus:border-[#00a884]"
             />
           </div>
         </div>
 
         {/* Client chat list */}
-        <div className="flex-1 overflow-y-auto divide-y divide-slate-800/40">
+        <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-[#202c33]/40">
           {filteredClients.map((client) => {
             const isSelected = client.id === activeClient?.id;
             const clientMsgList = messages.filter(m => m.clientId === client.id);
@@ -801,40 +818,40 @@ export const CoachMessenger: React.FC = () => {
                 key={client.id}
                 onClick={() => {
                   setSelectedClientId(client.id);
-                  setMobileView('thread');
+                  updateMobileView('thread');
                 }}
                 className={`p-3.5 flex items-center gap-3 cursor-pointer transition-colors ${
-                  isSelected ? 'bg-slate-800/80 border-l-4 border-emerald-500' : 'hover:bg-slate-900/60'
+                  isSelected ? 'bg-[#2a3942] border-l-4 border-[#00a884]' : 'hover:bg-[#202c33]/60'
                 }`}
               >
                 <div className="relative shrink-0">
-                  <OratorAvatar src={client.avatar} name={client.name} className="h-10 w-10 rounded-xl" />
-                  <span className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-slate-950 ${
+                  <OratorAvatar src={client.avatar} name={client.name} className="h-10 w-10 rounded-full" />
+                  <span className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#111b21] ${
                     isOnline ? 'bg-emerald-500' : client.status === 'Active' ? 'bg-emerald-600/70' : 'bg-slate-500'
                   }`} />
                 </div>
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <h4 className={`text-xs font-bold truncate ${isSelected ? 'text-emerald-400' : 'text-white'}`}>
+                    <h4 className={`text-xs font-bold truncate ${isSelected ? 'text-[#00a884]' : 'text-[#e9edef]'}`}>
                       {client.name}
                     </h4>
-                    <span className="text-[10px] font-mono text-slate-400">
+                    <span className="text-[10px] font-mono text-[#8696a0]">
                       {lastMsg ? formatMessageTime(lastMsg.timestamp) : ''}
                     </span>
                   </div>
                   <div className="flex items-center justify-between mt-0.5">
                     {typingUsers?.[client.id] ? (
-                      <p className="text-[11px] text-cyan-400 font-mono italic animate-pulse">
+                      <p className="text-[11px] text-[#00a884] font-mono italic animate-pulse">
                         typing...
                       </p>
                     ) : (
-                      <p className="text-[11px] text-slate-400 truncate max-w-[160px]">
+                      <p className="text-[11px] text-[#8696a0] truncate max-w-[160px]">
                         {lastMsg ? lastMsg.text || (lastMsg as any).content : `Goal: ${client.goal}`}
                       </p>
                     )}
                     {unreadCount > 0 && (
-                      <span className="h-4 min-w-[16px] px-1 rounded-full bg-emerald-500 text-on-gold font-bold text-[9px] flex items-center justify-center shrink-0">
+                      <span className="h-4 min-w-[16px] px-1 rounded-full bg-[#00a884] text-white font-bold text-[9px] flex items-center justify-center shrink-0">
                         {unreadCount}
                       </span>
                     )}
@@ -848,45 +865,55 @@ export const CoachMessenger: React.FC = () => {
 
       {/* Main Chat Stream Container */}
       {activeClient ? (
-        <div className={`flex-1 flex flex-col bg-slate-900/50 min-w-0 ${
+        <div className={`fixed inset-0 z-50 md:relative md:inset-auto md:z-auto flex-1 min-h-0 h-[100dvh] md:h-auto flex flex-col bg-[#0b141a] min-w-0 overflow-hidden ${
           mobileView === 'roster' ? 'hidden md:flex' : 'flex'
         }`}>
           {/* WhatsApp Modern Chat Header */}
-          <div className="p-3.5 sm:p-4 bg-slate-950/90 border-b border-slate-800 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-3 min-w-0">
+          <div className="h-14 sm:h-16 px-2.5 sm:px-4 bg-[#202c33] border-b border-slate-800/80 flex items-center justify-between gap-2 shrink-0 z-10 shadow-xs">
+            <div className="flex items-center gap-2 min-w-0">
               {/* Back to roster on mobile */}
               <button
-                onClick={() => setMobileView('roster')}
-                className="md:hidden p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 transition-colors"
+                onClick={() => updateMobileView('roster')}
+                className="md:hidden -ml-1 p-2 rounded-full hover:bg-slate-700/60 text-slate-200 transition-colors cursor-pointer flex items-center"
                 title="Back to Orator List"
               >
-                <ArrowLeft className="w-4 h-4" />
+                <ArrowLeft className="w-5 h-5" />
               </button>
 
               <div className="relative shrink-0">
                 <OratorAvatar 
                   src={activeClient.avatar} 
                   name={activeClient.name} 
-                  className="h-10 w-10 rounded-xl border border-slate-700" 
+                  className="h-10 w-10 rounded-full" 
                 />
-                <span className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-slate-950 ${
+                <span className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#202c33] ${
                   isClientOnline ? 'bg-emerald-400' : 'bg-slate-500'
                 }`} />
               </div>
 
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <h3 className="font-bold text-sm text-white truncate">{activeClient.name}</h3>
-                  <span className="hidden sm:inline text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <h3 className="font-semibold text-sm sm:text-base text-white truncate leading-tight">{activeClient.name}</h3>
+                  <span className="hidden sm:inline text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#00a884]/10 text-[#00a884] border border-[#00a884]/20">
                     {activeClient.goal}
                   </span>
                 </div>
                 {/* Real-Time Online Status Indicator */}
-                <div className="text-[10px] font-mono tracking-wider flex items-center gap-1.5 mt-0.5">
-                  <span className={isClientOnline ? 'text-emerald-400' : 'text-slate-400'}>
-                    {isClientOnline ? 'ONLINE • SSE ACTIVE' : 'OFFLINE • EMAIL BACKUP ARMED'}
-                  </span>
-                  <span className="hidden sm:inline text-slate-600">|</span>
+                <div className="text-[11px] font-mono leading-tight flex items-center gap-1.5 mt-0.5 truncate">
+                  {typingUsers?.[activeClient.id] ? (
+                    <span className="text-emerald-400 font-medium italic animate-pulse">
+                      typing...
+                    </span>
+                  ) : isClientOnline ? (
+                    <span className="text-emerald-400 font-bold">
+                      ONLINE • SSE ACTIVE
+                    </span>
+                  ) : (
+                    <span className="text-slate-400">
+                      OFFLINE • EMAIL BACKUP ARMED
+                    </span>
+                  )}
+                  <span className="hidden sm:inline text-slate-600">•</span>
                   <span className="hidden sm:inline text-slate-400 truncate">
                     {activeClient.currentProgramName || 'Master Orator Protocol'}
                   </span>
@@ -895,35 +922,35 @@ export const CoachMessenger: React.FC = () => {
             </div>
 
             {/* Quick Header Actions */}
-            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
               {/* Search in chat toggle */}
               <button
                 onClick={() => {
                   setIsSearchingInChat(!isSearchingInChat);
                   if (isSearchingInChat) setInChatSearch('');
                 }}
-                className={`p-2 rounded-xl border transition-colors ${
+                className={`p-2 rounded-full hover:bg-slate-700/60 transition-colors cursor-pointer ${
                   isSearchingInChat 
-                    ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300' 
-                    : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+                    ? 'bg-amber-500/20 text-amber-300' 
+                    : 'text-slate-300 hover:text-white'
                 }`}
                 title="Search conversation"
               >
-                <Search className="w-3.5 h-3.5" />
+                <Search className="w-5 h-5" />
               </button>
 
               <button
                 onClick={() => setIsLiveRoomOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-on-gold text-xs font-bold transition-all shadow cursor-pointer"
+                className="p-2 sm:px-3 sm:py-1.5 rounded-full hover:bg-slate-700/60 text-emerald-400 transition-all cursor-pointer flex items-center gap-1.5"
                 title="Launch Live Rehearsal Chamber"
               >
-                <Video className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Live Chamber</span>
+                <Video className="w-5 h-5" />
+                <span className="hidden sm:inline text-xs font-bold">Live Chamber</span>
               </button>
 
               <button
                 onClick={() => setActiveTab('progress')}
-                className="hidden sm:inline-flex px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-bold transition-colors"
+                className="hidden sm:inline-flex px-3 py-1.5 rounded-full bg-[#111b21] hover:bg-slate-800 border border-slate-700 text-slate-300 text-xs font-bold transition-colors"
               >
                 Metrics
               </button>
@@ -932,18 +959,18 @@ export const CoachMessenger: React.FC = () => {
 
           {/* In-Chat Search Bar */}
           {isSearchingInChat && (
-            <div className="px-4 py-2 bg-slate-950/80 border-b border-slate-800 flex items-center gap-2 text-xs">
-              <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <div className="px-4 py-2 bg-[#202c33] border-b border-[#2a3942] flex items-center gap-2 text-xs">
+              <Search className="w-4 h-4 text-[#8696a0] shrink-0" />
               <input
                 type="text"
                 placeholder="Search messages in this thread..."
                 value={inChatSearch}
                 onChange={(e) => setInChatSearch(e.target.value)}
                 autoFocus
-                className="flex-1 bg-transparent text-xs text-white placeholder-slate-500 focus:outline-hidden"
+                className="flex-1 bg-transparent text-xs text-[#e9edef] placeholder-[#8696a0] focus:outline-hidden"
               />
               {inChatSearch && (
-                <span className="text-[10px] font-mono text-slate-400">
+                <span className="text-[10px] font-mono text-[#8696a0]">
                   {displayedMessages.length} found
                 </span>
               )}
@@ -952,18 +979,21 @@ export const CoachMessenger: React.FC = () => {
                   setInChatSearch('');
                   setIsSearchingInChat(false);
                 }}
-                className="p-1 text-slate-400 hover:text-white"
+                className="p-1 text-[#8696a0] hover:text-white cursor-pointer"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
           )}
 
           {/* Messages Stream */}
-          <div className="flex-1 p-3 sm:p-6 overflow-y-auto space-y-3.5 text-xs">
+          <div 
+            ref={messagesContainerRef}
+            className="flex-1 min-h-0 p-3 sm:p-4 overflow-y-auto space-y-3 text-xs bg-[#0b141a]"
+          >
             {/* Date separator pill */}
             <div className="flex justify-center my-2">
-              <span className="px-3 py-0.5 rounded-full bg-slate-950/80 border border-slate-800 text-[10px] font-mono text-slate-400 uppercase tracking-widest shadow-inner">
+              <span className="px-3 py-1 rounded-lg bg-[#182229] border border-white/5 text-[11px] font-mono text-[#8696a0] uppercase tracking-widest shadow-xs">
                 TODAY · ORATORY THREAD
               </span>
             </div>
@@ -1009,13 +1039,13 @@ export const CoachMessenger: React.FC = () => {
                 >
                   {/* Floating Action Bar (WhatsApp Reaction & Reply on hover) */}
                   {(isHovered || isReactionMenuOpen) && (
-                    <div className={`absolute -top-7 ${isCoach ? 'right-0' : 'left-0'} z-20 flex items-center gap-1 p-1 rounded-full bg-slate-950 border border-slate-700 shadow-xl backdrop-blur-md`}>
+                    <div className={`absolute -top-7 ${isCoach ? 'right-0' : 'left-0'} z-20 flex items-center gap-1 p-1 rounded-full bg-[#202c33] border border-[#2a3942] shadow-xl backdrop-blur-md`}>
                       {/* WhatsApp Quick Reaction Bar */}
                       {WHATSAPP_REACTIONS.map((emoji) => (
                         <button
                           key={emoji}
                           onClick={() => handleToggleReaction(msg.id, emoji)}
-                          className="h-6 w-6 rounded-full hover:bg-slate-800 flex items-center justify-center text-xs transition-transform hover:scale-125 cursor-pointer"
+                          className="h-6 w-6 rounded-full hover:bg-[#2a3942] flex items-center justify-center text-xs transition-transform hover:scale-125 cursor-pointer"
                         >
                           {emoji}
                         </button>
@@ -1024,7 +1054,7 @@ export const CoachMessenger: React.FC = () => {
                       {/* Reply / Quote Button */}
                       <button
                         onClick={() => setReplyingToMessage(msg)}
-                        className="h-6 w-6 rounded-full hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center transition-transform hover:scale-110 cursor-pointer ml-0.5"
+                        className="h-6 w-6 rounded-full hover:bg-[#2a3942] text-slate-300 hover:text-white flex items-center justify-center transition-transform hover:scale-110 cursor-pointer ml-0.5"
                         title="Quote / Reply"
                       >
                         <Reply className="w-3 h-3" />
@@ -1048,7 +1078,7 @@ export const CoachMessenger: React.FC = () => {
                   {/* Avatar Icon */}
                   {isCoach ? (
                     <div 
-                      className={`h-7 w-7 rounded-xl flex items-center justify-center font-bold text-[10px] shrink-0 self-end border transition-colors ${
+                      className={`h-7 w-7 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 self-end border transition-colors ${
                         isHeadCoachSender
                           ? 'bg-[#C89630]/20 border-[#C89630]/70 text-brand-gold shadow-sm'
                           : 'bg-emerald-950 border border-emerald-500/40 text-emerald-400'
@@ -1061,22 +1091,29 @@ export const CoachMessenger: React.FC = () => {
                     <OratorAvatar
                       src={activeClient.avatar}
                       name={activeClient.name}
-                      className="h-7 w-7 rounded-xl text-[10px] shrink-0 self-end"
+                      className="h-7 w-7 rounded-full text-[10px] shrink-0 self-end"
                     />
                   )}
 
-                  <div className={`space-y-1 ${isCoach ? 'items-end' : 'items-start'} max-w-full`}>
+                  <div className={`space-y-1 flex flex-col ${isCoach ? 'items-end' : 'items-start'} max-w-full`}>
                     {/* WhatsApp Message Bubble */}
                     <div 
                       onClick={() => setActiveReactionMenuId(activeReactionMenuId === msg.id ? null : msg.id)}
-                      className={`relative px-4 py-3 rounded-2xl shadow-sm cursor-pointer ${
+                      className={`relative px-3.5 py-2.5 rounded-2xl shadow-xs cursor-pointer w-fit max-w-full ${
                       isCoach 
-                        ? 'bg-emerald-950/80 border border-emerald-500/40 text-slate-100 rounded-br-xs'
-                        : 'bg-slate-900 border border-slate-800 text-slate-100 rounded-bl-xs'
+                        ? 'bg-[#005c4b] text-white rounded-tr-xs'
+                        : 'bg-[#202c33] text-slate-100 rounded-tl-xs'
                     }`}>
+                      {/* WhatsApp Tail */}
+                      {isCoach ? (
+                        <div className="absolute top-0 -right-2 w-0 h-0 border-t-8 border-t-[#005c4b] border-r-8 border-r-transparent" />
+                      ) : (
+                        <div className="absolute top-0 -left-2 w-0 h-0 border-t-8 border-t-[#202c33] border-l-8 border-l-transparent" />
+                      )}
+
                       {/* Faculty Author Attribution Header */}
                       {isCoach && (
-                        <div className="flex items-center gap-1.5 mb-2 pb-1 border-b border-emerald-500/20">
+                        <div className="flex items-center gap-1.5 mb-2 pb-1 border-b border-white/10">
                           <span className={`text-[11px] font-semibold tracking-tight ${
                             isHeadCoachSender ? 'text-brand-gold' : 'text-emerald-300'
                           }`}>
@@ -1105,7 +1142,7 @@ export const CoachMessenger: React.FC = () => {
                             onClick={() => scrollToMessage(replyTo.id)}
                             className={`mb-2 p-2 rounded-xl text-[11px] border-l-4 cursor-pointer transition-colors ${
                               isCoach 
-                                ? 'bg-black/30 border-emerald-400 text-slate-200 hover:bg-black/40' 
+                                ? 'bg-black/20 border-[#00a884] text-slate-200 hover:bg-black/30' 
                                 : 'bg-slate-950/70 border-slate-600 text-slate-300 hover:bg-slate-950'
                             }`}
                           >
@@ -1339,13 +1376,20 @@ export const CoachMessenger: React.FC = () => {
                       })()}
 
                       {/* Message Footer: Timestamp & WhatsApp Delivery Checkmarks */}
-                      <div className="flex items-center justify-end gap-1 mt-1 text-[9px] text-slate-400">
+                      <div className="flex items-center justify-end gap-1 mt-1 text-[10px] text-[#8696a0] font-mono select-none">
                         <span>{formatMessageTime(msg.timestamp)}</span>
                         {isCoach && (
-                          <CheckCheck 
-                            className={`h-3 w-3 ${msg.isRead ? 'text-cyan-400' : 'text-slate-400'}`}
-                            title={msg.isRead ? 'Read by orator (WhatsApp Blue Ticks)' : 'Delivered to orator'}
-                          />
+                          msg.isRead ? (
+                            <CheckCheck 
+                              className="w-3.5 h-3.5 text-[#53bdeb]" 
+                              title="Read by orator (WhatsApp Blue Ticks)"
+                            />
+                          ) : (
+                            <Check 
+                              className="w-3.5 h-3.5 text-[#8696a0]" 
+                              title="Delivered to orator"
+                            />
+                          )
                         )}
                       </div>
                     </div>
@@ -1357,11 +1401,11 @@ export const CoachMessenger: React.FC = () => {
                           <button
                             key={idx}
                             onClick={() => handleToggleReaction(msg.id, r.emoji)}
-                            className="px-2 py-0.5 rounded-full bg-slate-950 border border-slate-700 hover:border-emerald-500/50 text-[10px] flex items-center gap-1 transition-all cursor-pointer shadow-sm"
+                            className="px-2 py-0.5 rounded-full bg-[#202c33] border border-[#2a3942] hover:border-[#00a884]/50 text-[10px] flex items-center gap-1 transition-all cursor-pointer shadow-xs"
                             title={`Reacted by ${r.userName || 'User'}`}
                           >
                             <span>{r.emoji}</span>
-                            <span className="font-mono text-[9px] text-slate-400">1</span>
+                            <span className="font-mono text-[9px] text-[#8696a0]">1</span>
                           </button>
                         ))}
                       </div>
@@ -1372,13 +1416,13 @@ export const CoachMessenger: React.FC = () => {
             })}
             {/* Real-time Typing Indicator */}
             {activeClient?.id && typingUsers?.[activeClient.id] && (
-              <div className="flex items-center gap-2 p-2 px-3 rounded-xl bg-slate-950/80 border border-slate-800 max-w-fit animate-fadeIn">
+              <div className="flex items-center gap-2 p-2 px-3 rounded-xl bg-[#202c33] border border-[#2a3942] max-w-fit animate-fadeIn">
                 <div className="flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#00a884] animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#00a884] animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#00a884] animate-bounce" style={{ animationDelay: '300ms' }} />
                 </div>
-                <span className="text-[10px] font-mono tracking-widest text-slate-400 uppercase">
+                <span className="text-[10px] font-mono tracking-widest text-[#8696a0] uppercase">
                   {activeClient.name || 'Orator'} is composing...
                 </span>
               </div>
@@ -1386,81 +1430,97 @@ export const CoachMessenger: React.FC = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Quick Rhetoric & Debate Cues Bar */}
-          <div className="px-4 py-2 bg-slate-950/60 border-t border-slate-800/80 flex items-center gap-2 overflow-x-auto text-[11px] no-scrollbar">
-            <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-400 shrink-0 flex items-center gap-1">
-              <Zap className="h-3 w-3" />
-              QUICK CUES:
-            </span>
-            {quickSnippets.map((snippet, idx) => (
-              <button
-                key={idx}
-                onClick={() => handleSendText(snippet)}
-                className="px-3 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 whitespace-nowrap transition-colors truncate max-w-xs cursor-pointer"
-              >
-                {snippet}
-              </button>
-            ))}
-          </div>
-
-          {/* Input & Voice Note Composer */}
-          <div className="p-3 sm:p-4 bg-slate-950 border-t border-slate-800 relative">
-            {/* Attachment Menu Popup */}
+          {/* WhatsApp Mobile & Desktop Native Input & Voice Note Composer */}
+          <div className="p-2 sm:p-3 pb-[max(8px,env(safe-area-inset-bottom))] bg-[#111b21] border-t border-[#202c33] relative shrink-0">
+            {/* WhatsApp Style Attachment Menu Grid */}
             {showAttachmentMenu && (
-              <div className="absolute bottom-16 left-4 p-2 rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl space-y-1 text-xs animate-in slide-in-from-bottom-2 z-30 min-w-[220px]">
-                <button
-                  type="button"
-                  onClick={() => {
-                    imageInputRef.current?.click();
-                    setShowAttachmentMenu(false);
-                  }}
-                  className="w-full px-3 py-2 rounded-xl text-left font-bold text-slate-200 hover:bg-slate-800 hover:text-emerald-400 flex items-center gap-2.5 transition-colors cursor-pointer"
-                >
-                  <ImageIcon className="h-4 w-4 text-emerald-400" />
-                  <span>Photos & Media</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    fileInputRef.current?.click();
-                    setShowAttachmentMenu(false);
-                  }}
-                  className="w-full px-3 py-2 rounded-xl text-left font-bold text-slate-200 hover:bg-slate-800 hover:text-amber-400 flex items-center gap-2.5 transition-colors cursor-pointer"
-                >
-                  <FileText className="h-4 w-4 text-brand-gold" />
-                  <span>Speech Document / PDF</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSendWorkoutAttachment}
-                  className="w-full px-3 py-2 rounded-xl text-left font-bold text-slate-200 hover:bg-slate-800 hover:text-cyan-400 flex items-center gap-2.5 transition-colors cursor-pointer"
-                >
-                  <BookOpen className="h-4 w-4 text-cyan-400" />
-                  <span>Attach Training Protocol</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSendFormCheckReview}
-                  className="w-full px-3 py-2 rounded-xl text-left font-bold text-slate-200 hover:bg-slate-800 hover:text-purple-400 flex items-center gap-2.5 transition-colors cursor-pointer"
-                >
-                  <Video className="h-4 w-4 text-purple-400" />
-                  <span>Attach Delivery Critique</span>
-                </button>
+              <div className="absolute bottom-18 left-3 sm:left-4 p-4 rounded-3xl bg-[#202c33] border border-[#2a3942] shadow-2xl z-30 animate-in slide-in-from-bottom-2 duration-150">
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-3.5 sm:gap-4 text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      fileInputRef.current?.click();
+                      setShowAttachmentMenu(false);
+                    }}
+                    className="flex flex-col items-center gap-1.5 group cursor-pointer"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-[#7f66ff] flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform">
+                      <FileText className="w-5 h-5" />
+                    </div>
+                    <span className="text-[11px] text-[#d1d7db] font-medium">Document</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      imageInputRef.current?.click();
+                      setShowAttachmentMenu(false);
+                    }}
+                    className="flex flex-col items-center gap-1.5 group cursor-pointer"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-[#ac44cf] flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform">
+                      <ImageIcon className="w-5 h-5" />
+                    </div>
+                    <span className="text-[11px] text-[#d1d7db] font-medium">Photos</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      imageInputRef.current?.click();
+                      setShowAttachmentMenu(false);
+                    }}
+                    className="flex flex-col items-center gap-1.5 group cursor-pointer"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-[#ff2e74] flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform">
+                      <Camera className="w-5 h-5" />
+                    </div>
+                    <span className="text-[11px] text-[#d1d7db] font-medium">Camera</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAttachmentMenu(false);
+                      handleSendWorkoutAttachment();
+                    }}
+                    className="flex flex-col items-center gap-1.5 group cursor-pointer"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-[#00b0ff] flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform">
+                      <BookOpen className="w-5 h-5" />
+                    </div>
+                    <span className="text-[11px] text-[#d1d7db] font-medium">Protocol</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAttachmentMenu(false);
+                      handleSendFormCheckReview();
+                    }}
+                    className="flex flex-col items-center gap-1.5 group cursor-pointer"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-[#ff8c00] flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform">
+                      <Video className="w-5 h-5" />
+                    </div>
+                    <span className="text-[11px] text-[#d1d7db] font-medium">Critique</span>
+                  </button>
+                </div>
               </div>
             )}
 
             {/* WhatsApp Staged Image Preview Bar */}
             {stagedImage && (
-              <div className="mb-2 p-2.5 rounded-2xl bg-slate-900 border border-emerald-500/40 flex items-center justify-between gap-3 animate-in slide-in-from-bottom-2">
+              <div className="mb-2 p-2.5 rounded-2xl bg-[#202c33] border border-[#00a884]/40 flex items-center justify-between gap-3 animate-in slide-in-from-bottom-2">
                 <div className="flex items-center gap-3 min-w-0">
                   <img 
                     src={stagedImage.dataUrl} 
                     alt={stagedImage.name} 
-                    className="h-12 w-12 rounded-xl object-cover border border-emerald-500/30 shrink-0" 
+                    className="h-12 w-12 rounded-xl object-cover border border-[#00a884]/30 shrink-0" 
                   />
                   <div className="min-w-0">
-                    <div className="font-bold text-xs text-white truncate">{stagedImage.name}</div>
-                    <div className="text-[10px] font-mono text-emerald-400">
+                    <div className="font-bold text-xs text-[#e9edef] truncate">{stagedImage.name}</div>
+                    <div className="text-[10px] font-mono text-[#00a884]">
                       {stagedImage.size} · Photo staged. Add caption and tap Send.
                     </div>
                   </div>
@@ -1468,7 +1528,7 @@ export const CoachMessenger: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setStagedImage(null)}
-                  className="p-1.5 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer shrink-0"
+                  className="p-1.5 rounded-xl hover:bg-[#2a3942] text-[#8696a0] hover:text-white transition-colors cursor-pointer shrink-0"
                   title="Remove Photo"
                 >
                   <X className="w-4 h-4" />
@@ -1478,9 +1538,9 @@ export const CoachMessenger: React.FC = () => {
 
             {/* Quoted Reply Banner above Composer */}
             {replyingToMessage && (
-              <div className="mb-2 p-2.5 rounded-xl bg-slate-900 border-l-4 border-emerald-500 flex items-center justify-between gap-2 animate-in fade-in">
+              <div className="mb-2 p-2.5 rounded-xl bg-[#202c33] border-l-4 border-[#00a884] flex items-center justify-between gap-2 animate-in fade-in">
                 <div className="min-w-0 flex-1">
-                  <div className="font-bold text-[10px] text-emerald-400">
+                  <div className="font-bold text-[10px] text-[#00a884]">
                     Replying to {replyingToMessage.sender === 'coach' ? 'Yourself' : activeClient.name}
                   </div>
                   <div className="text-[11px] text-slate-300 truncate">
@@ -1489,44 +1549,48 @@ export const CoachMessenger: React.FC = () => {
                 </div>
                 <button
                   onClick={() => setReplyingToMessage(null)}
-                  className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white"
+                  className="p-1 rounded-lg hover:bg-[#2a3942] text-[#8696a0] hover:text-white cursor-pointer"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
               </div>
             )}
 
-            {/* Live Audio Recording Toolbar OR Standard Input */}
+            {/* Live Audio Recording Toolbar OR WhatsApp Input Capsule + Circular Action Button */}
             {isRecordingAudio ? (
-              <div className="flex items-center gap-3 p-2 rounded-xl bg-rose-950/40 border border-rose-500/40 animate-in fade-in">
-                <div className="flex items-center gap-2 flex-1 pl-2">
-                  <span className="h-2.5 w-2.5 rounded-full bg-rose-500 animate-ping" />
-                  <span className="font-mono text-xs font-bold text-rose-300">
-                    RECORDING: {Math.floor(recordingDuration / 60)}:{(recordingDuration % 60).toString().padStart(2, '0')}
-                  </span>
-                  <div className="flex-1 flex items-center gap-0.5 h-4 ml-3">
-                    {[12, 20, 16, 24, 18, 28, 14, 22, 16, 20].map((h, i) => (
-                      <div key={i} className="w-1 bg-rose-400 rounded-full animate-pulse" style={{ height: `${h}px` }} />
-                    ))}
+              <div className="flex items-center gap-1.5 sm:gap-2 w-full max-w-full">
+                <div className="flex-1 min-w-0 min-h-[42px] sm:min-h-[46px] bg-[#202c33] rounded-3xl flex items-center px-3 sm:px-4 py-1.5 sm:py-2 gap-2 sm:gap-3 border border-rose-500/40 animate-in fade-in">
+                  <button
+                    type="button"
+                    onClick={cancelRecording}
+                    className="p-1 text-[#8696a0] hover:text-rose-400 transition-colors cursor-pointer shrink-0"
+                    title="Cancel Recording"
+                  >
+                    <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </button>
+
+                  <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
+                    <span className="h-2 sm:h-2.5 w-2 sm:w-2.5 rounded-full bg-rose-500 animate-ping shrink-0" />
+                    <span className="font-mono text-xs font-bold text-rose-300 shrink-0">
+                      {Math.floor(recordingDuration / 60)}:{(recordingDuration % 60).toString().padStart(2, '0')}
+                    </span>
+                    <div className="flex-1 min-w-0 flex items-center gap-0.5 h-4 ml-1 sm:ml-2 overflow-hidden">
+                      {[12, 20, 16, 24, 18, 28, 14, 22, 16, 20].map((h, i) => (
+                        <div key={i} className="w-1 bg-rose-400 rounded-full animate-pulse shrink-0" style={{ height: `${h}px` }} />
+                      ))}
+                    </div>
                   </div>
                 </div>
 
                 <button
                   type="button"
-                  onClick={cancelRecording}
-                  className="p-2 rounded-xl bg-slate-900 hover:bg-rose-900/50 text-slate-400 hover:text-rose-300 transition-colors cursor-pointer"
-                  title="Cancel Recording"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-
-                <button
-                  type="button"
                   onClick={stopAndSendRecording}
-                  className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-on-gold font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer"
+                  aria-label="Send Voice Memo"
+                  className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#00a884] hover:bg-[#008f70] text-white flex items-center justify-center shadow-lg transition-transform active:scale-95 cursor-pointer shrink-0"
+                  title="Send Voice Memo"
                 >
-                  <span>Send Voice Memo</span>
-                  <Send className="w-3.5 h-3.5" />
+                  <span className="sr-only">Send Voice Memo</span>
+                  <Send className="w-4 h-4 sm:w-5 sm:h-5 ml-0.5 fill-current" />
                 </button>
               </div>
             ) : (
@@ -1535,53 +1599,78 @@ export const CoachMessenger: React.FC = () => {
                   e.preventDefault();
                   handleSendText();
                 }}
-                className="flex items-center gap-2"
+                className="flex items-center gap-1.5 sm:gap-2 w-full max-w-full"
               >
-                <button
-                  type="button"
-                  onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
-                  className={`p-2.5 rounded-xl border transition-colors ${
-                    showAttachmentMenu 
-                      ? 'bg-emerald-500 text-on-gold border-emerald-400' 
-                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
-                  }`}
-                  title="Attach Protocol, Critique or Document"
-                >
-                  <Paperclip className="h-4 w-4" />
-                </button>
+                {/* WhatsApp Left Input Capsule */}
+                <div className="flex-1 min-w-0 min-h-[42px] sm:min-h-[46px] bg-[#202c33] rounded-3xl flex items-center px-2 sm:px-3 py-1 gap-1 sm:gap-1.5 shadow-xs border border-transparent focus-within:border-[#00a884]/40">
+                  <button
+                    type="button"
+                    className="p-1 sm:p-1.5 text-[#8696a0] hover:text-[#d1d7db] transition-colors cursor-pointer shrink-0"
+                    title="Emojis"
+                  >
+                    <Smile className="w-5 h-5" />
+                  </button>
 
-                <input
-                  type="text"
-                  placeholder={stagedImage ? "Add an optional photo caption..." : `Message ${activeClient.name}...`}
-                  value={inputMessage}
-                  onChange={handleInputChange}
-                  onPaste={handlePaste}
-                  onBlur={() => {
-                    if (sendTypingIndicator && activeClient?.id) {
-                      sendTypingIndicator(activeClient.id, false);
-                    }
-                  }}
-                  className="flex-1 h-10 px-4 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-400 focus:outline-hidden focus:border-emerald-500"
-                />
+                  <input
+                    type="text"
+                    placeholder={stagedImage ? "Add an optional photo caption..." : `Message ${activeClient.name}...`}
+                    value={inputMessage}
+                    onChange={handleInputChange}
+                    onPaste={handlePaste}
+                    onBlur={() => {
+                      if (sendTypingIndicator && activeClient?.id) {
+                        sendTypingIndicator(activeClient.id, false);
+                      }
+                    }}
+                    className="flex-1 w-0 min-w-0 bg-transparent border-0 text-[13px] sm:text-sm text-[#e9edef] placeholder-[#8696a0] focus:outline-hidden"
+                  />
 
-                {/* Voice Note Record Button */}
-                <button
-                  type="button"
-                  onClick={startRecording}
-                  className="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-emerald-400 transition-colors cursor-pointer"
-                  title="Record Voice Note"
-                >
-                  <Mic className="h-4 w-4" />
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
+                    className={`p-1 sm:p-1.5 transition-colors cursor-pointer shrink-0 ${
+                      showAttachmentMenu ? 'text-[#00a884]' : 'text-[#8696a0] hover:text-[#d1d7db]'
+                    }`}
+                    title="Attach Protocol, Critique or Document"
+                  >
+                    <Paperclip className="w-5 h-5" />
+                  </button>
 
-                <button
-                  type="submit"
-                  disabled={(!inputMessage.trim() && !stagedImage) || isSending}
-                  className="h-10 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 text-on-gold font-bold text-xs flex items-center gap-1.5 shadow-md transition-all cursor-pointer"
-                >
-                  <span>{isSending ? 'Sending...' : 'Send'}</span>
-                  <Send className="h-3.5 w-3.5" />
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => imageInputRef.current?.click()}
+                    className="p-1 sm:p-1.5 text-[#8696a0] hover:text-[#d1d7db] transition-colors cursor-pointer shrink-0"
+                    title="Camera / Photos"
+                  >
+                    <Camera className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* WhatsApp Right Action Circle Button: Send OR Mic */}
+                {(inputMessage.trim() || stagedImage) ? (
+                  <button
+                    type="submit"
+                    disabled={isSending}
+                    aria-label={isSending ? "Sending" : "Send"}
+                    title="Send message"
+                    className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#00a884] hover:bg-[#008f70] text-white flex items-center justify-center shadow-lg transition-transform active:scale-95 cursor-pointer shrink-0 ${
+                      isSending ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
+                  >
+                    <span className="sr-only">{isSending ? 'Sending...' : 'Send'}</span>
+                    <Send className="w-4 h-4 sm:w-5 sm:h-5 ml-0.5 fill-current" />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={startRecording}
+                    aria-label="Record Voice Critique"
+                    className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#00a884] hover:bg-[#008f70] text-white flex items-center justify-center shadow-lg transition-transform active:scale-95 cursor-pointer shrink-0"
+                    title="Record Voice Critique"
+                  >
+                    <Mic className="w-5 h-5" />
+                  </button>
+                )}
               </form>
             )}
           </div>
