@@ -1257,7 +1257,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
       </div>
 
       {/* RIGHT COLUMN: Active Chat Stream Container */}
-      <div className={`flex-1 min-h-0 h-full flex flex-col bg-[#0b141a] min-w-0 overflow-hidden ${
+      <div className={`fixed inset-0 z-40 md:relative md:inset-auto md:z-auto flex-1 min-h-0 h-[100dvh] md:h-full flex flex-col bg-[#0b141a] min-w-0 overflow-hidden ${
         mobileView === 'roster' ? 'hidden md:flex' : 'flex'
       }`}>
         {/* WhatsApp Modern Chat Header */}
@@ -1554,11 +1554,11 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
                     </div>
                   )}
 
-                  <div className={`space-y-1 ${isSpeaker ? 'items-end' : 'items-start'} max-w-full`}>
+                  <div className={`space-y-1 flex flex-col ${isSpeaker ? 'items-end' : 'items-start'} max-w-full`}>
                     {/* Message Bubble */}
                     <div 
                       onClick={() => setActiveReactionMenuId(activeReactionMenuId === msg.id ? null : msg.id)}
-                      className={`relative px-3.5 py-2.5 rounded-2xl shadow-xs cursor-pointer ${
+                      className={`relative px-3.5 py-2.5 rounded-2xl shadow-xs cursor-pointer w-fit max-w-full ${
                       isSpeaker
                         ? 'bg-[#005c4b] text-white rounded-tr-xs'
                         : 'bg-[#202c33] text-slate-100 rounded-tl-xs'
@@ -1849,7 +1849,7 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
 
 
         {/* WhatsApp Mobile & Desktop Native Input & Voice Note Composer */}
-        <div className="p-2 sm:p-3 bg-[#111b21] border-t border-[#202c33] relative shrink-0">
+        <div className="p-2 sm:p-3 pb-[max(8px,env(safe-area-inset-bottom))] bg-[#111b21] border-t border-[#202c33] relative shrink-0">
           {/* WhatsApp Style Attachment Menu Grid */}
           {showAttachmentMenu && (
             <div className="absolute bottom-18 left-3 sm:left-4 p-4 rounded-3xl bg-[#202c33] border border-[#2a3942] shadow-2xl z-30 animate-in slide-in-from-bottom-2 duration-150">

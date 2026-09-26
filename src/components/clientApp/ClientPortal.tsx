@@ -700,7 +700,7 @@ export const ClientPortal: React.FC = () => {
   }
 
   return (
-    <div className="flex-1 bg-slate-950 text-slate-100 flex font-sans antialiased selection:bg-emerald-500 selection:text-slate-950 min-h-screen h-screen overflow-hidden">
+    <div className="flex-1 bg-slate-950 text-slate-100 flex font-sans antialiased selection:bg-emerald-500 selection:text-slate-950 h-full h-[100dvh] max-h-[100dvh] overflow-hidden">
       <SEOHead
         title="Speaker Practice Studio"
         description="Private rehearsal vault, catharsis voice recorder, and drill studio for Global Orators speakers."

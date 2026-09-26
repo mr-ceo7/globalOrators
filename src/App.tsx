@@ -175,7 +175,7 @@ const AppContent: React.FC = () => {
   }
 
   return (
-    <div className={`${currentPortal === 'coach_os' || currentPortal === 'speaker_app' ? 'h-screen overflow-hidden' : 'min-h-screen'} bg-slate-950 text-slate-100 flex flex-col font-sans antialiased`}>
+    <div className={`${currentPortal === 'coach_os' || currentPortal === 'speaker_app' ? 'h-full h-[100dvh] max-h-[100dvh] overflow-hidden' : 'min-h-screen'} bg-slate-950 text-slate-100 flex flex-col font-sans antialiased`}>
       {isPreviewOrDev && currentPortal !== 'landing' && currentPortal !== 'onboarding' && isAuthenticatedCoach && <SubdomainSwitcher />}
       {currentPortal === 'landing' && <LandingPage />}
       {currentPortal === 'speaker_app' && (activeSpeakerProfile ? <ClientPortal /> : <SpeakerLoginPortal />)}
