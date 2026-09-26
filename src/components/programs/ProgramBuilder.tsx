@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   BookOpen, 
   Plus, 
@@ -19,7 +19,8 @@ import {
   ArrowRight,
   ListChecks,
   Search,
-  ExternalLink
+  ExternalLink,
+  Edit3
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { 
@@ -121,6 +122,23 @@ export const ProgramBuilder: React.FC<{
   const [saveNotification, setSaveNotification] = useState<string | null>(null);
   const [showPhasesTimeline, setShowPhasesTimeline] = useState(false);
   const [mobileView, setMobileView] = useState<'roadmap' | 'canvas'>('canvas');
+  const [isCreatingBlank, setIsCreatingBlank] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close curriculum switcher when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsProgramDropdownOpen(false);
+      }
+    };
+    if (isProgramDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isProgramDropdownOpen]);
 
   // Switch loaded program
   const handleLoadProgram = (programId: string) => {
@@ -132,58 +150,79 @@ export const ProgramBuilder: React.FC<{
     }
   };
 
-  // Create new blank program
-  const handleCreateNewBlankProgram = () => {
-    const newProg: TrainingProgram = {
-      id: `prog-${Date.now()}`,
-      title: 'New Speech & Debate Masterclass',
-      subtitle: 'Structured Oratory Syllabus & Rehearsal Protocol',
-      description: 'Custom forensics and executive rhetoric curriculum with practical floor drills.',
-      difficulty: 'Intermediate',
-      goal: 'Executive & Board Pitching',
-      durationWeeks: 6,
-      daysPerWeek: 2,
-      tags: ['Executive', 'Masterclass'],
-      assignedClientCount: 0,
-      createdAt: localDateString(),
-      updatedAt: localDateString(),
-      days: [
-        {
-          id: `session-${Date.now()}-1`,
-          dayNumber: 1,
-          name: 'Session 1: Diagnostic Assessment & Style Profiling',
-          focus: 'Baseline Diagnostic, Voice Resonance & Delivery Profiling',
-          estimatedDurationMin: 90,
-          warmupNotes: 'Diaphragmatic resonance humming (3x30s) + articulatory release.',
-          assignmentNotes: 'Record a 3-minute impromptu response to an unscripted stakeholder inquiry in the Voice Vault.',
-          objectives: [
-            'Establish baseline vocal presence, eye contact, and pacing (WPM)',
-            'Identify filler word frequency and unconscious postural tics',
-            'Deliver a 3-minute impromptu diagnostic speech'
-          ],
-          phases: JSON.parse(JSON.stringify(DEFAULT_6_PHASES)),
-          exercises: []
-        },
-        {
-          id: `session-${Date.now()}-2`,
-          dayNumber: 2,
-          name: 'Session 2: Vocal Architecture & Projection',
-          focus: 'Diaphragmatic Breathwork, Resonance & Pitch Dynamics',
-          estimatedDurationMin: 90,
-          warmupNotes: 'Vowel elongation scales and chest resonance exercises.',
-          assignmentNotes: 'Practice 5 minutes of vocal resonance hums daily before speaking.',
-          objectives: [
-            'Master thoracic diaphragmatic breathing to eliminate breathlessness',
-            'Develop vocal command without strain or vocal fatigue'
-          ],
-          phases: JSON.parse(JSON.stringify(DEFAULT_6_PHASES)),
-          exercises: []
-        }
-      ]
-    };
-    setActiveProgram(newProg);
-    setActiveSessionIndex(0);
-    setIsProgramDropdownOpen(false);
+  // Create new blank program and persist immediately to registry
+  const handleCreateNewBlankProgram = async () => {
+    if (isCreatingBlank) return;
+    setIsCreatingBlank(true);
+
+    try {
+      const existingCount = programs.filter(p => p.title.toLowerCase().startsWith('new speech & debate masterclass')).length;
+      const title = existingCount > 0 
+        ? `New Speech & Debate Masterclass (${existingCount + 1})` 
+        : 'New Speech & Debate Masterclass';
+
+      const newProg: TrainingProgram = {
+        id: `prog-${Date.now()}`,
+        title,
+        subtitle: 'Structured Oratory Syllabus & Rehearsal Protocol',
+        description: 'Custom forensics and executive rhetoric curriculum with practical floor drills.',
+        difficulty: 'Intermediate',
+        goal: 'Executive & Board Pitching',
+        durationWeeks: 6,
+        daysPerWeek: 2,
+        tags: ['Executive', 'Masterclass'],
+        assignedClientCount: 0,
+        createdAt: localDateString(),
+        updatedAt: localDateString(),
+        days: [
+          {
+            id: `session-${Date.now()}-1`,
+            dayNumber: 1,
+            name: 'Session 1: Diagnostic Assessment & Style Profiling',
+            focus: 'Baseline Diagnostic, Voice Resonance & Delivery Profiling',
+            estimatedDurationMin: 90,
+            warmupNotes: 'Diaphragmatic resonance humming (3x30s) + articulatory release.',
+            assignmentNotes: 'Record a 3-minute impromptu response to an unscripted stakeholder inquiry in the Voice Vault.',
+            objectives: [
+              'Establish baseline vocal presence, eye contact, and pacing (WPM)',
+              'Identify filler word frequency and unconscious postural tics',
+              'Deliver a 3-minute impromptu diagnostic speech'
+            ],
+            phases: JSON.parse(JSON.stringify(DEFAULT_6_PHASES)),
+            exercises: []
+          },
+          {
+            id: `session-${Date.now()}-2`,
+            dayNumber: 2,
+            name: 'Session 2: Vocal Architecture & Projection',
+            focus: 'Diaphragmatic Breathwork, Resonance & Pitch Dynamics',
+            estimatedDurationMin: 90,
+            warmupNotes: 'Vowel elongation scales and chest resonance exercises.',
+            assignmentNotes: 'Practice 5 minutes of vocal resonance hums daily before speaking.',
+            objectives: [
+              'Master thoracic diaphragmatic breathing to eliminate breathlessness',
+              'Develop vocal command without strain or vocal fatigue'
+            ],
+            phases: JSON.parse(JSON.stringify(DEFAULT_6_PHASES)),
+            exercises: []
+          }
+        ]
+      };
+
+      // 1. Immediately update active program view
+      setActiveProgram(newProg);
+      setActiveSessionIndex(0);
+      setIsProgramDropdownOpen(false);
+
+      // 2. Persist to global context and backend database
+      await saveProgram(newProg);
+      setSaveNotification(`Created and saved "${title}"`);
+      setTimeout(() => setSaveNotification(null), 3500);
+    } catch (err) {
+      console.error('Failed to create new blank curriculum:', err);
+    } finally {
+      setIsCreatingBlank(false);
+    }
   };
 
   const currentSession: WorkoutDay | undefined = activeProgram.days[activeSessionIndex] || activeProgram.days[0];
@@ -389,11 +428,12 @@ export const ProgramBuilder: React.FC<{
       {/* Minimalist Command Bar */}
       <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
         {/* Left: Active Curriculum Selector Dropdown */}
-        <div className="relative">
+        <div ref={dropdownRef} className="relative">
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={() => setIsProgramDropdownOpen(!isProgramDropdownOpen)}
-              className="flex items-center gap-2 group text-left transition-colors"
+              className="flex items-center gap-2 group text-left transition-colors cursor-pointer"
             >
               <div>
                 <div className="flex items-center gap-2">
@@ -409,9 +449,18 @@ export const ProgramBuilder: React.FC<{
                   <h2 className="text-lg md:text-xl font-serif font-bold text-white tracking-tight group-hover:text-brand-gold transition-colors">
                     {activeProgram.title}
                   </h2>
-                  <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors shrink-0" />
+                  <ChevronDown className={`w-4 h-4 text-slate-400 group-hover:text-white transition-transform duration-200 shrink-0 ${isProgramDropdownOpen ? 'rotate-180 text-white' : ''}`} />
                 </div>
               </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsSettingsOpen(true)}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent hover:border-slate-800 transition-colors cursor-pointer ml-1"
+              title="Rename Curriculum"
+              aria-label="Rename Curriculum"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
             </button>
           </div>
 
@@ -427,8 +476,9 @@ export const ProgramBuilder: React.FC<{
                   return (
                     <button
                       key={p.id}
+                      type="button"
                       onClick={() => handleLoadProgram(p.id)}
-                      className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors ${
+                      className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors cursor-pointer ${
                         isSelected 
                           ? 'bg-[#C89630]/15 text-brand-gold font-bold' 
                           : 'text-slate-300 hover:bg-slate-900 hover:text-white'
@@ -445,12 +495,23 @@ export const ProgramBuilder: React.FC<{
               </div>
               <div className="pt-1.5 border-t border-slate-900">
                 <button
+                  type="button"
                   id="new-program-builder-btn"
                   onClick={handleCreateNewBlankProgram}
-                  className="w-full py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-xs font-semibold text-brand-gold flex items-center justify-center gap-1.5 transition-colors"
+                  disabled={isCreatingBlank}
+                  className="w-full py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-xs font-semibold text-brand-gold flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-60"
                 >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>+ New Blank Curriculum</span>
+                  {isCreatingBlank ? (
+                    <>
+                      <div className="animate-spin h-3.5 w-3.5 border-2 border-[#C89630] border-t-transparent rounded-full" />
+                      <span>Creating Curriculum...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>New Blank Curriculum</span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>

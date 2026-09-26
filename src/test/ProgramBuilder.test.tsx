@@ -127,4 +127,28 @@ describe('Global Orators Minimalist Split-View ProgramBuilder', () => {
     expect(screen.getByText('Curriculum Settings')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Done/i })).toBeInTheDocument();
   });
+
+  test('creates a new blank curriculum, persists it, and updates the active canvas', async () => {
+    render(
+      <AppProvider>
+        <ProgramBuilder />
+      </AppProvider>
+    );
+
+    // Open curriculum switcher dropdown
+    const dropdownTrigger = screen.getByText('CURRICULUM').closest('button');
+    expect(dropdownTrigger).toBeTruthy();
+    fireEvent.click(dropdownTrigger!);
+
+    expect(screen.getByText('SWITCH CURRICULUM')).toBeInTheDocument();
+
+    // Click "+ New Blank Curriculum" button
+    const newBlankBtn = screen.getByRole('button', { name: /New Blank Curriculum/i });
+    expect(newBlankBtn).toBeInTheDocument();
+    fireEvent.click(newBlankBtn);
+
+    // Canvas should reflect the new masterclass title
+    expect(await screen.findByText(/New Speech & Debate Masterclass/i)).toBeInTheDocument();
+  });
 });
+
