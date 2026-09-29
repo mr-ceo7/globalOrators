@@ -1,3 +1,5 @@
+import asyncio
+import logging
 import uuid
 from datetime import datetime, timezone
 from typing import List
@@ -10,6 +12,8 @@ from app.dependencies import get_db, get_current_user, require_coach
 from app.models.user import User
 from app.schemas.client import CoachDirectoryItem, CreateCoachRequest
 from app.security import get_password_hash
+
+logger = logging.getLogger("globalorators.coaches")
 
 router = APIRouter(prefix="/coaches", tags=["Coaches"])
 
@@ -74,6 +78,20 @@ async def create_coach(
     db.add(new_coach)
     await db.commit()
     await db.refresh(new_coach)
+
+    # Dispatch welcome & credentials email to newly appointed faculty coach
+    try:
+        from app.services.email import send_welcome_coach_email
+        asyncio.create_task(
+            send_welcome_coach_email(
+                coach_email=new_coach.email,
+                coach_name=new_coach.full_name,
+                initial_password=req.password,
+                provisioner_name=current_user.full_name
+            )
+        )
+    except Exception as exc:
+        logger.error(f"Failed to dispatch welcome email to coach {new_coach.email}: {exc}")
 
     return CoachDirectoryItem(
         id=new_coach.id,

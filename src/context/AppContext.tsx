@@ -2034,7 +2034,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
       if (newCoach) {
         setCoaches(prev => [newCoach, ...prev.filter(c => c.id !== newCoach.id)]);
-        showToast(`Coach ${newCoach.name} added to faculty roster.`);
+        showToast(`Coach ${newCoach.name} added. Credentials email dispatched.`);
         return { success: true, coach: newCoach };
       }
       return { success: false, error: 'Failed to add coach.' };

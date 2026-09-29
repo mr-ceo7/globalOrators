@@ -932,3 +932,119 @@ async def send_inquiry_notification_email(
         focus,
         message
     )
+
+
+def send_welcome_coach_email_sync(
+    coach_email: str,
+    coach_name: str,
+    initial_password: str,
+    provisioner_name: Optional[str] = None
+) -> bool:
+    """
+    Dispatch onboarding credentials and workspace briefing to a newly provisioned faculty coach.
+    Adheres strictly to Anti-AI Slop standards (authoritative editorial tone, zero fluff, high contrast).
+    """
+    if settings.ENVIRONMENT == "production" or "globaloratorsproject.com" in settings.APP_URL:
+        coach_portal_url = "https://coach.globaloratorsproject.com"
+    else:
+        coach_portal_url = _sanitize_public_url(f"{settings.APP_URL}/coach")
+
+    greeting_coach = _format_coach_title(coach_name)
+    provisioner_line = f" by {provisioner_name}" if provisioner_name else ""
+
+    text_body = f"""GLOBAL ORATORS · FACULTY APPOINTMENT & CREDENTIALS DISPATCH
+Welcome to the Global Orators Faculty, {greeting_coach}.
+
+Your faculty coaching account has been provisioned{provisioner_line}. You have been granted access to the Coach OS workspace for orator triage, forensics adjudication, real-time messaging, and live chamber sessions.
+
+FACULTY CREDENTIALS:
+- Faculty Name: {coach_name}
+- Access Portal: {coach_portal_url}
+- Login Email: {coach_email}
+- Initial Temporary Password: {initial_password}
+
+SECURITY ADVISORY:
+Please log in to your coaching portal at your earliest convenience. For operational security, update your password to a private passphrase upon first access.
+
+Access your coaching workspace:
+{coach_portal_url}
+"""
+
+    content_html = f"""
+    <!-- Faculty Credentials Summary Card -->
+    <div style="background-color: #080a0e; border: 1px solid rgba(200, 150, 48, 0.4); border-radius: 14px; padding: 22px; margin-bottom: 24px;">
+      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 16px;">
+        <tr>
+          <td>
+            <div style="font-size: 16px; font-weight: 800; color: #ffffff; font-family: Georgia, serif;">{coach_name}</div>
+            <div style="font-size: 12px; color: #64748b; margin-top: 2px;">{coach_email}</div>
+          </td>
+          <td align="right" valign="top">
+            <span style="font-family: ui-monospace, monospace; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; padding: 5px 10px; border-radius: 6px; border: 1px solid rgba(200, 150, 48, 0.4); background-color: rgba(200, 150, 48, 0.15); color: #c89630;">
+              Faculty Coach
+            </span>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Credentials Detail Table -->
+      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-top: 1px solid #1e293b; padding-top: 14px;">
+        <tr>
+          <td width="35%" style="color: #64748b; font-size: 11px; padding: 6px 0; font-family: ui-monospace, monospace; text-transform: uppercase; letter-spacing: 0.08em;">Portal URL</td>
+          <td style="color: #c89630; font-size: 13px; font-weight: 600;">{coach_portal_url}</td>
+        </tr>
+        <tr>
+          <td style="color: #64748b; font-size: 11px; padding: 6px 0; font-family: ui-monospace, monospace; text-transform: uppercase; letter-spacing: 0.08em;">Login Email</td>
+          <td style="color: #ffffff; font-size: 13px; font-weight: 700;">{coach_email}</td>
+        </tr>
+        <tr>
+          <td style="color: #64748b; font-size: 11px; padding: 6px 0; font-family: ui-monospace, monospace; text-transform: uppercase; letter-spacing: 0.08em;">Initial Password</td>
+          <td style="padding: 6px 0;">
+            <code style="display: inline-block; background-color: #1e293b; color: #f1f5f9; padding: 4px 10px; border-radius: 6px; font-family: ui-monospace, monospace; font-size: 13px; letter-spacing: 0.05em; border: 1px solid #334155;">{initial_password}</code>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Security Guidance Box -->
+      <div style="background-color: #10141d; border-left: 3px solid #c89630; padding: 14px 16px; border-radius: 0 8px 8px 0; margin-top: 16px;">
+        <div style="font-size: 10px; font-family: ui-monospace, monospace; text-transform: uppercase; letter-spacing: 0.1em; color: #c89630; font-weight: 700; margin-bottom: 4px;">
+          Security Protocol
+        </div>
+        <div style="font-size: 12px; line-height: 1.6; color: #94a3b8;">
+          This temporary passphrase was generated upon appointment. Please sign in to your coaching console and update your password under profile settings.
+        </div>
+      </div>
+    </div>
+    """
+
+    html_body = _wrap_editorial_html(
+        kicker="Global Orators · Faculty Provisioning Dispatch",
+        headline="Faculty Coaching Account Provisioned",
+        lead_text=f"Welcome to the faculty, {greeting_coach}. Your coaching workspace has been provisioned{provisioner_line}. Access details and credentials are provided below.",
+        content_html=content_html,
+        action_url=coach_portal_url,
+        action_label="Open Coach Workspace"
+    )
+
+    return _dispatch_smtp_email_sync(
+        recipient_email=coach_email,
+        subject=f"Global Orators Faculty · Workspace Credentials for {coach_name}",
+        text_body=text_body,
+        html_body=html_body
+    )
+
+
+async def send_welcome_coach_email(
+    coach_email: str,
+    coach_name: str,
+    initial_password: str,
+    provisioner_name: Optional[str] = None
+) -> bool:
+    """Async wrapper for faculty coach credentials email dispatch."""
+    return await asyncio.to_thread(
+        send_welcome_coach_email_sync,
+        coach_email,
+        coach_name,
+        initial_password,
+        provisioner_name
+    )

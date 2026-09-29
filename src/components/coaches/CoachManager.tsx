@@ -428,6 +428,9 @@ export const CoachManager: React.FC = () => {
                   placeholder="Minimum 8 characters"
                   className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 placeholder-slate-500 focus:outline-hidden focus:border-[#C89630]"
                 />
+                <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
+                  An official welcome email with portal credentials will be dispatched to this address immediately.
+                </p>
               </div>
 
               <div className="pt-3 flex items-center justify-end gap-2">

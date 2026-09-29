@@ -213,6 +213,7 @@ describe('CoachManager Component Tests', () => {
     expect(screen.getByLabelText(/Full Name & Title/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Faculty Email Address/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Initial Password/i)).toBeInTheDocument();
+    expect(screen.getByText(/An official welcome email with portal credentials will be dispatched/i)).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText(/Full Name & Title/i), {
       target: { value: 'Evelyn Reed' }

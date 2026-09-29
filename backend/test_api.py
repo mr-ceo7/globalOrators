@@ -1234,6 +1234,96 @@ async def test_coach_referrals_reassignment_and_adjudication():
 
 
 @pytest.mark.asyncio
+async def test_faculty_coach_provisioning_and_welcome_email():
+    """Verify Master Coach can provision faculty accounts and trigger welcome credentials email dispatch."""
+    from unittest.mock import patch
+    from app.services.email import send_welcome_coach_email_sync
+
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        import time
+        ts = int(time.time() * 1000)
+        new_coach_email = f"kofi.mensah.{ts}@globalorators.com"
+        new_coach_password = "InitialSecurePassword2026!"
+        new_coach_name = "Coach Kofi Mensah"
+
+        # 1. Unauthenticated request must be denied
+        res_unauth = await client.post("/api/coaches", json={
+            "fullName": new_coach_name,
+            "email": new_coach_email,
+            "password": new_coach_password
+        })
+        assert res_unauth.status_code == 401
+
+        # 2. Login as Head Coach
+        res_head = await client.post("/api/auth/login", json={
+            "email": settings.DEFAULT_COACH_EMAIL,
+            "password": settings.DEFAULT_COACH_PASSWORD
+        })
+        assert res_head.status_code == 200
+        head_token = res_head.json()["access_token"]
+        headers_head = {"Authorization": f"Bearer {head_token}"}
+
+        # 3. Provision coach account with welcome email dispatch
+        with patch("app.services.email.send_welcome_coach_email") as mock_email:
+            res_provision = await client.post(
+                "/api/coaches",
+                json={
+                    "fullName": new_coach_name,
+                    "email": new_coach_email,
+                    "password": new_coach_password
+                },
+                headers=headers_head
+            )
+            assert res_provision.status_code == 201
+            data = res_provision.json()
+            assert data["name"] == new_coach_name
+            assert data["email"] == new_coach_email
+            assert data["role"] == "coach"
+
+            # Verify the email dispatch function was called with credentials
+            mock_email.assert_called_once()
+            called_kwargs = mock_email.call_args.kwargs
+            assert called_kwargs["coach_email"] == new_coach_email
+            assert called_kwargs["coach_name"] == new_coach_name
+            assert called_kwargs["initial_password"] == new_coach_password
+
+        # 4. Duplicate email rejection
+        res_dup = await client.post(
+            "/api/coaches",
+            json={
+                "fullName": "Coach Duplicate",
+                "email": new_coach_email,
+                "password": "OtherPassword2026!"
+            },
+            headers=headers_head
+        )
+        assert res_dup.status_code == 400
+        assert "already exists" in res_dup.json()["detail"].lower()
+
+        # 5. New coach can immediately authenticate with provisioned credentials
+        res_new_login = await client.post(
+            "/api/auth/login",
+            json={
+                "email": new_coach_email,
+                "password": new_coach_password
+            }
+        )
+        assert res_new_login.status_code == 200
+        new_token = res_new_login.json()["access_token"]
+        assert res_new_login.json()["user"]["role"] == "coach"
+
+        # 6. Verify welcome email template formats properly in sync dispatch
+        email_sent = send_welcome_coach_email_sync(
+            coach_email=new_coach_email,
+            coach_name=new_coach_name,
+            initial_password=new_coach_password,
+            provisioner_name="Head Coach Qassim"
+        )
+        assert email_sent is True
+
+
+@pytest.mark.asyncio
 async def test_email_otp_authentication_flow():
     """Verify passwordless email OTP generation, verification, and speaker session issuance."""
     transport = httpx.ASGITransport(app=app)
