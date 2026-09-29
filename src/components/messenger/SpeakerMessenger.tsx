@@ -1912,12 +1912,12 @@ export const SpeakerMessenger: React.FC<SpeakerMessengerProps> = ({
                   </button>
                 )}
 
-                {selectedGroupId && (
+                {activeConversation?.type === 'group' && (
                   <button
                     type="button"
                     onClick={() => {
                       setShowAttachmentMenu(false);
-                      handleStartChamberCall();
+                      handleInitiateGroupCall(activeConversation.rawId);
                     }}
                     className="flex flex-col items-center gap-1.5 group cursor-pointer"
                   >
