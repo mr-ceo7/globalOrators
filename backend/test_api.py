@@ -2843,3 +2843,202 @@ async def test_invoice_proxy_is_head_coach_only_and_uses_server_key(monkeypatch)
         # Without a configured key the proxy refuses instead of calling out unauthenticated.
         monkeypatch.setattr(settings, "INVOICE_ADMIN_KEY", "")
         assert (await client.get("/api/invoices", headers=head_headers)).status_code == 503
+
+
+import io
+
+
+def _zip_bytes(entries: dict) -> bytes:
+    import io
+    import zipfile
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as z:
+        for name, content in entries.items():
+            z.writestr(name, content)
+    return buf.getvalue()
+
+
+@pytest.mark.asyncio
+async def test_curriculum_import(monkeypatch):
+    """AI curriculum import: files are read, the AI answer is validated into a draft, and nothing is saved."""
+    import json
+    from app.services.ai import curriculum, files as ai_files, gateway, gemini, gemini_keys
+
+    monkeypatch.setattr(settings, "GEMINI_API_KEY", "test-key")
+    monkeypatch.setattr(settings, "AI_GATEWAY_URL", "http://gateway.test")
+    monkeypatch.setattr(settings, "AI_GATEWAY_TOKEN", "gw-token")
+    gemini_keys.reset()
+
+    # Word and PowerPoint are unpacked on the server
+    WNS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"'
+    ANS = 'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"'
+    w_p = lambda t: f"<w:p><w:r><w:t>{t}</w:t></w:r></w:p>"
+    docx = _zip_bytes({"word/document.xml": f'<w:document {WNS}><w:body>{w_p("Week 1: Opening hooks &amp; framing")}{w_p("Week 2: Rebuttal")}</w:body></w:document>'})
+    text, by = await ai_files.read("plan.docx", "", docx, "s")
+    assert text == "Week 1: Opening hooks & framing\nWeek 2: Rebuttal" and by == "server"
+
+    # Tables keep their rows, text boxes and footnotes/headers/comments are read, nothing is duplicated
+    rich = _zip_bytes({
+        "word/document.xml": f'<w:document {WNS}><w:body>{w_p("Intro")}'
+            '<w:tbl><w:tr><w:tc>' + w_p("Week") + '</w:tc><w:tc>' + w_p("Topic") + '</w:tc></w:tr>'
+            '<w:tr><w:tc>' + w_p("1") + '</w:tc><w:tc>' + w_p("Hooks") + w_p("and framing") + '</w:tc></w:tr></w:tbl>'
+            '<w:p><w:r><w:t>Before box</w:t></w:r><w:r><w:pict><w:txbxContent>' + w_p("Box tip") + '</w:txbxContent></w:pict></w:r>'
+            '<w:r><w:t> after box</w:t></w:r></w:p></w:body></w:document>',
+        "word/header1.xml": f'<w:hdr {WNS}>{w_p("Term 2 syllabus")}</w:hdr>',
+        "word/header2.xml": f'<w:hdr {WNS}>{w_p("Term 2 syllabus")}</w:hdr>',
+        "word/footnotes.xml": f'<w:footnotes {WNS}><w:footnote>{w_p("See the NSDA rules")}</w:footnote></w:footnotes>',
+        "word/comments.xml": f'<w:comments {WNS}><w:comment>{w_p("Coach: keep to 10 minutes")}</w:comment></w:comments>',
+    })
+    text, _ = await ai_files.read("rich.docx", "", rich, "s")
+    assert "Week | Topic\n1 | Hooks / and framing" in text
+    assert "Before box after box\nBox tip" in text
+    assert text.count("Term 2 syllabus") == 1 and "# Footnotes\nSee the NSDA rules" in text and "Coach: keep to 10 minutes" in text
+
+    a_sld = lambda t: f"<p:sld {ANS}><a:p><a:r><a:t>{t}</a:t></a:r></a:p></p:sld>"
+    pptx = _zip_bytes({"ppt/slides/slide2.xml": a_sld("Second"), "ppt/slides/slide10.xml": a_sld("Tenth"), "ppt/slides/slide1.xml": a_sld("First"),
+                       "ppt/slides/_rels/slide1.xml.rels": '<Relationships><Relationship Target="../notesSlides/notesSlide7.xml"/></Relationships>',
+                       "ppt/notesSlides/notesSlide7.xml": f"<p:notes {ANS}><a:p><a:r><a:t>Ask the room first</a:t></a:r></a:p><a:p><a:r><a:t>1</a:t></a:r></a:p></p:notes>"})
+    text, _ = await ai_files.read("deck.pptx", "", pptx, "s")
+    assert text.index("First") < text.index("Ask the room first") < text.index("Second") < text.index("Tenth")
+    assert "Speaker notes:\nAsk the room first\n" in text + "\n" and "\n1\n" not in text + "\n"
+
+    # Broken files get a plain error, including a zip bomb
+    import zipfile as _zf
+    bomb = io.BytesIO()
+    with _zf.ZipFile(bomb, "w", compression=_zf.ZIP_DEFLATED) as z:
+        z.writestr("word/document.xml", "<" + "a" * (31 * 1024 * 1024) + ">")
+    with pytest.raises(ValueError, match="damaged"):
+        await ai_files.read("bomb.docx", "", bomb.getvalue(), "s")
+    with pytest.raises(ValueError, match="damaged"):
+        await ai_files.read("bad.docx", "", b"not a zip", "s")
+    with pytest.raises(ValueError):
+        await ai_files.read("old.doc", "application/msword", b"x", "s")
+
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        coach = await client.post("/api/auth/login", json={"email": settings.DEFAULT_COACH_EMAIL, "password": settings.DEFAULT_COACH_PASSWORD})
+        headers = {"Authorization": f"Bearer {coach.json()['access_token']}"}
+        library = (await client.get("/api/exercises", headers=headers)).json()
+        lib_id = library[0]["id"]
+        programs_before = len((await client.get("/api/programs", headers=headers)).json())
+
+        answer = {
+            "title": "Debate Foundations", "subtitle": "", "description": "From the uploaded syllabus.",
+            "difficulty": "beginner", "goal": "Not a real goal", "durationWeeks": 99, "daysPerWeek": 2, "tags": ["Debate"],
+            "sessions": [
+                {"name": "Session 1: Opening hooks", "focus": "Hooks", "objectives": ["Open with a story"],
+                 "drills": [{"libraryId": lib_id, "newDrillKey": "", "coachNotes": "Library drill"},
+                            {"libraryId": "", "newDrillKey": "mirror", "coachNotes": "New drill", "cadenceWpm": 150},
+                            {"libraryId": "made-up-id", "newDrillKey": "", "coachNotes": "Should be dropped"}]},
+                {"name": "Session 2: Rebuttal", "focus": "Refutation", "objectives": [], "drills": [],
+                 "phases": [{"phaseName": "Clash drill", "durationMin": 25, "description": "Pairs"}]},
+            ],
+            "newDrills": [
+                {"key": "mirror", "name": "Mirror Rebuttal", "skill": "Rebuttal & Refutation", "equipment": "Debate Flow Sheet",
+                 "category": "Debate Tactics", "description": "Restate then refute.", "instructions": ["Restate", "Refute"]},
+                {"key": "unused", "name": "Never referenced", "skill": "x", "equipment": "y", "category": "z",
+                 "description": "", "instructions": []},
+            ],
+        }
+        gemini_calls, gateway_calls = [], []
+        gemini_status = {"code": 200}
+
+        def fake_gemini(request: httpx.Request) -> httpx.Response:
+            gemini_calls.append(request)
+            if gemini_status["code"] != 200:
+                return httpx.Response(gemini_status["code"], text="Quota exceeded, retry in 30s")
+            return httpx.Response(200, json={"candidates": [{"content": {"parts": [{"text": json.dumps(answer)}]}}]})
+
+        def fake_gateway(request: httpx.Request) -> httpx.Response:
+            gateway_calls.append(request)
+            assert request.headers["Authorization"] == "Bearer gw-token"
+            if request.url.path == "/api/upload":
+                return httpx.Response(200, json={"filename": "up.pdf"})
+            body = json.loads(request.content)
+            if body.get("json_schema"):
+                return httpx.Response(200, json={"response": json.dumps(answer)})
+            return httpx.Response(200, text="data: Week 1: Opening hooks\n\ndata: [DONE]\n\n")
+
+        monkeypatch.setattr(gemini, "_transport", httpx.MockTransport(fake_gemini))
+        monkeypatch.setattr(gateway, "_transport", httpx.MockTransport(fake_gateway))
+
+        # Speakers can't import; unsupported files are refused before any AI call
+        speaker = await client.post("/api/auth/otp/verify", json={"email": "marcus.vance@example.com", "code": "123456"})
+        speaker_headers = {"Authorization": f"Bearer {speaker.json()['access_token']}"}
+        res = await client.post("/api/programs/import", headers=speaker_headers, files={"files": ("a.txt", b"hi", "text/plain")})
+        assert res.status_code == 403
+        res = await client.post("/api/programs/import", headers=headers, files={"files": ("a.exe", b"MZ", "application/octet-stream")})
+        assert res.status_code == 422
+        assert gemini_calls == [] and gateway_calls == []
+
+        # Text + Word through Gemini
+        res = await client.post("/api/programs/import", headers=headers, files=[
+            ("files", ("notes.md", b"# Debate Foundations\nWeek 1: Opening hooks", "text/markdown")),
+            ("files", ("plan.docx", docx, "application/vnd.openxmlformats-officedocument.wordprocessingml.document")),
+        ])
+        assert res.status_code == 200, res.text
+        body = res.json()
+        assert body["builtBy"] == "gemini" and [s["readBy"] for s in body["sources"]] == ["server", "server"]
+        sent = json.loads(gemini_calls[-1].content)
+        prompt = sent["contents"][0]["parts"][0]["text"]
+        thinking = sent["generationConfig"].get("thinkingConfig")
+        assert thinking == ({"thinkingBudget": 0} if gemini_calls[-1].url.path.endswith("gemini-2.5-flash:generateContent") else None)
+        assert "Opening hooks & framing" in prompt and lib_id in prompt
+        prog = body["program"]
+        assert prog["difficulty"] == "Beginner" and prog["goal"] == "Competitive Debate" and prog["durationWeeks"] == 52
+        first = prog["days"][0]["exercises"]
+        assert [e["exerciseId"] for e in first][0] == lib_id and len(first) == 2  # the made-up id was dropped
+        assert len(body["newDrills"]) == 1 and body["newDrills"][0]["name"] == "Mirror Rebuttal"
+        assert first[1]["exerciseId"] == body["newDrills"][0]["tempId"] and first[1]["sets"][0]["targetWeightKg"] == 150
+        assert "phases" not in prog["days"][0] and prog["days"][1]["phases"][0]["phaseName"] == "Clash drill"
+        # A long lesson plan keeps every part as a phase
+        many = curriculum.normalize({"sessions": [{"name": "S", "drills": [], "phases": [
+            {"phaseName": f"Part {i}", "durationMin": 5, "description": ""} for i in range(1, 21)]}], "newDrills": []}, library)
+        assert len(many["program"]["days"][0]["phases"]) == 20
+
+        # PDF goes to the gateway first; Gemini out of quota -> the gateway builds the curriculum
+        gemini_status["code"] = 429
+        gemini_keys.reset()
+        res = await client.post("/api/programs/import", headers=headers, files={"files": ("syllabus.pdf", b"%PDF-1.4", "application/pdf")})
+        assert res.status_code == 200, res.text
+        assert res.json()["sources"][0]["readBy"] == "gateway" and res.json()["builtBy"] == "gateway"
+
+        # A "new" drill that already exists in the library (by name) uses the library drill; repeated names collapse
+        lib_entries = [{"id": e["id"], "name": e["name"], "skill": e["primaryMuscle"], "category": e["category"], "equipment": e["equipment"]} for e in library]
+        named = curriculum.normalize({"sessions": [{"name": "S", "drills": [
+            {"libraryId": "", "newDrillKey": "a", "coachNotes": ""}, {"libraryId": "", "newDrillKey": "b", "coachNotes": ""},
+            {"libraryId": "", "newDrillKey": "c", "coachNotes": ""}]}],
+            "newDrills": [{"key": "a", "name": "  " + library[1]["name"].upper() + "!"},
+                          {"key": "b", "name": "Mirror Walk"}, {"key": "c", "name": "mirror-walk"}]}, lib_entries)
+        ids = [e["exerciseId"] for e in named["program"]["days"][0]["exercises"]]
+        assert ids[0] == library[1]["id"] and ids[1] == ids[2] and len(named["newDrills"]) == 1
+
+        # Gemini's answer cut off at its output limit -> a clear "split the document" error, no gateway retry
+        gemini_status["code"] = 200
+        gemini_keys.reset()
+        gateway_calls.clear()
+        monkeypatch.setattr(gemini, "_transport", httpx.MockTransport(lambda r: httpx.Response(200, json={
+            "candidates": [{"finishReason": "MAX_TOKENS", "content": {"parts": [{"text": '{"title": "cut'}]}}]})))
+        res = await client.post("/api/programs/import", headers=headers, files={"files": ("long.md", b"# 30 weeks", "text/markdown")})
+        assert res.status_code == 422 and "too long" in res.json()["detail"] and gateway_calls == []
+
+        # Out of time: Gemini isn't started with too little time left, the gateway takes what remains
+        monkeypatch.setattr(gemini, "_transport", httpx.MockTransport(fake_gemini))
+        monkeypatch.setattr(curriculum, "TOTAL_SECONDS", curriculum.GATEWAY_RESERVE_SECONDS + 5)
+        gemini_calls.clear()
+        res = await client.post("/api/programs/import", headers=headers, files={"files": ("a.md", b"# Week 1", "text/markdown")})
+        assert res.status_code == 200 and res.json()["builtBy"] == "gateway" and gemini_calls == []
+        monkeypatch.setattr(curriculum, "TOTAL_SECONDS", 5)
+        res = await client.post("/api/programs/import", headers=headers, files={"files": ("a.md", b"# Week 1", "text/markdown")})
+        assert res.status_code == 503
+
+        # Unreadable password-protected PDF -> says so
+        monkeypatch.setattr(gateway, "_transport", httpx.MockTransport(lambda r: httpx.Response(500)))
+        gemini_status["code"] = 400
+        locked = b"%PDF-1.7\n" + b"x" * 5000 + b"\ntrailer << /Encrypt 9 0 R /Root 1 0 R >>\n%%EOF"
+        with pytest.raises(ValueError, match="password-protected"):
+            await ai_files.read("locked.pdf", "application/pdf", locked, "s")
+
+        # Nothing was saved
+        assert len((await client.get("/api/programs", headers=headers)).json()) == programs_before
+    gemini_keys.reset()

@@ -99,7 +99,7 @@ interface AppContextType {
   suspendClient: (id: string) => Promise<boolean>;
   reactivateClient: (id: string) => Promise<boolean>;
   addCoachNote: (clientId: string, note: string) => void;
-  addExercise: (exercise: Omit<Exercise, 'id'>) => void;
+  addExercise: (exercise: Omit<Exercise, 'id'>) => Promise<Exercise | null>;
   saveProgram: (program: TrainingProgram) => void;
   deleteProgram: (id: string) => void;
   assignProgramToClient: (programId: string, clientId: string) => void;
@@ -1218,7 +1218,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [showToast]);
 
 
-  const addExercise = async (exerciseData: Omit<Exercise, 'id'>) => {
+  const addExercise = async (exerciseData: Omit<Exercise, 'id'>): Promise<Exercise | null> => {
     const tempId = `ex-${Date.now()}`;
     const newEx: Exercise = {
       ...exerciseData,
@@ -1232,11 +1232,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const created = await exercisesApi.create(exerciseData);
       if (created?.id) {
         setExercises(prev => prev.map(e => e.id === tempId ? created : e));
+        return created;
       }
+      return null;
     } catch (err) {
       console.warn('Backend sync failed for addExercise:', err);
       setExercises(prev => prev.filter(e => e.id !== tempId));
       showToast('Failed to save drill to server. Reverting changes.');
+      return null;
     }
   };
 

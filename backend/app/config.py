@@ -91,8 +91,22 @@ class Settings(BaseSettings):
     # Invoicing: the shared payment backend and the Global Orators company key for its admin API.
     PAYMENT_BACKEND_URL: str = os.getenv("PAYMENT_BACKEND_URL", "https://uon-smart-backend.onrender.com")
     INVOICE_ADMIN_KEY: str = os.getenv("INVOICE_ADMIN_KEY", "")
-    # Server-side key for AI invoice drafting (never shipped to the browser).
+    # Server-side Gemini keys (never shipped to the browser). Extra keys (GEMINI_API_KEY1..6) form a pool: when one
+    # runs out of quota the next takes over (services/ai/gemini_keys.py). Used for invoice drafting and curriculum import.
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+    GEMINI_API_KEY1: str = os.getenv("GEMINI_API_KEY1", "")
+    GEMINI_API_KEY2: str = os.getenv("GEMINI_API_KEY2", "")
+    GEMINI_API_KEY3: str = os.getenv("GEMINI_API_KEY3", "")
+    GEMINI_API_KEY4: str = os.getenv("GEMINI_API_KEY4", "")
+    GEMINI_API_KEY5: str = os.getenv("GEMINI_API_KEY5", "")
+    GEMINI_API_KEY6: str = os.getenv("GEMINI_API_KEY6", "")
+    AI_MODEL: str = os.getenv("AI_MODEL", "gemini-2.5-flash")
+    # Tried, in order, when AI_MODEL is out of quota on every key
+    AI_FALLBACK_MODELS: str = os.getenv("AI_FALLBACK_MODELS", "gemini-3.5-flash,gemini-flash-lite-latest,gemini-3.5-flash-lite")
+    # Galvaniy AI gateway (shared with JeffyTab): reads PDFs and images, and builds the curriculum when every
+    # Gemini key and model fails. Empty URL disables it.
+    AI_GATEWAY_URL: str = os.getenv("AI_GATEWAY_URL", "")
+    AI_GATEWAY_TOKEN: str = os.getenv("AI_GATEWAY_TOKEN", "")
 
     # Shared token the Jitsi tunnel watchdog sends to update the live-room domain.
     # Leave empty to disable remote domain updates.

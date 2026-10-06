@@ -2,10 +2,11 @@
 Training Programs Router
 """
 
+import asyncio
 import time
 from datetime import datetime, date, timedelta
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_
 
@@ -16,6 +17,10 @@ from app.models.client import Client
 from app.models.workout import ScheduledWorkout
 from app.models.activity import ActivityFeedItem
 from app.models.user import User
+from app.models.exercise import Exercise
+from app.rate_limiter import rate_limit
+from app.services.ai import curriculum as ai_curriculum
+from app.services.ai import files as ai_files
 from app.schemas.program import (
     ProgramCreate,
     ProgramUpdate,
@@ -66,6 +71,67 @@ async def list_programs(
     
     result = await db.execute(query)
     return result.scalars().all()
+
+
+MAX_IMPORT_FILES = 5
+
+
+@router.post("/import", dependencies=[Depends(rate_limit(limit=5, window_seconds=60, key_prefix="curriculum_import"))])
+async def import_curriculum_from_files(
+    files: List[UploadFile] = File(...),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_coach),
+):
+    """Read uploaded documents with AI and return a draft curriculum for the builder. Nothing is saved here."""
+    if not ai_curriculum.ready():
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="AI curriculum import is not configured on this server")
+    if not files:
+        raise HTTPException(status_code=400, detail="Upload at least one file")
+    if len(files) > MAX_IMPORT_FILES:
+        raise HTTPException(status_code=400, detail=f"Upload at most {MAX_IMPORT_FILES} files at a time")
+
+    session = ai_curriculum.session_id(current_user.id)
+    started = time.monotonic()
+    uploads = []
+    for f in files:
+        name = (f.filename or "file")[:200]
+        data = await f.read(ai_files.MAX_BYTES + 1)
+        if len(data) > ai_files.MAX_BYTES:
+            raise HTTPException(status_code=413, detail=f"{name} is larger than 10MB")
+        if not data:
+            raise HTTPException(status_code=400, detail=f"{name} is empty")
+        if ai_files.kind(name, f.content_type or "") == "other":
+            raise HTTPException(status_code=422, detail=f"{name}: that file type isn't supported. Use PDF, Word (.docx), PowerPoint (.pptx), text, Markdown or an image.")
+        uploads.append((name, f.content_type or "", data))
+
+    # Files are read side by side, within a shared time budget
+    read_deadline = started + ai_curriculum.READ_SECONDS
+    results = await asyncio.gather(
+        *(ai_files.read(name, mime, data, session, read_deadline) for name, mime, data in uploads), return_exceptions=True)
+    documents, sources = [], []
+    for (name, _, _), result in zip(uploads, results):
+        if isinstance(result, ValueError):
+            raise HTTPException(status_code=422, detail=str(result))
+        if isinstance(result, BaseException):
+            raise HTTPException(status_code=422, detail=f"{name}: couldn't read the file. Try again in a minute, or upload it as Word or text.")
+        text, read_by = result
+        if not text.strip():
+            raise HTTPException(status_code=422, detail=f"{name}: no text could be found in the file")
+        documents.append((name, text))
+        sources.append({"name": name, "readBy": read_by, "characters": len(text)})
+
+    library = ai_curriculum.library_entries((await db.execute(select(Exercise))).scalars().all())
+    try:
+        raw, built_by = await ai_curriculum.build(documents, library, session, started + ai_curriculum.TOTAL_SECONDS)
+    except ai_curriculum.TooLong:
+        raise HTTPException(status_code=422, detail="The document is too long to turn into one draft. Split it into parts (for example a few weeks per file) and import them one at a time.")
+    except RuntimeError:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="The AI is busy right now. Try again in a minute.")
+    try:
+        draft = ai_curriculum.normalize(raw, library)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    return {**draft, "sources": sources, "builtBy": built_by}
 
 
 @router.get("/{program_id}", response_model=ProgramResponse)

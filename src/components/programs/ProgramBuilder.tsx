@@ -20,7 +20,9 @@ import {
   ListChecks,
   Search,
   ExternalLink,
-  Edit3
+  Edit3,
+  Upload,
+  AlertCircle
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { 
@@ -33,6 +35,14 @@ import {
   SessionPhase
 } from '../../types';
 import { localDateString } from '../../utils/date';
+import { programsApi, PendingDrill } from '../../services/apiClient';
+
+const IMPORT_ACCEPT = '.pdf,.docx,.pptx,.txt,.md,.markdown,.png,.jpg,.jpeg,.webp,.gif';
+const IMPORT_MAX_FILES = 5;
+const IMPORT_MAX_BYTES = 10 * 1024 * 1024;
+
+// Drill names compared loosely (case, punctuation, spacing), matching the server's check
+const drillNameKey = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 
 // Standard 6-Phase Masterclass breakdown used across Global Orators executive coaching
 const DEFAULT_6_PHASES: SessionPhase[] = [
@@ -81,6 +91,7 @@ export const ProgramBuilder: React.FC<{
     programs, 
     exercises, 
     saveProgram, 
+    addExercise,
     deleteProgram, 
     clients, 
     assignProgramToClient 
@@ -125,6 +136,16 @@ export const ProgramBuilder: React.FC<{
   const [isCreatingBlank, setIsCreatingBlank] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // AI import: files -> unsaved draft in the builder. Drills the AI defined that aren't in the
+  // library yet wait in pendingDrills and are added to the library when the coach saves.
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [importFiles, setImportFiles] = useState<File[]>([]);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [pendingDrills, setPendingDrills] = useState<PendingDrill[]>([]);
+  const [importedFrom, setImportedFrom] = useState<string[] | null>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
+
   // Close curriculum switcher when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -144,6 +165,8 @@ export const ProgramBuilder: React.FC<{
   const handleLoadProgram = (programId: string) => {
     const found = programs.find(p => p.id === programId);
     if (found) {
+      setPendingDrills([]);
+      setImportedFrom(null);
       setActiveProgram(JSON.parse(JSON.stringify(found)));
       setActiveSessionIndex(0);
       setIsProgramDropdownOpen(false);
@@ -210,6 +233,8 @@ export const ProgramBuilder: React.FC<{
       };
 
       // 1. Immediately update active program view
+      setPendingDrills([]);
+      setImportedFrom(null);
       setActiveProgram(newProg);
       setActiveSessionIndex(0);
       setIsProgramDropdownOpen(false);
@@ -395,12 +420,83 @@ export const ProgramBuilder: React.FC<{
   const [isSaving, setIsSaving] = useState(false);
   const handleSave = async () => {
     setIsSaving(true);
+    let prog = activeProgram;
+    let remaining = pendingDrills;
     try {
-      await saveProgram(activeProgram);
+      // Add the imported drills this curriculum still uses to the library, then point the sessions at their real ids.
+      // Each one is swapped in as soon as it exists, so a failed save can be retried without duplicates.
+      const isUsed = (d: PendingDrill) => prog.days.some(day => day.exercises.some(e => e.exerciseId === d.tempId));
+      for (const drill of pendingDrills.filter(isUsed)) {
+        const { tempId, ...exercise } = drill;
+        // Already in the library under the same name (e.g. added since the draft was built): reuse it
+        const existing = exercises.find(e => drillNameKey(e.name) === drillNameKey(drill.name));
+        const created = existing || (await addExercise(exercise));
+        if (!created) {
+          setSaveNotification(`Couldn't add the drill "${drill.name}" to the library, so the curriculum wasn't saved. Try again.`);
+          setTimeout(() => setSaveNotification(null), 5000);
+          return;
+        }
+        prog = {
+          ...prog,
+          days: prog.days.map(day => ({
+            ...day,
+            exercises: day.exercises.map(e => (e.exerciseId === tempId ? { ...e, exerciseId: created.id } : e))
+          }))
+        };
+        remaining = remaining.filter(d => d.tempId !== tempId);
+      }
+      remaining = [];
+      await saveProgram(prog);
+      setImportedFrom(null);
       setSaveNotification('Curriculum changes saved.');
       setTimeout(() => setSaveNotification(null), 3500);
     } finally {
+      setActiveProgram(prog);
+      setPendingDrills(remaining);
       setIsSaving(false);
+    }
+  };
+
+  const handleChooseImportFiles = (list: FileList | null) => {
+    if (!list) return;
+    setImportError(null);
+    const chosen = [...importFiles, ...Array.from(list)];
+    const tooBig = chosen.find(f => f.size > IMPORT_MAX_BYTES);
+    if (tooBig) {
+      setImportError(`${tooBig.name} is larger than 10MB.`);
+      return;
+    }
+    if (chosen.length > IMPORT_MAX_FILES) {
+      setImportError(`Upload at most ${IMPORT_MAX_FILES} files at a time.`);
+      return;
+    }
+    setImportFiles(chosen);
+  };
+
+  const closeImport = () => {
+    if (isImporting) return;
+    setIsImportOpen(false);
+    setImportFiles([]);
+    setImportError(null);
+  };
+
+  const handleImport = async () => {
+    if (!importFiles.length || isImporting) return;
+    setIsImporting(true);
+    setImportError(null);
+    try {
+      const draft = await programsApi.importFromFiles(importFiles);
+      setActiveProgram(draft.program);
+      setPendingDrills(draft.newDrills);
+      setImportedFrom(draft.sources.map(s => s.name));
+      setActiveSessionIndex(0);
+      setMobileView('canvas');
+      setIsImportOpen(false);
+      setImportFiles([]);
+    } catch (err: any) {
+      setImportError(err?.message || 'The import failed. Try again.');
+    } finally {
+      setIsImporting(false);
     }
   };
 
@@ -520,6 +616,17 @@ export const ProgramBuilder: React.FC<{
 
         {/* Right: Clean Actions */}
         <div className="flex items-center gap-2 self-end sm:self-auto">
+          {/* Build from uploaded files */}
+          <button
+            id="import-curriculum-btn"
+            onClick={() => setIsImportOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-medium border border-slate-800 hover:border-[#C89630]/50 transition-colors"
+            title="Build a curriculum from a syllabus or lesson plan"
+          >
+            <Upload className="w-3.5 h-3.5 text-brand-gold" />
+            <span className="hidden md:inline">Import from File</span>
+          </button>
+
           {/* Settings Trigger */}
           <button
             onClick={() => setIsSettingsOpen(true)}
@@ -561,6 +668,25 @@ export const ProgramBuilder: React.FC<{
           </button>
         </div>
       </header>
+
+      {importedFrom && (
+        <div className="flex items-start gap-3 px-4 py-3 rounded-xl border border-[#C89630]/40 bg-[#C89630]/5">
+          <FileText className="w-4 h-4 text-brand-gold shrink-0 mt-0.5" />
+          <div className="text-xs text-slate-300 space-y-0.5">
+            <div className="text-[10px] font-mono tracking-widest uppercase text-brand-gold font-bold">Unsaved draft</div>
+            <p>
+              Built from {importedFrom.join(', ')}. Read through each session and fix anything the AI got wrong, then
+              press Save Curriculum. Nothing is saved until you do.
+            </p>
+            {pendingDrills.length > 0 && (
+              <p className="text-slate-400">
+                {pendingDrills.length} drill{pendingDrills.length === 1 ? '' : 's'} from the document {pendingDrills.length === 1 ? "isn't" : "aren't"} in
+                your library yet ({pendingDrills.map(d => d.name).join(', ')}). {pendingDrills.length === 1 ? 'It' : 'They'} will be added when you save.
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Mobile Toggle Bar */}
       <div className="flex md:hidden items-center justify-between bg-slate-900/90 rounded-xl p-1 border border-slate-800 text-xs">
@@ -960,6 +1086,113 @@ export const ProgramBuilder: React.FC<{
           </div>
         )}
       </div>
+
+      {/* Import From File Modal */}
+      {isImportOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-in fade-in">
+          <div className="relative w-full max-w-lg rounded-3xl bg-slate-950 border border-slate-800 shadow-2xl overflow-hidden flex flex-col">
+            <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+              <div>
+                <div className="text-[10px] font-mono tracking-widest uppercase text-brand-gold font-bold">Import from file</div>
+                <h3 className="text-base font-serif font-bold text-white">Build a curriculum from your documents</h3>
+              </div>
+              <button onClick={closeImport} disabled={isImporting} className="text-slate-400 hover:text-white p-1 disabled:opacity-40" aria-label="Close">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="p-4 space-y-3">
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Upload a syllabus, lesson plan, handout or slides. The AI reads them, lays out the sessions, objectives
+                and assignments, and matches activities to drills in your library. You review the draft before anything is saved.
+              </p>
+
+              <button
+                type="button"
+                onClick={() => importInputRef.current?.click()}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => { e.preventDefault(); handleChooseImportFiles(e.dataTransfer.files); }}
+                disabled={isImporting}
+                className="w-full rounded-2xl border border-dashed border-slate-700 hover:border-[#C89630]/60 bg-slate-900/40 px-4 py-6 flex flex-col items-center gap-1.5 transition-colors disabled:opacity-50"
+              >
+                <Upload className="w-5 h-5 text-brand-gold" />
+                <span className="text-xs font-semibold text-white">Choose files or drop them here</span>
+                <span className="text-[10px] font-mono text-slate-400">PDF · DOCX · PPTX · TXT · MD · images · up to {IMPORT_MAX_FILES} files, 10MB each</span>
+              </button>
+              <input
+                ref={importInputRef}
+                type="file"
+                multiple
+                accept={IMPORT_ACCEPT}
+                className="hidden"
+                data-testid="import-file-input"
+                onChange={(e) => { handleChooseImportFiles(e.target.files); e.target.value = ''; }}
+              />
+
+              {importFiles.length > 0 && (
+                <ul className="space-y-1">
+                  {importFiles.map((f, i) => (
+                    <li key={`${f.name}-${i}`} className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs">
+                      <span className="flex items-center gap-2 min-w-0">
+                        <FileText className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span className="truncate text-slate-200">{f.name}</span>
+                        <span className="text-[10px] font-mono text-slate-500 shrink-0">{Math.max(1, Math.round(f.size / 1024))} KB</span>
+                      </span>
+                      <button
+                        onClick={() => setImportFiles(prev => prev.filter((_, j) => j !== i))}
+                        disabled={isImporting}
+                        className="text-slate-500 hover:text-red-400 p-0.5 disabled:opacity-40"
+                        aria-label={`Remove ${f.name}`}
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {importError && (
+                <div role="alert" className="flex items-start gap-2 px-3 py-2 rounded-xl border border-red-500/40 bg-red-500/10 text-xs text-red-300">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                  <span>{importError}</span>
+                </div>
+              )}
+
+              {isImporting && (
+                <p className="text-[11px] text-slate-400">Reading the files and building the sessions. Long documents can take a minute or two.</p>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-slate-800 flex items-center justify-end gap-2">
+              <button
+                onClick={closeImport}
+                disabled={isImporting}
+                className="px-3 py-2 rounded-xl text-xs font-medium text-slate-300 hover:text-white disabled:opacity-40"
+              >
+                Cancel
+              </button>
+              <button
+                id="run-curriculum-import-btn"
+                onClick={handleImport}
+                disabled={!importFiles.length || isImporting}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#C89630] hover:bg-[#b08428] text-on-gold font-bold text-xs disabled:opacity-50"
+              >
+                {isImporting ? (
+                  <>
+                    <div className="animate-spin h-3.5 w-3.5 border-2 border-slate-950 border-t-transparent rounded-full" />
+                    <span>Building draft...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-3.5 w-3.5" />
+                    <span>Build Draft</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Drill Library Picker Modal */}
       {isDrillPickerOpen && currentSession && (

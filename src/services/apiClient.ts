@@ -353,7 +353,23 @@ export const programsApi = {
   assign: (programId: string, clientId: string) =>
     api.post<{ message: string; scheduled_count: number }>(`/programs/${programId}/assign`, { client_id: clientId }),
   delete: (id: string) => api.delete<{ message: string; id: string }>(`/programs/${id}`),
+  /** Reads the files with AI and returns an unsaved draft for the builder. */
+  importFromFiles: (files: File[]) => {
+    const formData = new FormData();
+    files.forEach(f => formData.append('files', f));
+    return api.postFormData<CurriculumImportDraft>('/programs/import', formData);
+  },
 };
+
+/** A drill the AI found in the document that isn't in the library yet; created on save. */
+export type PendingDrill = Omit<Exercise, 'id'> & { tempId: string };
+
+export interface CurriculumImportDraft {
+  program: TrainingProgram;
+  newDrills: PendingDrill[];
+  sources: { name: string; readBy: string; characters: number }[];
+  builtBy: 'gemini' | 'gateway';
+}
 
 // Scheduled Workouts Endpoints
 export const workoutsApi = {
