@@ -115,6 +115,9 @@ Rules:
   Use its titles, objectives, activities and assignments, in its words where possible. Don't add topics it doesn't
   cover. Where it leaves something out (durations, warm-ups, phases), fill in sensible values for a coaching session.
 - Session names look like "Session 1: <title>".
+- Phased lesson script: for each session, provide a step-by-step lesson script in `phases` that easily guides the coach and speaker through the lesson from start to finish. Include clear phase names, exact instructional directions, discussion questions, master frameworks, and speaker dialogue from the source material in `description`. The sum of phase durationMin values for a session must equal estimatedDurationMin.
+- Outlines & objectives: provide a comprehensive, clear outline of what is to be covered in `objectives` and `focus`.
+- Takeaway drills & assignments: extract practical speaking exercises, diagnostic simulations, and practice challenges into `drills` (mapped to library drills or newly defined in `newDrills`). Extract specific between-session homework, preparation tasks, or reflections into `assignmentNotes` to be sent to the speaker's portal.
 - Drills: for each speaking exercise or activity in a session, use the matching drill from the library (its id in
   libraryId) when one fits. When none fits, define it once in newDrills with a short key and point to that key in
   newDrillKey. Set exactly one of libraryId or newDrillKey; leave the other empty.
@@ -260,6 +263,25 @@ def normalize(raw: dict, library: list[dict]) -> dict:
             for pi, p in enumerate((s.get('phases') or [])[:MAX_PHASES]) if isinstance(p, dict) and _s(p.get('phaseName'))
         ]
         if phases:  # otherwise the builder shows its standard six phases
+            target_min = day["estimatedDurationMin"]
+            total_phase_min = sum(p["durationMin"] for p in phases)
+            if total_phase_min > 0 and total_phase_min != target_min:
+                raw_scaled = [max(1, round(p["durationMin"] * target_min / total_phase_min)) for p in phases]
+                diff = target_min - sum(raw_scaled)
+                if diff > 0:
+                    sorted_indices = sorted(range(len(phases)), key=lambda idx: phases[idx]["durationMin"], reverse=True)
+                    for k in range(diff):
+                        raw_scaled[sorted_indices[k % len(sorted_indices)]] += 1
+                elif diff < 0:
+                    while diff < 0:
+                        candidates = [idx for idx in range(len(phases)) if raw_scaled[idx] > 1]
+                        if not candidates:
+                            break
+                        best_idx = max(candidates, key=lambda idx: raw_scaled[idx])
+                        raw_scaled[best_idx] -= 1
+                        diff += 1
+                for p, scaled_m in zip(phases, raw_scaled):
+                    p["durationMin"] = scaled_m
             day["phases"] = phases
         days.append(day)
 

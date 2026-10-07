@@ -491,6 +491,7 @@ export const ProgramBuilder: React.FC<{
       setImportedFrom(draft.sources.map(s => s.name));
       setActiveSessionIndex(0);
       setMobileView('canvas');
+      setShowPhasesTimeline(true);
       setIsImportOpen(false);
       setImportFiles([]);
     } catch (err: any) {
@@ -1052,36 +1053,67 @@ export const ProgramBuilder: React.FC<{
               </div>
             </div>
 
-            {/* Collapsible 6-Phase Timeline Breakdown */}
+            {/* Collapsible Lesson Script & Phased Breakdown */}
             <div className="pt-2 border-t border-slate-900">
-              <button
-                onClick={() => setShowPhasesTimeline(!showPhasesTimeline)}
-                className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-wider text-slate-400 hover:text-slate-200 transition-colors"
-              >
-                <span>{showPhasesTimeline ? '▾ Hide' : '▸ View'} Standard 6-Phase Coaching Breakdown</span>
-              </button>
+              {(() => {
+                const currentPhases = currentSession.phases || DEFAULT_6_PHASES;
+                const isCustom = Boolean(currentSession.phases && currentSession.phases.length > 0);
+                const totalMinutes = currentPhases.reduce((acc, p) => acc + (Number(p.durationMin) || 0), 0);
+                const matchesSession = totalMinutes === currentSession.estimatedDurationMin;
 
-              {showPhasesTimeline && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 pt-3 animate-in fade-in">
-                  {(currentSession.phases || DEFAULT_6_PHASES).map((phase, pIdx) => (
-                    <div key={phase.id || pIdx} className="p-2.5 rounded-xl bg-slate-950 border border-slate-900 space-y-1">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-bold text-white text-[11px] truncate">{phase.phaseName}</span>
-                        <div className="flex items-center font-mono text-[10px] text-brand-gold">
-                          <input
-                            type="number"
-                            value={phase.durationMin}
-                            onChange={(e) => handleUpdatePhase(pIdx, 'durationMin', Number(e.target.value))}
-                            className="w-8 text-center bg-transparent border-b border-slate-800 focus:outline-hidden"
-                          />
-                          <span>m</span>
+                return (
+                  <div>
+                    <button
+                      onClick={() => setShowPhasesTimeline(!showPhasesTimeline)}
+                      className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-wider text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+                    >
+                      <span>
+                        {showPhasesTimeline ? '▾ Hide' : '▸ View'}{' '}
+                        {isCustom
+                          ? `Lesson Script & Phased Breakdown (${currentPhases.length} Phases · ${totalMinutes}m)`
+                          : `Standard 6-Phase Coaching Breakdown (${totalMinutes}m)`}
+                      </span>
+                    </button>
+
+                    {showPhasesTimeline && (
+                      <div className="pt-3 space-y-3 animate-in fade-in">
+                        <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] font-mono text-slate-400 pb-1 border-b border-slate-900/60">
+                          <span className="uppercase tracking-wider">Step-by-step coaching script & guide</span>
+                          <span className={matchesSession ? 'text-emerald-400 font-bold' : 'text-brand-gold font-bold'}>
+                            {totalMinutes}m / {currentSession.estimatedDurationMin}m session
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                          {currentPhases.map((phase, pIdx) => (
+                            <div key={phase.id || pIdx} className="p-3 rounded-xl bg-slate-950 border border-slate-900 space-y-2 flex flex-col justify-between">
+                              <div className="flex items-start justify-between gap-2 text-xs">
+                                <span className="font-bold text-white text-[11px] leading-snug">{phase.phaseName}</span>
+                                <div className="flex items-center font-mono text-[10px] text-brand-gold shrink-0 bg-slate-900/80 px-1.5 py-0.5 rounded border border-slate-800">
+                                  <input
+                                    type="number"
+                                    value={phase.durationMin}
+                                    onChange={(e) => handleUpdatePhase(pIdx, 'durationMin', Number(e.target.value))}
+                                    className="w-8 text-center bg-transparent border-none outline-none focus:ring-0 p-0"
+                                  />
+                                  <span>m</span>
+                                </div>
+                              </div>
+                              <textarea
+                                rows={Math.min(6, Math.max(2, Math.ceil((phase.description?.length || 0) / 70)))}
+                                value={phase.description || ''}
+                                onChange={(e) => handleUpdatePhase(pIdx, 'description', e.target.value)}
+                                placeholder="Phase instructions, dialogue, or discussion prompts..."
+                                className="w-full bg-slate-900/40 border border-slate-800/80 rounded-lg p-2 text-[10px] text-slate-300 placeholder-slate-600 focus:outline-hidden focus:border-[#C89630]/60 leading-relaxed resize-y font-sans"
+                              />
+                            </div>
+                          ))}
                         </div>
                       </div>
-                      <p className="text-[10px] text-slate-400 leading-snug">{phase.description}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           </div>
         )}
@@ -1152,9 +1184,19 @@ export const ProgramBuilder: React.FC<{
               )}
 
               {importError && (
-                <div role="alert" className="flex items-start gap-2 px-3 py-2 rounded-xl border border-red-500/40 bg-red-500/10 text-xs text-red-300">
-                  <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                  <span>{importError}</span>
+                <div role="alert" className="flex items-start justify-between gap-2 px-3 py-2.5 rounded-xl border border-red-500/40 bg-red-500/10 text-xs text-red-300">
+                  <div className="flex items-start gap-2 min-w-0">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-red-400" />
+                    <span className="leading-relaxed">{importError}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleImport}
+                    disabled={isImporting || !importFiles.length}
+                    className="shrink-0 px-2.5 py-1 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-200 font-semibold text-[11px] transition-colors cursor-pointer"
+                  >
+                    Try Again
+                  </button>
                 </div>
               )}
 
@@ -1175,7 +1217,7 @@ export const ProgramBuilder: React.FC<{
                 id="run-curriculum-import-btn"
                 onClick={handleImport}
                 disabled={!importFiles.length || isImporting}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#C89630] hover:bg-[#b08428] text-on-gold font-bold text-xs disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#C89630] hover:bg-[#b08428] text-on-gold font-bold text-xs disabled:opacity-50 cursor-pointer"
               >
                 {isImporting ? (
                   <>
@@ -1185,7 +1227,7 @@ export const ProgramBuilder: React.FC<{
                 ) : (
                   <>
                     <Sparkles className="h-3.5 w-3.5" />
-                    <span>Build Draft</span>
+                    <span>{importError ? 'Try Again' : 'Build Draft'}</span>
                   </>
                 )}
               </button>

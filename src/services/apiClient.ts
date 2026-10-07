@@ -162,7 +162,7 @@ class ApiClient {
     return this.request<T>(endpoint, { method: 'DELETE' });
   }
 
-  async postFormData<T>(endpoint: string, formData: FormData): Promise<T> {
+  async postFormData<T>(endpoint: string, formData: FormData, maxRetries = 3): Promise<T> {
     const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
     const token = localStorage.getItem('globalorators_token') || localStorage.getItem('nubianfit_token');
 
@@ -174,21 +174,47 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetchOrNetworkError(url, {
-      method: 'POST',
-      headers,
-      body: formData,
-    });
+    const delays = [1000, 2000, 4000];
+    let attempt = 0;
+    while (true) {
+      try {
+        const response = await fetchOrNetworkError(url, {
+          method: 'POST',
+          headers,
+          body: formData,
+        });
 
-    if (!response.ok) {
-      if (response.status === 401) {
-        clearAuthSession();
-        throw new Error(SESSION_EXPIRED_MESSAGE);
+        if (!response.ok) {
+          if (response.status === 401) {
+            clearAuthSession();
+            throw new Error(SESSION_EXPIRED_MESSAGE);
+          }
+          // Retry on transient proxy/gateway errors (502 Bad Gateway, 503 Service Unavailable, 504 Gateway Timeout)
+          if ([502, 503, 504].includes(response.status) && attempt < maxRetries) {
+            const delay = delays[attempt] || 4000;
+            attempt++;
+            await new Promise(res => setTimeout(res, delay));
+            continue;
+          }
+          const errorMsg = await readErrorMessage(response);
+          if ([502, 503, 504].includes(response.status)) {
+            throw new Error(`The server is temporarily unavailable (${response.status}: ${response.statusText || 'Gateway error'}). Please try again.`);
+          }
+          throw new Error(errorMsg);
+        }
+
+        return await response.json();
+      } catch (err: any) {
+        const isNetworkErr = err?.message === NETWORK_ERROR_MESSAGE;
+        if (isNetworkErr && attempt < maxRetries) {
+          const delay = delays[attempt] || 4000;
+          attempt++;
+          await new Promise(res => setTimeout(res, delay));
+          continue;
+        }
+        throw err;
       }
-      throw new Error(await readErrorMessage(response));
     }
-
-    return response.json();
   }
 
   async getBlob(endpoint: string): Promise<Blob> {

@@ -202,13 +202,22 @@ export const ClientPortal: React.FC = () => {
     return false;
   }, [profile, pairedClient]);
 
-  // Real Persisted Roadmap Sessions from Database
+  // Real Persisted Roadmap Sessions from Database, enriched with assigned curriculum data
   const roadmapSessions = useMemo(() => {
-    if (pairedClient) {
-      return scheduledWorkouts.filter(w => w.clientId === pairedClient.id);
-    }
-    return [];
-  }, [pairedClient, scheduledWorkouts]);
+    if (!pairedClient) return [];
+    const workouts = scheduledWorkouts.filter(w => w.clientId === pairedClient.id);
+    return workouts.map((w, idx) => {
+      const matchingDay = execProgram?.days?.find(d => d.id === w.workoutDayId) || execProgram?.days?.[idx];
+      return {
+        ...w,
+        objectives: (w.objectives && w.objectives.length > 0) ? w.objectives : matchingDay?.objectives,
+        assignmentNotes: w.assignmentNotes || matchingDay?.assignmentNotes,
+        phases: (w.phases && w.phases.length > 0) ? w.phases : matchingDay?.phases,
+        durationMin: w.durationMin || matchingDay?.estimatedDurationMin,
+        exercises: (w.exercises && w.exercises.length > 0) ? w.exercises : (matchingDay?.exercises || []),
+      };
+    });
+  }, [pairedClient, scheduledWorkouts, execProgram]);
 
   // Real Persisted Rehearsal Metrics from Database
   const speakerMetrics = useMemo(() => {

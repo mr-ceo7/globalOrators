@@ -49,7 +49,18 @@ The portal comes from the hostname in production (`coach.` → coach_os, `app.` 
 - Seeding happens only when `ENABLE_DEV_SEED` or `TESTING` is set (outside production). In production, `BOOTSTRAP_INITIAL_ADMIN` creates the first coach.
 - Auth uses a JWT (python-jose) with coach and speaker roles. Speakers can log in with Google OAuth or passwordless email OTP / magic link. Coach signup requires `COACH_INVITE_CODE`.
 
-### Deployment
-- The frontend runs on Vercel (`vercel.json`). It sets a strict CSP; add new external hosts for scripts, frames or connections there. It rewrites `/api/*` to the backend tunnel and sends everything else to `index.html`.
+### Deployment & Production Infrastructure
+- The frontend runs on Vercel (`vercel.json`). It sets a strict CSP; add new external hosts for scripts, frames or connections there. It rewrites `/api/*` to the ngrok-backed tunnel (`https://unfenestral-scratchily-lester.ngrok-free.dev/api/:path*`) pointing to the production backend machine, and routes everything else to `index.html`.
 - `api/webhooks/resend.ts` is a Vercel serverless function for inbound Resend email webhooks.
-- The backend runs on Render with Postgres (`render.yaml`). `scripts/jitsi_tunnel_watchdog.py` and `deploy/*.service` keep the Jitsi tunnel running.
+- **Production Backend**: Runs on a dedicated machine at `10.42.0.1` managed under systemd (`globalorators-backend` in `/home/qsm/backend/app`), **not Render**. `render.yaml` remains for legacy Render deployments.
+  - Service restart: `sudo systemctl restart globalorators-backend`
+  - Rollback procedure on production server:
+    ```bash
+    cd ~/backend && rm -rf app && cp -a app.prev_20261006_230135_curriculum_import app && cp -a .env.bak_20261006_230135_curriculum_import .env && sudo systemctl restart globalorators-backend
+    ```
+- **AI Infrastructure & Document Parsing**:
+  - Gemini key pool (`GEMINI_API_KEY`) powers curriculum import and invoice AI drafting.
+  - Galvaniy AI gateway: `http://161.35.100.156` configured via `AI_GATEWAY_URL` and `AI_GATEWAY_TOKEN` (used for PDF/image OCR transcription and backup when Gemini is unavailable). Traffic to this external gateway currently travels over plain HTTP.
+  - Security note: Keep `GOOGLE_CLIENT_SECRET` and gateway tokens inside `.env` (readable only by the service owner), not hardcoded in the systemd service unit.
+- `scripts/jitsi_tunnel_watchdog.py` and `deploy/*.service` keep the Jitsi tunnel running.
+

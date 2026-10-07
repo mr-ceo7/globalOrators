@@ -213,8 +213,8 @@ describe('Global Orators Minimalist Split-View ProgramBuilder', () => {
     await waitFor(() => expect(screen.queryByText('Unsaved draft')).not.toBeInTheDocument());
   });
 
-  test('shows the server error when the import fails', async () => {
-    (programsApi.importFromFiles as any).mockRejectedValue(new Error('The AI is busy right now. Try again in a minute.'));
+  test('shows the server error when the import fails and allows Try Again', async () => {
+    (programsApi.importFromFiles as any).mockRejectedValue(new Error('The server is temporarily unavailable (502: Bad Gateway). Please try again.'));
     render(
       <AppProvider>
         <ProgramBuilder />
@@ -223,7 +223,10 @@ describe('Global Orators Minimalist Split-View ProgramBuilder', () => {
     fireEvent.click(screen.getByRole('button', { name: /Import from File/i }));
     fireEvent.change(screen.getByTestId('import-file-input'), { target: { files: [new File(['x'], 'a.pdf', { type: 'application/pdf' })] } });
     fireEvent.click(screen.getByRole('button', { name: /Build Draft/i }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('The AI is busy right now');
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('temporarily unavailable');
+    // "Try Again" is displayed both inside the alert and on the action button
+    expect(screen.getAllByRole('button', { name: /Try Again/i }).length).toBeGreaterThanOrEqual(1);
   });
 
   test('reuses a library drill with the same name instead of adding a duplicate on save', async () => {

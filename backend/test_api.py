@@ -2794,6 +2794,13 @@ async def test_google_sign_in_cannot_self_grant_coach_role():
         speaker_email = f"google.speaker.{ts}@example.com"
         res = await client.post("/api/auth/google", json={"credential": mock_google(speaker_email), "role": "speaker"})
         assert res.status_code == 200 and res.json()["user"]["role"] == "speaker"
+        from sqlalchemy import select
+        from app.models.client import Client
+        from app.database import AsyncSessionLocal
+        async with AsyncSessionLocal() as session:
+            speaker_client = (await session.execute(select(Client).where(Client.email == speaker_email))).scalar_one_or_none()
+            assert speaker_client is not None
+            assert speaker_client.status == "Pending Onboarding"
         res = await client.post("/api/auth/google", json={"credential": mock_google(speaker_email), "role": "coach"})
         assert res.status_code == 403
         res = await client.post("/api/auth/google", json={"credential": mock_google(speaker_email), "role": "speaker"})
@@ -2995,6 +3002,26 @@ async def test_curriculum_import(monkeypatch):
         many = curriculum.normalize({"sessions": [{"name": "S", "drills": [], "phases": [
             {"phaseName": f"Part {i}", "durationMin": 5, "description": ""} for i in range(1, 21)]}], "newDrills": []}, library)
         assert len(many["program"]["days"][0]["phases"]) == 20
+        # Phase minutes proportionally scale to match estimatedDurationMin
+        assert sum(p["durationMin"] for p in many["program"]["days"][0]["phases"]) == 90
+        john_run = curriculum.normalize({
+            "sessions": [{
+                "name": "Understanding the Status Quo",
+                "estimatedDurationMin": 120,
+                "drills": [],
+                "phases": [
+                    {"phaseName": "P1", "durationMin": 20, "description": ""},
+                    {"phaseName": "P2", "durationMin": 20, "description": ""},
+                    {"phaseName": "P3", "durationMin": 30, "description": ""},
+                    {"phaseName": "P4", "durationMin": 40, "description": ""},
+                    {"phaseName": "P5", "durationMin": 30, "description": ""},
+                    {"phaseName": "P6", "durationMin": 20, "description": ""},
+                ]
+            }],
+            "newDrills": []
+        }, library)
+        assert sum(p["durationMin"] for p in john_run["program"]["days"][0]["phases"]) == 120
+
 
         # PDF goes to the gateway first; Gemini out of quota -> the gateway builds the curriculum
         gemini_status["code"] = 429
