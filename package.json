@@ -12,13 +12,16 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "e2e:servers": "./e2e/start-e2e-servers.sh",
-    "e2e:stop": "./e2e/stop-e2e-servers.sh"
+    "e2e:stop": "./e2e/stop-e2e-servers.sh",
+    "render:video": "npm --prefix remotion-studio run render",
+    "preview:video": "npm --prefix remotion-studio run preview"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
     "@react-oauth/google": "^0.13.5",
     "@tailwindcss/vite": "^4.1.14",
     "@types/qrcode": "^1.5.6",
+    "@types/three": "^0.186.0",
     "@vercel/analytics": "^2.0.1",
     "@vitejs/plugin-react": "^5.0.4",
     "canvas-confetti": "^1.9.4",
@@ -31,6 +34,7 @@
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
     "react-router-dom": "^7.18.3",
+    "three": "^0.186.1",
     "vite": "^6.2.3"
   },
   "devDependencies": {
@@ -48,5 +52,21 @@
     "typescript": "~5.8.2",
     "vite": "^6.2.3",
     "vitest": "^4.1.10"
-  }
+  },
+  "description": "<div align=\"center\"> <img width=\"1200\" height=\"475\" alt=\"GHBanner\" src=\"https://ai.google.dev/static/site-assets/images/share-ais-513315318.png\" /> </div>",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mr-ceo7/globalOrators.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mr-ceo7/globalOrators/issues"
+  },
+  "homepage": "https://github.com/mr-ceo7/globalOrators#readme"
 }

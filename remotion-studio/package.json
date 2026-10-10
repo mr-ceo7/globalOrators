@@ -1,0 +1,27 @@
+{
+  "name": "gop-remotion-studio",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "render": "remotion render src/index.ts LaunchDemo ../public/videos/gop-product-launch-demo.mp4 --browser-executable=/usr/bin/google-chrome --concurrency=1",
+    "render:orator": "remotion render src/index.ts OratorPortalDemo ../public/videos/orator-portal-demo.mp4 --browser-executable=/usr/bin/google-chrome --concurrency=1",
+    "render:coach": "remotion render src/index.ts CoachPortalDemo ../public/videos/coach-portal-demo.mp4 --browser-executable=/usr/bin/google-chrome --concurrency=1",
+    "render:all": "npm run render && npm run render:orator && npm run render:coach",
+    "preview": "remotion preview src/index.ts"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.218",
+    "@remotion/google-fonts": "4.0.218",
+    "lucide-react": "^0.460.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "4.0.218"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "puppeteer-core": "^25.12.0",
+    "typescript": "^5.6.3"
+  }
+}

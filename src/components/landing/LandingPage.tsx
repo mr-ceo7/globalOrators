@@ -12,6 +12,7 @@ import { EscapismPage } from '../../pages/EscapismPage';
 import { TournamentsPage } from '../../pages/TournamentsPage';
 import { TestimonialsPage } from '../../pages/TestimonialsPage';
 import { ContactPage } from '../../pages/ContactPage';
+import { DemoPage } from '../../pages/DemoPage';
 import { NotFoundPage } from '../../pages/NotFoundPage';
 
 export const LandingPage: React.FC = () => {
@@ -88,6 +89,16 @@ export const LandingPage: React.FC = () => {
       case '/contact-us':
         return (
           <ContactPage 
+            onStartOnboarding={handleStartOnboarding} 
+            onOpenPartner={handleOpenPartner} 
+            onNavigate={navigate} 
+          />
+        );
+      case '/demo':
+      case '/tour':
+      case '/motion':
+        return (
+          <DemoPage 
             onStartOnboarding={handleStartOnboarding} 
             onOpenPartner={handleOpenPartner} 
             onNavigate={navigate} 

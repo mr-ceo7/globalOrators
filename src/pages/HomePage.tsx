@@ -1,5 +1,6 @@
 import React from 'react';
 import { HeroSection } from '../components/landing/HeroSection';
+import { MotionProductTour } from '../components/landing/MotionProductTour';
 import { AudienceChooser } from '../components/landing/AudienceChooser';
 import { ProcessSection } from '../components/landing/ProcessSection';
 import { MissionSection } from '../components/landing/MissionSection';
@@ -46,7 +47,10 @@ export const HomePage: React.FC<HomePageProps> = ({
       {/* 1. Hero Section with Value Proposition & Direct CTAs */}
       <HeroSection onStartOnboarding={onStartOnboarding} />
 
-      {/* 2. Early Audience Fast-Track Chooser */}
+      {/* 2. Interactive 3D Programmatic Motion Product Tour (Coach OS & Speaker Portal) */}
+      <MotionProductTour onStartOnboarding={onStartOnboarding} />
+
+      {/* 3. Early Audience Fast-Track Chooser */}
       <AudienceChooser
         onSelectBranch={(b) => onStartOnboarding(b)}
         onOpenPartner={onOpenPartner}
