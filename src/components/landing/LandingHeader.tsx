@@ -114,13 +114,6 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
           >
             Contact
           </a>
-          <a 
-            href="/demo" 
-            onClick={(e) => { e.preventDefault(); navigate('/demo'); }}
-            className={`transition-colors cursor-pointer flex items-center gap-1 ${currentPath === '/demo' ? 'text-[#E3B95C] font-bold border-b-2 border-[#C89630] pb-0.5' : 'text-[#E3B95C] hover:text-white font-medium'}`}
-          >
-            <span>3D Tour</span>
-          </a>
         </nav>
 
         {/* Right Action Controls */}
@@ -355,17 +348,6 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
               className={`px-3 py-2 rounded-lg font-semibold transition-colors ${currentPath === '/contact' ? 'text-[#7A4B06] dark:text-[#E3B95C] bg-slate-900/70' : 'text-slate-200 hover:bg-slate-900 hover:text-[#7A4B06] dark:hover:text-[#E3B95C]'}`}
             >
               Contact
-            </a>
-            <a 
-              href="/demo" 
-              onClick={(e) => {
-                e.preventDefault();
-                setMobileMenuOpen(false);
-                navigate('/demo');
-              }}
-              className={`px-3 py-2 rounded-lg font-semibold transition-colors ${currentPath === '/demo' ? 'text-[#7A4B06] dark:text-[#E3B95C] bg-slate-900/70' : 'text-[#E3B95C] hover:bg-slate-900 font-bold'}`}
-            >
-              3D Tour & Launch Video
             </a>
           </div>
 

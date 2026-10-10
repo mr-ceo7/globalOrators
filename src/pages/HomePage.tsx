@@ -1,6 +1,5 @@
 import React from 'react';
 import { HeroSection } from '../components/landing/HeroSection';
-import { MotionProductTour } from '../components/landing/MotionProductTour';
 import { AudienceChooser } from '../components/landing/AudienceChooser';
 import { ProcessSection } from '../components/landing/ProcessSection';
 import { MissionFounders, MissionPillars } from '../components/landing/MissionSection';
@@ -50,15 +49,12 @@ export const HomePage: React.FC<HomePageProps> = ({
       />
 
       {/* Sections alternate cream, charcoal ("ink") and gold bands joined by curved edges */}
-      <Band tone="cream">
+      <Band tone="cream" next="ink">
         {/* 1. Hero Section with Value Proposition & Direct CTAs */}
         <HeroSection onStartOnboarding={onStartOnboarding} entranceDelay={heroDelay} />
-
-        {/* 2. Interactive 3D Programmatic Motion Product Tour (Coach OS & Speaker Portal) */}
-        <MotionProductTour onStartOnboarding={onStartOnboarding} />
       </Band>
 
-      {/* 3. Early Audience Fast-Track Chooser */}
+      {/* 2. Early Audience Fast-Track Chooser */}
       <Band tone="ink" next="cream">
         <AudienceChooser
           onSelectBranch={(b) => onStartOnboarding(b)}
