@@ -1,6 +1,7 @@
 import React from 'react';
 import { GraduationCap, Heart, Building2, Globe, ArrowRight } from 'lucide-react';
 import { RevealOnScroll, StaggerContainer, StaggerItem } from '../common/MotionWrapper';
+import { KineticHeading } from './KineticHeading';
 
 interface AudienceChooserProps {
   onSelectBranch: (branch: 'Academy' | 'Foundation') => void;
@@ -18,9 +19,11 @@ export const AudienceChooser: React.FC<AudienceChooserProps> = ({
           <div className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
             Audience Orientation • Fast-Track Pathways
           </div>
-          <h2 className="text-xl sm:text-2xl lg:text-3xl font-serif font-black text-slate-100 tracking-tight mt-1">
-            Choose Your Path
-          </h2>
+          <KineticHeading
+            text="Choose Your Path"
+            highlight="Your Path"
+            className="text-xl sm:text-2xl lg:text-3xl font-serif font-black text-slate-100 tracking-tight mt-1"
+          />
         </div>
         <p className="text-xs text-slate-400 mt-1 sm:mt-0 max-w-md font-normal">
           Direct enrollment for speakers and debaters, accredited curriculums for schools, and grant partnerships for shelters.

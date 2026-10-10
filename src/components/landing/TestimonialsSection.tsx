@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowRight, ShieldCheck, Mail } from 'lucide-react';
 import { RevealOnScroll } from '../common/MotionWrapper';
+import { KineticHeading } from './KineticHeading';
 
 interface TestimonialsSectionProps {
   onStartOnboarding: (branch?: 'Academy' | 'Foundation') => void;
@@ -20,9 +21,11 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
             <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
               Chapter IV • Living Proof & Safeguarding
             </div>
-            <h2 className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight mt-1">
-              "The Day I Spoke, The Heaviness Lifted."
-            </h2>
+            <KineticHeading
+              text={'"The Day I Spoke, The Heaviness Lifted."'}
+              highlight={'Heaviness Lifted."'}
+              className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight mt-1"
+            />
           </RevealOnScroll>
 
           {/* Explicit Safeguarding & Clinical Disclaimer Banner */}
@@ -38,7 +41,7 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
             </div>
           </RevealOnScroll>
 
-          {/* Featured Community Storytelling Dispatch */}
+          {/* Featured community story */}
           <RevealOnScroll delay={0.08} className="mb-8">
             <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl group">
               <picture className="w-full h-full overflow-hidden block">
@@ -124,9 +127,11 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
           <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
             Applications & Partnerships
           </div>
-          <h2 className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight">
-            Stand With the Movement.
-          </h2>
+          <KineticHeading
+            text="Stand With the Movement."
+            highlight="Movement."
+            className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight"
+          />
           <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-xl mx-auto font-normal">
             Whether you are a student ready to master parliamentary debate, a children's shelter seeking healing voice circles, or an institution seeking accredited debate training: your voice belongs here.
           </p>
@@ -149,7 +154,7 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
           </div>
 
           <div className="pt-2 text-[11px] font-mono text-slate-400">
-            Direct Director Governance Inquiries: <a href="mailto:director@globaloratorsproject.com" className="text-[#7A4B06] dark:text-[#E3B95C] underline hover:text-[#B37D22]">director@globaloratorsproject.com</a>
+            Questions for the director: <a href="mailto:director@globaloratorsproject.com" className="text-[#7A4B06] dark:text-[#E3B95C] underline hover:text-[#B37D22]">director@globaloratorsproject.com</a>
           </div>
         </RevealOnScroll>
       </section>

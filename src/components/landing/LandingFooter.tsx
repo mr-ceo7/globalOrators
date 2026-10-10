@@ -25,7 +25,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
               </div>
             </div>
             <p className="text-[11px] text-slate-400 leading-relaxed max-w-sm">
-              A Pan-African intellectual movement dedicated to cognitive deconditioning, sovereign leadership manifestation, and therapeutic vocal catharsis.
+              A Pan-African movement teaching young people to think critically, lead, and heal through their voice.
             </p>
             <div className="text-[10px] font-mono text-slate-400">
               Nairobi • London • Johannesburg • Dakar • Global
@@ -223,12 +223,12 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
                     }} 
                     className="inline-flex items-center min-h-[24px] py-1 hover:text-slate-100 transition-colors"
                   >
-                    Faculty Dispatch Form
+                    Inquiry Form
                   </a>
                 </li>
                 <li>
                   <a href="mailto:director@globaloratorsproject.com" className="inline-flex items-center min-h-[24px] py-1 hover:text-slate-100 transition-colors">
-                    Contact Governance
+                    Contact
                   </a>
                 </li>
               </ul>

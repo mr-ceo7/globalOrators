@@ -454,3 +454,147 @@
   -webkit-text-stroke: 0.35px currentColor;
 }
 
+/* ==========================================================================
+   Landing site: color bands
+   The @theme colors above resolve once at :root, so any scope that overrides
+   --app-* tokens must re-declare the mapping for the overrides to reach the
+   slate, emerald and other remapped utilities inside it.
+   ========================================================================== */
+:root {
+  --band-cream: #FBF6F0;
+  --band-ink: #181B1F;
+  --band-gold: #C89630;
+}
+:root.dark {
+  --band-cream: #0C0E11;
+}
+
+.landing-root,
+.band-ink,
+.band-gold {
+  --color-white: var(--app-white);
+  --color-slate-50: var(--app-fg);
+  --color-slate-100: var(--app-fg);
+  --color-slate-200: var(--app-fg-secondary);
+  --color-slate-300: var(--app-muted);
+  --color-slate-400: var(--app-muted);
+  --color-slate-500: var(--app-muted-light);
+  --color-slate-600: var(--app-muted-light);
+  --color-slate-700: var(--app-border-light);
+  --color-slate-800: var(--app-border);
+  --color-slate-900: var(--app-card);
+  --color-slate-950: var(--app-bg);
+  --color-emerald-50: var(--app-fg);
+  --color-emerald-100: var(--app-fg);
+  --color-emerald-200: var(--app-fg-secondary);
+  --color-emerald-300: var(--app-accent);
+  --color-emerald-400: var(--app-accent);
+  --color-emerald-500: var(--app-accent);
+  --color-emerald-600: var(--app-accent-hover);
+  --color-emerald-700: var(--app-accent-hover);
+  --color-amber-400: var(--app-amber-text);
+  --color-amber-500: var(--app-amber-text);
+  --color-amber-900: var(--app-amber-bg);
+  --color-amber-950: var(--app-amber-bg);
+  --color-emerald-800: var(--app-accent-hover);
+  --color-emerald-900: var(--app-accent-hover);
+  --color-emerald-950: var(--app-accent-light);
+  --color-cyan-400: var(--app-cyan);
+  --color-cyan-500: var(--app-cyan-dark);
+  --color-cyan-900: var(--app-cyan-light);
+  --color-teal-400: var(--app-cyan);
+  --color-teal-500: var(--app-cyan-dark);
+  --color-brand-gold: var(--app-gold-text);
+  --color-rose-200: var(--app-danger-text);
+  --color-rose-300: var(--app-danger-text);
+  --color-rose-400: var(--app-danger-text);
+  --color-rose-700: var(--app-danger-border);
+  --color-rose-800: var(--app-danger-border);
+  --color-rose-900: var(--app-danger-bg);
+  --color-rose-950: var(--app-danger-bg);
+  --color-red-200: var(--app-danger-text);
+  --color-red-300: var(--app-danger-text);
+  --color-red-400: var(--app-danger-text);
+  --color-red-700: var(--app-danger-border);
+  --color-red-800: var(--app-danger-border);
+  --color-red-900: var(--app-danger-bg);
+  --color-red-950: var(--app-danger-bg);
+}
+
+/* Warm ivory cards on the landing site instead of pure white (light mode) */
+:root:not(.dark) .landing-root {
+  --app-card: #FFFCF5;
+  --app-card-hover: #F8F0E3;
+}
+
+/* Charcoal band (both themes). Paired with the .dark class so dark: variants apply inside. */
+.band-ink {
+  --app-bg: #181B1F;
+  --app-card: #22272E;
+  --app-card-hover: #2A3038;
+  --app-border: #343B45;
+  --app-border-light: #3E4651;
+  --app-fg: #FBF8F2;
+  --app-fg-secondary: #C8D0DC;
+  --app-muted: #A3ADBB;
+  --app-muted-light: #7E8898;
+  --app-white: #FFFFFF;
+  --app-accent: #C89630;
+  --app-accent-hover: #E3B95C;
+  --app-accent-light: #2A2312;
+  --app-emerald: #34D399;
+  --app-amber-text: #FBBF24;
+  --app-amber-bg: #78350F;
+  --app-cyan: #22d3ee;
+  --app-cyan-light: #0B2B2E;
+  --app-cyan-dark: #06b6d4;
+  --app-gold-text: #E3B95C;
+  --app-danger-text: #FDA4AF;
+  --app-danger-bg: #4C0519;
+  --app-danger-border: #9F1239;
+  background-color: var(--band-ink);
+  color: var(--app-fg);
+}
+
+/* Gold band (both themes): gold ground, charcoal cards. Text placed straight on the
+   gold uses .on-gold-* helpers; everything inside cards uses the charcoal tokens. */
+.band-gold {
+  --app-bg: #C89630;
+  --app-card: #181B1F;
+  --app-card-hover: #22272E;
+  --app-border: #343B45;
+  --app-border-light: #3E4651;
+  --app-fg: #FBF8F2;
+  --app-fg-secondary: #C8D0DC;
+  --app-muted: #A3ADBB;
+  --app-muted-light: #7E8898;
+  --app-white: #FFFFFF;
+  --app-accent: #C89630;
+  --app-accent-hover: #E3B95C;
+  --app-accent-light: #2A2312;
+  --app-emerald: #34D399;
+  --app-amber-text: #FBBF24;
+  --app-amber-bg: #78350F;
+  --app-cyan: #22d3ee;
+  --app-cyan-light: #0B2B2E;
+  --app-cyan-dark: #06b6d4;
+  --app-gold-text: #E3B95C;
+  --app-danger-text: #FDA4AF;
+  --app-danger-bg: #4C0519;
+  --app-danger-border: #9F1239;
+  background-color: var(--band-gold);
+  color: #181B1F;
+}
+.band-gold .on-gold-fg { color: #181B1F; }
+.band-gold .on-gold-muted { color: #3D3524; }
+.band-gold .on-gold-kicker { color: #4A2E02; }
+
+.band-cream {
+  background-color: var(--band-cream);
+}
+
+/* Section dividers are replaced by the bands' curved edges */
+.band > section,
+.band > div > section {
+  border-bottom-width: 0;
+}

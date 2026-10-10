@@ -277,6 +277,6 @@ describe('Global Orators Dedicated Routing & SEO Tests', () => {
     expect(screen.getByText(/Official Correspondence Channels/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Full Name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Email Address/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Transmit Faculty Dispatch/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Send Inquiry/i })).toBeInTheDocument();
   });
 });

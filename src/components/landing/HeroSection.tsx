@@ -1,25 +1,34 @@
-import React, { useState } from 'react';
-import { motion } from 'motion/react';
+import React, { useRef, useState } from 'react';
+import { motion, useReducedMotion, useScroll, useTransform } from 'motion/react';
 import { GraduationCap, Heart, ArrowRight, CheckCircle2 } from 'lucide-react';
 
 interface HeroSectionProps {
   onStartOnboarding: (branch?: 'Academy' | 'Foundation') => void;
+  /** Seconds to hold the entrance (e.g. while the intro curtain lifts) */
+  entranceDelay?: number;
 }
 
-export const HeroSection: React.FC<HeroSectionProps> = ({ onStartOnboarding }) => {
+export const HeroSection: React.FC<HeroSectionProps> = ({ onStartOnboarding, entranceDelay = 0 }) => {
   const [imgError, setImgError] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
+  const reduce = useReducedMotion();
+  // As the hero scrolls away, the photo drifts down inside its frame and the copy eases back
+  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end start'] });
+  const photoY = useTransform(scrollYProgress, [0, 1], ['0%', '14%']);
+  const copyY = useTransform(scrollYProgress, [0, 1], [0, 70]);
+  const copyOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0.35]);
 
   return (
-    <section className="relative pt-8 sm:pt-14 pb-12 sm:pb-20 px-4 sm:px-8 border-b border-slate-800">
+    <section ref={sectionRef} className="relative pt-8 sm:pt-14 pb-12 sm:pb-20 px-4 sm:px-8">
       <div className="max-w-7xl 2xl:max-w-[1440px] mx-auto">
         {/* Mobile: 1-Column sequential rhythm (Headline -> Value Prop -> Image -> Paragraph -> CTAs -> Proof Points)
             Desktop (lg:): 2-Column editorial split (Col 1-7 Left narrative rows 1-5, Col 8-12 Right Image spanning rows 1-5) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-y-4 sm:gap-y-5 lg:gap-x-12 lg:items-center">
+        <motion.div style={reduce ? undefined : { y: copyY, opacity: copyOpacity }} className="grid grid-cols-1 lg:grid-cols-12 gap-y-4 sm:gap-y-5 lg:gap-x-12 lg:items-center">
           {/* 1. Headline */}
           <motion.div 
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.5, delay: entranceDelay, ease: [0.16, 1, 0.3, 1] }}
             className="order-1 lg:col-span-7 lg:col-start-1 lg:row-start-1 text-left"
           >
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-serif font-black tracking-tight text-slate-100 leading-[1.1]">
@@ -34,11 +43,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onStartOnboarding }) =
           <motion.div 
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.5, delay: entranceDelay + 0.08, ease: [0.16, 1, 0.3, 1] }}
             className="order-2 lg:col-span-7 lg:col-start-1 lg:row-start-2 text-left"
           >
             <div className="p-3 sm:p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs sm:text-sm font-serif font-bold text-slate-100 leading-snug">
-              Debate training, sovereign leadership development, and healing-centered voice programs for African youth.
+              Debate training, leadership development, and healing-centered voice programs for African youth.
             </div>
           </motion.div>
 
@@ -46,11 +55,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onStartOnboarding }) =
           <motion.figure 
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.6, delay: entranceDelay + 0.15, ease: [0.16, 1, 0.3, 1] }}
             className="order-3 lg:col-span-5 lg:col-start-8 lg:row-start-1 lg:row-span-5 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 shadow-xl flex flex-col justify-between self-stretch group"
           >
             {!imgError ? (
-              <picture className="w-full h-full overflow-hidden">
+              <motion.picture className="block w-full h-full overflow-hidden" style={reduce ? undefined : { y: photoY, scale: 1.12 }}>
                 <source srcSet="/images/hero-orator.webp" type="image/webp" />
                 <img 
                   src="/images/hero-orator.jpg" 
@@ -63,7 +72,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onStartOnboarding }) =
                   height={600}
                   onError={() => setImgError(true)}
                 />
-              </picture>
+              </motion.picture>
             ) : (
               <div className="h-64 sm:h-80 lg:h-full lg:min-h-[380px] w-full bg-slate-950 flex items-center justify-center p-6 text-center text-slate-400">
                 <div className="font-serif italic text-sm">
@@ -77,11 +86,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onStartOnboarding }) =
           <motion.div 
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.5, delay: entranceDelay + 0.12, ease: [0.16, 1, 0.3, 1] }}
             className="order-4 lg:col-span-7 lg:col-start-1 lg:row-start-3 text-left"
           >
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal max-w-xl">
-              The <strong className="text-slate-100 font-semibold">Global Orators Project (GOP)</strong> cultivates minds capable of sovereign critical thought and champion debate—paired with safe, trauma-informed vocal release to heal trauma, break patriarchal silence, and champion honest emotional truth.
+              The <strong className="text-slate-100 font-semibold">Global Orators Project (GOP)</strong> trains young people to think critically and debate at championship level, alongside safe, trauma-informed voice work that helps them heal, break patriarchal silence, and say honestly what they feel.
             </p>
           </motion.div>
 
@@ -89,7 +98,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onStartOnboarding }) =
           <motion.div 
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.5, delay: entranceDelay + 0.18, ease: [0.16, 1, 0.3, 1] }}
             className="order-5 lg:col-span-7 lg:col-start-1 lg:row-start-4 text-left"
           >
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
@@ -120,7 +129,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onStartOnboarding }) =
           <motion.div 
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.5, delay: entranceDelay + 0.22, ease: [0.16, 1, 0.3, 1] }}
             className="order-6 lg:col-span-7 lg:col-start-1 lg:row-start-5 text-left"
           >
             <div className="grid grid-cols-2 gap-2.5 text-[11px] font-mono text-slate-400 pt-1">
@@ -142,7 +151,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onStartOnboarding }) =
               </div>
             </div>
           </motion.div>
-        </div>
+        </motion.div>
 
         {/* 2-Column Responsive Stats Grid on Mobile */}
         <div className="mt-8 sm:mt-12 pt-6 border-t border-slate-800">

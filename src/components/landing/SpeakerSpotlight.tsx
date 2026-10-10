@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowRight, Quote } from 'lucide-react';
 import { RevealOnScroll } from '../common/MotionWrapper';
+import { KineticHeading } from './KineticHeading';
 
 interface SpeakerSpotlightProps {
   onStartOnboarding: (branch?: 'Academy' | 'Foundation') => void;
@@ -12,14 +13,16 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
       <div className="max-w-7xl 2xl:max-w-[1440px] mx-auto space-y-14 sm:space-y-20">
         {/* Editorial Section Header */}
         <RevealOnScroll className="max-w-3xl space-y-2">
-          <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
+          <div className="on-gold-kicker text-[10px] font-mono tracking-widest uppercase font-bold">
             Speaker Spotlight • The Living Movement
           </div>
-          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-serif font-black text-slate-100 tracking-tight leading-tight">
-            Voices of Conviction: Rigor, Rhetoric, and Courage.
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-300 font-normal leading-relaxed">
-            Debaters, legal scholars, and philosophers defining the Global Orators standard—transforming classrooms, courtrooms, and championship podiums across the continent.
+          <KineticHeading
+            text="Voices of Conviction: Rigor, Rhetoric, and Courage."
+            highlight="Courage."
+            className="text-2xl sm:text-4xl lg:text-5xl font-serif font-black on-gold-fg tracking-tight leading-tight"
+          />
+          <p className="on-gold-muted text-xs sm:text-sm font-normal leading-relaxed">
+            Debaters, legal scholars, and philosophers who train with Global Orators, carrying it into classrooms, courtrooms, and championship finals across the continent.
           </p>
         </RevealOnScroll>
 
@@ -28,10 +31,10 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
         {/* ========================================================================= */}
         <RevealOnScroll delay={0.06} className="space-y-6">
           <div className="flex items-center gap-3">
-            <span className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
-              Dispatch 01 · Philosophy & Voice
+            <span className="on-gold-kicker text-[10px] font-mono uppercase tracking-widest font-bold">
+              Spotlight 01 · Philosophy & Voice
             </span>
-            <div className="h-px bg-slate-800 flex-1" />
+            <div className="h-px bg-[#181B1F]/25 flex-1" />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
@@ -120,8 +123,8 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
           </div>
         </RevealOnScroll>
 
-        {/* Architectural Divider */}
-        <div className="border-t border-slate-800/80" />
+        {/* Divider */}
+        <div className="border-t border-[#181B1F]/20" />
 
         {/* ========================================================================= */}
         {/* Spotlight 2: Milo Brian (Legal Scholar, Award-Winning Debater & Poet) */}
@@ -129,9 +132,9 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
         <RevealOnScroll delay={0.06} className="space-y-6">
           <div className="flex items-center gap-3">
             <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-700 dark:text-emerald-400 font-bold">
-              Dispatch 02 · Law, Forensics & Poetics
+              Spotlight 02 · Law, Debate & Poetry
             </span>
-            <div className="h-px bg-slate-800 flex-1" />
+            <div className="h-px bg-[#181B1F]/25 flex-1" />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
@@ -225,10 +228,10 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
         {/* ========================================================================= */}
         <RevealOnScroll delay={0.06} className="space-y-6">
           <div className="flex items-center gap-3">
-            <span className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
-              Dispatch 03 · Narrative Forensics & African Voices
+            <span className="on-gold-kicker text-[10px] font-mono uppercase tracking-widest font-bold">
+              Spotlight 03 · Storytelling & African Voices
             </span>
-            <div className="h-px bg-slate-800 flex-1" />
+            <div className="h-px bg-[#181B1F]/25 flex-1" />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
@@ -236,7 +239,7 @@ export const SpeakerSpotlight: React.FC<SpeakerSpotlightProps> = ({ onStartOnboa
             <div className="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 flex flex-col justify-between space-y-6 shadow-xl">
               <div className="space-y-4">
                 <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#C89630]/10 border border-[#C89630]/20 text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
-                  Storytelling & Forensics
+                  Storytelling & Debate
                 </div>
 
                 <blockquote className="space-y-3">

@@ -2,19 +2,25 @@ import React from 'react';
 import { Quote } from 'lucide-react';
 import { VoiceDispatchPlayer } from './VoiceDispatchPlayer';
 import { RevealOnScroll } from '../common/MotionWrapper';
+import { KineticHeading } from './KineticHeading';
 
-export const MissionSection: React.FC = () => {
+/** Chapter I, part one: the question and the two founders' convictions (sits on the gold band). */
+export const MissionFounders: React.FC = () => {
   return (
-    <section id="mission" className="py-14 sm:py-20 px-4 sm:px-8 max-w-5xl mx-auto border-b border-slate-800">
-      <RevealOnScroll className="text-left space-y-3 mb-12">
-        <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
-          Chapter I • The Diagnosis & The Remedy
-        </div>
-        <h2 className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight max-w-2xl">
-          What is the Root Crisis Facing African Society?
-        </h2>
-        <div className="w-16 h-0.5 bg-[#C89630]" />
-      </RevealOnScroll>
+    <section id="mission" className="py-14 sm:py-20 px-4 sm:px-8 max-w-5xl mx-auto">
+      <div className="text-left space-y-3 mb-12">
+        <RevealOnScroll>
+          <div className="on-gold-kicker text-[10px] font-mono tracking-widest uppercase font-bold">
+            Chapter I • The Diagnosis & The Remedy
+          </div>
+        </RevealOnScroll>
+        <KineticHeading
+          text="What is the Root Crisis Facing African Society?"
+          highlight="Root Crisis"
+          className="on-gold-fg text-2xl sm:text-4xl font-serif font-black tracking-tight max-w-2xl"
+        />
+        <div className="w-16 h-0.5 bg-[#181B1F]" />
+      </div>
 
       {/* Founder's Note: Geoffrey Anyona */}
       <RevealOnScroll delay={0.06} className="mb-10">
@@ -50,12 +56,12 @@ export const MissionSection: React.FC = () => {
         </blockquote>
 
         <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
-          We are working to build a generation that is not simply articulate, but aware, intellectually curious, and courageous enough to participate in shaping its future. Our movement dismantles cognitive conditioning by combining parliamentary forensic discipline with authentic, trauma-informed vocal release.
+          We are working to build a generation that is not simply articulate, but aware, intellectually curious, and courageous enough to participate in shaping its future. We pair the discipline of parliamentary debate with trauma-informed voice work, so young people learn to question what they were taught and say what they actually think.
         </p>
       </div>
     </RevealOnScroll>
 
-    {/* Co-Founder's Note & Forensic Track Record: Tyrese King’ori Nyawira */}
+    {/* Co-Founder's Note & Track Record: Tyrese King’ori Nyawira */}
     <RevealOnScroll delay={0.08} className="mb-10">
       <div className="p-6 sm:p-7 rounded-2xl bg-slate-900 border border-slate-800 hover:border-[#C89630]/40 transition-colors shadow-xl space-y-5 text-left">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
@@ -89,13 +95,13 @@ export const MissionSection: React.FC = () => {
         </blockquote>
 
         <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
-          Competitive debater, adjudicator, trainer, and debate academy co-founder. Mashujaa & Indaba V Novice Champion, Ikenga Open finalist, TOC East Africa judge, and assistant coach for Team Ecuador. Tyrese directs forensic preparation across British Parliamentary and World Schools formats, training orators to command global stages with substance and conviction.
+          Competitive debater, adjudicator, trainer, and debate academy co-founder. Mashujaa & Indaba V Novice Champion, Ikenga Open finalist, TOC East Africa judge, and assistant coach for Team Ecuador. Tyrese leads debate preparation in British Parliamentary and World Schools formats, training speakers to hold their own on international stages.
         </p>
 
         {/* Documentary Photo Essay: Tyrese at Rostrum, Laureate Medals, and Championship Delegation */}
         <div className="pt-2 border-t border-slate-800/80">
           <div className="text-[10px] font-mono tracking-widest text-slate-400 uppercase font-semibold mb-3">
-            Forensic Track Record · Podium Command & Championship Laurels
+            Track Record · Podium & Championship Moments
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
             {/* Visual 1: Rostrum Command (Tyrese.jpeg) */}
@@ -149,17 +155,27 @@ export const MissionSection: React.FC = () => {
         </div>
       </div>
     </RevealOnScroll>
+    </section>
+  );
+};
 
+/** Chapter I, part two: the two pillars and the audio dispatch (sits on a cream band). */
+export const MissionPillars: React.FC = () => {
+  return (
+    <section className="py-14 sm:py-20 px-4 sm:px-8 max-w-5xl mx-auto">
     {/* Editorial 2-Column Split */}
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 text-left">
       {/* Pillar 1 */}
       <RevealOnScroll delay={0.06} className="space-y-4 text-xs sm:text-sm text-slate-300 leading-relaxed">
         <div className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
-          The First Pillar • Deconditioning & Pan-African Enlightenment
+          The First Pillar • Thinking For Ourselves
         </div>
-        <h3 className="text-xl sm:text-2xl font-serif font-bold text-slate-100">
-          Cognitive Sovereignty & Deconditioning
-        </h3>
+        <KineticHeading
+          as="h3"
+          text="Learning to Think for Ourselves"
+          highlight="Ourselves"
+          className="text-xl sm:text-2xl font-serif font-bold text-slate-100"
+        />
 
         <figure className="rounded-xl overflow-hidden border border-slate-800 bg-slate-900 shadow-sm my-3 group">
           <img 
@@ -180,7 +196,7 @@ export const MissionSection: React.FC = () => {
           When a generation is deprived of cognitive familiarity with the economic, political, and historical mechanisms governing their lives, leadership default becomes imitation. We settle for the status quo and wait for external validation.
         </p>
         <p>
-          The primary mission of Global Orators is to dismantle this intellectual inertia. We teach young Africans to deconstruct policy, debate foundational constitutional and economic dilemmas, and manifest self-development through uncompromising action.
+          Global Orators exists to break that habit. We teach young Africans to take policy apart, debate the constitutional and economic questions that shape their lives, and act on what they conclude.
         </p>
       </RevealOnScroll>
 
@@ -215,3 +231,11 @@ export const MissionSection: React.FC = () => {
     </section>
   );
 };
+
+/** Both halves together, for any page that wants the whole chapter in one block. */
+export const MissionSection: React.FC = () => (
+  <>
+    <MissionFounders />
+    <MissionPillars />
+  </>
+);

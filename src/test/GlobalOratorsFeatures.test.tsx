@@ -1,5 +1,5 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, within } from '@testing-library/react';
 import React from 'react';
 import { AppProvider } from '../context/AppContext';
 import { LandingPage } from '../components/landing/LandingPage';
@@ -78,12 +78,12 @@ describe('Global Orators Landing Page & Features Tests', () => {
     );
 
     // Verify brand and lead headline
-    expect(screen.getByText('Global')).toBeInTheDocument();
+    expect(within(screen.getByRole('banner')).getByText('Global')).toBeInTheDocument();
     expect(screen.getByText('speak with impact')).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 1, name: /Words Shape Nations/i })).toBeInTheDocument();
 
     // Verify both missions
-    expect(screen.getByText(/Deconditioning & Pan-African Enlightenment/i)).toBeInTheDocument();
+    expect(screen.getByText(/The First Pillar • Thinking For Ourselves/i)).toBeInTheDocument();
     expect(screen.getByText(/Speaking as a Form of Escapism & Catharsis/i)).toBeInTheDocument();
 
     // Verify both functional branches
@@ -179,7 +179,7 @@ describe('Global Orators Landing Page & Features Tests', () => {
     );
 
     // Verify clear one-sentence value proposition
-    expect(screen.getByText(/Debate training, sovereign leadership development, and healing-centered voice programs for African youth/i)).toBeInTheDocument();
+    expect(screen.getByText(/Debate training, leadership development, and healing-centered voice programs for African youth/i)).toBeInTheDocument();
 
     // Verify Audience Chooser fast-track section and 4-stage methodology
     expect(screen.getByText('Choose Your Path')).toBeInTheDocument();
@@ -190,7 +190,7 @@ describe('Global Orators Landing Page & Features Tests', () => {
     expect(screen.getAllByText('Apply for Fellowship').length).toBeGreaterThan(0);
 
     // Verify Debated Motions section
-    expect(screen.getByText('Sovereignty Defended On The Floor')).toBeInTheDocument();
+    expect(screen.getByText("Motions We've Argued on the Floor")).toBeInTheDocument();
     expect(screen.getByText(/Condition All Foreign Mineral Concessions/i)).toBeInTheDocument();
     expect(screen.getByText(/Repudiate Odious Historical Debts/i)).toBeInTheDocument();
 
@@ -292,19 +292,19 @@ describe('Global Orators Landing Page & Features Tests', () => {
 
     // Verify Imani's presence in spotlight & testimonials
     expect(screen.getAllByText('Imani').length).toBeGreaterThan(0);
-    expect(screen.getByText(/Dispatch 01 · Philosophy & Voice/i)).toBeInTheDocument();
+    expect(screen.getByText(/Spotlight 01 · Philosophy & Voice/i)).toBeInTheDocument();
     expect(screen.getByAltText(/Imani studying and drafting philosophical debate arguments/i)).toBeInTheDocument();
 
     // Verify Milo Brian's presence in spotlight & testimonials
     expect(screen.getAllByText('Milo Brian').length).toBeGreaterThan(0);
-    expect(screen.getByText(/Dispatch 02 · Law, Forensics & Poetics/i)).toBeInTheDocument();
+    expect(screen.getByText(/Spotlight 02 · Law, Debate & Poetry/i)).toBeInTheDocument();
     expect(screen.getByText(/Milo, among other things, is a legal scholar, award winning debater, poet/i)).toBeInTheDocument();
     expect(screen.getByAltText(/Milo Brian delivering an award-winning speech at the podium with microphone/i)).toBeInTheDocument();
     expect(screen.getByAltText(/Milo Brian reviewing debate frameworks and poetry in front of a green chalkboard/i)).toBeInTheDocument();
 
     // Verify Valerie Wanjiku's presence in spotlight
     expect(screen.getAllByText('Valerie Wanjiku').length).toBeGreaterThan(0);
-    expect(screen.getByText(/Dispatch 03 · Narrative Forensics & African Voices/i)).toBeInTheDocument();
+    expect(screen.getByText(/Spotlight 03 · Storytelling & African Voices/i)).toBeInTheDocument();
     expect(screen.getByAltText(/Valerie Wanjiku addressing the continental assembly forum at the rostrum in Maseru/i)).toBeInTheDocument();
     expect(screen.getByAltText(/Valerie Wanjiku in oratorical delivery at the International Sports and Olympism podium/i)).toBeInTheDocument();
   });

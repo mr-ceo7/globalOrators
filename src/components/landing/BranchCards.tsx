@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowRight, GraduationCap, Heart, Check, Building2 } from 'lucide-react';
 import { RevealOnScroll } from '../common/MotionWrapper';
+import { KineticHeading } from './KineticHeading';
 
 interface BranchCardsProps {
   onStartOnboarding: (branch: 'Academy' | 'Foundation') => void;
@@ -18,11 +19,13 @@ export const BranchCards: React.FC<BranchCardsProps> = ({
           <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
             Chapter II • The Functional Structure
           </div>
-          <h2 className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight mt-1">
-            Two Functional Branches. One Sovereign Vision.
-          </h2>
+          <KineticHeading
+            text="Two Branches. One Mission."
+            highlight="One Mission."
+            className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight mt-1"
+          />
           <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-xl font-normal">
-            An ecosystem balancing world-class competitive parliamentary debate with radical philanthropic accessibility.
+            Fee-based competitive debate training through the Academy, and fully grant-funded voice programs through the Foundation.
           </p>
         </RevealOnScroll>
 
@@ -175,7 +178,7 @@ export const BranchCards: React.FC<BranchCardsProps> = ({
                 </div>
                 <div className="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800">
                   <div className="font-bold text-slate-100">Trauma-to-Advocacy</div>
-                  <div className="text-[10px] text-slate-400 mt-0.5">Giving survivors sovereign authority</div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">Giving survivors authority over their own story</div>
                 </div>
                 <div className="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800">
                   <div className="font-bold text-slate-100">Anti-Abuse Forums</div>

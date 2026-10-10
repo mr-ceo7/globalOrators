@@ -1,5 +1,6 @@
 import React from 'react';
 import { RevealOnScroll, StaggerContainer, StaggerItem } from '../common/MotionWrapper';
+import { KineticHeading } from './KineticHeading';
 
 export const ChampionshipsSection: React.FC = () => {
   return (
@@ -9,16 +10,18 @@ export const ChampionshipsSection: React.FC = () => {
           <div className="text-[10px] font-mono tracking-widest text-[#7A4B06] dark:text-[#E3B95C] uppercase font-bold">
             Chapter III • The Global Arena
           </div>
-          <h2 className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight mt-1">
-            Fielding Champions On Continental & World Stages
-          </h2>
+          <KineticHeading
+            text="Fielding Champions On Continental & World Stages"
+            highlight="World Stages"
+            className="text-2xl sm:text-4xl font-serif font-black text-slate-100 tracking-tight mt-1"
+          />
         </div>
         <p className="text-xs text-slate-400 max-w-sm mt-2 md:mt-0 font-normal">
-          We prove the progress and rigor of our movement by fielding African teams at premier debate conventions across the globe.
+          We test our training where it counts: fielding African teams at major debate championships around the world.
         </p>
       </RevealOnScroll>
 
-      {/* Featured Championship Arena Visual Dispatch: Authentic Trophy & Medal Laureates */}
+      {/* Featured championship photo: trophy & medal laureates */}
       <RevealOnScroll delay={0.06} className="mb-8">
         <figure className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl group">
           <picture className="w-full h-full overflow-hidden block">
@@ -97,11 +100,11 @@ export const ChampionshipsSection: React.FC = () => {
               The Motions • Real British Parliamentary Clashes
             </div>
             <h3 className="text-xl sm:text-2xl font-serif font-black text-slate-100 tracking-tight mt-1">
-              Sovereignty Defended On The Floor
+              Motions We've Argued on the Floor
             </h3>
           </div>
           <div className="text-[11px] text-slate-400 font-mono mt-1 sm:mt-0">
-            15-minute prep • No internet • Pure cognitive sovereignty
+            15-minute prep • No internet • Just the argument
           </div>
         </div>
 

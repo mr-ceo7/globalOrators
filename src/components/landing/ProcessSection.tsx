@@ -1,6 +1,7 @@
 import React from 'react';
 import { UserCheck, Activity, Mic, Trophy } from 'lucide-react';
 import { RevealOnScroll, StaggerContainer, StaggerItem } from '../common/MotionWrapper';
+import { KineticHeading } from './KineticHeading';
 
 export const ProcessSection: React.FC = () => {
   const steps = [
@@ -36,11 +37,13 @@ export const ProcessSection: React.FC = () => {
         <div className="text-[10px] font-mono uppercase tracking-widest text-[#7A4B06] dark:text-[#E3B95C] font-bold">
           Methodology & Development Model
         </div>
-        <h2 className="text-2xl sm:text-3xl font-serif font-black text-slate-100 tracking-tight mt-1">
-          How The Program Operates
-        </h2>
+        <KineticHeading
+          text="How The Program Operates"
+          highlight="Program"
+          className="text-2xl sm:text-3xl font-serif font-black text-slate-100 tracking-tight mt-1"
+        />
         <p className="text-xs text-slate-400 mt-1 max-w-xl font-normal">
-          A structured 4-stage progression from initial diagnostic intake to sovereign national and international delivery.
+          A structured 4-stage progression, from your first assessment to speaking and competing nationally and internationally.
         </p>
       </RevealOnScroll>
 

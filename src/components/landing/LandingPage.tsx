@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useApp } from '../../context/AppContext';
 import { LandingHeader } from './LandingHeader';
@@ -14,11 +14,19 @@ import { TestimonialsPage } from '../../pages/TestimonialsPage';
 import { ContactPage } from '../../pages/ContactPage';
 import { DemoPage } from '../../pages/DemoPage';
 import { NotFoundPage } from '../../pages/NotFoundPage';
+import { IntroCurtain } from './IntroCurtain';
+import { INTRO_HERO_DELAY, shouldShowIntro } from './introCurtain';
+import { startSmoothScroll } from './smoothScroll';
 
 export const LandingPage: React.FC = () => {
   const { currentPath, navigate, setCurrentPortal } = useApp();
   const [partnerModalOpen, setPartnerModalOpen] = useState(false);
   const [partnerBranch, setPartnerBranch] = useState<'Academy' | 'Foundation'>('Academy');
+  // Decided once on first render so the hero entrance can wait for the curtain
+  const [showIntro] = useState(shouldShowIntro);
+
+  // Momentum scrolling only while the marketing site is mounted; the apps keep native scroll
+  useEffect(() => startSmoothScroll(), []);
 
   const handleStartOnboarding = (branch?: 'Academy' | 'Foundation') => {
     if (branch) {
@@ -110,6 +118,7 @@ export const LandingPage: React.FC = () => {
             onStartOnboarding={handleStartOnboarding} 
             onOpenPartner={handleOpenPartner} 
             onNavigate={navigate} 
+            heroDelay={showIntro ? INTRO_HERO_DELAY : 0}
           />
         );
       default:
@@ -118,7 +127,9 @@ export const LandingPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-[#C89630] selection:text-white transition-colors duration-200">
+    <div className="landing-root min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-[#C89630] selection:text-white transition-colors duration-200">
+      {showIntro && <IntroCurtain />}
+
       {/* 1. Header Navigation & Portals */}
       <LandingHeader
         onStartOnboarding={handleStartOnboarding}
@@ -138,10 +149,12 @@ export const LandingPage: React.FC = () => {
       </main>
 
       {/* Architectural Editorial Footer */}
-      <LandingFooter
-        onStartOnboarding={handleStartOnboarding}
-        onOpenPartner={handleOpenPartner}
-      />
+      <div className="band band-ink dark">
+        <LandingFooter
+          onStartOnboarding={handleStartOnboarding}
+          onOpenPartner={handleOpenPartner}
+        />
+      </div>
 
       {/* Direct Institutional & Partnership Dialog */}
       <PartnerModal

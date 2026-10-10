@@ -10,6 +10,7 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import { RevealOnScroll } from '../common/MotionWrapper';
+import { KineticHeading } from './KineticHeading';
 import { inquiriesApi, InquiryResponse } from '../../services/apiClient';
 import { 
   sanitizeText, 
@@ -104,7 +105,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
       setFieldErrors({});
       setTouched({});
     } catch (err: unknown) {
-      const displayErr = err instanceof Error ? err.message : 'Unable to dispatch inquiry. Please check network connection or reach us directly via email.';
+      const displayErr = err instanceof Error ? err.message : 'Unable to send your inquiry. Please check your connection or email us directly.';
       setErrorMsg(displayErr);
     } finally {
       setLoading(false);
@@ -117,13 +118,15 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
         {/* Editorial Section Kicker & Header */}
         <RevealOnScroll className="max-w-3xl mb-12 sm:mb-16 text-left">
           <div className="text-[10px] sm:text-xs font-mono tracking-widest uppercase text-[#7A4B06] dark:text-[#E3B95C] font-bold mb-3">
-            Direct Faculty Dispatch & Platform Governance
+            Talk to the Faculty
           </div>
-          <h2 className="font-serif font-black text-3xl sm:text-4xl lg:text-5xl text-slate-100 tracking-tight leading-tight mb-4">
-            Contact Global Orators Faculty
-          </h2>
+          <KineticHeading
+            text="Contact Global Orators Faculty"
+            highlight="Faculty"
+            className="font-serif font-black text-3xl sm:text-4xl lg:text-5xl text-slate-100 tracking-tight leading-tight mb-4"
+          />
           <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-            Reach out for institutional partnerships, tournament adjudications, or admissions counseling. Every inquiry enters our faculty queue with a 24-hour response protocol.
+            Reach out for institutional partnerships, tournament adjudications, or admissions counseling. We reply to every inquiry within 24 hours.
           </p>
           <div className="w-16 h-0.5 bg-[#C89630] mt-6"></div>
         </RevealOnScroll>
@@ -155,7 +158,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     <ShieldCheck className="w-4 h-4" />
                   </div>
                   <div>
-                    <div className="text-[10px] font-mono uppercase tracking-widest text-slate-400">Speaker Admissions & Protocols</div>
+                    <div className="text-[10px] font-mono uppercase tracking-widest text-slate-400">Speaker Admissions</div>
                     <a href="mailto:admissions@globaloratorsproject.com" className="font-medium text-slate-100 hover:text-emerald-400 transition-colors">
                       admissions@globaloratorsproject.com
                     </a>
@@ -179,7 +182,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     <Clock className="w-4 h-4" />
                   </div>
                   <div>
-                    <div className="text-[10px] font-mono uppercase tracking-widest text-slate-400">Dispatch Response Cadence</div>
+                    <div className="text-[10px] font-mono uppercase tracking-widest text-slate-400">Response Times</div>
                     <div className="text-slate-200">Monday – Saturday: 08:00 – 19:00 EAT (24-Hour Review)</div>
                   </div>
                 </div>
@@ -197,7 +200,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                   </div>
                   <div className="space-y-2">
                     <div className="text-xs font-mono uppercase tracking-widest text-emerald-400 font-bold">
-                      Inquiry Dispatched Successfully
+                      Inquiry Sent
                     </div>
                     <h3 className="font-serif font-black text-2xl text-slate-100">
                       We Have Received Your Dossier
@@ -209,7 +212,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                       {successData.inquiryId || successData.id || successData.inquiry_id}
                     </div>
                     <p className="text-slate-400 text-xs max-w-md mx-auto pt-2">
-                      An alert has been dispatched to Faculty Coach Qassim. You will receive an official response at <strong className="text-slate-200">{successData.email}</strong> within 24 hours.
+                      Faculty Coach Qassim has been notified. You will receive an official response at <strong className="text-slate-200">{successData.email}</strong> within 24 hours.
                     </p>
                   </div>
                   <button
@@ -226,7 +229,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                       Submit a Direct Faculty Inquiry
                     </h3>
                     <p className="text-xs text-slate-400 mt-1">
-                      Complete the transmission form below to route your inquiry directly to platform coaches.
+                      Fill in the form below and it goes straight to our coaches.
                     </p>
                   </div>
 
@@ -327,7 +330,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                         className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-slate-100 focus:outline-hidden focus:border-[#C89630] focus:ring-1 focus:ring-[#C89630] transition-colors cursor-pointer"
                       >
                         <option value="Academy">Global Orators Academy (Debate & Forensics)</option>
-                        <option value="Foundation">Global Orators Foundation (Voice Sovereignty)</option>
+                        <option value="Foundation">Global Orators Foundation (Healing & Voice)</option>
                       </select>
                     </div>
                   </div>
@@ -346,7 +349,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                       <option value="Institutional Speech Training & Tournament Sponsorship">Institutional Speech Training & Tournament Sponsorship</option>
                       <option value="School Forensics Club Curriculum Implementation">School Forensics Club Curriculum Implementation</option>
                       <option value="Corporate Executive Rhetoric & Speechwriting">Corporate Executive Rhetoric & Speechwriting</option>
-                      <option value="Sovereign Leadership & Healing-Centered Cohorts">Sovereign Leadership & Healing-Centered Cohorts</option>
+                      <option value="Sovereign Leadership & Healing-Centered Cohorts">Leadership & Healing-Centered Cohorts</option>
                       <option value="General Strategic Partnership / Grant Inquiry">General Strategic Partnership / Grant Inquiry</option>
                     </select>
                   </div>
@@ -393,11 +396,11 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                       {loading ? (
                         <>
                           <div className="w-4 h-4 border-2 border-[#181B1F] border-t-transparent rounded-full animate-spin"></div>
-                          <span>Transmitting Dossier...</span>
+                          <span>Sending...</span>
                         </>
                       ) : (
                         <>
-                          <span>Transmit Faculty Dispatch</span>
+                          <span>Send Inquiry</span>
                           <ArrowRight className="w-4 h-4" />
                         </>
                       )}
