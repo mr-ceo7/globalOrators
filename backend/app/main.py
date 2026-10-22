@@ -60,11 +60,45 @@ async def lifespan(app: FastAPI):
             from sqlalchemy import inspect, text
             inspector = inspect(connection)
             if "clients" in inspector.get_table_names():
-                cols = [c["name"] for c in inspector.get_columns("clients")]
+                columns = inspector.get_columns("clients")
+                cols = [c["name"] for c in columns]
                 if "referral_code" not in cols:
                     connection.execute(text("ALTER TABLE clients ADD COLUMN referral_code VARCHAR(64)"))
                 if "adjudicator_notes" not in cols:
                     connection.execute(text("ALTER TABLE clients ADD COLUMN adjudicator_notes JSON DEFAULT '[]'"))
+
+                # Rebuild SQLite clients table if legacy NOT NULL constraints are detected on fitness fields
+                if connection.dialect.name == "sqlite":
+                    age_col = next((c for c in columns if c["name"] == "age"), None)
+                    if age_col and age_col.get("nullable") is False:
+                        logger.info("Migrating legacy clients table to relax NOT NULL constraints...")
+                        connection.execute(text("PRAGMA foreign_keys=OFF"))
+                        connection.execute(text("CREATE TABLE clients_migration_backup AS SELECT * FROM clients;"))
+                        connection.execute(text("DROP TABLE clients;"))
+                        Base.metadata.tables["clients"].create(connection)
+                        inspector_after = inspect(connection)
+                        new_cols_dict = {c["name"]: c for c in inspector_after.get_columns("clients")}
+                        target_cols = []
+                        source_exprs = []
+                        for name, col_info in new_cols_dict.items():
+                            if name in cols:
+                                target_cols.append(f'"{name}"')
+                                source_exprs.append(f'"{name}"')
+                            elif name == "adjudicator_notes":
+                                target_cols.append(f'"{name}"')
+                                source_exprs.append("'[]'")
+                            elif name == "referral_code":
+                                target_cols.append(f'"{name}"')
+                                source_exprs.append("NULL")
+                            elif not col_info.get("nullable", True):
+                                target_cols.append(f'"{name}"')
+                                source_exprs.append("''")
+                        col_str = ", ".join(target_cols)
+                        expr_str = ", ".join(source_exprs)
+                        connection.execute(text(f"INSERT INTO clients ({col_str}) SELECT {expr_str} FROM clients_migration_backup;"))
+                        connection.execute(text("DROP TABLE clients_migration_backup;"))
+                        connection.execute(text("PRAGMA foreign_keys=ON"))
+                        logger.info("Clients table migrated successfully.")
             if "audio_recordings" in inspector.get_table_names():
                 rec_cols = [c["name"] for c in inspector.get_columns("audio_recordings")]
                 if "storage_key" not in rec_cols:
@@ -77,6 +111,10 @@ async def lifespan(app: FastAPI):
                 otp_cols = [c["name"] for c in inspector.get_columns("email_otps")]
                 if "magic_token" not in otp_cols:
                     connection.execute(text("ALTER TABLE email_otps ADD COLUMN magic_token VARCHAR(255)"))
+            if "users" in inspector.get_table_names():
+                user_cols = [c["name"] for c in inspector.get_columns("users")]
+                if "is_head_coach" not in user_cols:
+                    connection.execute(text("ALTER TABLE users ADD COLUMN is_head_coach BOOLEAN DEFAULT 0"))
         await conn.run_sync(_migrate_columns)
 
     logger.info("Checking / running initial database seed...")
@@ -116,6 +154,7 @@ async def lifespan(app: FastAPI):
                             hashed_password=get_password_hash(settings.DEFAULT_COACH_PASSWORD),
                             full_name=settings.DEFAULT_COACH_NAME,
                             role="coach",
+                            is_head_coach=True,
                             avatar="",
                             is_active=True,
                             created_at=datetime.now(timezone.utc),

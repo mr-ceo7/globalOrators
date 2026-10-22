@@ -131,7 +131,25 @@ vi.mock('../services/apiClient', () => ({
       avatar: '',
       specialty: 'Vocal Presence',
       assignedSpeakersCount: 0
-    })
+    }),
+    makeHeadCoach: vi.fn().mockImplementation((id: string) => Promise.resolve({
+      id,
+      name: 'Sarah Chen',
+      email: 'sarah.chen@globalorators.com',
+      avatar: '',
+      role: 'coach',
+      isHeadCoach: true,
+      is_head_coach: true
+    })),
+    setHeadCoach: vi.fn().mockImplementation((id: string, isHeadCoach: boolean) => Promise.resolve({
+      id,
+      name: 'Sarah Chen',
+      email: 'sarah.chen@globalorators.com',
+      avatar: '',
+      role: 'coach',
+      isHeadCoach,
+      is_head_coach: isHeadCoach
+    }))
   },
   exercisesApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },
   programsApi: { list: vi.fn().mockResolvedValue([]), getAll: vi.fn().mockResolvedValue([]) },
@@ -233,6 +251,42 @@ describe('CoachManager Component Tests', () => {
         email: 'evelyn.reed@globalorators.com',
         password: 'CoachPassword2026'
       }));
+    });
+  });
+
+  test('displays Head Coach badge and allows promoting a faculty coach to Head Coach', async () => {
+    render(
+      <AppProvider>
+        <CoachManager />
+      </AppProvider>
+    );
+
+    // Initial load: Dr. Arthur Vance is Head Coach (coach-1), Sarah Chen is Faculty (coach-2)
+    await waitFor(() => {
+      expect(screen.getByText('Dr. Arthur Vance')).toBeInTheDocument();
+      expect(screen.getByText('Sarah Chen')).toBeInTheDocument();
+    });
+
+    // Verify Head Coach badge
+    expect(screen.getByText('Head Coach')).toBeInTheDocument();
+    expect(screen.getByText('Faculty')).toBeInTheDocument();
+
+    // Verify "Make Head Coach" button is present for Sarah Chen
+    const makeHeadBtn = screen.getByRole('button', { name: /Make Head Coach/i });
+    expect(makeHeadBtn).toBeInTheDocument();
+
+    // Click Make Head Coach to open confirmation dialog
+    fireEvent.click(makeHeadBtn);
+
+    expect(screen.getByRole('heading', { name: /Appoint Head Coach/i })).toBeInTheDocument();
+    expect(screen.getByText(/Are you sure you want to appoint/i)).toBeInTheDocument();
+
+    // Confirm appointment
+    const confirmBtn = screen.getByRole('button', { name: /Confirm Appointment/i });
+    fireEvent.click(confirmBtn);
+
+    await waitFor(() => {
+      expect(coachesApi.makeHeadCoach).toHaveBeenCalledWith('coach-2');
     });
   });
 });

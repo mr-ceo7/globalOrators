@@ -172,6 +172,8 @@ interface AppContextType {
   loginCoach: (email: string, password: string) => Promise<{ success: boolean; error?: string; user?: any }>;
   registerCoach: (payload: { email: string; password: string; fullName: string; inviteCode?: string }) => Promise<{ success: boolean; error?: string; user?: any }>;
   addCoach: (data: { email: string; password: string; fullName: string; avatar?: string }) => Promise<{ success: boolean; error?: string; coach?: CoachItem }>;
+  makeCoachHeadCoach: (coachId: string) => Promise<{ success: boolean; error?: string }>;
+  setCoachHeadCoach: (coachId: string, isHeadCoach: boolean) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
 }
 
@@ -2047,6 +2049,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [showToast]);
 
+  const makeCoachHeadCoach = useCallback(async (coachId: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const updated = await coachesApi.makeHeadCoach(coachId);
+      if (updated) {
+        setCoaches(prev => prev.map(c => c.id === coachId ? { ...c, isHeadCoach: true, is_head_coach: true } : c));
+        showToast(`Coach ${updated.name || 'member'} promoted to Head Coach.`);
+        return { success: true };
+      }
+      return { success: false, error: 'Failed to promote coach.' };
+    } catch (err: any) {
+      const msg = err?.response?.data?.detail || err?.message || 'Failed to promote coach.';
+      showToast(msg);
+      return { success: false, error: msg };
+    }
+  }, [showToast]);
+
+  const setCoachHeadCoach = useCallback(async (coachId: string, isHead: boolean): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const updated = await coachesApi.setHeadCoach(coachId, isHead);
+      if (updated) {
+        setCoaches(prev => prev.map(c => c.id === coachId ? { ...c, isHeadCoach: isHead, is_head_coach: isHead } : c));
+        showToast(isHead ? `Coach ${updated.name || 'member'} promoted to Head Coach.` : `Head Coach privileges revoked for ${updated.name || 'member'}.`);
+        return { success: true };
+      }
+      return { success: false, error: 'Failed to update coach privileges.' };
+    } catch (err: any) {
+      const msg = err?.response?.data?.detail || err?.message || 'Failed to update coach privileges.';
+      showToast(msg);
+      return { success: false, error: msg };
+    }
+  }, [showToast]);
+
   return (
     <AppContext.Provider
       value={{
@@ -2131,6 +2165,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         loginCoach,
         registerCoach,
         addCoach,
+        makeCoachHeadCoach,
+        setCoachHeadCoach,
         logout,
         deleteClient,
         suspendClient,

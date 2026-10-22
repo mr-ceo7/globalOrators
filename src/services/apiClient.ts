@@ -357,6 +357,10 @@ export const coachesApi = {
   getAll: () => api.get<CoachItem[]>('/coaches'),
   create: (data: { email: string; password: string; fullName: string; avatar?: string }) =>
     api.post<CoachItem>('/coaches', data),
+  makeHeadCoach: (coachId: string) =>
+    api.post<CoachItem>(`/coaches/${coachId}/make-head-coach`, {}),
+  setHeadCoach: (coachId: string, isHeadCoach: boolean) =>
+    api.post<CoachItem>(`/coaches/${coachId}/set-head-coach`, { isHeadCoach }),
 };
 
 

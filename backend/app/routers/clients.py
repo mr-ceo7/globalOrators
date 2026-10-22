@@ -45,9 +45,8 @@ async def list_clients(
     
     # Strict Coach Isolation & Intake Triage Pool
     if current_user.role == "coach":
-        is_default_coach = (
-            current_user.email.lower() == settings.DEFAULT_COACH_EMAIL.lower() 
-            or current_user.id == "coach-1"
+        is_default_coach = settings.is_head_coach(
+            current_user.id, current_user.email, current_user.role, getattr(current_user, "is_head_coach", False)
         )
         if intake == "unassigned":
             # Any coach can view the unassigned triage pool to claim or review applicants
@@ -215,9 +214,8 @@ async def get_client(
         raise HTTPException(status_code=404, detail="Client not found")
         
     if current_user.role == "coach":
-        is_default_coach = (
-            current_user.email.lower() == settings.DEFAULT_COACH_EMAIL.lower() 
-            or current_user.id == "coach-1"
+        is_default_coach = settings.is_head_coach(
+            current_user.id, current_user.email, current_user.role, getattr(current_user, "is_head_coach", False)
         )
         if not is_default_coach and client.coach_id != current_user.id:
             raise HTTPException(
@@ -526,9 +524,8 @@ async def update_client(
         raise HTTPException(status_code=404, detail="Client not found")
         
     if current_user.role == "coach":
-        is_default_coach = (
-            current_user.email.lower() == settings.DEFAULT_COACH_EMAIL.lower() 
-            or current_user.id == "coach-1"
+        is_default_coach = settings.is_head_coach(
+            current_user.id, current_user.email, current_user.role, getattr(current_user, "is_head_coach", False)
         )
         if not is_default_coach and client.coach_id != current_user.id:
             raise HTTPException(
@@ -587,9 +584,8 @@ async def add_coach_note(
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
     
-    is_default_coach = (
-        current_user.email.lower() == settings.DEFAULT_COACH_EMAIL.lower() 
-        or current_user.id == "coach-1"
+    is_default_coach = settings.is_head_coach(
+        current_user.id, current_user.email, current_user.role, getattr(current_user, "is_head_coach", False)
     )
     if not is_default_coach and client.coach_id != current_user.id:
         raise HTTPException(
@@ -756,9 +752,8 @@ async def delete_client(
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
     
-    is_default_coach = (
-        current_user.email.lower() == settings.DEFAULT_COACH_EMAIL.lower() 
-        or current_user.id == "coach-1"
+    is_default_coach = settings.is_head_coach(
+        current_user.id, current_user.email, current_user.role, getattr(current_user, "is_head_coach", False)
     )
     if not is_default_coach and client.coach_id != current_user.id:
         raise HTTPException(

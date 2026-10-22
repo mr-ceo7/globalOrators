@@ -39,11 +39,8 @@ async def list_groups(
     current_user: User = Depends(get_current_user)
 ):
     """List all orator syndicates/groups that the authenticated user belongs to."""
-    is_head_coach = (
-        current_user.role == "coach" and (
-            current_user.email.lower() == settings.DEFAULT_COACH_EMAIL.lower()
-            or current_user.id == "coach-1"
-        )
+    is_head_coach = settings.is_head_coach(
+        current_user.id, current_user.email, current_user.role, getattr(current_user, "is_head_coach", False)
     )
     
     result = await db.execute(select(ChatGroup).order_by(desc(ChatGroup.created_at)))
@@ -181,11 +178,8 @@ async def get_group(
         
     user_ids = set(await _get_user_identifiers(current_user, db))
     g_members = set(group.member_ids or [])
-    is_head_coach = (
-        current_user.role == "coach" and (
-            current_user.email.lower() == settings.DEFAULT_COACH_EMAIL.lower()
-            or current_user.id == "coach-1"
-        )
+    is_head_coach = settings.is_head_coach(
+        current_user.id, current_user.email, current_user.role, getattr(current_user, "is_head_coach", False)
     )
     if not is_head_coach and group.created_by != current_user.id and g_members.isdisjoint(user_ids):
         raise HTTPException(status_code=403, detail="Access denied: you are not a member of this syndicate")

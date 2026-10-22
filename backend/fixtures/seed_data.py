@@ -63,6 +63,7 @@ async def seed_database(force: bool = False):
                 hashed_password=get_password_hash(settings.DEFAULT_COACH_PASSWORD),
                 full_name=settings.DEFAULT_COACH_NAME,
                 role="coach",
+                is_head_coach=True,
                 avatar="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
                 is_active=True,
                 created_at=datetime.now(timezone.utc),

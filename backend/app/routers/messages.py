@@ -40,11 +40,8 @@ async def list_messages(
     """List chat messages with coach isolation, speaker authorization, and syndicate group support."""
     query = select(ChatMessage)
     
-    is_head_coach = (
-        current_user.role == "coach" and (
-            current_user.email.lower() == settings.DEFAULT_COACH_EMAIL.lower() 
-            or current_user.id == "coach-1"
-        )
+    is_head_coach = settings.is_head_coach(
+        current_user.id, current_user.email, current_user.role, getattr(current_user, "is_head_coach", False)
     )
 
     if client_id:
@@ -119,11 +116,8 @@ async def send_message(
     current_user: User = Depends(get_current_user)
 ):
     """Send a new message with coach isolation, syndicate group routing, and sender attribution."""
-    is_head_coach = (
-        current_user.role == "coach" and (
-            current_user.email.lower() == settings.DEFAULT_COACH_EMAIL.lower() 
-            or current_user.id == "coach-1"
-        )
+    is_head_coach = settings.is_head_coach(
+        current_user.id, current_user.email, current_user.role, getattr(current_user, "is_head_coach", False)
     )
     
     coach_id = current_user.id if current_user.role == "coach" else None

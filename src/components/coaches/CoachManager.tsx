@@ -18,12 +18,15 @@ import {
 import { useApp } from '../../context/AppContext';
 import { sanitizeText } from '../../utils/sanitization';
 import { getStoredUser, isHeadCoach } from '../../utils/roles';
+import { CoachItem } from '../../types';
 
 export const CoachManager: React.FC = () => {
   const { 
     coaches, 
     clients, 
     addCoach, 
+    makeCoachHeadCoach,
+    setCoachHeadCoach,
     reassignClientCoach, 
     showToast 
   } = useApp();
@@ -31,7 +34,14 @@ export const CoachManager: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const headCoach = isHeadCoach(getStoredUser());
+  const storedUser = getStoredUser();
+  const headCoach = isHeadCoach(storedUser);
+
+  // Promote / Revoke Head Coach State
+  const [promoteTargetCoach, setPromoteTargetCoach] = useState<CoachItem | null>(null);
+  const [revokeTargetCoach, setRevokeTargetCoach] = useState<CoachItem | null>(null);
+  const [isPromoting, setIsPromoting] = useState(false);
+  const [isRevoking, setIsRevoking] = useState(false);
 
   // Add Coach Modal State
   const [formName, setFormName] = useState('');
@@ -115,6 +125,32 @@ export const CoachManager: React.FC = () => {
       showToast('Error connecting to allocation service.');
     } finally {
       setIsReassigning(false);
+    }
+  };
+
+  const handleConfirmPromote = async () => {
+    if (!promoteTargetCoach) return;
+    setIsPromoting(true);
+    try {
+      const res = await makeCoachHeadCoach(promoteTargetCoach.id);
+      if (res.success) {
+        setPromoteTargetCoach(null);
+      }
+    } finally {
+      setIsPromoting(false);
+    }
+  };
+
+  const handleConfirmRevoke = async () => {
+    if (!revokeTargetCoach) return;
+    setIsRevoking(true);
+    try {
+      const res = await setCoachHeadCoach(revokeTargetCoach.id, false);
+      if (res.success) {
+        setRevokeTargetCoach(null);
+      }
+    } finally {
+      setIsRevoking(false);
     }
   };
 
@@ -274,6 +310,9 @@ export const CoachManager: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredCoaches.map(coach => {
             const coachSpeakers = clients.filter(c => c.coachId === coach.id);
+            const isCoachHead = Boolean(coach.isHeadCoach || coach.is_head_coach || coach.id === 'coach-1');
+            const isRootAdmin = coach.id === 'coach-1' || coach.email.toLowerCase() === 'kassimmusa322@gmail.com';
+            const isSelf = coach.id === storedUser?.id || coach.email.toLowerCase() === storedUser?.email?.toLowerCase();
 
             return (
               <div 
@@ -281,15 +320,26 @@ export const CoachManager: React.FC = () => {
                 className="p-5 rounded-xl bg-slate-900 border border-slate-800 flex flex-col justify-between space-y-4 hover:border-slate-700 transition-colors"
               >
                 <div>
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-[#C89630]/20 border border-[#C89630]/40 text-brand-gold flex items-center justify-center font-serif font-bold text-sm">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-[#C89630]/20 border border-[#C89630]/40 text-brand-gold flex items-center justify-center font-serif font-bold text-sm shrink-0">
                         {coach.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                       </div>
-                      <div>
-                        <h3 className="font-serif font-bold text-sm text-white">{coach.name}</h3>
+                      <div className="min-w-0">
+                        <h3 className="font-serif font-bold text-sm text-white truncate">{coach.name}</h3>
                         <p className="text-[11px] text-slate-400 font-mono truncate">{coach.email}</p>
                       </div>
+                    </div>
+                    <div>
+                      {isCoachHead ? (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono tracking-widest uppercase bg-[#C89630]/20 text-brand-gold border border-[#C89630]/40 font-semibold whitespace-nowrap">
+                          Head Coach
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono tracking-widest uppercase bg-slate-800 text-slate-400 border border-slate-700 whitespace-nowrap">
+                          Faculty
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -324,6 +374,31 @@ export const CoachManager: React.FC = () => {
                   ) : (
                     <div className="mt-3 py-3 text-center rounded bg-slate-950/40 border border-dashed border-slate-800 text-[11px] text-slate-500 font-mono">
                       No speakers currently allocated
+                    </div>
+                  )}
+
+                  {/* Head Coach Designation Controls */}
+                  {headCoach && (
+                    <div className="mt-3 pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-mono uppercase tracking-widest text-slate-500">Privileges</span>
+                      {!isCoachHead ? (
+                        <button
+                          onClick={() => setPromoteTargetCoach(coach)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#C89630]/15 hover:bg-[#C89630]/25 text-brand-gold border border-[#C89630]/40 text-[11px] font-mono font-medium transition-colors cursor-pointer"
+                        >
+                          <ShieldCheck className="w-3.5 h-3.5" />
+                          <span>Make Head Coach</span>
+                        </button>
+                      ) : !isRootAdmin && !isSelf ? (
+                        <button
+                          onClick={() => setRevokeTargetCoach(coach)}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-300 border border-slate-700 text-[10px] font-mono transition-colors cursor-pointer"
+                        >
+                          <span>Revoke Head Coach</span>
+                        </button>
+                      ) : (
+                        <span className="text-[10px] font-mono text-brand-gold/70 italic">Primary Administrator</span>
+                      )}
                     </div>
                   )}
                 </div>
@@ -518,6 +593,114 @@ export const CoachManager: React.FC = () => {
                   </>
                 ) : (
                   <span>Confirm Assignment</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Make Head Coach Confirmation Modal */}
+      {promoteTargetCoach && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+          <div className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-brand-gold" />
+                <h3 className="font-serif font-bold text-base text-white">Appoint Head Coach</h3>
+              </div>
+              <button 
+                onClick={() => setPromoteTargetCoach(null)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Are you sure you want to appoint <span className="font-semibold text-white">{promoteTargetCoach.name}</span> as a <span className="text-brand-gold font-semibold">Head Coach</span>?
+            </p>
+
+            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-[11px] text-slate-400 space-y-1.5 font-mono">
+              <div className="text-white font-serif font-semibold text-xs">Granted Privileges:</div>
+              <ul className="list-disc list-inside space-y-1">
+                <li>Manage and provision new faculty coach accounts</li>
+                <li>Global speaker triage and roster reallocation</li>
+                <li>Access to billing, invoices, and payment admin</li>
+                <li>Faculty triage badge in platform messaging</li>
+              </ul>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => setPromoteTargetCoach(null)}
+                className="px-3 py-1.5 rounded-lg border border-slate-800 text-xs text-slate-400 hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isPromoting}
+                onClick={handleConfirmPromote}
+                className="px-4 py-1.5 rounded-lg bg-[#C89630] hover:bg-[#B37D22] text-on-gold font-serif font-bold text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {isPromoting ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Appointing...</span>
+                  </>
+                ) : (
+                  <span>Confirm Appointment</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Revoke Head Coach Confirmation Modal */}
+      {revokeTargetCoach && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+          <div className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-amber-400" />
+                <h3 className="font-serif font-bold text-base text-white">Revoke Head Coach Privileges</h3>
+              </div>
+              <button 
+                onClick={() => setRevokeTargetCoach(null)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Are you sure you want to revoke Head Coach privileges for <span className="font-semibold text-white">{revokeTargetCoach.name}</span>? They will return to standard Faculty Coach permissions.
+            </p>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => setRevokeTargetCoach(null)}
+                className="px-3 py-1.5 rounded-lg border border-slate-800 text-xs text-slate-400 hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isRevoking}
+                onClick={handleConfirmRevoke}
+                className="px-4 py-1.5 rounded-lg bg-rose-700 hover:bg-rose-800 text-white font-serif font-bold text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {isRevoking ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Revoking...</span>
+                  </>
+                ) : (
+                  <span>Confirm Revocation</span>
                 )}
               </button>
             </div>

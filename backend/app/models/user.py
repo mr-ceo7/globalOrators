@@ -18,6 +18,7 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String(255), default="", nullable=False)
     full_name: Mapped[str] = mapped_column(String(255), nullable=False)
     role: Mapped[str] = mapped_column(String(50), default="coach", nullable=False) # "coach" or "speaker"
+    is_head_coach: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     google_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, index=True)
     avatar: Mapped[str] = mapped_column(String(512), default="")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)

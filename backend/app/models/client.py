@@ -40,10 +40,10 @@ class Client(Base):
     body_fat_percentage: Mapped[Optional[float]] = mapped_column(Float, nullable=True, default=None)
     target_body_fat: Mapped[Optional[float]] = mapped_column(Float, nullable=True, default=None)
 
-    injuries_and_health: Mapped[List[str]] = mapped_column(JSON, default=list)
+    injuries_and_health: Mapped[List[str]] = mapped_column(JSON, default=list, nullable=True)
     medical_alerts: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    custom_coach_notes: Mapped[List[str]] = mapped_column(JSON, default=list)
-    onboarding_survey: Mapped[Dict[str, Any]] = mapped_column(JSON, default=dict)
+    custom_coach_notes: Mapped[List[str]] = mapped_column(JSON, default=list, nullable=True)
+    onboarding_survey: Mapped[Dict[str, Any]] = mapped_column(JSON, default=dict, nullable=True)
     referral_code: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
-    adjudicator_notes: Mapped[List[Dict[str, Any]]] = mapped_column(JSON, default=list)
+    adjudicator_notes: Mapped[List[Dict[str, Any]]] = mapped_column(JSON, default=list, nullable=True)
 

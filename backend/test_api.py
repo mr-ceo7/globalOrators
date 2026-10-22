@@ -1324,6 +1324,102 @@ async def test_faculty_coach_provisioning_and_welcome_email():
 
 
 @pytest.mark.asyncio
+async def test_make_coach_head_coach_and_privilege_elevation():
+    """Verify promoting a coach to Head Coach elevates privileges and allows head coach actions."""
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        # Head Coach login
+        res_head = await client.post("/api/auth/login", json={
+            "email": settings.DEFAULT_COACH_EMAIL,
+            "password": settings.DEFAULT_COACH_PASSWORD
+        })
+        assert res_head.status_code == 200
+        head_token = res_head.json()["access_token"]
+        head_headers = {"Authorization": f"Bearer {head_token}"}
+
+        # Regular coach login (coach@globalorators.com is coach-test-admin)
+        res_coach = await client.post("/api/auth/login", json={
+            "email": "coach@globalorators.com",
+            "password": "CoachSecurePassword123"
+        })
+        assert res_coach.status_code == 200
+        coach_user = res_coach.json()["user"]
+        coach_id = coach_user["id"]
+        assert coach_user["is_head_coach"] is False
+        coach_token = res_coach.json()["access_token"]
+        coach_headers = {"Authorization": f"Bearer {coach_token}"}
+
+        # 1. Unauthenticated request denied
+        res_unauth = await client.post(f"/api/coaches/{coach_id}/make-head-coach")
+        assert res_unauth.status_code == 401
+
+        # 2. Regular coach cannot promote others
+        res_forbidden = await client.post(
+            f"/api/coaches/{coach_id}/make-head-coach",
+            headers=coach_headers
+        )
+        assert res_forbidden.status_code == 403
+
+        # 3. Head coach promotes coach to Head Coach
+        res_promote = await client.post(
+            f"/api/coaches/{coach_id}/make-head-coach",
+            headers=head_headers
+        )
+        assert res_promote.status_code == 200
+        data = res_promote.json()
+        assert data["id"] == coach_id
+        assert data["isHeadCoach"] is True
+
+        # 4. Check GET /api/coaches reflects the new status
+        res_list = await client.get("/api/coaches", headers=head_headers)
+        assert res_list.status_code == 200
+        target_in_list = next((c for c in res_list.json() if c["id"] == coach_id), None)
+        assert target_in_list is not None
+        assert target_in_list["isHeadCoach"] is True
+
+        # 5. Promoted coach logs in and now has is_head_coach = True
+        res_promoted_login = await client.post("/api/auth/login", json={
+            "email": "coach@globalorators.com",
+            "password": "CoachSecurePassword123"
+        })
+        assert res_promoted_login.status_code == 200
+        assert res_promoted_login.json()["user"]["is_head_coach"] is True
+        promoted_headers = {"Authorization": f"Bearer {res_promoted_login.json()['access_token']}"}
+
+        # 6. Promoted coach can now perform head-coach-only actions (provisioning a new coach)
+        import time
+        ts = int(time.time() * 1000)
+        res_prov_by_promoted = await client.post(
+            "/api/coaches",
+            json={
+                "fullName": f"Sub Coach {ts}",
+                "email": f"subcoach.{ts}@example.com",
+                "password": "SubCoachPass2026!"
+            },
+            headers=promoted_headers
+        )
+        assert res_prov_by_promoted.status_code == 201
+
+        # 7. Demote the promoted coach using set-head-coach
+        res_demote = await client.post(
+            f"/api/coaches/{coach_id}/set-head-coach",
+            json={"isHeadCoach": False},
+            headers=head_headers
+        )
+        assert res_demote.status_code == 200
+        assert res_demote.json()["isHeadCoach"] is False
+
+        # 8. Attempting to demote root admin coach-1 is rejected
+        res_demote_root = await client.post(
+            "/api/coaches/coach-1/set-head-coach",
+            json={"isHeadCoach": False},
+            headers=head_headers
+        )
+        assert res_demote_root.status_code == 400
+        assert "cannot be demoted" in res_demote_root.json()["detail"].lower()
+
+
+@pytest.mark.asyncio
 async def test_email_otp_authentication_flow():
     """Verify passwordless email OTP generation, verification, and speaker session issuance."""
     transport = httpx.ASGITransport(app=app)

@@ -59,6 +59,8 @@ export interface CoachItem {
   email: string;
   avatar: string;
   role: string;
+  isHeadCoach?: boolean;
+  is_head_coach?: boolean;
 }
 
 export interface Client {

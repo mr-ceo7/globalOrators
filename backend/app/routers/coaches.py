@@ -8,9 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.config import settings
-from app.dependencies import get_db, get_current_user, require_coach
+from app.dependencies import get_db, get_current_user, require_coach, require_head_coach
 from app.models.user import User
-from app.schemas.client import CoachDirectoryItem, CreateCoachRequest
+from app.schemas.client import CoachDirectoryItem, CreateCoachRequest, SetHeadCoachRequest
 from app.security import get_password_hash
 
 logger = logging.getLogger("globalorators.coaches")
@@ -34,7 +34,8 @@ async def list_coaches(
             name=c.full_name,
             email=c.email,
             avatar=c.avatar or "",
-            role="coach"
+            role="coach",
+            is_head_coach=settings.is_head_coach(c.id, c.email, c.role, getattr(c, "is_head_coach", False))
         )
         for c in coaches
     ]
@@ -47,11 +48,10 @@ async def create_coach(
     current_user: User = Depends(require_coach)
 ):
     """Allow master coach to provision a new coach account directly."""
-    is_default_coach = (
-        current_user.email.lower() == settings.DEFAULT_COACH_EMAIL.lower() 
-        or current_user.id == "coach-1"
+    is_head = settings.is_head_coach(
+        current_user.id, current_user.email, current_user.role, getattr(current_user, "is_head_coach", False)
     )
-    if not is_default_coach:
+    if not is_head:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied: only the Head Coach can provision faculty accounts"
@@ -98,5 +98,84 @@ async def create_coach(
         name=new_coach.full_name,
         email=new_coach.email,
         avatar=new_coach.avatar or "",
-        role="coach"
+        role="coach",
+        is_head_coach=False
+    )
+
+
+@router.post("/{coach_id}/make-head-coach", response_model=CoachDirectoryItem)
+async def make_coach_head_coach(
+    coach_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_head_coach),
+):
+    """Promote an existing coach to Head Coach."""
+    result = await db.execute(select(User).where(User.id == coach_id, User.role == "coach"))
+    target = result.scalar_one_or_none()
+    if not target:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Coach with ID '{coach_id}' not found"
+        )
+
+    target.is_head_coach = True
+    await db.commit()
+    await db.refresh(target)
+
+    logger.info(
+        "AUDIT SECURITY EVENT: Coach '%s' (%s) promoted to Head Coach by '%s' (%s)",
+        target.full_name, target.email, current_user.full_name, current_user.email
+    )
+
+    return CoachDirectoryItem(
+        id=target.id,
+        name=target.full_name,
+        email=target.email,
+        avatar=target.avatar or "",
+        role="coach",
+        is_head_coach=True
+    )
+
+
+@router.post("/{coach_id}/set-head-coach", response_model=CoachDirectoryItem)
+async def set_coach_head_coach(
+    coach_id: str,
+    req: SetHeadCoachRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_head_coach),
+):
+    """Set Head Coach status (promote or demote)."""
+    result = await db.execute(select(User).where(User.id == coach_id, User.role == "coach"))
+    target = result.scalar_one_or_none()
+    if not target:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Coach with ID '{coach_id}' not found"
+        )
+
+    # Prevent demoting the root bootstrap admin account
+    is_root_admin = (
+        target.id == "coach-1" 
+        or target.email.strip().lower() == settings.DEFAULT_COACH_EMAIL.strip().lower()
+    )
+    if not req.is_head_coach and is_root_admin:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="The primary administrator account cannot be demoted"
+        )
+
+    target.is_head_coach = req.is_head_coach
+    await db.commit()
+    await db.refresh(target)
+
+    computed_head = settings.is_head_coach(
+        target.id, target.email, target.role, getattr(target, "is_head_coach", False)
+    )
+    return CoachDirectoryItem(
+        id=target.id,
+        name=target.full_name,
+        email=target.email,
+        avatar=target.avatar or "",
+        role="coach",
+        is_head_coach=computed_head
     )

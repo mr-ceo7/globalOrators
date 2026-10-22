@@ -187,13 +187,15 @@ async def _get_or_create_speaker(
             created_at=now
         )
         db.add(user)
-
     if not matched_client:
         new_client = Client(
             id=f"client-{uuid.uuid4().hex[:8]}",
             name=resolved_name,
             email=email_clean,
             avatar=resolved_avatar,
+            phone="",
+            age=0,
+            gender="",
             status="Pending Onboarding",
             goal="",
             experience_level="",
@@ -202,7 +204,16 @@ async def _get_or_create_speaker(
             workouts_completed=0,
             total_workouts_assigned=0,
             last_active="Just now",
-            onboarding_survey={}
+            starting_weight_kg=0.0,
+            current_weight_kg=0.0,
+            target_weight_kg=0.0,
+            height_cm=0.0,
+            body_fat_percentage=0.0,
+            target_body_fat=0.0,
+            injuries_and_health=[],
+            custom_coach_notes=[],
+            onboarding_survey={},
+            adjudicator_notes=[]
         )
         db.add(new_client)
     else:

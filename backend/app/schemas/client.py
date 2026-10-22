@@ -143,6 +143,11 @@ class CoachDirectoryItem(CamelModel):
     email: str
     avatar: str
     role: str = "coach"
+    is_head_coach: bool = False
+
+
+class SetHeadCoachRequest(CamelModel):
+    is_head_coach: bool = True
 
 
 class CreateCoachRequest(CamelModel):

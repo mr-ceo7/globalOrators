@@ -42,7 +42,7 @@ class UserResponse(BaseModel):
     @model_validator(mode="after")
     def _compute_head_coach(self):
         from app.config import settings
-        self.is_head_coach = settings.is_head_coach(self.id, self.email, self.role)
+        self.is_head_coach = bool(settings.is_head_coach(self.id, self.email, self.role, self.is_head_coach))
         return self
 
 

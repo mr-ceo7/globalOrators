@@ -96,8 +96,8 @@ async def require_coach(
 async def require_head_coach(
     current_user: User = Depends(require_coach)
 ) -> User:
-    """Ensure the caller is the head coach (coach-1 or DEFAULT_COACH_EMAIL)."""
-    if not settings.is_head_coach(current_user.id, current_user.email, current_user.role):
+    """Ensure the caller is the head coach (coach-1, DEFAULT_COACH_EMAIL, or is_head_coach=True)."""
+    if not settings.is_head_coach(current_user.id, current_user.email, current_user.role, getattr(current_user, "is_head_coach", False)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only the head coach can manage invoices"
